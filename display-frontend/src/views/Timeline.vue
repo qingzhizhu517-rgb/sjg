@@ -1,15 +1,26 @@
 <template>
   <div class="timeline-page">
-    <h1 class="page-title">朝代时间线</h1>
-    <div class="timeline">
-      <TimelineItem
-        v-for="item in timeline"
-        :key="item.dynasty.id"
-        :dynasty="item.dynasty"
-        :events="item.events"
-        :poets="item.poets"
-        :poems="item.poems"
-      />
+    <div class="page-hero">
+      <h1 class="page-title">朝代年轮</h1>
+      <p class="page-desc">沿着历史的河流，见证诗与时代的交响</p>
+      <div class="divider"></div>
+    </div>
+
+    <div class="timeline-container">
+      <div class="timeline-track">
+        <TimelineItem
+          v-for="item in timeline"
+          :key="item.dynasty.id"
+          :dynasty="item.dynasty"
+          :events="item.events"
+          :poets="item.poets"
+          :poems="item.poems"
+        />
+      </div>
+    </div>
+
+    <div v-if="!timeline.length && loaded" class="empty-state">
+      <p>暂无朝代数据</p>
     </div>
   </div>
 </template>
@@ -20,22 +31,56 @@ import api from '../api'
 import TimelineItem from '../components/TimelineItem.vue'
 
 const timeline = ref([])
+const loaded = ref(false)
 
 onMounted(async () => {
   timeline.value = await api.get('/timeline')
+  loaded.value = true
 })
 </script>
 
 <style scoped>
 .timeline-page {
-  max-width: 900px;
+  max-width: 860px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 0 24px 80px;
 }
-.page-title {
-  font-family: var(--font-heading);
-  font-size: 32px;
+
+/* Hero */
+.page-hero {
   text-align: center;
-  margin-bottom: 48px;
+  padding: 56px 0 40px;
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: 8px;
+  margin-bottom: 12px;
+}
+
+.page-desc {
+  font-size: 15px;
+  color: var(--text-secondary);
+  letter-spacing: 2px;
+}
+
+/* Timeline container */
+.timeline-container {
+  padding-left: 24px;
+}
+
+.timeline-track {
+  position: relative;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 80px 0;
+  color: var(--text-muted);
+  font-size: 15px;
 }
 </style>

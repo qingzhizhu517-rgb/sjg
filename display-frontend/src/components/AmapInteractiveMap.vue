@@ -1,5 +1,11 @@
 <template>
-  <div ref="mapContainer" class="amap-container"></div>
+  <div class="amap-wrapper">
+    <div ref="mapContainer" class="amap-container"></div>
+    <div class="map-hint" v-if="spots.length">
+      <span class="hint-icon">◎</span>
+      点击标记查看详情
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -44,5 +50,37 @@ onUnmounted(() => { if (map) map.destroy() })
 </script>
 
 <style scoped>
-.amap-container { width: 100%; height: 100%; min-height: 600px; }
+.amap-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.amap-container {
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+}
+
+.map-hint {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.hint-icon {
+  margin-right: 4px;
+  color: var(--accent);
+}
 </style>
