@@ -1,0 +1,13 @@
+import { createRouter, createWebHistory } from 'vue-router'
+
+const routes = [
+  { path: '/', redirect: '/map' },
+  { path: '/map', name: 'Map', component: () => import('../views/MapView.vue') },
+  { path: '/poets', name: 'Poets', component: () => import('../views/PoetList.vue') },
+  { path: '/poets/:id', name: 'PoetDetail', component: () => import('../views/PoetDetail.vue') },
+  { path: '/poems/:id', name: 'PoemDetail', component: () => import('../views/PoemDetail.vue') },
+  { path: '/timeline', name: 'Timeline', component: () => import('../views/Timeline.vue') },
+  { path: '/regions/:region', name: 'RegionSpots', component: () => import('../views/RegionSpots.vue') },
+]
+
+export default createRouter({ history: createWebHistory(), routes })
