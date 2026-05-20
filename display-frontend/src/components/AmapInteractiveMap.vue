@@ -15,7 +15,7 @@ let map = null
 onMounted(async () => {
   try {
     const AMap = await AMapLoader.load({
-      key: 'YOUR_AMAP_KEY',
+      key: '001042ee59eb25ad6a0c605882ad9cf3',
       version: '2.0',
     })
     map = new AMap.Map(mapContainer.value, {

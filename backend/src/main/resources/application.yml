@@ -18,10 +18,10 @@ jwt:
   expiration: 86400000
 
 oss:
-  endpoint: ${OSS_ENDPOINT:oss-cn-hangzhou.aliyuncs.com}
-  access-key-id: ${OSS_ACCESS_KEY_ID:your-access-key}
-  access-key-secret: ${OSS_ACCESS_KEY_SECRET:your-access-key-secret}
-  bucket-name: ${OSS_BUCKET:sjg-bucket}
+  endpoint: oss-cn-beijing.aliyuncs.com
+  access-key-id: ${OSS_ACCESS_KEY_ID}
+  access-key-secret: ${OSS_ACCESS_KEY_SECRET}
+  bucket-name: shandong-lit-landscape
 
 logging:
   level:
