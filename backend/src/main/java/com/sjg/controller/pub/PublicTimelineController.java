@@ -1,4 +1,4 @@
-package com.sjg.controller.public;
+package com.sjg.controller.pub;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.sjg.entity.*;

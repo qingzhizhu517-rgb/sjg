@@ -1,7 +1,7 @@
 <template>
   <div class="inkwash-map">
     <div class="map-image-wrapper">
-      <img src="/images/inkwash-map.jpg" alt="黄河流域山东段" class="map-image" />
+      <img :src="'/images/inkwash-map.png'" alt="黄河流域山东段" class="map-image" />
       <div
         v-for="label in labels"
         :key="label.name"

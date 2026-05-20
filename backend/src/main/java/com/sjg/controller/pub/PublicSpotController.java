@@ -1,4 +1,4 @@
-package com.sjg.controller.public;
+package com.sjg.controller.pub;
 
 import com.sjg.entity.ScenicSpot;
 import com.sjg.entity.Poem;
