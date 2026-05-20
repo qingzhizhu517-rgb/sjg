@@ -1,0 +1,28 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/sjg?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: ${DB_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+jwt:
+  secret: ${JWT_SECRET:sjg-secret-key-must-be-at-least-256-bits-long-for-hs256}
+  expiration: 86400000
+
+oss:
+  endpoint: ${OSS_ENDPOINT:oss-cn-hangzhou.aliyuncs.com}
+  access-key-id: ${OSS_ACCESS_KEY_ID:your-access-key}
+  access-key-secret: ${OSS_ACCESS_KEY_SECRET:your-access-key-secret}
+  bucket-name: ${OSS_BUCKET:sjg-bucket}
+
+logging:
+  level:
+    com.sjg: debug
