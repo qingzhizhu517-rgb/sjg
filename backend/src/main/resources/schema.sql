@@ -90,6 +90,8 @@ CREATE TABLE user (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '用户ID',
     username VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
     password VARCHAR(200) NOT NULL COMMENT '密码（BCrypt加密）',
+    role VARCHAR(20) NOT NULL DEFAULT 'user' COMMENT '角色（admin/user）',
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' COMMENT '状态（pending/approved/rejected/disabled）',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
@@ -103,3 +105,7 @@ INSERT INTO dynasty (name, start_year, end_year, description) VALUES
 ('元', 1271, 1368, '元朝'),
 ('明', 1368, 1644, '明朝'),
 ('清', 1644, 1912, '清朝');
+
+-- 默认管理员账号（密码: admin123）
+INSERT INTO user (username, password, role, status) VALUES
+('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'admin', 'approved');
