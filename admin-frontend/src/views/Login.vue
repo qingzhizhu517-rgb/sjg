@@ -8,35 +8,80 @@
           <p class="login-subtitle">数字人文视域下黄河流域文学景观</p>
         </div>
         <div class="ink-divider"></div>
-        <el-form :model="form" @submit.prevent="handleLogin" class="login-form">
-          <el-form-item>
-            <el-input
-              v-model="form.username"
-              placeholder="请输入用户名"
-              prefix-icon="User"
-              size="large"
-            />
-          </el-form-item>
-          <el-form-item>
-            <el-input
-              v-model="form.password"
-              type="password"
-              placeholder="请输入密码"
-              prefix-icon="Lock"
-              show-password
-              size="large"
-            />
-          </el-form-item>
-          <el-button
-            type="primary"
-            native-type="submit"
-            :loading="loading"
-            size="large"
-            class="login-btn"
-          >
-            登 录
-          </el-button>
-        </el-form>
+        <el-tabs v-model="activeTab" class="login-tabs">
+          <el-tab-pane label="登录" name="login">
+            <el-form :model="loginForm" @submit.prevent="handleLogin" class="login-form">
+              <el-form-item>
+                <el-input
+                  v-model="loginForm.username"
+                  placeholder="请输入用户名"
+                  prefix-icon="User"
+                  size="large"
+                />
+              </el-form-item>
+              <el-form-item>
+                <el-input
+                  v-model="loginForm.password"
+                  type="password"
+                  placeholder="请输入密码"
+                  prefix-icon="Lock"
+                  show-password
+                  size="large"
+                />
+              </el-form-item>
+              <el-button
+                type="primary"
+                native-type="submit"
+                :loading="loading"
+                size="large"
+                class="login-btn"
+              >
+                登 录
+              </el-button>
+            </el-form>
+          </el-tab-pane>
+          <el-tab-pane label="注册" name="register">
+            <el-form :model="registerForm" @submit.prevent="handleRegister" class="login-form">
+              <el-form-item>
+                <el-input
+                  v-model="registerForm.username"
+                  placeholder="请输入用户名"
+                  prefix-icon="User"
+                  size="large"
+                />
+              </el-form-item>
+              <el-form-item>
+                <el-input
+                  v-model="registerForm.password"
+                  type="password"
+                  placeholder="请输入密码"
+                  prefix-icon="Lock"
+                  show-password
+                  size="large"
+                />
+              </el-form-item>
+              <el-form-item>
+                <el-input
+                  v-model="registerForm.confirmPassword"
+                  type="password"
+                  placeholder="请确认密码"
+                  prefix-icon="Lock"
+                  show-password
+                  size="large"
+                />
+              </el-form-item>
+              <el-button
+                type="primary"
+                native-type="submit"
+                :loading="loading"
+                size="large"
+                class="login-btn"
+              >
+                注 册
+              </el-button>
+            </el-form>
+          </el-tab-pane>
+        </el-tabs>
         <div class="login-footer">
           <span class="footer-text">山东师范大学 · 文学院</span>
         </div>
@@ -53,17 +98,44 @@ import api from '../api'
 
 const router = useRouter()
 const loading = ref(false)
-const form = ref({ username: '', password: '' })
+const activeTab = ref('login')
+const loginForm = ref({ username: '', password: '' })
+const registerForm = ref({ username: '', password: '', confirmPassword: '' })
 
 const handleLogin = async () => {
   loading.value = true
   try {
-    const data = await api.post('/auth/login', form.value)
+    const data = await api.post('/auth/login', loginForm.value)
     localStorage.setItem('token', data.token)
     localStorage.setItem('username', data.username)
     localStorage.setItem('role', data.role || 'user')
     ElMessage.success('登录成功')
     router.push('/')
+  } catch (e) {
+    // handled by interceptor
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleRegister = async () => {
+  if (registerForm.value.password !== registerForm.value.confirmPassword) {
+    ElMessage.error('两次输入的密码不一致')
+    return
+  }
+  if (!registerForm.value.username || !registerForm.value.password) {
+    ElMessage.error('请输入用户名和密码')
+    return
+  }
+  loading.value = true
+  try {
+    await api.post('/auth/register', {
+      username: registerForm.value.username,
+      password: registerForm.value.password
+    })
+    ElMessage.success('注册成功，等待管理员审批')
+    activeTab.value = 'login'
+    registerForm.value = { username: '', password: '', confirmPassword: '' }
   } catch (e) {
     // handled by interceptor
   } finally {
@@ -156,5 +228,32 @@ const handleLogin = async () => {
   font-size: 12px;
   color: var(--text-muted);
   letter-spacing: 1px;
+}
+
+.login-tabs {
+  margin-top: 16px;
+}
+
+.login-tabs :deep(.el-tabs__header) {
+  margin-bottom: 0;
+}
+
+.login-tabs :deep(.el-tabs__nav-wrap::after) {
+  display: none;
+}
+
+.login-tabs :deep(.el-tabs__item) {
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+}
+
+.login-tabs :deep(.el-tabs__item.is-active) {
+  color: var(--color-zhu);
+}
+
+.login-tabs :deep(.el-tabs__active-bar) {
+  background-color: var(--color-zhu);
 }
 </style>
