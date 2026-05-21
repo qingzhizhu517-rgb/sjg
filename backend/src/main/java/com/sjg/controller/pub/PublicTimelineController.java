@@ -3,12 +3,19 @@ package com.sjg.controller.pub;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.sjg.entity.*;
 import com.sjg.mapper.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 时间线公开接口（无需认证）
+ * 提供按朝代分组的历史时间线数据
+ */
+@Tag(name = "公开时间线", description = "按朝代分组的历史时间线数据（无需认证）")
 @RestController
 @RequestMapping("/api/public/timeline")
 public class PublicTimelineController {
@@ -26,6 +33,10 @@ public class PublicTimelineController {
         this.poemMapper = poemMapper;
     }
 
+    /**
+     * 获取完整历史时间线（按朝代排序）
+     */
+    @Operation(summary = "获取历史时间线", description = "按朝代起始年份升序返回完整时间线，每个朝代包含其历史事件、诗人和诗词")
     @GetMapping
     public ResponseEntity<?> getTimeline() {
         List<Dynasty> dynasties = dynastyMapper.selectList(

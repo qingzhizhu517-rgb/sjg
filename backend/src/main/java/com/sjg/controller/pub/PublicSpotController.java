@@ -6,12 +6,20 @@ import com.sjg.service.SpotService;
 import com.sjg.mapper.PoemMapper;
 import com.sjg.mapper.PoetMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 景点公开接口（无需认证）
+ * 提供面向前端展示的景点查询接口
+ */
+@Tag(name = "公开景点", description = "面向前端展示的景点查询接口（无需认证）")
 @RestController
 @RequestMapping("/api/public/spots")
 public class PublicSpotController {
@@ -26,11 +34,15 @@ public class PublicSpotController {
         this.poetMapper = poetMapper;
     }
 
+    /**
+     * 分页查询景点列表（含关联诗词数量）
+     */
+    @Operation(summary = "分页查询景点列表", description = "查询景点列表并附带每个景点的关联诗词数量，支持区域筛选")
     @GetMapping
     public ResponseEntity<?> list(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String region) {
+            @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "每页数量", example = "20") @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "区域筛选", example = "济南") @RequestParam(required = false) String region) {
         var result = spotService.list(page, size, null, region);
         var enriched = result.getRecords().stream().map(spot -> {
             Map<String, Object> map = new HashMap<>();
@@ -50,8 +62,13 @@ public class PublicSpotController {
         return ResponseEntity.ok(Map.of("records", enriched, "total", result.getTotal()));
     }
 
+    /**
+     * 查询景点详情（含关联诗词列表）
+     */
+    @Operation(summary = "查询景点详情", description = "根据景点ID查询详情，同时返回关联的诗词列表")
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id) {
+    public ResponseEntity<?> getById(
+            @Parameter(description = "景点ID", example = "1", required = true) @PathVariable Long id) {
         ScenicSpot spot = spotService.getById(id);
         if (spot == null) return ResponseEntity.notFound().build();
 
@@ -64,6 +81,10 @@ public class PublicSpotController {
         return ResponseEntity.ok(result);
     }
 
+    /**
+     * 获取所有区域及其景点数量
+     */
+    @Operation(summary = "获取区域列表", description = "返回所有预设区域及其景点数量统计")
     @GetMapping("/regions")
     public ResponseEntity<?> regions() {
         String[] regions = {"菏泽", "济宁", "泰安", "聊城", "济南", "德州", "滨州", "淄博", "东营"};
