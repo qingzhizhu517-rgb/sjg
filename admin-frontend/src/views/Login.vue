@@ -61,6 +61,7 @@ const handleLogin = async () => {
     const data = await api.post('/auth/login', form.value)
     localStorage.setItem('token', data.token)
     localStorage.setItem('username', data.username)
+    localStorage.setItem('role', data.role || 'user')
     ElMessage.success('登录成功')
     router.push('/')
   } catch (e) {
