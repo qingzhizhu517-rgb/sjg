@@ -54,7 +54,7 @@ public class AuthService {
             throw new RuntimeException("账号已被禁用");
         }
         String token = jwtUtil.generateToken(user.getUsername());
-        return new LoginResponse(token, user.getUsername());
+        return new LoginResponse(token, user.getUsername(), user.getRole());
     }
 
     public void changePassword(String username, ChangePasswordRequest request) {

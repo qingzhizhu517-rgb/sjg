@@ -14,4 +14,7 @@ public class LoginResponse {
 
     @Schema(description = "用户名", example = "admin")
     private String username;
+
+    @Schema(description = "用户角色", example = "admin")
+    private String role;
 }
