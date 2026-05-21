@@ -20,8 +20,11 @@ let map = null
 
 onMounted(async () => {
   try {
+    window._AMapSecurityConfig = {
+      securityJsCode: '844a978b907c2ddf9f8e4c9203277800',
+    }
     const AMap = await AMapLoader.load({
-      key: '001042ee59eb25ad6a0c605882ad9cf3',
+      key: 'dbfdc8b27a784b3defa5bff9ac795ee0',
       version: '2.0',
     })
     map = new AMap.Map(mapContainer.value, {

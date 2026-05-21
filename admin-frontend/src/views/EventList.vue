@@ -1,27 +1,42 @@
 <template>
   <div>
+    <div class="page-title">事件管理</div>
     <DataTable ref="table" :fetchFn="fetchEvents" @add="openAdd" @edit="openEdit" @delete="handleDelete">
-      <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column prop="title" label="标题" />
+      <el-table-column prop="id" label="ID" width="70" />
+      <el-table-column prop="title" label="标题" width="200" />
       <el-table-column prop="year" label="年份" width="100" />
       <el-table-column prop="significance" label="意义" show-overflow-tooltip />
     </DataTable>
+
     <FormDialog :visible="dialogVisible" :isEdit="isEdit" :initialData="current" :submitFn="handleSubmit"
       @close="dialogVisible = false" @success="table.fetch()">
       <template #default="{ form }">
-        <el-form-item label="标题" required><el-input v-model="form.title" /></el-form-item>
+        <el-form-item label="标题" required>
+          <el-input v-model="form.title" placeholder="请输入事件标题" />
+        </el-form-item>
         <el-form-item label="朝代">
           <el-select v-model="form.dynastyId" placeholder="选择朝代">
             <el-option v-for="d in dynasties" :key="d.id" :label="d.name" :value="d.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="年份"><el-input-number v-model="form.year" :controls="false" /></el-form-item>
-        <el-form-item label="描述"><el-input v-model="form.description" type="textarea" :rows="4" /></el-form-item>
-        <el-form-item label="历史意义"><el-input v-model="form.significance" type="textarea" :rows="3" /></el-form-item>
+        <el-form-item label="年份">
+          <el-input-number v-model="form.year" :controls="false" style="width: 100%;" />
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input v-model="form.description" type="textarea" :rows="4" placeholder="请输入事件描述" />
+        </el-form-item>
+        <el-form-item label="历史意义">
+          <el-input v-model="form.significance" type="textarea" :rows="3" placeholder="请输入历史意义" />
+        </el-form-item>
         <el-form-item label="图片">
           <el-upload :show-file-list="false" :http-request="uploadImage" accept="image/*">
-            <el-image v-if="form.imageUrl" :src="form.imageUrl" style="width: 100px;" fit="contain" />
-            <el-button v-else>上传</el-button>
+            <div class="upload-area">
+              <el-image v-if="form.imageUrl" :src="form.imageUrl" class="preview-img" fit="contain" />
+              <div v-else class="upload-placeholder">
+                <el-icon><Plus /></el-icon>
+                <span>上传图片</span>
+              </div>
+            </div>
           </el-upload>
         </el-form-item>
       </template>
@@ -62,3 +77,42 @@ onMounted(async () => {
   dynasties.value = timeline.map(t => t.dynasty)
 })
 </script>
+
+<style scoped>
+.upload-area {
+  width: 120px;
+  height: 120px;
+  border: 1px dashed var(--border-medium);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  background: #FAFAF5;
+  overflow: hidden;
+}
+
+.upload-area:hover {
+  border-color: var(--color-zhu);
+  background: #FDF9F2;
+}
+
+.upload-area .preview-img {
+  width: 100%;
+  height: 100%;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.upload-placeholder .el-icon {
+  font-size: 24px;
+}
+</style>

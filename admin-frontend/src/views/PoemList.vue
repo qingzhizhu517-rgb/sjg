@@ -1,15 +1,21 @@
 <template>
   <div>
+    <div class="page-title">诗词管理</div>
     <DataTable ref="table" :fetchFn="fetchPoems" @add="openAdd" @edit="openEdit" @delete="handleDelete">
-      <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column prop="title" label="标题" />
+      <el-table-column prop="id" label="ID" width="70" />
+      <el-table-column prop="title" label="标题" width="200" />
       <el-table-column prop="content" label="内容" show-overflow-tooltip />
     </DataTable>
+
     <FormDialog :visible="dialogVisible" :isEdit="isEdit" :initialData="current" :submitFn="handleSubmit"
       @close="dialogVisible = false" @success="table.fetch()">
       <template #default="{ form }">
-        <el-form-item label="标题" required><el-input v-model="form.title" /></el-form-item>
-        <el-form-item label="内容" required><el-input v-model="form.content" type="textarea" :rows="6" /></el-form-item>
+        <el-form-item label="标题" required>
+          <el-input v-model="form.title" placeholder="请输入诗词标题" />
+        </el-form-item>
+        <el-form-item label="内容" required>
+          <el-input v-model="form.content" type="textarea" :rows="6" placeholder="请输入诗词内容" />
+        </el-form-item>
         <el-form-item label="作者">
           <el-select v-model="form.poetId" filterable placeholder="选择诗人">
             <el-option v-for="p in poets" :key="p.id" :label="p.name" :value="p.id" />
@@ -25,10 +31,18 @@
             <el-option v-for="s in spots" :key="s.id" :label="s.name" :value="s.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="注解"><el-input v-model="form.annotation" type="textarea" :rows="3" /></el-form-item>
-        <el-form-item label="创作背景"><el-input v-model="form.background" type="textarea" :rows="3" /></el-form-item>
-        <el-form-item label="音频URL"><el-input v-model="form.audioUrl" /></el-form-item>
-        <el-form-item label="视频URL"><el-input v-model="form.videoUrl" /></el-form-item>
+        <el-form-item label="注解">
+          <el-input v-model="form.annotation" type="textarea" :rows="3" placeholder="请输入注解" />
+        </el-form-item>
+        <el-form-item label="创作背景">
+          <el-input v-model="form.background" type="textarea" :rows="3" placeholder="请输入创作背景" />
+        </el-form-item>
+        <el-form-item label="音频URL">
+          <el-input v-model="form.audioUrl" placeholder="请输入音频地址" />
+        </el-form-item>
+        <el-form-item label="视频URL">
+          <el-input v-model="form.videoUrl" placeholder="请输入视频地址" />
+        </el-form-item>
       </template>
     </FormDialog>
   </div>
