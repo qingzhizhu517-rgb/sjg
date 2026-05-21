@@ -11,6 +11,7 @@ const routes = [
       { path: 'spots', name: 'SpotList', component: () => import('../views/SpotList.vue') },
       { path: 'poems', name: 'PoemList', component: () => import('../views/PoemList.vue') },
       { path: 'events', name: 'EventList', component: () => import('../views/EventList.vue') },
+      { path: 'users', name: 'UserList', component: () => import('../views/UserList.vue'), meta: { requireAdmin: true } },
     ]
   }
 ]
@@ -24,6 +25,8 @@ router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
   if (to.path !== '/login' && !token) {
     next('/login')
+  } else if (to.meta.requireAdmin && localStorage.getItem('role') !== 'admin') {
+    next('/')
   } else {
     next()
   }

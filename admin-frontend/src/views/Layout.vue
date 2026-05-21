@@ -29,6 +29,12 @@
           <el-icon><Calendar /></el-icon>
           <span>事件管理</span>
         </el-menu-item>
+        <!-- 底部分隔区 -->
+        <div class="sidebar-divider"></div>
+        <el-menu-item v-if="isAdmin" index="/users">
+          <el-icon><UserFilled /></el-icon>
+          <span>用户管理</span>
+        </el-menu-item>
       </el-menu>
       <div class="sidebar-footer">
         <div class="sidebar-decoration"></div>
@@ -63,18 +69,21 @@
 </template>
 
 <script setup>
+import { UserFilled } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
 const username = computed(() => localStorage.getItem('username') || '管理员')
+const isAdmin = computed(() => localStorage.getItem('role') === 'admin')
 
 const pageTitles = {
   '/poets': '诗人管理',
   '/spots': '景点管理',
   '/poems': '诗词管理',
   '/events': '事件管理',
+  '/users': '用户管理',
 }
 
 const currentPageTitle = computed(() => pageTitles[route.path] || '管理后台')
@@ -82,6 +91,7 @@ const currentPageTitle = computed(() => pageTitles[route.path] || '管理后台'
 const logout = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('username')
+  localStorage.removeItem('role')
   router.push('/login')
 }
 </script>
@@ -273,5 +283,11 @@ const logout = () => {
 .page-fade-leave-to {
   opacity: 0;
   transform: translateY(-8px);
+}
+
+.sidebar-divider {
+  height: 1px;
+  margin: 8px 20px;
+  background: linear-gradient(90deg, transparent, rgba(232, 220, 200, 0.15), transparent);
 }
 </style>
