@@ -2,6 +2,7 @@ package com.sjg.service;
 
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -22,22 +23,27 @@ public class OssService {
     @Value("${oss.bucket-name}")
     private String bucketName;
 
-    private OSS ossClient;
+    private volatile OSS ossClient;
 
-    private OSS getClient() {
-        if (ossClient == null) {
+    @PostConstruct
+    public void init() {
+        if (accessKeyId != null && accessKeySecret != null) {
             ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
         }
-        return ossClient;
     }
 
     public String upload(MultipartFile file, String directory) throws IOException {
+        if (ossClient == null) {
+            throw new IOException("OSS client not initialized, check OSS_ACCESS_KEY_ID and OSS_ACCESS_KEY_SECRET");
+        }
         String originalFilename = file.getOriginalFilename();
         String extension = originalFilename != null && originalFilename.contains(".")
                 ? originalFilename.substring(originalFilename.lastIndexOf("."))
                 : "";
         String objectName = directory + "/" + UUID.randomUUID() + extension;
-        getClient().putObject(bucketName, objectName, file.getInputStream());
+        try (var is = file.getInputStream()) {
+            ossClient.putObject(bucketName, objectName, is);
+        }
         return "https://" + bucketName + "." + endpoint + "/" + objectName;
     }
 

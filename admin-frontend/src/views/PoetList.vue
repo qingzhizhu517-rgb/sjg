@@ -1,11 +1,11 @@
 <template>
-  <div>
+  <div class="page-container">
     <div class="page-title">诗人管理</div>
     <DataTable ref="table" :fetchFn="fetchPoets" @add="openAdd" @edit="openEdit" @delete="handleDelete" @import="showImport = true">
       <el-table-column prop="id" label="ID" width="70" />
       <el-table-column prop="name" label="姓名" width="120" />
-      <el-table-column prop="birthplace" label="籍贯" width="140" />
-      <el-table-column prop="style" label="风格" width="140" />
+      <el-table-column prop="birthplace" label="籍贯" min-width="150" />
+      <el-table-column prop="style" label="风格" min-width="150" />
       <el-table-column label="头像" width="80">
         <template #default="{ row }">
           <el-image v-if="row.avatarUrl" :src="row.avatarUrl" style="width: 48px; height: 48px; border-radius: 4px;" fit="cover" />
@@ -119,6 +119,7 @@ const uploadAvatar = async ({ file }) => {
   formData.append('directory', 'poets')
   const { url } = await api.post('/admin/upload', formData)
   currentPoet.value.avatarUrl = url
+  ElMessage.success('上传成功')
 }
 
 const uploadAvatarAnime = async ({ file }) => {
@@ -127,6 +128,7 @@ const uploadAvatarAnime = async ({ file }) => {
   formData.append('directory', 'poets/anime')
   const { url } = await api.post('/admin/upload', formData)
   currentPoet.value.avatarAnimeUrl = url
+  ElMessage.success('上传成功')
 }
 
 const importPoets = async (formData) => {

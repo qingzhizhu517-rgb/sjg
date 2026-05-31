@@ -39,3 +39,7 @@ yarn-error.log*
 backend/.m2/
 backend/.mvn-repo/
 backend/target/
+
+# Antigravity/Superpowers Tool Metadata
+.superpowers/
+.antigravitycli/

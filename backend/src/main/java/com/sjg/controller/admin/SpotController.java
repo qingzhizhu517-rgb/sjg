@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import java.util.Map;
 
 /**
@@ -41,7 +42,9 @@ public class SpotController {
     @GetMapping("/{id}")
     public ResponseEntity<ScenicSpot> getById(
             @Parameter(description = "景点ID", example = "1", required = true) @PathVariable Long id) {
-        return ResponseEntity.ok(spotService.getById(id));
+        ScenicSpot spot = spotService.getById(id);
+        if (spot == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(spot);
     }
 
     /**
@@ -75,5 +78,16 @@ public class SpotController {
             @Parameter(description = "景点ID", example = "1", required = true) @PathVariable Long id) {
         spotService.delete(id);
         return ResponseEntity.ok(Map.of("message", "删除成功"));
+    }
+
+    @Operation(summary = "批量导入景点", description = "通过Excel文件批量导入景点，表头：名称、地区、地址、经度、纬度、介绍")
+    @PostMapping("/import")
+    public ResponseEntity<?> importExcel(@RequestParam("file") MultipartFile file) {
+        try {
+            int count = spotService.importFromExcel(file);
+            return ResponseEntity.ok(Map.of("success", true, "message", "成功导入 " + count + " 条景点记录"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "导入失败: " + e.getMessage()));
+        }
     }
 }

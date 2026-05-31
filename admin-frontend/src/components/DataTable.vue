@@ -27,7 +27,7 @@
       </div>
     </div>
 
-    <el-table :data="data" v-loading="loading" stripe class="traditional-table">
+    <el-table :data="data" v-loading="loading" stripe class="traditional-table" style="width: 100%; height: 100%">
       <slot />
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">

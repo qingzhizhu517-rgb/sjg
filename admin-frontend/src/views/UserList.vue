@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="page-container">
     <div class="page-title">用户管理</div>
     <el-tabs v-model="statusFilter" @tab-change="handleTabChange" class="status-tabs">
       <el-tab-pane label="全部" name="" />
@@ -25,7 +25,7 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="createdAt" label="创建时间" width="180" />
+      <el-table-column prop="createdAt" label="创建时间" min-width="180" />
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
           <template v-if="row.status === 'pending'">

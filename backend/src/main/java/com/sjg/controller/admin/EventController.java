@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import java.util.Map;
 
 /**
@@ -40,7 +41,9 @@ public class EventController {
     @GetMapping("/{id}")
     public ResponseEntity<Event> getById(
             @Parameter(description = "事件ID", example = "1", required = true) @PathVariable Long id) {
-        return ResponseEntity.ok(eventService.getById(id));
+        Event event = eventService.getById(id);
+        if (event == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(event);
     }
 
     /**
@@ -74,5 +77,16 @@ public class EventController {
             @Parameter(description = "事件ID", example = "1", required = true) @PathVariable Long id) {
         eventService.delete(id);
         return ResponseEntity.ok(Map.of("message", "删除成功"));
+    }
+
+    @Operation(summary = "批量导入事件", description = "通过Excel文件批量导入事件，表头：标题、朝代ID、年份、描述、历史意义")
+    @PostMapping("/import")
+    public ResponseEntity<?> importExcel(@RequestParam("file") MultipartFile file) {
+        try {
+            int count = eventService.importFromExcel(file);
+            return ResponseEntity.ok(Map.of("success", true, "message", "成功导入 " + count + " 条事件记录"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "导入失败: " + e.getMessage()));
+        }
     }
 }

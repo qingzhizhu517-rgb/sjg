@@ -82,9 +82,6 @@
             </el-form>
           </el-tab-pane>
         </el-tabs>
-        <div class="login-footer">
-          <span class="footer-text">山东师范大学 · 文学院</span>
-        </div>
       </div>
     </div>
   </div>
@@ -216,19 +213,6 @@ const handleRegister = async () => {
   background: linear-gradient(135deg, var(--color-zhu-light), var(--color-zhu));
 }
 
-.login-footer {
-  text-align: center;
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-light);
-}
-
-.login-footer .footer-text {
-  font-family: var(--font-body);
-  font-size: 12px;
-  color: var(--text-muted);
-  letter-spacing: 1px;
-}
 
 .login-tabs {
   margin-top: 16px;

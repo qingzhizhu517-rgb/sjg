@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <div class="page-container">
     <div class="page-title">景点管理</div>
-    <DataTable ref="table" :fetchFn="fetchSpots" @add="openAdd" @edit="openEdit" @delete="handleDelete">
+    <DataTable ref="table" :fetchFn="fetchSpots" @add="openAdd" @edit="openEdit" @delete="handleDelete" @import="showImport = true">
       <el-table-column prop="id" label="ID" width="70" />
       <el-table-column prop="name" label="名称" width="180" />
       <el-table-column prop="region" label="地区" width="100" />
@@ -63,6 +63,8 @@
         </el-form-item>
       </template>
     </FormDialog>
+
+    <ImportDialog :visible="showImport" :uploadFn="importSpots" @close="showImport = false" @success="table.fetch()" />
   </div>
 </template>
 
@@ -72,9 +74,11 @@ import { ElMessage } from 'element-plus'
 import api from '../api'
 import DataTable from '../components/DataTable.vue'
 import FormDialog from '../components/FormDialog.vue'
+import ImportDialog from '../components/ImportDialog.vue'
 
 const regions = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '滨州', '淄博', '东营']
 const table = ref(null)
+const showImport = ref(false)
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const current = ref({})
@@ -89,9 +93,15 @@ const handleSubmit = async (form) => {
 }
 const handleDelete = async (row) => { await api.delete(`/admin/spots/${row.id}`); ElMessage.success('删除成功'); table.value.fetch() }
 const uploadImage = async ({ file }, field) => {
-  const formData = new FormData(); formData.append('file', file); formData.append('directory', 'spots')
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('directory', 'spots')
   const { url } = await api.post('/admin/upload', formData)
   current.value[field] = url
+  ElMessage.success('上传成功')
+}
+const importSpots = async (formData) => {
+  return await api.post('/admin/spots/import', formData)
 }
 </script>
 

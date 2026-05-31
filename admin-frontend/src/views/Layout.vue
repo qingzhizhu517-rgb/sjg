@@ -267,7 +267,10 @@ const logout = () => {
 .main-content {
   padding: 24px;
   background: var(--bg-page);
-  min-height: calc(100vh - 56px);
+  height: calc(100vh - 56px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .page-fade-enter-active,

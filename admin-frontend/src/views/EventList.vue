@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <div class="page-container">
     <div class="page-title">事件管理</div>
-    <DataTable ref="table" :fetchFn="fetchEvents" @add="openAdd" @edit="openEdit" @delete="handleDelete">
+    <DataTable ref="table" :fetchFn="fetchEvents" @add="openAdd" @edit="openEdit" @delete="handleDelete" @import="showImport = true">
       <el-table-column prop="id" label="ID" width="70" />
       <el-table-column prop="title" label="标题" width="200" />
       <el-table-column prop="year" label="年份" width="100" />
@@ -41,6 +41,8 @@
         </el-form-item>
       </template>
     </FormDialog>
+
+    <ImportDialog :visible="showImport" :uploadFn="importEvents" @close="showImport = false" @success="table.fetch()" />
   </div>
 </template>
 
@@ -50,11 +52,13 @@ import { ElMessage } from 'element-plus'
 import api from '../api'
 import DataTable from '../components/DataTable.vue'
 import FormDialog from '../components/FormDialog.vue'
+import ImportDialog from '../components/ImportDialog.vue'
 
 const table = ref(null)
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const current = ref({})
+const showImport = ref(false)
 const dynasties = ref([])
 
 const fetchEvents = (page, size, keyword) => api.get('/admin/events', { params: { page, size, keyword } })
@@ -66,6 +70,9 @@ const handleSubmit = async (form) => {
   ElMessage.success(isEdit.value ? '更新成功' : '创建成功')
 }
 const handleDelete = async (row) => { await api.delete(`/admin/events/${row.id}`); ElMessage.success('删除成功'); table.value.fetch() }
+const importEvents = async (formData) => {
+  return await api.post('/admin/events/import', formData)
+}
 const uploadImage = async ({ file }) => {
   const formData = new FormData(); formData.append('file', file); formData.append('directory', 'events')
   const { url } = await api.post('/admin/upload', formData)

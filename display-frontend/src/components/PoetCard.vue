@@ -1,8 +1,7 @@
 <template>
-  <div class="poet-card card" @click="$emit('click')">
+  <div class="poet-card card hover-lift" @click="$emit('click')">
     <div class="card-avatar-wrap">
       <img :src="avatar" :alt="poet.name" class="card-avatar" />
-      <div class="avatar-ring"></div>
     </div>
     <div class="card-body">
       <h3 class="card-name">{{ poet.name }}</h3>
@@ -16,14 +15,18 @@
 <script setup>
 import { computed } from 'vue'
 import { useTheme } from '../composables/useTheme'
+import { useImage } from '../composables/useImage'
 
 const props = defineProps({ poet: Object, dynasty: String })
 defineEmits(['click'])
-const { isReal } = useTheme()
+const { isAnime } = useTheme()
+const { getImageUrl } = useImage()
 
-const avatar = computed(() =>
-  isReal.value ? props.poet.avatarUrl : (props.poet.avatarAnimeUrl || props.poet.avatarUrl)
-)
+const avatar = computed(() => {
+  if (!props.poet) return ''
+  const url = isAnime.value ? props.poet.avatarAnimeUrl || props.poet.avatarUrl : props.poet.avatarUrl
+  return getImageUrl(url, isAnime.value)
+})
 </script>
 
 <style scoped>
@@ -34,10 +37,34 @@ const avatar = computed(() =>
   transition: transform 0.35s ease, box-shadow 0.35s ease;
   position: relative;
   overflow: hidden;
+  border-top: 4px solid var(--accent);
+}
+
+.theme-real .poet-card {
+  border-top-color: var(--accent-light);
 }
 
 .poet-card:hover {
   transform: translateY(-6px);
+}
+
+/* Bottom roll decoration */
+.poet-card::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 15%;
+  right: 15%;
+  height: 8px;
+  background: linear-gradient(90deg, #422f20, #694a32, #422f20);
+  border-radius: 4px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.poet-card:hover::after {
+  opacity: 1;
 }
 
 .card-avatar-wrap {
@@ -45,30 +72,34 @@ const avatar = computed(() =>
   width: 96px;
   height: 96px;
   margin: 0 auto 16px;
+  padding: 4px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.theme-real .card-avatar-wrap {
+  border-color: var(--accent-light);
+  background: rgba(184, 134, 11, 0.05);
+}
+
+.theme-inkwash .card-avatar-wrap {
+  border-radius: 4px; /* Calligraphy album style uses square cut */
+  border-color: var(--accent);
 }
 
 .card-avatar {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: inherit;
   object-fit: cover;
-  position: relative;
-  z-index: 1;
-  border: 3px solid var(--bg-secondary);
+  transition: transform 0.4s ease;
 }
 
-.avatar-ring {
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  border: 1px solid var(--accent);
-  opacity: 0;
-  transition: all 0.35s ease;
-}
-
-.poet-card:hover .avatar-ring {
-  opacity: 1;
-  inset: -6px;
+.poet-card:hover .card-avatar {
+  transform: scale(1.08);
 }
 
 .card-body {
@@ -81,7 +112,7 @@ const avatar = computed(() =>
   font-size: 18px;
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   letter-spacing: 2px;
 }
 
@@ -114,13 +145,5 @@ const avatar = computed(() =>
 .poet-card:hover .card-accent {
   width: 60%;
 }
-
-.theme-inkwash .card-avatar {
-  border-color: var(--bg-tertiary);
-}
-
-.theme-inkwash .avatar-ring {
-  border-color: var(--accent);
-  border-style: dashed;
-}
 </style>
+

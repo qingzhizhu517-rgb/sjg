@@ -78,9 +78,10 @@ CREATE TABLE event (
 
 -- 诗词-事件关联表
 CREATE TABLE poem_event (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID',
     poem_id BIGINT NOT NULL COMMENT '诗词ID',
     event_id BIGINT NOT NULL COMMENT '事件ID',
-    PRIMARY KEY (poem_id, event_id),
+    UNIQUE KEY uk_poem_event (poem_id, event_id),
     FOREIGN KEY (poem_id) REFERENCES poem(id),
     FOREIGN KEY (event_id) REFERENCES event(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='诗词-事件关联表';

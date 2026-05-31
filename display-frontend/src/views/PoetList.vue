@@ -108,6 +108,12 @@ onMounted(async () => {
   background: var(--bg-primary);
   padding: 16px 0;
   border-bottom: 1px solid var(--border-light);
+  transition: background-color 0.5s ease, border-color 0.5s ease, padding 0.3s ease;
+}
+
+.theme-inkwash .page-toolbar {
+  border-bottom: 1px solid var(--border);
+  padding: 20px 0;
 }
 
 .toolbar-inner {
@@ -120,43 +126,91 @@ onMounted(async () => {
 .filter-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 10px;
+  align-items: center;
+}
+
+.theme-inkwash .filter-group {
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .filter-btn {
-  padding: 6px 16px;
+  padding: 8px 18px;
   border: 1px solid var(--border);
-  border-radius: 100px;
+  border-radius: 4px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
-  background: transparent;
-  transition: all 0.2s ease;
+  background: var(--card-bg);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   letter-spacing: 1px;
 }
 
-.filter-btn:hover {
+.theme-real .filter-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
+  background: rgba(184, 134, 11, 0.02);
 }
 
-.filter-btn.active {
+.theme-real .filter-btn.active {
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(184, 134, 11, 0.15);
+}
+
+/* Inkwash theme: Bamboo slip (竹简) style */
+.theme-inkwash .filter-btn {
+  border: none;
+  border-left: 2px solid #5c432d;
+  border-right: 2px solid #5c432d;
+  background: linear-gradient(180deg, #ebdcb9, #dfcca2, #ebdcb9);
+  color: #3d2b1f;
+  box-shadow: 1px 3px 6px rgba(0, 0, 0, 0.12);
+  font-family: var(--font-heading);
+  min-width: 48px;
+  text-align: center;
+  padding: 12px 10px;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  letter-spacing: 3px;
+  border-radius: 2px;
+  line-height: 1.2;
+}
+
+.theme-inkwash .filter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 1px 5px 10px rgba(0, 0, 0, 0.18);
+}
+
+.theme-inkwash .filter-btn.active {
+  background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+  color: #fff;
+  border-left-color: var(--accent-dark);
+  border-right-color: var(--accent-dark);
+  box-shadow: 0 4px 12px rgba(194, 58, 43, 0.35);
 }
 
 .poet-count {
   font-size: 13px;
   color: var(--text-muted);
   flex-shrink: 0;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.theme-inkwash .poet-count {
+  border-left: 3px double var(--accent);
+  padding-left: 8px;
+  font-family: var(--font-heading);
 }
 
 /* Grid */
 .poets-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 24px;
 }
 
 .poet-enter {
@@ -189,11 +243,28 @@ onMounted(async () => {
   }
   .poets-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: 16px;
   }
   .toolbar-inner {
     flex-direction: column;
     align-items: flex-start;
   }
+  .theme-inkwash .filter-btn {
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+    min-width: auto;
+    padding: 6px 12px;
+    border-left: none;
+    border-right: none;
+    border-top: 2px solid #5c432d;
+    border-bottom: 2px solid #5c432d;
+    background: linear-gradient(90deg, #ebdcb9, #dfcca2, #ebdcb9);
+  }
+  .theme-inkwash .filter-btn.active {
+    border-top-color: var(--accent-dark);
+    border-bottom-color: var(--accent-dark);
+    background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+  }
 }
 </style>
+

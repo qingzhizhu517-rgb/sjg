@@ -35,6 +35,12 @@ watch(() => props.visible, (val) => {
   if (val) form.value = { ...props.initialData }
 })
 
+watch(() => props.initialData, (val) => {
+  if (props.visible && val) {
+    form.value = { ...form.value, ...val }
+  }
+}, { deep: true })
+
 const submit = async () => {
   loading.value = true
   try {

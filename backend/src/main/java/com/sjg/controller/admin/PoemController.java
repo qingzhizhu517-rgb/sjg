@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import java.util.Map;
 
 /**
@@ -40,7 +41,9 @@ public class PoemController {
     @GetMapping("/{id}")
     public ResponseEntity<Poem> getById(
             @Parameter(description = "诗词ID", example = "1", required = true) @PathVariable Long id) {
-        return ResponseEntity.ok(poemService.getById(id));
+        Poem poem = poemService.getById(id);
+        if (poem == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(poem);
     }
 
     /**
@@ -74,5 +77,16 @@ public class PoemController {
             @Parameter(description = "诗词ID", example = "1", required = true) @PathVariable Long id) {
         poemService.delete(id);
         return ResponseEntity.ok(Map.of("message", "删除成功"));
+    }
+
+    @Operation(summary = "批量导入诗词", description = "通过Excel文件批量导入诗词，表头：标题、内容、作者ID、朝代ID、景点ID、注解、背景、音频URL、视频URL、情感标签")
+    @PostMapping("/import")
+    public ResponseEntity<?> importExcel(@RequestParam("file") MultipartFile file) {
+        try {
+            int count = poemService.importFromExcel(file);
+            return ResponseEntity.ok(Map.of("success", true, "message", "成功导入 " + count + " 条诗词记录"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "导入失败: " + e.getMessage()));
+        }
     }
 }
