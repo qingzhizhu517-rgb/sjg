@@ -25,6 +25,22 @@
               <span class="stat-lbl">传世名篇</span>
             </div>
           </div>
+          
+          <!-- Immersive HUD label control action -->
+          <div class="hud-actions">
+            <button class="action-btn-toggle" @click="showLabels = !showLabels" :title="showLabels ? '隐藏标签' : '显示标签'">
+              <svg v-if="showLabels" class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg v-else class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+              <span>{{ showLabels ? '隐藏地区标签' : '显示地区标签' }}</span>
+            </button>
+          </div>
+          
           <div class="hud-tips">
             <span class="tip-txt">说明：单击发光节点可快速预览城市文学名胜，双击进入城市专栏。</span>
           </div>
@@ -36,19 +52,38 @@
         <canvas ref="canvas3d" class="webgl-canvas"></canvas>
         
         <!-- Floating City Labels HTML Overlay -->
-        <div class="labels-overlay-3d">
+        <div class="labels-overlay-3d" v-show="showLabels">
           <div
             v-for="label in cityLabels"
             :key="label.name"
             v-show="label.visible"
             class="city-3d-label"
+            :class="[isReal ? 'label-theme-real' : 'label-theme-inkwash']"
             :style="{ left: `${label.x}px`, top: `${label.y}px` }"
             @click="clickLabel(label.name)"
           >
-            <div class="label-dot" :style="{ backgroundColor: label.colorHex }"></div>
-            <div class="label-line"></div>
-            <div class="label-box">
-              <span class="label-text">{{ label.name }}</span>
+            <!-- Chinese Heritage Plaque Card -->
+            <div class="label-plaque-card">
+              <div class="decor-corner corner-tl"></div>
+              <div class="decor-corner corner-tr"></div>
+              <div class="decor-corner corner-bl"></div>
+              <div class="decor-corner corner-br"></div>
+              
+              <div class="plaque-content">
+                <span class="plaque-name">{{ label.name }}</span>
+                <span class="plaque-divider"></span>
+                <span class="plaque-tag">{{ getCityData(label.name).tag }}</span>
+              </div>
+            </div>
+            
+            <!-- Elegant Gradient Connecting Line -->
+            <div class="label-connector-line"></div>
+            
+            <!-- Glowing Interactive Ripple Pin -->
+            <div class="label-glow-pin">
+              <span class="ring-pulse pulse-1" :style="{ borderColor: label.colorHex }"></span>
+              <span class="ring-pulse pulse-2" :style="{ borderColor: label.colorHex }"></span>
+              <div class="pin-dot" :style="{ backgroundColor: label.colorHex }"></div>
             </div>
           </div>
         </div>
@@ -152,6 +187,7 @@ const router = useRouter()
 const { isReal, isAnime } = useTheme()
 
 const cityLabels = ref([])
+const showLabels = ref(true)
 
 const clickLabel = (cityName) => {
   selectedCity.value = cityName
@@ -159,14 +195,21 @@ const clickLabel = (cityName) => {
   if (targetPin) {
     const startPos = camera.position.clone()
     const endPos = new THREE.Vector3(targetPin.position.x, targetPin.position.y + 3.5, targetPin.position.z + 5.0)
+    const startTarget = controls.target.clone()
+    const endTarget = targetPin.position.clone()
     
     let t = 0
     const animateCamera = () => {
       t += 0.05
       if (t <= 1.0) {
         camera.position.lerpVectors(startPos, endPos, t)
-        controls.target.lerpVectors(controls.target.clone(), targetPin.position, t)
+        controls.target.lerpVectors(startTarget, endTarget, t)
+        controls.update()
         requestAnimationFrame(animateCamera)
+      } else {
+        camera.position.copy(endPos)
+        controls.target.copy(endTarget)
+        controls.update()
       }
     }
     animateCamera()
@@ -225,11 +268,56 @@ const canvas3d = ref(null)
 const selectedCity = ref(null)
 let scene, camera, renderer, controls, animationFrameId
 const cityObjects = []
+let pointerDownRef = null
+
+// Clean up existing Three.js scene, renderer, and animation loop to prevent leaks
+const cleanupThree = () => {
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId)
+    animationFrameId = null
+  }
+  
+  if (renderer) {
+    if (renderer.domElement && pointerDownRef) {
+      renderer.domElement.removeEventListener('pointerdown', pointerDownRef)
+      pointerDownRef = null
+    }
+    renderer.dispose()
+    renderer = null
+  }
+  
+  if (scene) {
+    scene.traverse((object) => {
+      if (object.geometry) {
+        object.geometry.dispose()
+      }
+      
+      if (object.material) {
+        if (Array.isArray(object.material)) {
+          object.material.forEach((material) => material.dispose())
+        } else {
+          object.material.dispose()
+        }
+      }
+    })
+    scene = null
+  }
+  
+  if (controls) {
+    controls.dispose()
+    controls = null
+  }
+  
+  cityObjects.length = 0
+}
 
 // 3D coordinates for Shandong cities relative to [0, 0] plane
+// Correct aspect ratio calculation: longitude scale = latitude scale * cos(mean_latitude)
+// For Shandong (mean latitude ~36.4° N), cos(36.4°) ≈ 0.805
+// If latitude scale is 3.8, longitude scale should be 3.8 * 0.805 ≈ 3.06. This prevents horizontal stretching.
 const projectGeo = (lon, lat) => {
-  const x = (lon - 117.0) * 3.9
-  const z = -(lat - 36.4) * 3.0
+  const x = (lon - 117.0) * 3.06
+  const z = -(lat - 36.4) * 3.8
   return { x, z }
 }
 
@@ -246,17 +334,17 @@ const createCityShape = (coordinates) => {
   return shape
 }
 
-// Geographical coordinates (Lon, Lat) of core cities
+// Geographical coordinates (Lon, Lat) of core cities (accurate administrative centers)
 const cityGeoCoords = [
-  { name: '菏泽', lon: 115.43, lat: 35.24, color: 0xc23a2b },
-  { name: '济宁', lon: 116.59, lat: 35.41, color: 0xe69138 },
-  { name: '泰安', lon: 117.09, lat: 36.26, color: 0xd4af37 },
+  { name: '菏泽', lon: 115.48, lat: 35.23, color: 0xc23a2b },
+  { name: '济宁', lon: 116.59, lat: 35.38, color: 0xe69138 },
+  { name: '泰安', lon: 117.08, lat: 36.20, color: 0xd4af37 },
   { name: '聊城', lon: 115.97, lat: 36.45, color: 0x8e352e },
-  { name: '济南', lon: 116.99, lat: 36.67, color: 0x3d85c6 },
-  { name: '德州', lon: 116.36, lat: 37.45, color: 0x674ea7 },
-  { name: '淄博', lon: 118.05, lat: 36.78, color: 0x6aa84f },
+  { name: '济南', lon: 117.00, lat: 36.67, color: 0x3d85c6 },
+  { name: '德州', lon: 116.29, lat: 37.43, color: 0x674ea7 },
+  { name: '淄博', lon: 118.00, lat: 36.81, color: 0x6aa84f },
   { name: '滨州', lon: 118.02, lat: 37.37, color: 0x5b8c85 },
-  { name: '东营', lon: 118.67, lat: 37.43, color: 0x008080 }
+  { name: '东营', lon: 118.49, lat: 37.46, color: 0x008080 }
 ]
 
 const city3dCoords = cityGeoCoords.map(city => {
@@ -292,19 +380,25 @@ const guidePoints = new THREE.CatmullRomCurve3(
   river2dPoints.map(p => new THREE.Vector3(p.x, 0, p.z))
 ).getPoints(100)
 
+// Geographically accurate mountain centers
+const centerTai = projectGeo(117.09, 36.26)      // Mount Tai
+const centerYimeng = projectGeo(117.88, 35.53)   // Yimeng Range
+const centerJiaodong = projectGeo(121.39, 37.18) // Jiaodong Hills
+
 // Terrain height calculator based on geographic features of Shandong
 const getTerrainHeight = (x, z) => {
   const vx = x
   const vy = -z
   
+  // Bohai Bay & Yellow Sea bounds calculated based on coordinates
   let isSea = false
-  if (vx > 3.0 && vy > 2.5) {
+  if (vx > 4.5 && vy > 2.0) {
     isSea = true // Bohai Bay
-  } else if (vx > 6.0 && vy < -2.0) {
+  } else if (vx > 7.0 && vy < -1.5) {
     isSea = true // Yellow Sea
   }
   
-  if (isSea) return -0.4
+  if (isSea) return 0.05
   
   let height = 0
   
@@ -314,28 +408,34 @@ const getTerrainHeight = (x, z) => {
   noise += Math.sin(vx * 1.5) * Math.cos(vy * 1.3) * 0.03
   height += noise
   
-  // 2. Mountains (Mount Tai, Yimeng Range, Jiaodong Hills)
-  // Mount Tai around (-0.5, 1.2) -> vy: -1.2
-  const distToTai = Math.sqrt(Math.pow(vx - (-0.5), 2) + Math.pow(vy - (-1.2), 2))
+  // 2. Mountains (Mount Tai, Yimeng Range, Jiaodong Hills using projected centers)
+  // Mount Tai
+  const dxTai = vx - centerTai.x
+  const dyTai = vy - (-centerTai.z)
+  const distToTai = Math.sqrt(dxTai * dxTai + dyTai * dyTai)
   if (distToTai < 3.5) {
     height += 1.8 * Math.pow(1.0 - distToTai / 3.5, 2)
   }
   
-  // Yimeng Range around (2.0, -2.5)
-  const distToYimeng = Math.sqrt(Math.pow(vx - 2.0, 2) + Math.pow(vy - (-2.5), 2))
+  // Yimeng Range
+  const dxYimeng = vx - centerYimeng.x
+  const dyYimeng = vy - (-centerYimeng.z)
+  const distToYimeng = Math.sqrt(dxYimeng * dxYimeng + dyYimeng * dyYimeng)
   if (distToYimeng < 4.0) {
     height += 1.3 * Math.pow(1.0 - distToYimeng / 4.0, 2)
   }
   
-  // Jiaodong Hills around (7.5, -0.5)
-  const distToJiaodong = Math.sqrt(Math.pow(vx - 7.5, 2) + Math.pow(vy - (-0.5), 2))
+  // Jiaodong Hills
+  const dxJiaodong = vx - centerJiaodong.x
+  const dyJiaodong = vy - (-centerJiaodong.z)
+  const distToJiaodong = Math.sqrt(dxJiaodong * dxJiaodong + dyJiaodong * dyJiaodong)
   if (distToJiaodong < 3.0) {
     height += 0.6 * Math.pow(1.0 - distToJiaodong / 3.0, 2)
   }
   
   // 3. Plain flattening (Heze, Liaocheng, Dezhou)
-  if (vx < -3.5) {
-    const plainFade = Math.max(0, (vx + 8) / 4.5)
+  if (vx < -2.5) {
+    const plainFade = Math.max(0, (vx + 6.8) / 4.3)
     height *= plainFade
   }
   
@@ -358,11 +458,35 @@ const getTerrainHeight = (x, z) => {
   return height
 }
 
+// Hypsometric tinting color mapper based on realistic terrain features (actual geography)
+const getGeographyColor = (h) => {
+  const color = new THREE.Color()
+  if (h < -0.1) {
+    // Valley / lowlands: lush river basin green
+    color.setHSL(0.24, 0.22, 0.45 + (h + 0.3) * 0.2)
+  } else if (h < 0.3) {
+    // Plains: fertile green/yellowish green
+    const t = (h - (-0.1)) / 0.4
+    color.lerpColors(new THREE.Color('#94af76'), new THREE.Color('#b5c48f'), t)
+  } else if (h < 0.8) {
+    // Hills: warm ochre/olive
+    const t = (h - 0.3) / 0.5
+    color.lerpColors(new THREE.Color('#b5c48f'), new THREE.Color('#caba7d'), t)
+  } else {
+    // Mountains: rugged rock brown to snow cap white
+    const t = Math.min(1.0, (h - 0.8) / 1.0)
+    color.lerpColors(new THREE.Color('#9e7a59'), new THREE.Color('#e0dcd3'), t)
+  }
+  return color
+}
+
 // Complete Yellow River 3D path line (sitting inside the carved valley)
 const riverPoints = river2dPoints.map(p => new THREE.Vector3(p.x, getTerrainHeight(p.x, p.z) + 0.04, p.z))
 
 const initThree = (geojson) => {
   if (!canvas3d.value) return
+  
+  cleanupThree()
   
   const width = canvas3d.value.parentElement.clientWidth
   const height = canvas3d.value.parentElement.clientHeight
@@ -374,11 +498,12 @@ const initThree = (geojson) => {
   camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000)
   camera.position.set(0, 15, 15) // Top down orthographic-style angle
   
-  // 2. Renderer
+  // 2. Renderer with soft shadow optimization
   renderer = new THREE.WebGLRenderer({ canvas: canvas3d.value, antialias: true })
   renderer.setSize(width, height)
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.shadowMap.enabled = true
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap
   
   // 3. Orbit Controls
   controls = new OrbitControls(camera, renderer.domElement)
@@ -388,13 +513,23 @@ const initThree = (geojson) => {
   controls.minDistance = 5
   controls.maxDistance = 35
   
-  // 4. Lights
+  // 4. Lights & Geographically calibrated shadows
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
   scene.add(ambientLight)
   
   const dirLight = new THREE.DirectionalLight(0xfffdf6, 1.2)
   dirLight.position.set(5, 18, 5)
   dirLight.castShadow = true
+  dirLight.shadow.mapSize.width = 2048
+  dirLight.shadow.mapSize.height = 2048
+  dirLight.shadow.camera.near = 0.5
+  dirLight.shadow.camera.far = 40
+  const d = 15
+  dirLight.shadow.camera.left = -d
+  dirLight.shadow.camera.right = d
+  dirLight.shadow.camera.top = d
+  dirLight.shadow.camera.bottom = -d
+  dirLight.shadow.bias = -0.0005
   scene.add(dirLight)
   
   const pointLight = new THREE.PointLight(0xb8860b, 1.0, 20)
@@ -431,21 +566,28 @@ const initThree = (geojson) => {
       
       const cityColor = getCityColorVal(cityName)
       
-      // Create city 2D shape boundaries
+      // Create city 2D shape boundaries (filter out small islands/isolated points under 45 vertices)
       const shapes = []
       if (feature.geometry.type === 'Polygon') {
-        shapes.push(createCityShape(feature.geometry.coordinates[0]))
+        const coords = feature.geometry.coordinates[0]
+        if (coords.length >= 45) {
+          shapes.push(createCityShape(coords))
+        }
       } else if (feature.geometry.type === 'MultiPolygon') {
         feature.geometry.coordinates.forEach(poly => {
-          shapes.push(createCityShape(poly[0]))
+          const coords = poly[0]
+          if (coords.length >= 45) {
+            shapes.push(createCityShape(coords))
+          }
         })
       }
       
       if (shapes.length > 0) {
         const cityGeometry = new THREE.ExtrudeGeometry(shapes, extrudeSettings)
         
-        // Deform top surface of the city plate to follow the mountain/valley height-map
+        // Deform top surface of the city plate to follow the mountain/valley height-map and set vertex colors
         const pos = cityGeometry.attributes.position
+        const colors = new Float32Array(pos.count * 3)
         for (let i = 0; i < pos.count; i++) {
           const lx = pos.getX(i)
           const ly = pos.getY(i)
@@ -456,17 +598,25 @@ const initThree = (geojson) => {
           
           const terrainH = getTerrainHeight(wx, wz)
           
+          let vertexColor
           if (lz > 0.15) {
             pos.setZ(i, terrainH) // Top face follows terrain
+            vertexColor = getGeographyColor(terrainH)
           } else {
-            pos.setZ(i, -0.3)      // Bottom face is flat
+            pos.setZ(i, -0.6)      // Bottom face is flat
+            vertexColor = new THREE.Color('#4a3e3d') // Foundation rock color (dark basalt/slate)
           }
+          
+          colors[i * 3] = vertexColor.r
+          colors[i * 3 + 1] = vertexColor.g
+          colors[i * 3 + 2] = vertexColor.b
         }
+        cityGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
         cityGeometry.computeVertexNormals()
         
         const cityMaterial = new THREE.MeshStandardMaterial({
-          color: cityColor,
-          roughness: 0.85,
+          vertexColors: true,
+          roughness: 0.8,
           metalness: 0.05,
           flatShading: true
         })
@@ -496,10 +646,16 @@ const initThree = (geojson) => {
         }
         
         if (feature.geometry.type === 'Polygon') {
-          drawRing(feature.geometry.coordinates[0])
+          const coords = feature.geometry.coordinates[0]
+          if (coords.length >= 45) {
+            drawRing(coords)
+          }
         } else if (feature.geometry.type === 'MultiPolygon') {
           feature.geometry.coordinates.forEach(poly => {
-            drawRing(poly[0])
+            const coords = poly[0]
+            if (coords.length >= 45) {
+              drawRing(coords)
+            }
           })
         }
       }
@@ -515,7 +671,7 @@ const initThree = (geojson) => {
     })
     const seaMesh = new THREE.Mesh(seaGeometry, seaMaterial)
     seaMesh.rotation.x = -Math.PI / 2
-    seaMesh.position.y = -0.32
+    seaMesh.position.y = -0.4
     seaMesh.receiveShadow = true
     scene.add(seaMesh)
     
@@ -523,6 +679,7 @@ const initThree = (geojson) => {
     // Fallback: Rectangular terrain plane if GeoJSON is not loaded
     const mapGeometry = new THREE.PlaneGeometry(22, 14, 40, 40)
     const posAttribute = mapGeometry.attributes.position
+    const colors = new Float32Array(posAttribute.count * 3)
     for (let i = 0; i < posAttribute.count; i++) {
       const vx = posAttribute.getX(i)
       const vy = posAttribute.getY(i)
@@ -532,11 +689,17 @@ const initThree = (geojson) => {
         z += (3 - distToTai) * 0.6
       }
       posAttribute.setZ(i, z)
+      
+      const vertexColor = getGeographyColor(z)
+      colors[i * 3] = vertexColor.r
+      colors[i * 3 + 1] = vertexColor.g
+      colors[i * 3 + 2] = vertexColor.b
     }
+    mapGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
     mapGeometry.computeVertexNormals()
     
     const mapMaterial = new THREE.MeshStandardMaterial({
-      color: 0xede6da,
+      vertexColors: true,
       roughness: 0.8,
       metalness: 0.1,
       flatShading: true,
@@ -584,46 +747,79 @@ const initThree = (geojson) => {
   const riverPointsObj = new THREE.Points(dotGeometry, dotMaterial)
   scene.add(riverPointsObj)
   
-  // 7. Render City Nodes (glowing 3D pins on terrain surface)
+  // 7. Render City Nodes (holographic glowing markers)
   city3dCoords.forEach(city => {
-    // Pin group
     const pinGroup = new THREE.Group()
     const terrainHeight = getTerrainHeight(city.x, city.z)
     pinGroup.position.set(city.x, terrainHeight, city.z)
     pinGroup.name = city.name
     
-    // Glowing sphere
-    const sphereGeom = new THREE.SphereGeometry(0.24, 16, 16)
-    const sphereMat = new THREE.MeshStandardMaterial({
+    // 1) Volumetric light beam
+    const beamGeom = new THREE.CylinderGeometry(0.04, 0.06, 1.2, 12, 1, true)
+    const beamMat = new THREE.MeshBasicMaterial({
+      color: city.color,
+      transparent: true,
+      opacity: 0.32,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending
+    })
+    const beamMesh = new THREE.Mesh(beamGeom, beamMat)
+    beamMesh.position.y = 0.6
+    pinGroup.add(beamMesh)
+    
+    // 2) Floating spinning crystal octahedron (diamond)
+    const octaGeom = new THREE.OctahedronGeometry(0.18, 0)
+    const octaMat = new THREE.MeshStandardMaterial({
       color: city.color,
       emissive: city.color,
-      emissiveIntensity: 0.6,
-      roughness: 0.2
+      emissiveIntensity: 0.7,
+      roughness: 0.15,
+      metalness: 0.9,
+      flatShading: true
     })
-    const sphereMesh = new THREE.Mesh(sphereGeom, sphereMat)
-    sphereMesh.position.y = 0.4
-    sphereMesh.castShadow = true
-    pinGroup.add(sphereMesh)
+    const octaMesh = new THREE.Mesh(octaGeom, octaMat)
+    octaMesh.position.y = 1.3
+    octaMesh.castShadow = true
+    pinGroup.add(octaMesh)
     
-    // Little stand pole
-    const cylGeom = new THREE.CylinderGeometry(0.04, 0.04, 0.4, 8)
-    const cylMat = new THREE.MeshBasicMaterial({ color: 0x4b382a })
-    const cylMesh = new THREE.Mesh(cylGeom, cylMat)
-    cylMesh.position.y = 0.2
-    pinGroup.add(cylMesh)
-    
-    // Bottom ripple ring
-    const ringGeom = new THREE.RingGeometry(0.1, 0.4, 32)
+    // 3) Holographic outer ring (ticks)
+    const ringGeom = new THREE.RingGeometry(0.2, 0.26, 32)
     const ringMat = new THREE.MeshBasicMaterial({
+      color: city.color,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.65
+    })
+    const ringMesh = new THREE.Mesh(ringGeom, ringMat)
+    ringMesh.rotation.x = -Math.PI / 2
+    ringMesh.position.y = 0.01
+    pinGroup.add(ringMesh)
+    
+    // 4) Holographic inner ring (compass pointer)
+    const innerRingGeom = new THREE.RingGeometry(0.08, 0.13, 4, 1)
+    const innerRingMat = new THREE.MeshBasicMaterial({
+      color: city.color,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.75
+    })
+    const innerRingMesh = new THREE.Mesh(innerRingGeom, innerRingMat)
+    innerRingMesh.rotation.x = -Math.PI / 2
+    innerRingMesh.position.y = 0.015
+    pinGroup.add(innerRingMesh)
+    
+    // 5) Expanding pulse ring
+    const rippleGeom = new THREE.RingGeometry(0.1, 0.5, 32)
+    const rippleMat = new THREE.MeshBasicMaterial({
       color: city.color,
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0.4
     })
-    const ringMesh = new THREE.Mesh(ringGeom, ringMat)
-    ringMesh.rotation.x = -Math.PI / 2
-    ringMesh.position.y = 0.02
-    pinGroup.add(ringMesh)
+    const rippleMesh = new THREE.Mesh(rippleGeom, rippleMat)
+    rippleMesh.rotation.x = -Math.PI / 2
+    rippleMesh.position.y = 0.005
+    pinGroup.add(rippleMesh)
     
     scene.add(pinGroup)
     cityObjects.push(pinGroup)
@@ -677,14 +873,21 @@ const initThree = (geojson) => {
           // Camera flies smoothly closer
           const startPos = camera.position.clone()
           const endPos = new THREE.Vector3(targetPin.position.x, targetPin.position.y + 3.5, targetPin.position.z + 5.0)
+          const startTarget = controls.target.clone()
+          const endTarget = targetPin.position.clone()
           
           let t = 0
           const animateCamera = () => {
             t += 0.05
             if (t <= 1.0) {
               camera.position.lerpVectors(startPos, endPos, t)
-              controls.target.lerpVectors(controls.target.clone(), targetPin.position, t)
+              controls.target.lerpVectors(startTarget, endTarget, t)
+              controls.update()
               requestAnimationFrame(animateCamera)
+            } else {
+              camera.position.copy(endPos)
+              controls.target.copy(endTarget)
+              controls.update()
             }
           }
           animateCamera()
@@ -694,6 +897,7 @@ const initThree = (geojson) => {
   }
   
   renderer.domElement.addEventListener('pointerdown', onPointerDown)
+  pointerDownRef = onPointerDown
   
   // 9. Animation Loop
   let clock = new THREE.Clock()
@@ -713,17 +917,34 @@ const initThree = (geojson) => {
     }
     riverPointsObj.geometry.attributes.position.needsUpdate = true
     
-    // Animate city rings and nodes (slow rotations/pulsing)
+    // Animate holographic city markers (rotation, hover, pulsing)
     cityObjects.forEach((pin, index) => {
-      // Little vertical hover bounce
-      const sphere = pin.children[0]
-      sphere.position.y = 0.4 + Math.sin(elapsedTime * 2 + index) * 0.06
+      const diamond = pin.children[1]
+      const outerRing = pin.children[2]
+      const innerRing = pin.children[3]
+      const ripple = pin.children[4]
       
-      // Expand bottom ripple rings
-      const ring = pin.children[2]
-      const scaleVal = 1.0 + (elapsedTime + index * 0.5) % 1.5
-      ring.scale.set(scaleVal, scaleVal, 1)
-      ring.material.opacity = 0.5 * (1.0 - (scaleVal - 1.0) / 1.5)
+      // 1) Spin and float the diamond
+      if (diamond) {
+        diamond.position.y = 1.25 + Math.sin(elapsedTime * 1.8 + index) * 0.08
+        diamond.rotation.y = elapsedTime * 1.6 + index
+        diamond.rotation.x = elapsedTime * 0.4
+      }
+      
+      // 2) Rotate base compass rings in opposite directions
+      if (outerRing) {
+        outerRing.rotation.z = elapsedTime * 0.6
+      }
+      if (innerRing) {
+        innerRing.rotation.z = -elapsedTime * 1.1
+      }
+      
+      // 3) Expand and fade the bottom ripple ring
+      if (ripple) {
+        const scaleVal = 1.0 + (elapsedTime + index * 0.5) % 1.5
+        ripple.scale.set(scaleVal, scaleVal, 1)
+        ripple.material.opacity = 0.45 * (1.0 - (scaleVal - 1.0) / 1.5)
+      }
     })
     
     // Update labels projection
@@ -734,9 +955,9 @@ const initThree = (geojson) => {
       const newLabels = city3dCoords.map(city => {
         const targetPin = cityObjects.find(c => c.name === city.name)
         const terrainY = targetPin ? targetPin.position.y : 0
-        const sphereLocalY = targetPin ? targetPin.children[0].position.y : 0.4
+        const sphereLocalY = targetPin && targetPin.children[1] ? targetPin.children[1].position.y : 1.3
         
-        const tempV = new THREE.Vector3(city.x, terrainY + sphereLocalY + 0.35, city.z)
+        const tempV = new THREE.Vector3(city.x, terrainY + sphereLocalY + 0.3, city.z)
         tempV.project(camera)
         
         const visible = tempV.z <= 1
@@ -764,12 +985,7 @@ const initThree = (geojson) => {
   
   tick()
   
-  // Clean up listener
-  onBeforeUnmount(() => {
-    if (renderer && renderer.domElement) {
-      renderer.domElement.removeEventListener('pointerdown', onPointerDown)
-    }
-  })
+  // Listener cleanup handled globally by cleanupThree
 }
 
 // Window resizing
@@ -798,8 +1014,7 @@ watch(isReal, (newVal) => {
     }, 150)
   } else {
     window.removeEventListener('resize', handleResize)
-    cancelAnimationFrame(animationFrameId)
-    if (chartInstance) chartInstance.dispose()
+    cleanupThree()
   }
 })
 
@@ -821,7 +1036,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize)
-  cancelAnimationFrame(animationFrameId)
+  cleanupThree()
 })
 </script>
 
@@ -907,6 +1122,41 @@ onBeforeUnmount(() => {
   background: rgba(0, 0, 0, 0.02);
   border-radius: 4px;
   padding: 12px 8px;
+}
+
+.hud-actions {
+  margin-bottom: 20px;
+}
+
+.action-btn-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(184, 134, 11, 0.08);
+  border: 1px solid rgba(184, 134, 11, 0.25);
+  border-radius: var(--radius-sm);
+  color: var(--accent-dark);
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.action-btn-toggle:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(184, 134, 11, 0.15);
+}
+
+.action-icon {
+  width: 16px;
+  height: 16px;
 }
 
 .stat-item {
@@ -1316,45 +1566,224 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   user-select: none;
+  animation: labelFadeIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.label-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  border: 1.5px solid #fff;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+@keyframes labelFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -85%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -100%) scale(1);
+  }
 }
 
-.label-line {
+/* Plaque Card styling */
+.label-plaque-card {
+  position: relative;
+  padding: 6px 14px;
+  min-width: 120px;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Theme specific colors */
+.label-theme-real .label-plaque-card {
+  background: rgba(253, 250, 245, 0.94);
+  border: 1px solid var(--accent-light);
+}
+
+.label-theme-inkwash .label-plaque-card {
+  background: rgba(26, 26, 26, 0.92);
+  border: 1px solid var(--accent);
+}
+
+/* Hover effects */
+.city-3d-label:hover .label-plaque-card {
+  transform: translateY(-5px) scale(1.06);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+.label-theme-real:hover .label-plaque-card {
+  border-color: var(--accent);
+  background: #ffffff;
+}
+
+.label-theme-inkwash:hover .label-plaque-card {
+  border-color: #ffffff;
+  background: #111111;
+}
+
+/* Decorative Chinese Plaque Corners */
+.decor-corner {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border: 1.5px solid transparent;
+  pointer-events: none;
+}
+
+.label-theme-real .decor-corner {
+  border-color: var(--accent-light);
+}
+
+.label-theme-inkwash .decor-corner {
+  border-color: var(--accent);
+}
+
+/* TL, TR, BL, BR corners */
+.corner-tl { top: 3px; left: 3px; border-right: 0; border-bottom: 0; }
+.corner-tr { top: 3px; right: 3px; border-left: 0; border-bottom: 0; }
+.corner-bl { bottom: 3px; left: 3px; border-right: 0; border-top: 0; }
+.corner-br { bottom: 3px; right: 3px; border-left: 0; border-top: 0; }
+
+.city-3d-label:hover .decor-corner {
+  border-color: currentColor;
+}
+
+.label-theme-real:hover .decor-corner {
+  border-color: var(--accent);
+}
+
+.label-theme-inkwash:hover .decor-corner {
+  border-color: #ffffff;
+}
+
+/* Plaque Content */
+.plaque-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.plaque-name {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.label-theme-real .plaque-name {
+  color: var(--text-primary);
+}
+
+.label-theme-inkwash .plaque-name {
+  color: #ffffff;
+}
+
+.plaque-divider {
   width: 1px;
-  height: 14px;
+  height: 12px;
+  background: var(--border);
+}
+
+.label-theme-inkwash .plaque-divider {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.plaque-tag {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.label-theme-real .plaque-tag {
+  color: var(--accent-dark);
+  background: rgba(184, 134, 11, 0.12);
+}
+
+.label-theme-inkwash .plaque-tag {
+  color: #e85d4f;
+  background: rgba(194, 58, 43, 0.15);
+}
+
+/* Connecting Line */
+.label-connector-line {
+  width: 1.5px;
+  height: 24px;
+  background: linear-gradient(to bottom, var(--accent-light), transparent);
+  transition: all 0.3s ease;
+}
+
+.label-theme-inkwash .label-connector-line {
   background: linear-gradient(to bottom, var(--accent), transparent);
 }
 
-.label-box {
-  background: rgba(61, 43, 31, 0.82); /* Deep warm brown matches theme */
-  border: 1px solid var(--accent-light);
-  padding: 4px 10px;
-  border-radius: 4px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(4px);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+.city-3d-label:hover .label-connector-line {
+  height: 30px;
+  background: linear-gradient(to bottom, var(--accent), transparent);
 }
 
-.city-3d-label:hover .label-box {
-  background: var(--accent);
-  border-color: #fff;
-  transform: scale(1.08) translateY(-2px);
-  box-shadow: 0 6px 16px rgba(142, 53, 46, 0.3);
+.label-theme-inkwash:hover .label-connector-line {
+  background: linear-gradient(to bottom, #ffffff, transparent);
 }
 
-.label-text {
-  font-family: var(--font-heading);
-  font-size: 11px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 2px;
-  line-height: 1;
+/* Glow Pin Base */
+.label-glow-pin {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pin-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+  z-index: 2;
+  transition: transform 0.3s ease;
+}
+
+.city-3d-label:hover .pin-dot {
+  transform: scale(1.3);
+}
+
+/* Breathing Rings */
+.ring-pulse {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 1.5px solid;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.pulse-1 {
+  animation: pulseAnimation 2s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+}
+
+.pulse-2 {
+  animation: pulseAnimation 2s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+  animation-delay: 1s;
+}
+
+@keyframes pulseAnimation {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
 }
 </style>
