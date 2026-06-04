@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "@antv/g6": "^5.1.1",
@@ -17,7 +18,9 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.39.2",
     "@vitejs/plugin-vue": "^6.0.6",
-    "vite": "^8.0.12"
+    "vite": "^8.0.12",
+    "wrangler": "^4.97.0"
   }
 }
