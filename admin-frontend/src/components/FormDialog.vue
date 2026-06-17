@@ -37,7 +37,7 @@ watch(() => props.visible, (val) => {
 
 watch(() => props.initialData, (val) => {
   if (props.visible && val) {
-    form.value = { ...form.value, ...val }
+    Object.assign(form.value, val)
   }
 }, { deep: true })
 

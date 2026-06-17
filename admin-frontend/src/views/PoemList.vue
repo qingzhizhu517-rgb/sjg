@@ -2,8 +2,23 @@
   <div class="page-container">
     <div class="page-title">诗词管理</div>
     <DataTable ref="table" :fetchFn="fetchPoems" @add="openAdd" @edit="openEdit" @delete="handleDelete" @import="showImport = true">
-      <el-table-column prop="id" label="ID" width="70" />
-      <el-table-column prop="title" label="标题" width="200" />
+      <el-table-column type="index" label="序号" width="70" />
+      <el-table-column prop="title" label="标题" width="150" show-overflow-tooltip />
+      <el-table-column label="作者" width="110">
+        <template #default="{ row }">
+          {{ getPoetName(row.poetId) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="朝代" width="90">
+        <template #default="{ row }">
+          {{ getDynastyName(row.dynastyId) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="创作地点" width="130" show-overflow-tooltip>
+        <template #default="{ row }">
+          {{ getSpotName(row.spotId) }}
+        </template>
+      </el-table-column>
       <el-table-column prop="content" label="内容" show-overflow-tooltip />
     </DataTable>
 
@@ -66,6 +81,21 @@ const showImport = ref(false)
 const poets = ref([])
 const dynasties = ref([])
 const spots = ref([])
+
+const getPoetName = (id) => {
+  const p = poets.value.find(item => item.id === id)
+  return p ? p.name : id || '—'
+}
+
+const getDynastyName = (id) => {
+  const d = dynasties.value.find(item => item.id === id)
+  return d ? d.name : id || '—'
+}
+
+const getSpotName = (id) => {
+  const s = spots.value.find(item => item.id === id)
+  return s ? s.name : id || '—'
+}
 
 const fetchPoems = (page, size, keyword) => api.get('/admin/poems', { params: { page, size, keyword } })
 const openAdd = () => { isEdit.value = false; current.value = {}; dialogVisible.value = true }

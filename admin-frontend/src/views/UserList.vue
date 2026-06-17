@@ -9,7 +9,7 @@
       <el-tab-pane label="已禁用" name="disabled" />
     </el-tabs>
     <DataTable ref="table" :fetchFn="fetchUsers">
-      <el-table-column prop="id" label="ID" width="70" />
+      <el-table-column type="index" label="序号" width="70" />
       <el-table-column prop="username" label="用户名" width="150" />
       <el-table-column prop="role" label="角色" width="100">
         <template #default="{ row }">

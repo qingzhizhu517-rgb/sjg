@@ -2,13 +2,13 @@
   <div class="page-container">
     <div class="page-title">诗人管理</div>
     <DataTable ref="table" :fetchFn="fetchPoets" @add="openAdd" @edit="openEdit" @delete="handleDelete" @import="showImport = true">
-      <el-table-column prop="id" label="ID" width="70" />
+      <el-table-column type="index" label="序号" width="70" />
       <el-table-column prop="name" label="姓名" width="120" />
       <el-table-column prop="birthplace" label="籍贯" min-width="150" />
       <el-table-column prop="style" label="风格" min-width="150" />
       <el-table-column label="头像" width="80">
         <template #default="{ row }">
-          <el-image v-if="row.avatarUrl" :src="row.avatarUrl" style="width: 48px; height: 48px; border-radius: 4px;" fit="cover" />
+          <el-image v-if="getFirstImage(row.avatarUrl)" :src="getFirstImage(row.avatarUrl)" style="width: 48px; height: 48px; border-radius: 4px;" fit="cover" />
           <div v-else class="avatar-placeholder">
             <el-icon><User /></el-icon>
           </div>
@@ -49,26 +49,10 @@
           <el-input v-model="form.biography" type="textarea" :rows="4" placeholder="请输入诗人生平简介" />
         </el-form-item>
         <el-form-item label="头像(真实)">
-          <el-upload :show-file-list="false" :http-request="uploadAvatar" accept="image/*">
-            <div class="upload-area">
-              <el-image v-if="form.avatarUrl" :src="form.avatarUrl" class="preview-img" fit="contain" />
-              <div v-else class="upload-placeholder">
-                <el-icon><Plus /></el-icon>
-                <span>上传头像</span>
-              </div>
-            </div>
-          </el-upload>
+          <MultiImageUpload v-model="form.avatarUrlArray" directory="poets" />
         </el-form-item>
         <el-form-item label="头像(动漫)">
-          <el-upload :show-file-list="false" :http-request="uploadAvatarAnime" accept="image/*">
-            <div class="upload-area">
-              <el-image v-if="form.avatarAnimeUrl" :src="form.avatarAnimeUrl" class="preview-img" fit="contain" />
-              <div v-else class="upload-placeholder">
-                <el-icon><Plus /></el-icon>
-                <span>上传头像</span>
-              </div>
-            </div>
-          </el-upload>
+          <MultiImageUpload v-model="form.avatarAnimeUrlArray" directory="poets/anime" />
         </el-form-item>
       </template>
     </FormDialog>
@@ -84,6 +68,7 @@ import api from '../api'
 import DataTable from '../components/DataTable.vue'
 import FormDialog from '../components/FormDialog.vue'
 import ImportDialog from '../components/ImportDialog.vue'
+import MultiImageUpload from '../components/MultiImageUpload.vue'
 
 const table = ref(null)
 const dialogVisible = ref(false)
@@ -92,17 +77,80 @@ const currentPoet = ref({})
 const showImport = ref(false)
 const dynasties = ref([])
 
+const getFirstImage = (json) => {
+  if (!json) return ''
+  try {
+    const arr = JSON.parse(json)
+    if (Array.isArray(arr)) {
+      return arr.length > 0 ? arr[0] : ''
+    }
+    if (typeof arr === 'string' && arr.trim() !== '' && arr !== '[]') {
+      return arr
+    }
+    return ''
+  } catch {
+    if (typeof json === 'string') {
+      const trimmed = json.trim()
+      if (trimmed === '[]' || trimmed === '') return ''
+      return trimmed
+    }
+    return ''
+  }
+}
+
+const parseImageUrls = (json) => {
+  if (!json) return []
+  if (Array.isArray(json)) return json
+  try {
+    const arr = JSON.parse(json)
+    if (Array.isArray(arr)) {
+      return arr.filter(url => typeof url === 'string' && url.trim() !== '')
+    }
+    if (typeof arr === 'string' && arr.trim() !== '') {
+      return [arr.trim()]
+    }
+    return []
+  } catch {
+    if (typeof json === 'string') {
+      const trimmed = json.trim()
+      if (trimmed === '' || trimmed === '[]') return []
+      return [trimmed]
+    }
+    return []
+  }
+}
+
 const fetchPoets = (page, size, keyword) =>
   api.get('/admin/poets', { params: { page, size, keyword } })
 
-const openAdd = () => { isEdit.value = false; currentPoet.value = {}; dialogVisible.value = true }
-const openEdit = (row) => { isEdit.value = true; currentPoet.value = { ...row }; dialogVisible.value = true }
+const openAdd = () => {
+  isEdit.value = false
+  currentPoet.value = { avatarUrlArray: [], avatarAnimeUrlArray: [] }
+  dialogVisible.value = true
+}
+
+const openEdit = (row) => {
+  isEdit.value = true
+  currentPoet.value = {
+    ...row,
+    avatarUrlArray: parseImageUrls(row.avatarUrl),
+    avatarAnimeUrlArray: parseImageUrls(row.avatarAnimeUrl)
+  }
+  dialogVisible.value = true
+}
 
 const handleSubmit = async (form) => {
+  const payload = {
+    ...form,
+    avatarUrl: JSON.stringify(form.avatarUrlArray || []),
+    avatarAnimeUrl: JSON.stringify(form.avatarAnimeUrlArray || [])
+  }
+  delete payload.avatarUrlArray
+  delete payload.avatarAnimeUrlArray
   if (isEdit.value) {
-    await api.put(`/admin/poets/${form.id}`, form)
+    await api.put(`/admin/poets/${form.id}`, payload)
   } else {
-    await api.post('/admin/poets', form)
+    await api.post('/admin/poets', payload)
   }
   ElMessage.success(isEdit.value ? '更新成功' : '创建成功')
 }
@@ -111,24 +159,6 @@ const handleDelete = async (row) => {
   await api.delete(`/admin/poets/${row.id}`)
   ElMessage.success('删除成功')
   table.value.fetch()
-}
-
-const uploadAvatar = async ({ file }) => {
-  const formData = new FormData()
-  formData.append('file', file)
-  formData.append('directory', 'poets')
-  const { url } = await api.post('/admin/upload', formData)
-  currentPoet.value.avatarUrl = url
-  ElMessage.success('上传成功')
-}
-
-const uploadAvatarAnime = async ({ file }) => {
-  const formData = new FormData()
-  formData.append('file', file)
-  formData.append('directory', 'poets/anime')
-  const { url } = await api.post('/admin/upload', formData)
-  currentPoet.value.avatarAnimeUrl = url
-  ElMessage.success('上传成功')
 }
 
 const importPoets = async (formData) => {
@@ -152,42 +182,5 @@ api.get('/public/timeline').then(data => {
   justify-content: center;
   color: var(--text-muted);
   font-size: 20px;
-}
-
-.upload-area {
-  width: 120px;
-  height: 120px;
-  border: 1px dashed var(--border-medium);
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all var(--transition-normal);
-  background: #FAFAF5;
-  overflow: hidden;
-}
-
-.upload-area:hover {
-  border-color: var(--color-zhu);
-  background: #FDF9F2;
-}
-
-.upload-area .preview-img {
-  width: 100%;
-  height: 100%;
-}
-
-.upload-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-muted);
-  font-size: 13px;
-}
-
-.upload-placeholder .el-icon {
-  font-size: 24px;
 }
 </style>
