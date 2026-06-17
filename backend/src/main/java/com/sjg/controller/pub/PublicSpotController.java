@@ -1,5 +1,6 @@
 package com.sjg.controller.pub;
 
+import com.sjg.dto.Result;
 import com.sjg.entity.ScenicSpot;
 import com.sjg.entity.Poem;
 import com.sjg.service.SpotService;
@@ -9,9 +10,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,7 +40,7 @@ public class PublicSpotController {
      */
     @Operation(summary = "分页查询景点列表", description = "查询景点列表并附带每个景点的关联诗词数量，支持区域筛选")
     @GetMapping
-    public ResponseEntity<?> list(
+    public ResponseEntity<Result<Map<String, Object>>> list(
             @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页数量", example = "20") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "区域筛选", example = "济南") @RequestParam(required = false) String region) {
@@ -59,7 +60,7 @@ public class PublicSpotController {
             map.put("poemCount", poemCount);
             return map;
         }).collect(Collectors.toList());
-        return ResponseEntity.ok(Map.of("records", enriched, "total", result.getTotal()));
+        return ResponseEntity.ok(Result.success(Map.of("records", enriched, "total", result.getTotal())));
     }
 
     /**
@@ -67,10 +68,12 @@ public class PublicSpotController {
      */
     @Operation(summary = "查询景点详情", description = "根据景点ID查询详情，同时返回关联的诗词列表")
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(
+    public ResponseEntity<Result<Map<String, Object>>> getById(
             @Parameter(description = "景点ID", example = "1", required = true) @PathVariable Long id) {
         ScenicSpot spot = spotService.getById(id);
-        if (spot == null) return ResponseEntity.notFound().build();
+        if (spot == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.error(404, "景点不存在"));
+        }
 
         List<Poem> poems = poemMapper.selectList(
             new LambdaQueryWrapper<Poem>().eq(Poem::getSpotId, id));
@@ -78,7 +81,7 @@ public class PublicSpotController {
         Map<String, Object> result = new HashMap<>();
         result.put("spot", spot);
         result.put("poems", poems);
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(Result.success(result));
     }
 
     /**
@@ -86,13 +89,13 @@ public class PublicSpotController {
      */
     @Operation(summary = "获取区域列表", description = "返回所有预设区域及其景点数量统计")
     @GetMapping("/regions")
-    public ResponseEntity<?> regions() {
+    public ResponseEntity<Result<List<Map<String, Object>>>> regions() {
         String[] regions = {"菏泽", "济宁", "泰安", "聊城", "济南", "德州", "滨州", "淄博", "东营"};
         List<Map<String, Object>> regionList = new ArrayList<>();
         for (String region : regions) {
             Long count = spotService.list(1, 1, null, region).getTotal();
             regionList.add(Map.of("name", region, "spotCount", count));
         }
-        return ResponseEntity.ok(regionList);
+        return ResponseEntity.ok(Result.success(regionList));
     }
 }

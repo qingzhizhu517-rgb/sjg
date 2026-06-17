@@ -2,6 +2,7 @@ package com.sjg.service;
 
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
+import com.aliyun.oss.model.ObjectMetadata;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,8 +42,10 @@ public class OssService {
                 ? originalFilename.substring(originalFilename.lastIndexOf("."))
                 : "";
         String objectName = directory + "/" + UUID.randomUUID() + extension;
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setHeader("x-oss-object-acl", "public-read");
         try (var is = file.getInputStream()) {
-            ossClient.putObject(bucketName, objectName, is);
+            ossClient.putObject(bucketName, objectName, is, metadata);
         }
         return "https://" + bucketName + "." + endpoint + "/" + objectName;
     }

@@ -19,7 +19,15 @@
       </div>
     </div>
 
-    <div v-if="!timeline.length && loaded" class="empty-state">
+    <div v-if="errorMsg" class="error-state">
+      <div class="error-content">
+        <p class="error-icon">!</p>
+        <p class="error-text">{{ errorMsg }}</p>
+        <button class="error-retry-btn" @click="loadTimeline">重新加载</button>
+      </div>
+    </div>
+
+    <div v-else-if="!timeline.length && loaded" class="empty-state">
       <p>暂无朝代数据</p>
     </div>
   </div>
@@ -32,10 +40,22 @@ import TimelineItem from '../components/TimelineItem.vue'
 
 const timeline = ref([])
 const loaded = ref(false)
+const errorMsg = ref(null)
 
-onMounted(async () => {
-  timeline.value = await api.get('/timeline')
-  loaded.value = true
+const loadTimeline = async () => {
+  errorMsg.value = null
+  try {
+    timeline.value = await api.get('/timeline')
+  } catch (err) {
+    console.error('加载朝代时间线失败:', err)
+    errorMsg.value = '加载朝代数据失败，请稍后重试'
+  } finally {
+    loaded.value = true
+  }
+}
+
+onMounted(() => {
+  loadTimeline()
 })
 </script>
 
@@ -83,4 +103,51 @@ onMounted(async () => {
   color: var(--text-muted);
   font-size: 15px;
 }
+
+/* Error state */
+.error-state {
+  text-align: center;
+  padding: 80px 0;
+}
+
+.error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.error-icon {
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--accent);
+  margin-bottom: 16px;
+  opacity: 0.6;
+  line-height: 1;
+}
+
+.error-text {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+.error-retry-btn {
+  font-size: 14px;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid var(--border);
+  padding: 8px 20px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  letter-spacing: 1px;
+  transition: all 0.3s;
+}
+
+.error-retry-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 </style>

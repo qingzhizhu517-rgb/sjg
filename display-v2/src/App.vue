@@ -139,7 +139,7 @@
     <main class="main-content">
       <router-view v-slot="{ Component }">
         <transition name="page-slide" mode="out-in">
-          <component :is="Component" :key="$route.fullPath + theme" />
+          <component :is="Component" :key="$route.fullPath" />
         </transition>
       </router-view>
     </main>
@@ -260,7 +260,7 @@ onUnmounted(() => {
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.theme-inkwash class.main-header,
+.theme-inkwash.main-header,
 .theme-inkwash .main-header {
   background: rgba(244, 239, 228, 0.85);
   border-bottom: 1px solid rgba(200, 192, 176, 0.3);

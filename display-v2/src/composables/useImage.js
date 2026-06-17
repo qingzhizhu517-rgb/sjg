@@ -1,15 +1,39 @@
 export function useImage() {
+  const OSS_BASE = import.meta.env.VITE_OSS_BUCKET_URL || ''
+
+  // 从 JSON 数组字符串或单值中提取第一个 URL
+  const parseFirstUrl = (val) => {
+    if (!val) return null
+    if (typeof val === 'string') {
+      // JSON 数组：'["https://oss.../a.jpg", "https://oss.../b.jpg"]'
+      if (val.startsWith('[')) {
+        try {
+          const arr = JSON.parse(val)
+          if (Array.isArray(arr) && arr.length > 0) return arr[0]
+        } catch { /* fall through */ }
+      }
+      // 以 http 开头的裸 URL
+      if (val.startsWith('https://') || val.startsWith('http://')) return val
+      // 本地路径
+      if (val.startsWith('/')) return val
+    }
+    return null
+  }
+
   const getImageUrl = (url, isAnime = false) => {
     if (!url) return getPlaceholder(isAnime)
-    
-    // Clean and replace OSS prefix
-    let localPath = url.replace('https://shandong-lit-landscape.oss-cn-beijing.aliyuncs.com', '/images')
-    
-    // Normalize extensions to .jpg for local assets
-    localPath = localPath.replace('.png', '.jpg')
-    
-    // Check if we have the file locally
-    const availableFiles = [
+
+    // 解析可能的 JSON 数组格式
+    const parsed = parseFirstUrl(url)
+    if (!parsed) return getPlaceholder(isAnime)
+
+    // OSS 完整 URL → 直接用
+    if (parsed.startsWith('https://') || parsed.startsWith('http://')) {
+      return parsed
+    }
+
+    // 本地 /images/ 相对路径 → 检查本地白名单
+    const availableFiles = new Set([
       '/images/poets/li_bai.jpg',
       '/images/poets/li_bai_anime.jpg',
       '/images/poets/du_fu.jpg',
@@ -34,38 +58,19 @@ export function useImage() {
       '/images/spots/sulu_tomb_anime.jpg',
       '/images/spots/wei_manor_anime.jpg',
       '/images/spots/peony_garden_anime.jpg'
-    ]
-    
-    // If it's anime theme, try to get the anime version
-    if (isAnime) {
-      let animePath = localPath
-      if (!animePath.includes('_anime')) {
-        animePath = animePath.replace('.jpg', '_anime.jpg')
-      }
-      if (availableFiles.includes(animePath)) {
-        return animePath
-      }
-    } else {
-      // If it's real theme, try to get the real version
-      let realPath = localPath.replace('_anime.jpg', '.jpg')
-      if (availableFiles.includes(realPath)) {
-        return realPath
-      }
+    ])
+
+    let localPath = parsed.replace('.png', '.jpg')
+
+    if (isAnime && !localPath.includes('_anime')) {
+      localPath = localPath.replace('.jpg', '_anime.jpg')
     }
-    
-    // Check if original/normalized path is available directly
-    if (availableFiles.includes(localPath)) {
+
+    if (availableFiles.has(localPath)) {
       return localPath
     }
-    
-    // Fallback logic for missing assets to maintain gorgeous visual exhibition
-    if (localPath.includes('/poets/')) {
-      return isAnime ? '/images/poets/li_bai_anime.jpg' : '/images/poets/li_bai.jpg'
-    } else if (localPath.includes('/spots/')) {
-      return isAnime ? '/images/spots/baotu_spring_anime.jpg' : '/images/spots/baotu_spring.jpg'
-    }
-    
-    return localPath
+
+    return getPlaceholder(isAnime)
   }
 
   const getPlaceholder = (isAnime = false) => {

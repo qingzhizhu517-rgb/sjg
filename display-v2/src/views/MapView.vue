@@ -2,6 +2,15 @@
   <div class="map-view" :class="{ 'anime-layout': isAnime }" @mousemove="handleMouseMove" @mouseleave="resetParallax">
     <!-- 双主题布局容器 -->
 
+    <!-- 错误状态 -->
+    <div v-if="errorMsg" class="map-error-state">
+      <div class="error-overlay">
+        <p class="error-icon">!</p>
+        <p class="error-text">{{ errorMsg }}</p>
+        <button class="error-retry-btn" @click="retryLoadMap">重新加载</button>
+      </div>
+    </div>
+
     <!-- WRITE-UP 3D REAL THEME -->
     <div class="real-3d-container" v-if="isReal">
       <div class="hud-panel left-hud animate-slide-in">
@@ -175,7 +184,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
 import { mockCities } from '../config/mockDetailData'
@@ -188,6 +197,7 @@ const { isReal, isAnime } = useTheme()
 
 const cityLabels = ref([])
 const showLabels = ref(true)
+const errorMsg = ref(null)
 
 const clickLabel = (cityName) => {
   selectedCity.value = cityName
@@ -999,38 +1009,65 @@ const handleResize = () => {
   }
 }
 
+// Cache GeoJSON to avoid redundant fetch on theme switch
+let cachedGeojson = null
+let geojsonLoading = null
+
+const loadGeojson = async () => {
+  if (cachedGeojson !== null) return cachedGeojson
+  if (geojsonLoading) return geojsonLoading
+  geojsonLoading = (async () => {
+    try {
+      const response = await fetch('/shandong.json')
+      cachedGeojson = await response.json()
+      return cachedGeojson
+    } catch (e) {
+      console.error('Error loading shandong.json:', e)
+      cachedGeojson = null
+      return null
+    } finally {
+      geojsonLoading = null
+    }
+  })()
+  return geojsonLoading
+}
+
+// Shared initialization — called by both onMounted and theme-switch watcher
+const startThree = async () => {
+  const geojson = await loadGeojson()
+  initThree(geojson)
+  window.addEventListener('resize', handleResize)
+}
+
 watch(isReal, (newVal) => {
   if (newVal) {
-    setTimeout(async () => {
-      try {
-        const response = await fetch('/shandong.json')
-        const shandongGeojson = await response.json()
-        initThree(shandongGeojson)
-      } catch (e) {
-        console.error('Error loading shandong.json:', e)
-        initThree(null)
-      }
-      window.addEventListener('resize', handleResize)
-    }, 150)
+    errorMsg.value = null
+    setTimeout(startThreeSafe, 150)
   } else {
     window.removeEventListener('resize', handleResize)
     cleanupThree()
   }
 })
 
+const retryLoadMap = () => {
+  errorMsg.value = null
+  if (isReal.value) {
+    setTimeout(startThreeSafe, 150)
+  }
+}
+
+const startThreeSafe = async () => {
+  try {
+    await startThree()
+  } catch (err) {
+    console.error('加载三维地图失败:', err)
+    errorMsg.value = '加载三维地图失败，请稍后重试'
+  }
+}
+
 onMounted(() => {
   if (isReal.value) {
-    setTimeout(async () => {
-      try {
-        const response = await fetch('/shandong.json')
-        const shandongGeojson = await response.json()
-        initThree(shandongGeojson)
-      } catch (e) {
-        console.error('Error loading shandong.json, falling back to mock terrain:', e)
-        initThree(null)
-      }
-      window.addEventListener('resize', handleResize)
-    }, 150)
+    setTimeout(startThreeSafe, 150)
   }
 })
 
@@ -1786,4 +1823,59 @@ onBeforeUnmount(() => {
     opacity: 0;
   }
 }
+
+/* Error state overlay */
+.map-error-state {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+}
+
+.error-overlay {
+  text-align: center;
+  max-width: 400px;
+  padding: 40px;
+}
+
+.error-overlay .error-icon {
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--accent);
+  margin-bottom: 16px;
+  opacity: 0.6;
+  line-height: 1;
+}
+
+.error-overlay .error-text {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.error-overlay .error-retry-btn {
+  display: inline-block;
+  font-size: 14px;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid var(--border);
+  padding: 8px 24px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  letter-spacing: 1px;
+  transition: all 0.3s;
+}
+
+.error-overlay .error-retry-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(184, 134, 11, 0.03);
+}
+
 </style>

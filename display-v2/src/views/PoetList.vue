@@ -92,7 +92,7 @@ import { useRouter } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
 import { useImage } from '../composables/useImage'
 import api from '../api'
-import * as G6 from '@antv/g6'
+import { Graph } from '@antv/g6'
 
 const router = useRouter()
 const { isAnime } = useTheme()
@@ -145,7 +145,7 @@ const handleGraphResize = () => {
   if (graphInstance && g6Container.value) {
     const width = g6Container.value.clientWidth || 800
     const height = g6Container.value.clientHeight || 520
-    graphInstance.changeSize(width, height)
+    graphInstance.setSize(width, height)
   }
 }
 
@@ -159,98 +159,126 @@ const initG6 = () => {
   const width = g6Container.value.clientWidth || 800
   const height = g6Container.value.clientHeight || 520
 
-  // Dynamic theme styling for the graph nodes
-  const themeColors = isAnime.value ? {
-    poetFill: '#1a1a1a', // deep ink wash
-    poetStroke: '#c23a2b', // cinnabar accent
-    poetText: '#ffffff',
-    cityFill: '#faf6ee', // calligraphic paper color
-    cityStroke: '#1a1a1a', // black ink line
+  // G6 renders to Canvas, CSS variables won't resolve — compute actual hex colors
+  const graphTheme = isAnime.value ? {
+    poetFill: '#1a1a1a',
+    poetStroke: '#c23a2b',
+    cityFill: '#faf6ee',
+    cityStroke: '#1a1a1a',
     edgeColor: '#7a7a7a',
+    textPrimary: '#e8e4d8',
+    accent: '#c23a2b',
+    textSecondary: '#9a9484',
+    cardBg: '#2a2520',
     lineDash: [4, 4]
   } : {
-    poetFill: '#b8860b', // digital heritage gold
-    poetStroke: '#3d2b1f', // dark teak wood
-    poetText: '#ffffff',
-    cityFill: '#ffffff', // pure marble white
-    cityStroke: '#b8860b', // gold trim
+    poetFill: '#b8860b',
+    poetStroke: '#3d2b1f',
+    cityFill: '#ffffff',
+    cityStroke: '#b8860b',
     edgeColor: '#c5b8a5',
+    textPrimary: '#3d2b1f',
+    accent: '#b8860b',
+    textSecondary: '#8a7e6b',
+    cardBg: '#fdfaf5',
     lineDash: [4, 4]
   }
 
-  // Relationship nodes and edges data
+  // G6 v5: data passed via constructor, flat per-node properties instead of nested style/labelCfg
   const data = {
     nodes: [
-      { id: '1', label: '李白', sub: '唐朝 · 诗仙', size: 55, style: { fill: themeColors.poetFill, stroke: themeColors.poetStroke, lineWidth: 2 }, labelCfg: { style: { fill: 'var(--text-primary)', fontSize: 13, fontFamily: 'var(--font-heading)', fontWeight: 'bold' } } },
-      { id: '2', label: '杜甫', sub: '唐朝 · 诗圣', size: 55, style: { fill: themeColors.poetFill, stroke: themeColors.poetStroke, lineWidth: 2 }, labelCfg: { style: { fill: 'var(--text-primary)', fontSize: 13, fontWeight: 'bold' } } },
-      { id: '3', label: '李清照', sub: '宋朝 · 千古才女', size: 55, style: { fill: themeColors.poetFill, stroke: themeColors.poetStroke, lineWidth: 2 }, labelCfg: { style: { fill: 'var(--text-primary)', fontSize: 13, fontWeight: 'bold' } } },
-      { id: '4', label: '辛弃疾', sub: '宋朝 · 稼轩豪杰', size: 55, style: { fill: themeColors.poetFill, stroke: themeColors.poetStroke, lineWidth: 2 }, labelCfg: { style: { fill: 'var(--text-primary)', fontSize: 13, fontWeight: 'bold' } } },
-      { id: '5', label: '赵孟頫', sub: '元朝 · 松雪道人', size: 50, style: { fill: themeColors.poetFill, stroke: themeColors.poetStroke, lineWidth: 2 }, labelCfg: { style: { fill: 'var(--text-primary)', fontSize: 12, fontWeight: 'bold' } } },
-      { id: '6', label: '蒲松龄', sub: '清朝 · 聊斋先生', size: 50, style: { fill: themeColors.poetFill, stroke: themeColors.poetStroke, lineWidth: 2 }, labelCfg: { style: { fill: 'var(--text-primary)', fontSize: 12, fontWeight: 'bold' } } },
-      // Geographic hubs
-      { id: 'c1', label: '济南', sub: '济南名士多', size: 45, style: { fill: themeColors.cityFill, stroke: themeColors.cityStroke, lineWidth: 2 }, labelCfg: { style: { fill: 'var(--accent)', fontWeight: 'bold', fontSize: 12 } } },
-      { id: 'c2', label: '泰安', sub: '会当凌绝顶', size: 45, style: { fill: themeColors.cityFill, stroke: themeColors.cityStroke, lineWidth: 2 }, labelCfg: { style: { fill: 'var(--accent)', fontWeight: 'bold', fontSize: 12 } } }
+      { id: '1', label: '李白', sub: '唐朝 · 诗仙', size: 55, isPoet: true, fillColor: graphTheme.poetFill, strokeColor: graphTheme.poetStroke, labelSize: 13 },
+      { id: '2', label: '杜甫', sub: '唐朝 · 诗圣', size: 55, isPoet: true, fillColor: graphTheme.poetFill, strokeColor: graphTheme.poetStroke, labelSize: 13 },
+      { id: '3', label: '李清照', sub: '宋朝 · 千古才女', size: 55, isPoet: true, fillColor: graphTheme.poetFill, strokeColor: graphTheme.poetStroke, labelSize: 13 },
+      { id: '4', label: '辛弃疾', sub: '宋朝 · 稼轩豪杰', size: 55, isPoet: true, fillColor: graphTheme.poetFill, strokeColor: graphTheme.poetStroke, labelSize: 13 },
+      { id: '5', label: '赵孟頫', sub: '元朝 · 松雪道人', size: 50, isPoet: true, fillColor: graphTheme.poetFill, strokeColor: graphTheme.poetStroke, labelSize: 12 },
+      { id: '6', label: '蒲松龄', sub: '清朝 · 聊斋先生', size: 50, isPoet: true, fillColor: graphTheme.poetFill, strokeColor: graphTheme.poetStroke, labelSize: 12 },
+      { id: 'c1', label: '济南', sub: '济南名士多', size: 45, isPoet: false, fillColor: graphTheme.cityFill, strokeColor: graphTheme.cityStroke, labelSize: 12 },
+      { id: 'c2', label: '泰安', sub: '会当凌绝顶', size: 45, isPoet: false, fillColor: graphTheme.cityFill, strokeColor: graphTheme.cityStroke, labelSize: 12 }
     ],
     edges: [
-      { source: '1', target: '2', label: '李杜齐鲁相会', style: { stroke: themeColors.poetStroke, lineWidth: 2 } },
-      { source: '2', target: 'c1', label: '历下亭同宴', style: { stroke: themeColors.poetStroke, lineDash: themeColors.lineDash } },
-      { source: '1', target: 'c2', label: '游历泰山', style: { stroke: themeColors.poetStroke, lineDash: themeColors.lineDash } },
-      { source: '2', target: 'c2', label: '写《望岳》', style: { stroke: themeColors.poetStroke, lineDash: themeColors.lineDash } },
-      { source: '3', target: 'c1', label: '生平与居所', style: { stroke: themeColors.edgeColor, lineDash: themeColors.lineDash } },
-      { source: '4', target: 'c1', label: '生平与归宋', style: { stroke: themeColors.edgeColor, lineDash: themeColors.lineDash } },
-      { source: '3', target: '4', label: '济南二安', style: { stroke: themeColors.poetStroke, lineWidth: 1.5 } },
-      { source: '5', target: 'c1', label: '出任总管/描摹鹊华', style: { stroke: themeColors.edgeColor, lineDash: themeColors.lineDash } }
+      { source: '1', target: '2', label: '李杜齐鲁相会', eStroke: graphTheme.poetStroke, eLineWidth: 2, eDashed: false },
+      { source: '2', target: 'c1', label: '历下亭同宴', eStroke: graphTheme.poetStroke, eLineWidth: 1, eDashed: true },
+      { source: '1', target: 'c2', label: '游历泰山', eStroke: graphTheme.poetStroke, eLineWidth: 1, eDashed: true },
+      { source: '2', target: 'c2', label: '写《望岳》', eStroke: graphTheme.poetStroke, eLineWidth: 1, eDashed: true },
+      { source: '3', target: 'c1', label: '生平与居所', eStroke: graphTheme.edgeColor, eLineWidth: 1, eDashed: true },
+      { source: '4', target: 'c1', label: '生平与归宋', eStroke: graphTheme.edgeColor, eLineWidth: 1, eDashed: true },
+      { source: '3', target: '4', label: '济南二安', eStroke: graphTheme.poetStroke, eLineWidth: 1.5, eDashed: false },
+      { source: '5', target: 'c1', label: '出任总管/描摹鹊华', eStroke: graphTheme.edgeColor, eLineWidth: 1, eDashed: true }
     ]
   }
 
-  graphInstance = new G6.Graph({
+    // 给节点预设坐标避免全部挤在中心
+    const positions = {
+      '1': [width * 0.2, height * 0.3],  '2': [width * 0.4, height * 0.15],
+      '3': [width * 0.6, height * 0.3],  '4': [width * 0.8, height * 0.25],
+      '5': [width * 0.3, height * 0.7],  '6': [width * 0.5, height * 0.8],
+      'c1': [width * 0.7, height * 0.6], 'c2': [width * 0.15, height * 0.55],
+    }
+    data.nodes.forEach((n) => {
+      if (positions[n.id]) {
+        n.x = positions[n.id][0]
+        n.y = positions[n.id][1]
+      }
+    })
+  graphInstance = new Graph({
     container: g6Container.value,
     width,
     height,
+    data,
     layout: {
       type: 'force',
       preventOverlap: true,
-      linkDistance: 160,
-      nodeStrength: -150
+      nodeSize: 55,
+      linkDistance: 180,
+      nodeStrength: 30,
+      collideStrength: 1,
+      alpha: 0.3,
+      alphaDecay: 0.02,
+      alphaMin: 0.01,
     },
-    defaultNode: {
+    node: {
       type: 'circle',
-      labelCfg: {
-        position: 'bottom',
-        offset: 8
-      }
+      style: (d) => ({
+        fill: d.fillColor,
+        stroke: d.strokeColor,
+        lineWidth: 2,
+        size: d.size || 50
+      }),
+      labelText: (d) => d.label,
+      labelPlacement: 'bottom',
+      labelOffsetY: 8,
+      labelFontSize: (d) => d.labelSize || 13,
+      labelFontWeight: 'bold',
+      labelFill: (d) => d.isPoet ? graphTheme.textPrimary : graphTheme.accent
     },
-    defaultEdge: {
-      labelCfg: {
-        autoRotate: true,
-        style: {
-          fontSize: 10,
-          fill: 'var(--text-secondary)',
-          background: {
-            fill: 'var(--card-bg)',
-            padding: [2, 4],
-            radius: 2
-          }
-        }
-      }
+    edge: {
+      style: (d) => ({
+        stroke: d.eStroke || graphTheme.edgeColor,
+        lineWidth: d.eLineWidth || 1,
+        lineDash: d.eDashed ? graphTheme.lineDash : undefined
+      }),
+      labelText: (d) => d.label || '',
+      labelAutoRotate: true,
+      labelFontSize: 10,
+      labelFill: graphTheme.textSecondary,
+      labelBackgroundFill: graphTheme.cardBg,
+      labelBackgroundPadding: [2, 4],
+      labelBackgroundRadius: 2
     },
-    modes: {
-      default: ['drag-canvas', 'zoom-canvas', 'drag-node']
-    }
+    behaviors: ['drag-canvas', 'zoom-canvas', 'drag-element']
   })
 
-  graphInstance.data(data)
   graphInstance.render()
 
-  // Node clicks navigate directly to subpages
+  // G6 v5: event target.id replaces evt.item.getModel().id
   graphInstance.on('node:click', (evt) => {
-    const nodeItem = evt.item
-    const model = nodeItem.getModel()
-    if (['1', '2', '3', '4', '5', '6'].includes(model.id)) {
-      router.push(`/poets/${model.id}`)
-    } else if (model.id === 'c1') {
+    const modelId = evt.target?.id
+    if (modelId && ['1', '2', '3', '4', '5', '6'].includes(modelId)) {
+      router.push(`/poets/${modelId}`)
+    } else if (modelId === 'c1') {
       router.push('/regions/济南')
-    } else if (model.id === 'c2') {
+    } else if (modelId === 'c2') {
       router.push('/regions/泰安')
     }
   })

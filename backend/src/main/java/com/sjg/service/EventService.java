@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sjg.dto.PageResult;
 import com.sjg.entity.Event;
+import com.sjg.entity.PoemEvent;
 import com.sjg.mapper.EventMapper;
+import com.sjg.mapper.PoemEventMapper;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
@@ -20,9 +22,11 @@ import java.util.List;
 public class EventService {
 
     private final EventMapper eventMapper;
+    private final PoemEventMapper poemEventMapper;
 
-    public EventService(EventMapper eventMapper) {
+    public EventService(EventMapper eventMapper, PoemEventMapper poemEventMapper) {
         this.eventMapper = eventMapper;
+        this.poemEventMapper = poemEventMapper;
     }
 
     public PageResult<Event> list(int page, int size, String keyword) {
@@ -39,7 +43,13 @@ public class EventService {
     public Event getById(Long id) { return eventMapper.selectById(id); }
     public void create(Event event) { eventMapper.insert(event); }
     public void update(Long id, Event event) { event.setId(id); eventMapper.updateById(event); }
-    public void delete(Long id) { eventMapper.deleteById(id); }
+    @Transactional
+    public void delete(Long id) {
+        // 1. 先删除诗词-事件关联表中的记录，以避免外键约束错误
+        poemEventMapper.delete(new LambdaQueryWrapper<PoemEvent>().eq(PoemEvent::getEventId, id));
+        // 2. 再删除事件本身
+        eventMapper.deleteById(id);
+    }
 
     @Transactional
     public int importFromExcel(MultipartFile file) throws IOException {

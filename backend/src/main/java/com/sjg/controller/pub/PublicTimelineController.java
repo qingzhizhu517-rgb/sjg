@@ -1,13 +1,13 @@
 package com.sjg.controller.pub;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.sjg.dto.Result;
 import com.sjg.entity.*;
 import com.sjg.mapper.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,7 +38,7 @@ public class PublicTimelineController {
      */
     @Operation(summary = "获取历史时间线", description = "按朝代起始年份升序返回完整时间线，每个朝代包含其历史事件、诗人和诗词")
     @GetMapping
-    public ResponseEntity<?> getTimeline() {
+    public ResponseEntity<Result<List<Map<String, Object>>>> getTimeline() {
         List<Dynasty> dynasties = dynastyMapper.selectList(
             new LambdaQueryWrapper<Dynasty>().orderByAsc(Dynasty::getStartYear));
 
@@ -54,6 +54,6 @@ public class PublicTimelineController {
             return item;
         }).collect(Collectors.toList());
 
-        return ResponseEntity.ok(timeline);
+        return ResponseEntity.ok(Result.success(timeline));
     }
 }

@@ -37,6 +37,9 @@ public class ScenicSpot {
     @Schema(description = "动漫风格图片URL", example = "https://example.com/taishan-anime.jpg")
     private String imageAnimeUrl;
 
+    @Schema(description = "景点视频URL", example = "https://example.com/video.mp4")
+    private String videoUrl;
+
     @Schema(description = "所属区域", example = "泰安")
     private String region;
 

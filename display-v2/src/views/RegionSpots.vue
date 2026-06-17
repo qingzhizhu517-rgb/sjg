@@ -1,5 +1,13 @@
 <template>
-  <div class="region-spots" :class="{ 'anime-layout': isAnime }">
+    <div v-if="errorMsg" class="error-state">
+    <div class="error-content">
+      <p class="error-icon">!</p>
+      <p class="error-text">{{ errorMsg }}</p>
+      <router-link to="/map" class="error-back-link">← 返回地图</router-link>
+    </div>
+  </div>
+
+<div class="region-spots" :class="{ 'anime-layout': isAnime }">
     <!-- Real Layout (original simple grid style) -->
     <div class="real-container" v-if="isReal">
       <div class="page-hero">
@@ -144,6 +152,7 @@ const { getImageUrl } = useImage()
 const region = ref(route.params.region)
 const spots = ref([])
 const loaded = ref(false)
+const errorMsg = ref(null)
 
 const getCityData = (cityName) => {
   return mockCities[cityName] || {
@@ -181,9 +190,15 @@ const cityRepresentativeImage = computed(() => {
 })
 
 onMounted(async () => {
-  const data = await api.get('/spots', { params: { region: region.value, size: 100 } })
-  spots.value = data.records
-  loaded.value = true
+  try {
+    const data = await api.get('/spots', { params: { region: region.value, size: 100 } })
+    spots.value = data.records
+  } catch (err) {
+    console.error('加载地区景点失败:', err)
+    errorMsg.value = '加载景点数据失败，请稍后重试'
+  } finally {
+    loaded.value = true
+  }
 })
 </script>
 
@@ -616,5 +631,54 @@ onMounted(async () => {
     padding: 24px 20px;
   }
 }
+
+/* Error state */
+.error-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 32px 40px;
+}
+
+.error-content {
+  text-align: center;
+  max-width: 400px;
+}
+
+.error-icon {
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--accent);
+  margin-bottom: 16px;
+  opacity: 0.6;
+  line-height: 1;
+}
+
+.error-text {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.error-back-link {
+  display: inline-block;
+  font-size: 14px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 8px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: all 0.3s;
+}
+
+.error-back-link:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 </style>
 

@@ -1,5 +1,20 @@
 <template>
-  <div class="poet-detail" :class="{ 'anime-layout': isAnime }" v-if="poet">
+  <div v-if="errorMsg" class="error-state">
+    <div class="error-content">
+      <p class="error-icon">!</p>
+      <p class="error-text">{{ errorMsg }}</p>
+      <router-link to="/poets" class="error-back-link">← 返回诗人长廊</router-link>
+    </div>
+  </div>
+
+  <div v-else-if="!poet" class="error-state">
+    <div class="error-content">
+      <p class="error-icon">⌛</p>
+      <p class="error-text">加载中...</p>
+    </div>
+  </div>
+
+<div class="poet-detail" :class="{ 'anime-layout': isAnime }" v-else>
     <!-- Real Layout (original 2-column or slightly styled) -->
     <div class="real-container" v-if="isReal">
       <div class="detail-back">
@@ -190,6 +205,7 @@ const { getImageUrl } = useImage()
 const poet = ref(null)
 const poems = ref([])
 const dynasty = ref(null)
+const errorMsg = ref(null)
 
 const avatar = computed(() => {
   if (!poet.value) return ''
@@ -211,10 +227,15 @@ const getPoetData = (name) => {
 }
 
 onMounted(async () => {
-  const data = await api.get(`/poets/${route.params.id}`)
-  poet.value = data.poet
-  poems.value = data.poems
-  dynasty.value = data.dynasty
+  try {
+    const data = await api.get(`/poets/${route.params.id}`)
+    poet.value = data.poet
+    poems.value = data.poems
+    dynasty.value = data.dynasty
+  } catch (err) {
+    console.error('加载诗人详情失败:', err)
+    errorMsg.value = '加载诗人详情失败，请稍后重试'
+  }
 })
 </script>
 
@@ -813,6 +834,56 @@ onMounted(async () => {
     padding: 24px 20px;
   }
 }
+
+/* Error state */
+.error-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 32px 40px;
+}
+
+.error-content {
+  text-align: center;
+  max-width: 400px;
+}
+
+.error-icon {
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--accent);
+  margin-bottom: 16px;
+  opacity: 0.6;
+  line-height: 1;
+}
+
+.error-text {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.error-back-link {
+  display: inline-block;
+  font-size: 14px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 8px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: all 0.3s;
+}
+
+.error-back-link:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(184, 134, 11, 0.03);
+}
+
 </style>
 
 

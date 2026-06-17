@@ -60,7 +60,7 @@
             </div>
             <!-- Bubble -->
             <div class="msg-bubble">
-              <p class="bubble-txt" v-html="msg.content"></p>
+              <p class="bubble-txt">{{ msg.content }}</p>
               <!-- Interactive Action Buttons -->
               <div class="bubble-actions" v-if="msg.actions && msg.actions.length">
                 <button
@@ -108,7 +108,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -128,7 +128,7 @@ const quickList = [
 const messages = ref([
   {
     role: 'assistant',
-    content: '您好！我是 <strong>AI 小文</strong>。已为您接入齐鲁文化大模型，集合了历史名人、文化典籍、自然地理景观等六大板块。请问有什么可以帮您？'
+    content: '您好！我是 AI 小文。已为您接入齐鲁文化大模型，集合了历史名人、文化典籍、自然地理景观等六大板块。请问有什么可以帮您？'
   }
 ])
 
@@ -150,7 +150,7 @@ const getMockResponse = (text) => {
   const query = text.toLowerCase()
   if (query.includes('李白') || query.includes('杜甫') || query.includes('同游')) {
     return {
-      content: '天宝三载至四载（744-745年），李白与杜甫同游齐鲁大地。他们曾同游<strong>济南大明湖历下亭</strong>、登临<strong>泰山</strong>，最后在<strong>曲阜东石门山</strong>送别。这是中国文学史上最伟大的会面，留下了李白《鲁郡东石门送杜二甫》与杜甫《望岳》等不朽名篇。',
+      content: '天宝三载至四载（744-745年），李白与杜甫同游齐鲁大地。他们曾同游济南大明湖历下亭、登临泰山，最后在曲阜东石门山送别。这是中国文学史上最伟大的会面，留下了李白《鲁郡东石门送杜二甫》与杜甫《望岳》等不朽名篇。',
       actions: [
         { label: '飞往泰山', type: 'route', path: '/spots/3' },
         { label: '飞往大明湖', type: 'route', path: '/spots/2' }
@@ -158,7 +158,7 @@ const getMockResponse = (text) => {
     }
   } else if (query.includes('大明湖') || query.includes('历下亭')) {
     return {
-      content: '大明湖是历代名士汇聚之所。杜甫在此写下“<strong>海右此亭古，济南名士多</strong>”；李清照少女时代在此泛舟迷路，写下《如梦令·常记溪亭日暮》；元代赵孟頫在此任职画下《鹊华秋色图》。',
+      content: '大明湖是历代名士汇聚之所。杜甫在此写下"海右此亭古，济南名士多"；李清照少女时代在此泛舟迷路，写下《如梦令·常记溪亭日暮》；元代赵孟頫在此任职画下《鹊华秋色图》。',
       actions: [
         { label: '品读《如梦令》', type: 'route', path: '/poems/3' },
         { label: '品读《陪李北海宴历下亭》', type: 'route', path: '/poems/2' }

@@ -1,5 +1,20 @@
 <template>
-  <div class="poem-detail" v-if="poem">
+  <div v-if="errorMsg" class="error-state">
+    <div class="error-content">
+      <p class="error-icon">!</p>
+      <p class="error-text">{{ errorMsg }}</p>
+      <button class="error-back-link" @click="$router.back()">← 返回</button>
+    </div>
+  </div>
+
+  <div v-else-if="!poem" class="error-state">
+    <div class="error-content">
+      <p class="error-icon">⌛</p>
+      <p class="error-text">加载中...</p>
+    </div>
+  </div>
+
+<div class="poem-detail" v-else>
     <!-- Back -->
     <div class="detail-top">
       <button class="back-link" @click="$router.back()">← 返回</button>
@@ -78,15 +93,21 @@ const poet = ref(null)
 const dynasty = ref(null)
 const spot = ref(null)
 const showAnnotation = ref(false)
+const errorMsg = ref(null)
 
 const poemLines = computed(() => poem.value?.content?.split('\n').filter(l => l.trim()) || [])
 
 onMounted(async () => {
-  const data = await api.get(`/poems/${route.params.id}`)
-  poem.value = data.poem
-  poet.value = data.poet
-  dynasty.value = data.dynasty
-  spot.value = data.spot
+  try {
+    const data = await api.get(`/poems/${route.params.id}`)
+    poem.value = data.poem
+    poet.value = data.poet
+    dynasty.value = data.dynasty
+    spot.value = data.spot
+  } catch (err) {
+    console.error('加载诗词详情失败:', err)
+    errorMsg.value = '加载诗词详情失败，请稍后重试'
+  }
 })
 </script>
 
@@ -443,5 +464,57 @@ onMounted(async () => {
     display: none;
   }
 }
+
+/* Error state */
+.error-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 32px 24px;
+}
+
+.error-content {
+  text-align: center;
+  max-width: 400px;
+}
+
+.error-icon {
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--accent);
+  margin-bottom: 16px;
+  opacity: 0.6;
+  line-height: 1;
+}
+
+.error-text {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.error-back-link {
+  display: inline-block;
+  font-size: 14px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 8px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.3s;
+}
+
+.error-back-link:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 </style>
 
