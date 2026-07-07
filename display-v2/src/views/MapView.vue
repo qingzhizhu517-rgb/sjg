@@ -16,19 +16,21 @@
       <div class="hud-panel left-hud animate-slide-in">
         <div class="hud-header">
           <span class="hud-badge">DH SYSTEM</span>
-          <h2 class="hud-title">三维地理文脉舱</h2>
+          <h2 class="hud-title">三维地理<br/>文脉舱</h2>
         </div>
         <div class="hud-body">
-          <p class="hud-desc">数字人文视域下黄河流域（山东段）文学景观时空交互。拖拽鼠标旋转视角，双击节点飞往对应城市。</p>
+          <p class="hud-desc">数字人文视域下黄河流域（山东段）文学景观时空交互。拖拽旋转视角，双击节点飞往对应城市。</p>
           <div class="hud-stats">
             <div class="stat-item">
               <span class="stat-num">10</span>
               <span class="stat-lbl">核心景点</span>
             </div>
+            <span class="stat-divider"></span>
             <div class="stat-item">
               <span class="stat-num">6</span>
               <span class="stat-lbl">文人大家</span>
             </div>
+            <span class="stat-divider"></span>
             <div class="stat-item">
               <span class="stat-num">8</span>
               <span class="stat-lbl">传世名篇</span>
@@ -122,7 +124,10 @@
         <aside class="ink-left-panel">
           <div class="calligraphy-header">
             <div class="seal-red">天下大观</div>
-            <h1 class="calligraphy-title">山东揽胜<br>黄河入海</h1>
+            <div class="calligraphy-text">
+              <h1 class="calligraphy-title">山东揽胜</h1>
+              <span class="calligraphy-subtitle">— 黄河入海 —</span>
+            </div>
           </div>
           <p class="ink-intro-para">
             黄河自菏泽入境，经梁山、东平，过济南，北折德州，蜿蜒东营归海。千百年来，诗圣杜甫、诗仙李白同游于此，易安居士、稼轩豪杰吟唱不断。
@@ -132,6 +137,11 @@
             <div class="category-stamp">泉城名胜</div>
             <div class="category-stamp">运河古都</div>
             <div class="category-stamp">黄河湿地</div>
+          </div>
+          <div class="ink-legend">
+            <p class="legend-title">图例</p>
+            <div class="legend-row"><span class="legend-mark mark-stamp"></span>城市节点（点击进入）</div>
+            <div class="legend-row"><span class="legend-mark mark-river"></span>黄河流经</div>
           </div>
         </aside>
 
@@ -1109,21 +1119,24 @@ onBeforeUnmount(() => {
   position: absolute;
   top: 32px;
   left: 32px;
-  width: 320px;
-  background: rgba(253, 250, 245, 0.85);
+  width: 340px;
+  max-height: calc(100% - 64px);
+  overflow-y: auto;
+  background: rgba(253, 250, 245, 0.88);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 24px;
+  padding: 28px 26px;
   z-index: 10;
-  box-shadow: 0 10px 30px rgba(61, 43, 31, 0.06);
+  box-shadow: 0 10px 30px rgba(61, 43, 31, 0.08);
   backdrop-filter: blur(16px);
   text-align: left;
+  scrollbar-width: thin;
 }
 
 .hud-header {
   border-bottom: 2px solid var(--accent);
-  padding-bottom: 12px;
-  margin-bottom: 16px;
+  padding-bottom: 14px;
+  margin-bottom: 18px;
 }
 
 .hud-badge {
@@ -1133,32 +1146,38 @@ onBeforeUnmount(() => {
   border: 1px solid var(--accent);
   padding: 2px 6px;
   border-radius: 2px;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
+  display: inline-block;
+  margin-bottom: 10px;
 }
 
 .hud-title {
   font-family: var(--font-heading);
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 900;
   color: var(--text-primary);
-  letter-spacing: 2px;
-  margin: 8px 0 0 0;
+  letter-spacing: 3px;
+  line-height: 1.2;
+  margin: 0;
 }
 
 .hud-desc {
   font-size: 13px;
-  line-height: 1.7;
+  line-height: 1.8;
   color: var(--text-secondary);
-  margin: 0 0 20px 0;
+  margin: 0 0 22px 0;
+  letter-spacing: 0.3px;
 }
 
 .hud-stats {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 20px;
-  background: rgba(0, 0, 0, 0.02);
+  align-items: center;
+  margin-bottom: 22px;
+  background: rgba(184, 134, 11, 0.04);
+  border: 1px solid rgba(184, 134, 11, 0.15);
   border-radius: 4px;
-  padding: 12px 8px;
+  padding: 16px 12px;
 }
 
 .hud-actions {
@@ -1181,6 +1200,7 @@ onBeforeUnmount(() => {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+  letter-spacing: 1px;
 }
 
 .action-btn-toggle:hover {
@@ -1201,20 +1221,31 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   flex: 1;
+  min-width: 0;
 }
 
 .stat-num {
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 26px;
   font-weight: 900;
   color: var(--accent);
+  line-height: 1;
+  letter-spacing: 0;
 }
 
 .stat-lbl {
   font-size: 11px;
   color: var(--text-muted);
   font-weight: 700;
-  margin-top: 2px;
+  margin-top: 6px;
+  letter-spacing: 2px;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 28px;
+  background: rgba(184, 134, 11, 0.2);
+  flex-shrink: 0;
 }
 
 .hud-tips {
@@ -1238,14 +1269,15 @@ onBeforeUnmount(() => {
 /* Floating Click Details Card */
 .hud-detail-card {
   position: absolute;
-  bottom: 40px;
+  bottom: 32px;
   left: 32px;
-  width: 320px;
-  background: rgba(253, 250, 245, 0.9);
+  width: 340px;
+  background: rgba(253, 250, 245, 0.92);
   border: 1px solid var(--accent);
-  padding: 20px;
+  border-top: 4px solid var(--accent);
+  padding: 22px 24px;
   z-index: 10;
-  box-shadow: 0 12px 36px rgba(142, 53, 46, 0.12);
+  box-shadow: 0 12px 36px rgba(142, 53, 46, 0.15);
   backdrop-filter: blur(16px);
   text-align: left;
 }
@@ -1255,17 +1287,18 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px dashed var(--border-light);
-  padding-bottom: 8px;
-  margin-bottom: 12px;
+  padding-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 .city-title-real {
   font-family: var(--font-heading);
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 800;
   color: var(--text-primary);
-  letter-spacing: 1px;
+  letter-spacing: 2px;
   margin: 0;
+  line-height: 1.1;
 }
 
 .close-card-btn {
@@ -1275,17 +1308,26 @@ onBeforeUnmount(() => {
   cursor: pointer;
   color: var(--text-muted);
   transition: color 0.2s;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  line-height: 1;
 }
 
 .close-card-btn:hover {
   color: var(--accent);
+  background: rgba(184, 134, 11, 0.08);
 }
 
 .city-desc-real {
   font-size: 13px;
-  line-height: 1.7;
+  line-height: 1.8;
   color: var(--text-secondary);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+  letter-spacing: 0.3px;
 }
 
 .card-footer-action {
@@ -1294,16 +1336,17 @@ onBeforeUnmount(() => {
 
 .action-btn-primary {
   width: 100%;
-  padding: 8px 16px;
+  padding: 10px 16px;
   background: var(--accent);
   color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: 2px;
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
   transition: all 0.2s;
+  font-family: inherit;
 }
 
 .action-btn-primary:hover {
@@ -1318,7 +1361,7 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   background: #f4efe4; /* Traditional ink wash paper base */
-  padding: 40px;
+  padding: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1326,11 +1369,11 @@ onBeforeUnmount(() => {
 
 .ink-layout-wrap {
   width: 100%;
-  max-width: 1300px;
+  max-width: 1400px;
   height: 100%;
   display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 40px;
+  grid-template-columns: 340px 1fr;
+  gap: 48px;
   align-items: center;
 }
 
@@ -1338,47 +1381,65 @@ onBeforeUnmount(() => {
 .ink-left-panel {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 26px;
   text-align: left;
 }
 
 .calligraphy-header {
   display: flex;
   align-items: flex-start;
-  gap: 16px;
+  gap: 18px;
 }
 
 .seal-red {
   writing-mode: vertical-rl;
   text-orientation: upright;
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: #fff;
   background: #8e352e;
-  padding: 6px 4px;
+  padding: 8px 5px;
   border-radius: 2px;
-  letter-spacing: 2px;
-  box-shadow: 2px 2px 4px rgba(142, 53, 46, 0.2);
+  letter-spacing: 3px;
+  box-shadow: 2px 2px 6px rgba(142, 53, 46, 0.25);
+  flex-shrink: 0;
+}
+
+.calligraphy-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .calligraphy-title {
   font-family: var(--font-display);
-  font-size: 40px;
+  font-size: 48px;
   font-weight: 900;
   color: var(--text-primary);
-  letter-spacing: 6px;
-  line-height: 1.2;
+  letter-spacing: 4px;
+  line-height: 1.1;
   margin: 0;
+}
+
+.calligraphy-subtitle {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 4px;
+  text-indent: 4px;
 }
 
 .ink-intro-para {
   font-family: var(--font-heading);
   font-size: 14px;
-  line-height: 1.9;
+  line-height: 2;
   color: var(--text-secondary);
   text-indent: 2em;
   text-align: justify;
+  margin: 0;
+  letter-spacing: 0.5px;
 }
 
 .ink-categories {
@@ -1392,26 +1453,81 @@ onBeforeUnmount(() => {
   font-weight: 700;
   border: 1px solid rgba(142, 53, 46, 0.4);
   color: #8e352e;
-  padding: 4px 12px;
+  padding: 6px 14px;
   border-radius: 2px;
   background: rgba(142, 53, 46, 0.03);
+  letter-spacing: 2px;
+  transition: all 0.2s;
+}
+
+.category-stamp:hover {
+  background: rgba(142, 53, 46, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Legend block under categories */
+.ink-legend {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px dashed rgba(142, 53, 46, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legend-title {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 4px;
+  margin: 0 0 4px 0;
+  text-indent: 4px;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+}
+
+.legend-mark {
+  flex-shrink: 0;
+}
+
+.mark-stamp {
+  width: 14px;
+  height: 14px;
+  background: #8e352e;
+  border: 1px dashed rgba(255,255,255,0.4);
+  border-radius: 1px;
+}
+
+.mark-river {
+  width: 24px;
+  height: 0;
+  border-top: 2px dashed rgba(142, 53, 46, 0.6);
 }
 
 /* Right Scroll Frame */
 .scroll-outer-frame {
-  height: 520px;
+  height: 560px;
   display: flex;
   align-items: center;
   position: relative;
 }
 
 .scroll-wooden-rod {
-  width: 14px;
-  height: 540px;
+  width: 16px;
+  height: 580px;
   background: linear-gradient(to bottom, #3d240e, #73451d, #3d240e);
-  border-radius: 7px;
-  box-shadow: 4px 0 10px rgba(0,0,0,0.25);
+  border-radius: 8px;
+  box-shadow: 4px 0 12px rgba(0,0,0,0.28);
   z-index: 5;
+  position: relative;
 }
 
 .scroll-wooden-rod::before,
@@ -1420,21 +1536,21 @@ onBeforeUnmount(() => {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  width: 22px;
-  height: 16px;
+  width: 24px;
+  height: 18px;
   background: linear-gradient(90deg, #d4af37, #aa7c11, #d4af37);
   border-radius: 2px;
 }
 
-.scroll-wooden-rod::before { top: -10px; }
-.scroll-wooden-rod::after { bottom: -10px; }
+.scroll-wooden-rod::before { top: -12px; }
+.scroll-wooden-rod::after { bottom: -12px; }
 
 .left-rod { margin-right: -4px; }
 .right-rod { margin-left: -4px; }
 
 .scroll-middle-paper {
   flex: 1;
-  height: 480px;
+  height: 520px;
   background: #fbf8f2;
   border-top: 1px solid rgba(142, 53, 46, 0.12);
   border-bottom: 1px solid rgba(142, 53, 46, 0.12);
@@ -1510,18 +1626,19 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 42px;
   background: #8e352e;
   border-radius: 2px;
   color: #fff;
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.1;
   font-weight: 900;
-  box-shadow: 2px 2px 6px rgba(142, 53, 46, 0.35);
+  box-shadow: 3px 3px 8px rgba(142, 53, 46, 0.4);
   border: 1px dashed rgba(255, 255, 255, 0.3);
-  padding: 2px;
+  padding: 3px 2px;
+  letter-spacing: 0;
 }
 
 .stamp-lbl-vertical {
@@ -1532,10 +1649,11 @@ onBeforeUnmount(() => {
   font-weight: bold;
   color: var(--text-primary);
   letter-spacing: 2px;
-  margin-top: 6px;
-  background: rgba(251, 248, 242, 0.85);
+  margin-top: 8px;
+  background: rgba(251, 248, 242, 0.92);
   padding: 4px 2px;
   border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
 /* Animations */
@@ -1564,26 +1682,74 @@ onBeforeUnmount(() => {
   opacity: 0;
 }
 
-/* Responsive */
+/* ============================================
+   RESPONSIVE — three tiers
+   ============================================ */
+
+/* Wide desktop: keep generous spacing, larger HUD */
+@media (min-width: 1600px) {
+  .ink-layout-wrap { max-width: 1560px; grid-template-columns: 380px 1fr; gap: 56px; }
+  .scroll-outer-frame { height: 620px; }
+  .scroll-wooden-rod { height: 640px; }
+  .scroll-middle-paper { height: 580px; }
+  .hud-panel { width: 360px; }
+}
+
+/* Tablet: collapse to single column, HUD slides to bottom */
 @media (max-width: 1024px) {
   .ink-layout-wrap {
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 24px;
+    align-items: stretch;
   }
-  .scroll-outer-frame {
-    height: 380px;
+  .ink-left-panel {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 18px;
   }
-  .scroll-wooden-rod {
-    height: 400px;
-  }
-  .scroll-middle-paper {
-    height: 350px;
-  }
+  .calligraphy-header { flex: 1; min-width: 240px; }
+  .calligraphy-title { font-size: 40px; }
+  .ink-intro-para { flex: 1 1 100%; }
+  .ink-categories, .ink-legend { flex: 1 1 auto; }
+  .scroll-outer-frame { height: 400px; }
+  .scroll-wooden-rod { height: 420px; }
+  .scroll-middle-paper { height: 370px; }
+
   .hud-panel {
-    width: 280px;
-    left: 20px;
-    top: 20px;
+    top: auto;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px);
+    max-width: 480px;
+    max-height: 45vh;
   }
+  .hud-detail-card {
+    top: 20px;
+    bottom: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px);
+    max-width: 360px;
+  }
+}
+
+/* Mobile: stack ink panel, shrink stamps */
+@media (max-width: 640px) {
+  .anime-ink-container { padding: 24px 16px; }
+  .ink-left-panel { gap: 14px; }
+  .calligraphy-title { font-size: 32px; letter-spacing: 3px; }
+  .calligraphy-subtitle { font-size: 14px; letter-spacing: 3px; }
+  .ink-intro-para { font-size: 13px; line-height: 1.85; }
+  .scroll-outer-frame { height: 340px; }
+  .scroll-wooden-rod { height: 360px; }
+  .scroll-middle-paper { height: 310px; }
+  .stamp-seal-red { width: 32px; height: 36px; font-size: 10px; }
+  .label-plaque-card { min-width: 110px; padding: 6px 10px; }
+  .hud-panel { padding: 20px 18px; }
+  .hud-title { font-size: 20px; }
+  .stat-num { font-size: 22px; }
 }
 
 /* Floating Labels Overlay */
@@ -1620,9 +1786,10 @@ onBeforeUnmount(() => {
 /* Plaque Card styling */
 .label-plaque-card {
   position: relative;
-  padding: 6px 14px;
-  min-width: 120px;
-  border-radius: 6px;
+  padding: 7px 14px;
+  min-width: 130px;
+  max-width: 180px;
+  border-radius: 4px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   backdrop-filter: blur(8px);
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -1828,7 +1995,7 @@ onBeforeUnmount(() => {
 .map-error-state {
   position: absolute;
   inset: 0;
-  z-index: 100;
+  z-index: 50;          /* lower than HUD (z=10) so HUD stays usable on error */
   display: flex;
   align-items: center;
   justify-content: center;
