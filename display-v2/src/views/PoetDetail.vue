@@ -1,889 +1,444 @@
 <template>
-  <div v-if="errorMsg" class="error-state">
-    <div class="error-content">
-      <p class="error-icon">!</p>
-      <p class="error-text">{{ errorMsg }}</p>
-      <router-link to="/poets" class="error-back-link">← 返回诗人长廊</router-link>
+  <div class="pd" v-if="poet">
+    <!-- 返回 -->
+    <div class="pd-back">
+      <router-link :to="backTo" class="pd-back-link">← 返回名士</router-link>
+    </div>
+
+    <div ref="revealRoot" class="pd-content">
+      <!-- 详情头：左肖像 + 右印章/名/元信息/代表作 -->
+      <header class="pd-head" data-reveal>
+        <div class="pd-portrait">
+          <img v-if="avatar" :src="avatar" :alt="poet.name" class="pd-portrait-img" @error="onAvatarError" />
+          <span v-else class="pd-portrait-stamp">{{ poet.name ? poet.name.charAt(0) : '文' }}</span>
+        </div>
+
+        <div class="pd-head-main">
+          <div class="pd-head-top">
+            <span class="pd-seal" aria-hidden="true">{{ poet.name ? poet.name.charAt(0) : '文' }}</span>
+            <span class="pd-dyn" v-if="dynasty">{{ dynasty.name }}</span>
+            <span class="pd-count">{{ poems.length }} 篇传世</span>
+          </div>
+          <h1 class="pd-name">{{ poet.name }}</h1>
+          <div class="pd-meta" v-if="poet.birthYear || poet.birthplace">
+            <span v-if="poet.birthYear">{{ poet.birthYear }} 至 {{ poet.deathYear || '？' }}</span>
+            <span v-if="poet.birthYear && poet.birthplace" class="pd-meta-sep">·</span>
+            <span v-if="poet.birthplace">籍贯 {{ poet.birthplace }}</span>
+          </div>
+          <blockquote v-if="signature" class="pd-sig">
+            <p class="pd-sig-text">「{{ signature.firstLine }}」</p>
+            <cite class="pd-sig-cite">—— 《{{ signature.title }}》</cite>
+          </blockquote>
+        </div>
+      </header>
+
+      <!-- 生平 -->
+      <section v-if="poet.biography" class="pd-section" data-reveal>
+        <SectionHeading title="生平简介" />
+        <div class="pd-bio">{{ poet.biography }}</div>
+      </section>
+
+      <!-- 传世诗篇 -->
+      <section v-if="poems.length" class="pd-section" data-reveal>
+        <SectionHeading :title="`传世诗篇 · ${poems.length} 首`" />
+        <div class="pd-poems">
+          <router-link
+            v-for="pm in poems"
+            :key="pm.id"
+            :to="`/poems/${pm.id}`"
+            class="pd-poem hover-lift"
+          >
+            <div class="pd-poem-head">
+              <span class="pd-poem-title">《{{ pm.title }}》</span>
+              <span class="pd-poem-arrow">→</span>
+            </div>
+            <p class="pd-poem-line">{{ firstLine(pm.content) }}</p>
+            <div v-if="parseTags(pm.sentimentTags).length" class="pd-poem-tags">
+              <span
+                v-for="t in parseTags(pm.sentimentTags).slice(0, 5)"
+                :key="t"
+                class="pd-poem-tag"
+              >{{ t }}</span>
+            </div>
+          </router-link>
+        </div>
+      </section>
     </div>
   </div>
 
-  <div v-else-if="!poet" class="error-state">
-    <div class="error-content">
-      <p class="error-icon">⌛</p>
-      <p class="error-text">加载中...</p>
-    </div>
+  <div v-else-if="errorMsg" class="pd-state">
+    <ErrorState :message="errorMsg" @retry="loadDetail" />
+    <router-link :to="backTo" class="pd-back-link" style="margin-top: 16px;">← 返回名士</router-link>
   </div>
 
-<div class="poet-detail" :class="{ 'anime-layout': isAnime }" v-else>
-    <!-- Real Layout (original 2-column or slightly styled) -->
-    <div class="real-container" v-if="isReal">
-      <div class="detail-back">
-        <router-link to="/poets" class="back-link">← 返回诗人长廊</router-link>
-      </div>
-
-      <div class="poet-detail-container">
-        <!-- Left Column: Portrait & Seals -->
-        <aside class="poet-left-col">
-          <div class="portrait-frame card">
-            <img :src="avatar" :alt="poet.name" class="portrait-img" />
-            <div class="frame-border-decor"></div>
-          </div>
-          
-          <div class="poet-quick-info card">
-            <h1 class="poet-name">{{ poet.name }}</h1>
-            <div class="info-dynasty" v-if="dynasty">{{ dynasty.name }}</div>
-            
-            <div class="quick-meta-list">
-              <div class="meta-row" v-if="poet.birthYear">
-                <span class="meta-tag">生卒</span>
-                <span class="meta-val">{{ poet.birthYear }} — {{ poet.deathYear || '？' }}</span>
-              </div>
-              <div class="meta-row" v-if="poet.birthplace">
-                <span class="meta-tag">籍贯</span>
-                <span class="meta-val">{{ poet.birthplace }}</span>
-              </div>
-            </div>
-
-            <div class="poet-seal-wrap" v-if="poet.style">
-              <div class="cinnabar-seal">{{ poet.style }}</div>
-            </div>
-          </div>
-        </aside>
-
-        <!-- Right Column: Biography & Thread-bound Book Style TOC -->
-        <section class="poet-right-col">
-          <!-- Biography -->
-          <div class="biography-section card" v-if="poet.biography">
-            <h2 class="section-heading">生平简介</h2>
-            <div class="bio-content ink-bleed-effect">
-              <p>{{ poet.biography }}</p>
-            </div>
-          </div>
-
-          <!-- Representative Poems -->
-          <div class="poems-section card" v-if="poems.length">
-            <h2 class="section-heading">代表诗词</h2>
-            
-            <div class="toc-book-list">
-              <router-link
-                v-for="(poem, index) in poems"
-                :key="poem.id"
-                :to="`/poems/${poem.id}`"
-                class="toc-item hover-lift"
-              >
-                <div class="toc-lead">
-                  <span class="toc-index">卷 {{ index + 1 }}</span>
-                  <span class="toc-title">{{ poem.title }}</span>
-                </div>
-                <div class="toc-dots"></div>
-                <div class="toc-preview">{{ poem.content?.split('\n')[0] }}…</div>
-                <span class="toc-action">阅览全文 →</span>
-              </router-link>
-            </div>
-          </div>
-        </section>
-      </div>
-    </div>
-
-    <!-- Anime Layout (诗人详情页.png replica) -->
-    <div class="anime-container" v-else>
-      <div class="detail-back">
-        <router-link to="/poets" class="back-link">← 返回诗人长廊</router-link>
-      </div>
-
-      <div class="poet-split-layout">
-        <!-- Left Column: Big Portrait Cover -->
-        <aside class="poet-cover-col animate-slide-in">
-          <div class="poet-big-portrait-wrap card">
-            <img :src="avatar" :alt="poet.name" class="poet-big-portrait" />
-            <div class="cover-calligraphy-overlay">
-              <div class="calligraphy-text-vertical">{{ getPoetData(poet.name).verticalPoetry }}</div>
-              <div class="calligraphy-signature">
-                {{ poet.name }} <span class="signature-seal">印</span>
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        <!-- Right Column: Timeline & Works -->
-        <section class="poet-details-col">
-          <div class="poet-main-header">
-            <h1 class="poet-title-large">
-              {{ poet.name }}
-              <span class="title-seal">印</span>
-            </h1>
-            <p class="poet-subtitle">{{ getPoetData(poet.name).impact?.substring(0, 32) }}…</p>
-          </div>
-
-          <!-- Quick Meta Grid -->
-          <div class="poet-meta-grid">
-            <div class="meta-grid-cell">
-              <span class="cell-label">字</span>
-              <span class="cell-val">{{ getPoetData(poet.name).zi || '—' }}</span>
-            </div>
-            <div class="meta-grid-cell">
-              <span class="cell-label">号</span>
-              <span class="cell-val">{{ getPoetData(poet.name).hao || '—' }}</span>
-            </div>
-            <div class="meta-grid-cell">
-              <span class="cell-label">生卒年</span>
-              <span class="cell-val">{{ getPoetData(poet.name).years || '—' }}</span>
-            </div>
-            <div class="meta-grid-cell">
-              <span class="cell-label">籍贯</span>
-              <span class="cell-val">{{ getPoetData(poet.name).place || '—' }}</span>
-            </div>
-          </div>
-
-          <!-- Biography Section -->
-          <div class="poet-intro-block">
-            <h3 class="poet-block-title">诗人简介</h3>
-            <p class="intro-paragraph">{{ poet.biography }}</p>
-          </div>
-
-          <!-- Timeline Milestones -->
-          <div class="poet-timeline-block" v-if="getPoetData(poet.name).milestones">
-            <h3 class="poet-block-title">生平经历</h3>
-            <div class="horizontal-timeline-wrapper">
-              <div class="horizontal-timeline-track"></div>
-              <div class="horizontal-timeline-nodes">
-                <div 
-                  v-for="ms in getPoetData(poet.name).milestones" 
-                  :key="ms.year"
-                  class="timeline-milestone-node"
-                >
-                  <div class="milestone-dot-box">
-                    <div class="milestone-dot"></div>
-                  </div>
-                  <div class="milestone-text">
-                    <span class="milestone-year">{{ ms.year }}</span>
-                    <span class="milestone-title">{{ ms.title }}</span>
-                    <p class="milestone-desc">{{ ms.desc }}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Representative Works -->
-          <div class="poet-works-block" v-if="getPoetData(poet.name).works">
-            <h3 class="poet-block-title">代表作品</h3>
-            <div class="works-cards-grid">
-              <div 
-                v-for="work in getPoetData(poet.name).works" 
-                :key="work.title"
-                class="work-quote-card card hover-lift"
-              >
-                <h4 class="work-title">《{{ work.title }}》</h4>
-                <p class="work-quote">“{{ work.quote }}”</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Historical Impact -->
-          <div class="poet-impact-block" v-if="getPoetData(poet.name).impact">
-            <h3 class="poet-block-title">历史影响</h3>
-            <p class="impact-paragraph">{{ getPoetData(poet.name).impact }}</p>
-          </div>
-        </section>
-      </div>
-    </div>
+  <div v-else class="pd-state">
+    <SkeletonBlock height="220px" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
 import { useImage } from '../composables/useImage'
-import { mockPoets } from '../config/mockDetailData'
+import { useReveal } from '../composables/useReveal'
 import api from '../api'
+import SectionHeading from '../components/homepage/SectionHeading.vue'
+import ErrorState from '../components/homepage/ErrorState.vue'
+import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 
 const route = useRoute()
-const { isReal, isAnime } = useTheme()
+const { isAnime } = useTheme()
 const { getImageUrl } = useImage()
+const { reveal } = useReveal()
+
 const poet = ref(null)
 const poems = ref([])
 const dynasty = ref(null)
 const errorMsg = ref(null)
+const revealRoot = ref(null)
+
+// 从哪来回哪去：来自 /poets/all 则返回全量列表，否则返回 showcase
+const backTo = computed(() => {
+  if (typeof document !== 'undefined' && document.referrer?.includes('/poets/all')) return '/poets/all'
+  return '/poets'
+})
 
 const avatar = computed(() => {
   if (!poet.value) return ''
   const url = isAnime.value ? poet.value.avatarAnimeUrl || poet.value.avatarUrl : poet.value.avatarUrl
-  return getImageUrl(url, isAnime.value)
+  return url ? getImageUrl(url, isAnime.value) : ''
 })
-
-const getPoetData = (name) => {
-  return mockPoets[name] || {
-    zi: '—',
-    hao: '—',
-    years: '—',
-    place: '—',
-    verticalPoetry: '大江东去，浪淘尽，千古风流人物。',
-    milestones: [],
-    works: [],
-    impact: ''
-  }
+const onAvatarError = (e) => {
+  e.target.style.display = 'none'
 }
 
-onMounted(async () => {
+const parseTags = (v) => {
+  if (!v) return []
+  if (Array.isArray(v)) return v
+  if (typeof v === 'string') {
+    try {
+      const p = JSON.parse(v)
+      return Array.isArray(p) ? p : []
+    } catch {
+      return []
+    }
+  }
+  return []
+}
+const firstLine = (content) => {
+  if (!content) return ''
+  const c = String(content).replace(/\s+/g, '')
+  const f = c.split(/[。！？；]/)[0] || c.slice(0, 16)
+  return f.length > 16 ? f.slice(0, 16) + '…' : f
+}
+
+// 代表作：sentiment 最丰富的诗
+const signature = computed(() => {
+  const withContent = poems.value.filter((p) => p && p.content)
+  const sorted = [...withContent].sort(
+    (a, b) => parseTags(b.sentimentTags).length - parseTags(a.sentimentTags).length,
+  )
+  const p = sorted[0] || poems.value[0]
+  if (!p) return null
+  return { id: p.id, firstLine: firstLine(p.content), title: p.title }
+})
+
+const loadDetail = async () => {
+  errorMsg.value = null
   try {
     const data = await api.get(`/poets/${route.params.id}`)
     poet.value = data.poet
-    poems.value = data.poems
+    poems.value = data.poems || []
     dynasty.value = data.dynasty
+    await nextTick()
+    if (revealRoot.value) reveal(revealRoot.value)
   } catch (err) {
     console.error('加载诗人详情失败:', err)
     errorMsg.value = '加载诗人详情失败，请稍后重试'
   }
+}
+
+onMounted(() => {
+  loadDetail()
 })
 </script>
 
 <style scoped>
-.poet-detail {
-  max-width: 1400px;
+.pd {
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 32px 40px 80px;
+  padding: 32px 48px 96px;
 }
-
-.detail-back {
+.pd-back {
   margin-bottom: 24px;
   text-align: left;
 }
-
-.back-link {
-  font-size: 14px;
+.pd-back-link {
+  font-size: 13px;
   color: var(--text-muted);
   text-decoration: none;
   font-weight: 600;
   letter-spacing: 1px;
-  transition: color 0.3s;
+  transition: color 0.25s;
 }
-
-.back-link:hover {
+.pd-back-link:hover {
   color: var(--accent);
 }
+.pd-content {
+  max-width: 960px;
+}
 
-/* 2-Column Layout */
-.poet-detail-container {
+/* 详情头 */
+.pd-head {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 200px 1fr;
   gap: 40px;
-  align-items: start;
-}
-
-/* Left Column Styling */
-.poet-left-col {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.portrait-frame {
+  align-items: center;
+  padding-bottom: 36px;
+  margin-bottom: 48px;
+  border-bottom: 1px solid var(--border);
   position: relative;
-  padding: 12px;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  box-shadow: var(--card-shadow);
-  border-radius: var(--radius-sm);
+}
+.pd-head::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 96px;
+  height: 2px;
+  background: var(--accent);
+}
+.pd-portrait {
+  width: 200px;
+  height: 260px;
+  border-radius: 3px;
   overflow: hidden;
-}
-
-.theme-real .portrait-frame {
-  border: 6px solid #2b1d12;
-  outline: 1px solid #d4a843;
-  outline-offset: -4px;
-  border-radius: var(--radius-md);
-}
-
-.portrait-img {
-  width: 100%;
-  height: auto;
-  aspect-ratio: 3 / 4;
-  object-fit: cover;
-  display: block;
-  border-radius: 2px;
-}
-
-.poet-quick-info {
-  padding: 24px;
-  text-align: center;
-  background: var(--card-bg);
   border: 1px solid var(--border);
+  background: #f4efe4;
+  position: relative;
 }
-
-.poet-name {
-  font-family: var(--font-heading);
-  font-size: 28px;
+.theme-inkwash .pd-portrait {
+  background: #2a2520;
+}
+.theme-real .pd-portrait {
+  border: 6px solid #2b1d12;
+}
+.pd-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: relative;
+  z-index: 2;
+}
+.pd-portrait-stamp {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 88px;
   font-weight: 900;
-  color: var(--text-primary);
-  margin-bottom: 8px;
-  letter-spacing: 4px;
+  color: #fff;
+  background: linear-gradient(135deg, #9e2b25, #6b2820);
 }
-
-.info-dynasty {
-  display: inline-block;
+.theme-real .pd-portrait-stamp {
+  background: linear-gradient(135deg, #b8860b, #8b6508);
+}
+.pd-head-main {
+  text-align: left;
+}
+.pd-head-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.pd-seal {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #9e2b25;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 900;
+  border-radius: 3px;
+  transform: rotate(-3deg);
+  flex-shrink: 0;
+}
+.theme-real .pd-seal {
+  background: #b23a2b;
+}
+.pd-dyn {
   font-size: 12px;
   font-weight: 700;
   color: var(--accent);
   border: 1px solid var(--accent);
-  padding: 2px 10px;
+  padding: 3px 12px;
   border-radius: 2px;
-  margin-bottom: 20px;
   letter-spacing: 2px;
 }
-
-.quick-meta-list {
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  border-top: 1px dashed var(--border-light);
-  border-bottom: 1px dashed var(--border-light);
-  padding: 16px 0;
-  margin-bottom: 20px;
-}
-
-.meta-row {
-  display: flex;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.meta-tag {
-  width: 60px;
+.pd-count {
+  font-size: 12px;
   color: var(--text-muted);
+  letter-spacing: 1px;
   font-weight: 600;
 }
-
-.meta-val {
-  flex: 1;
+.pd-name {
+  font-family: var(--font-display);
+  font-size: clamp(44px, 6vw, 68px);
+  font-weight: 900;
   color: var(--text-primary);
+  letter-spacing: 8px;
+  line-height: 1.05;
+  margin: 0 0 12px 0;
+}
+.pd-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+  margin: 0 0 20px 0;
+}
+.pd-meta-sep {
+  margin: 0 8px;
+  color: var(--border);
+}
+.pd-sig {
+  margin: 0;
+  padding: 0 0 0 16px;
+  border-left: 2px solid var(--accent);
+}
+.pd-sig-text {
+  font-family: var(--font-heading);
+  font-size: clamp(17px, 1.8vw, 21px);
   font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.8;
+  letter-spacing: 2px;
+  margin: 0 0 6px 0;
+}
+.pd-sig-cite {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-muted);
+  letter-spacing: 1px;
 }
 
-.poet-seal-wrap {
-  display: flex;
-  justify-content: center;
-  margin-top: 12px;
+/* sections */
+.pd-section {
+  margin-bottom: 56px;
+  text-align: left;
 }
-
-/* Right Column Styling */
-.poet-right-col {
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-}
-
-.biography-section,
-.poems-section {
-  padding: 40px;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-}
-
-.theme-inkwash .biography-section,
-.theme-inkwash .poems-section {
-  background-image: radial-gradient(circle at 100% 150%, rgba(194,58,43,0.02) 24%, transparent 25%);
-}
-
-.bio-content p {
-  font-size: 16px;
+.pd-bio {
+  font-size: 15px;
   line-height: 2;
   color: var(--text-primary);
   text-indent: 2em;
-  text-justify: inter-character;
   letter-spacing: 0.5px;
-}
-
-/* TOC book list style */
-.toc-book-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 24px;
-}
-
-.toc-item {
-  display: flex;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px dashed var(--border-light);
-  text-decoration: none;
-  transition: all 0.3s;
-}
-
-.toc-item:hover {
-  background: rgba(184, 134, 11, 0.03);
-  border-bottom-color: var(--accent);
-}
-
-.theme-inkwash .toc-item:hover {
-  background: rgba(194, 58, 43, 0.03);
-  border-bottom-color: var(--accent);
-}
-
-.toc-lead {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-shrink: 0;
-}
-
-.toc-index {
-  font-family: var(--font-display);
-  font-size: 13px;
-  color: var(--text-muted);
-  letter-spacing: 1px;
-}
-
-.toc-title {
-  font-family: var(--font-heading);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: 2px;
-}
-
-.toc-dots {
-  flex: 1;
-  border-bottom: 1px dotted var(--border);
-  margin: 0 16px;
-  opacity: 0.6;
-}
-
-.toc-preview {
-  font-size: 13px;
-  color: var(--text-muted);
-  max-width: 240px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.toc-action {
-  font-size: 13px;
-  color: var(--accent);
-  font-weight: 700;
-  margin-left: 20px;
-  flex-shrink: 0;
-  transition: transform 0.2s;
-}
-
-.toc-item:hover .toc-action {
-  transform: translateX(4px);
-}
-
-/* Anime Layout (诗人详情页.png replica) */
-.poet-split-layout {
-  display: grid;
-  grid-template-columns: 360px 1fr;
-  gap: 48px;
-  align-items: start;
-}
-
-.poet-cover-col {
-  width: 100%;
-}
-
-.poet-big-portrait-wrap {
-  position: relative;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  overflow: hidden;
-  background: #000;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
-}
-
-.poet-big-portrait {
-  width: 100%;
-  height: 520px;
-  object-fit: cover;
-  display: block;
-  opacity: 0.95;
-}
-
-.cover-calligraphy-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to right, rgba(0,0,0,0.6) 0%, transparent 60%);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 32px;
-  color: #fff;
-  text-align: left;
-}
-
-.calligraphy-text-vertical {
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-  font-family: var(--font-heading);
-  font-size: 20px;
-  line-height: 1.5;
-  letter-spacing: 6px;
-  color: #faf6ee;
-  text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
-}
-
-.calligraphy-signature {
-  font-family: var(--font-heading);
-  font-size: 18px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
-  letter-spacing: 2px;
-}
-
-.signature-seal {
-  background: var(--accent);
-  color: #fff;
-  padding: 2px 6px;
-  font-size: 11px;
-  border-radius: 2px;
-  font-family: var(--font-display);
-  transform: rotate(-4deg);
-}
-
-/* Right details column */
-.poet-details-col {
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-  text-align: left;
-}
-
-.poet-main-header {
-  border-bottom: 2px solid var(--border);
-  padding-bottom: 16px;
-}
-
-.poet-title-large {
-  font-family: var(--font-heading);
-  font-size: 36px;
-  font-weight: 900;
-  color: var(--text-primary);
-  letter-spacing: 4px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.title-seal {
-  background: var(--accent);
-  color: #fff;
-  padding: 2px 8px;
-  font-size: 12px;
-  border-radius: 2px;
-  font-family: var(--font-display);
-  letter-spacing: 1px;
-  transform: rotate(-3deg);
-}
-
-.poet-subtitle {
-  font-size: 14px;
-  color: var(--text-muted);
-  margin-top: 6px;
-  font-weight: 600;
-}
-
-/* Meta grid four sections */
-.poet-meta-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-.meta-grid-cell {
   background: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 16px;
-  border-radius: 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.cell-label {
-  font-size: 12px;
-  color: var(--text-muted);
-  font-weight: 700;
-}
-
-.cell-val {
-  font-size: 15px;
-  color: var(--text-primary);
-  font-weight: 700;
-}
-
-/* Content blocks */
-.poet-block-title {
-  font-family: var(--font-heading);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 16px;
   border-left: 3px solid var(--accent);
-  padding-left: 10px;
-  letter-spacing: 1px;
+  border-radius: 0 4px 4px 0;
+  padding: 28px 32px;
 }
 
-.intro-paragraph,
-.impact-paragraph {
-  font-size: 14px;
-  line-height: 1.8;
-  color: var(--text-secondary);
-  text-align: justify;
-}
-
-/* Horizontal Timeline */
-.poet-timeline-block {
-  width: 100%;
-}
-
-.horizontal-timeline-wrapper {
-  position: relative;
-  padding: 24px 0;
-  margin-top: 12px;
-}
-
-.horizontal-timeline-track {
-  position: absolute;
-  top: 36px;
-  left: 20px;
-  right: 20px;
-  height: 2px;
-  background: var(--border);
-  z-index: 1;
-}
-
-.horizontal-timeline-nodes {
-  position: relative;
-  z-index: 2;
+/* 诗篇列表 */
+.pd-poems {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
-}
-
-.timeline-milestone-node {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.milestone-dot-box {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--bg-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-}
-
-.milestone-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 4px #fff, 0 0 0 5px var(--accent);
-  transition: transform 0.3s;
-}
-
-.timeline-milestone-node:hover .milestone-dot {
-  transform: scale(1.3);
-}
-
-.milestone-text {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0 4px;
-}
-
-.milestone-year {
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--accent);
-}
-
-.milestone-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-top: 2px;
-}
-
-.milestone-desc {
-  font-size: 10px;
-  color: var(--text-muted);
-  line-height: 1.4;
-  margin-top: 6px;
-  text-align: justify;
-}
-
-/* Works cards */
-.works-cards-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 }
-
-.work-quote-card {
+.pd-poem {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 22px;
   background: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 20px;
   border-radius: 4px;
-  text-align: left;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
-
-.work-title {
-  font-family: var(--font-heading);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--accent);
-  margin-bottom: 8px;
+.pd-poem:hover {
+  border-color: var(--accent);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(61, 43, 31, 0.1);
 }
-
-.work-quote {
-  font-size: 13px;
-  font-style: italic;
-  line-height: 1.5;
-  color: var(--text-secondary);
-}
-
-/* Responsive */
-@media (max-width: 900px) {
-  .poet-detail-container {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
-  .poet-left-col {
-    display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 24px;
-    align-items: center;
-  }
-  .portrait-img {
-    aspect-ratio: 1;
-  }
-  .poet-quick-info {
-    text-align: left;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-  .poet-seal-wrap {
-    justify-content: flex-start;
-  }
-  .poet-split-layout {
-    grid-template-columns: 1fr;
-  }
-  .poet-big-portrait {
-    height: 380px;
-  }
-  .horizontal-timeline-nodes {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  .horizontal-timeline-track {
-    display: none;
-  }
-  .timeline-milestone-node {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 16px;
-  }
-  .milestone-dot-box {
-    margin-bottom: 0;
-  }
-  .milestone-text {
-    text-align: left;
-    align-items: flex-start;
-  }
-  .works-cards-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 600px) {
-  .poet-left-col {
-    grid-template-columns: 1fr;
-  }
-  .biography-section,
-  .poems-section {
-    padding: 24px;
-  }
-  .toc-dots,
-  .toc-preview {
-    display: none;
-  }
-  .toc-item {
-    justify-content: space-between;
-  }
-  .poet-meta-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .poet-detail {
-    padding: 24px 20px;
-  }
-}
-
-/* Error state */
-.error-state {
+.pd-poem-head {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  min-height: 60vh;
-  padding: 32px 40px;
 }
-
-.error-content {
-  text-align: center;
-  max-width: 400px;
+.pd-poem-title {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 1px;
 }
-
-.error-icon {
-  font-size: 48px;
-  font-weight: 900;
-  color: var(--accent);
-  margin-bottom: 16px;
-  opacity: 0.6;
-  line-height: 1;
-}
-
-.error-text {
-  font-size: 15px;
-  color: var(--text-secondary);
-  margin-bottom: 32px;
-  line-height: 1.6;
-}
-
-.error-back-link {
-  display: inline-block;
+.pd-poem-arrow {
   font-size: 14px;
   color: var(--text-muted);
-  text-decoration: none;
-  font-weight: 600;
-  letter-spacing: 1px;
-  padding: 8px 20px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  transition: all 0.3s;
+  transition: transform 0.25s, color 0.25s;
 }
-
-.error-back-link:hover {
+.pd-poem:hover .pd-poem-arrow {
+  transform: translateX(4px);
   color: var(--accent);
-  border-color: var(--accent);
-  background: rgba(184, 134, 11, 0.03);
+}
+.pd-poem-line {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  letter-spacing: 1px;
+  margin: 0;
+}
+.pd-poem-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
+.pd-poem-tag {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  background: rgba(184, 134, 11, 0.07);
+  border: 1px solid var(--border-light);
+  padding: 2px 8px;
+  border-radius: 100px;
+  letter-spacing: 1px;
+}
+.theme-inkwash .pd-poem-tag {
+  background: rgba(194, 58, 43, 0.06);
 }
 
+.pd-state {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 64px 48px;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .pd { padding: 24px 32px 80px; }
+  .pd-head {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    text-align: left;
+  }
+  .pd-portrait { width: 160px; height: 210px; }
+  .pd-portrait-stamp { font-size: 72px; }
+  .pd-poems { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .pd { padding: 20px 16px 64px; }
+  .pd-section { margin-bottom: 40px; }
+  .pd-bio { padding: 20px; }
+  .pd-name { letter-spacing: 4px; }
+}
 </style>
-
-
