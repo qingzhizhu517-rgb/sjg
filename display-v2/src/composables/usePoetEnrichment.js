@@ -76,7 +76,7 @@ export function usePoetEnrichment() {
             sentimentTags: parseTags(sig.sentimentTags),
           }
         : null
-      delete e.poems // 不留全量，省内存
+      // 保留 poems 全量，供经典案例展示使用
     })
     map.value = m
     loaded.value = true
@@ -91,6 +91,7 @@ export function usePoetEnrichment() {
       ...poet,
       poemCount: e.poemCount || 0,
       signaturePoem: e.signaturePoem || null,
+      poems: e.poems || [],
     }
   }
 
