@@ -1,45 +1,48 @@
 <template>
-  <section ref="root" class="ink-hero" :style="{ minHeight }">
-    <!-- 背景层：墨渐变 + 山脉剪影 + 金粉 -->
-    <div class="ink-hero__bg" aria-hidden="true">
-      <svg class="ink-hero__range" viewBox="0 0 1440 200" preserveAspectRatio="none">
-        <path
-          d="M0,200 L0,150 L170,80 L320,125 L470,55 L620,135 L780,45 L940,115 L1120,65 L1280,120 L1440,85 L1440,200 Z"
-        />
-      </svg>
-      <span
-        v-for="(p, i) in particles"
-        :key="i"
-        class="ink-hero__particle"
-        :style="{
-          left: p.left + '%',
-          top: p.top + '%',
-          width: p.size + 'px',
-          height: p.size + 'px',
-          animationDelay: p.delay + 's',
-          animationDuration: p.dur + 's',
-        }"
-      ></span>
-    </div>
+  <section ref="root" class="ph" :class="`ph--${variant}`">
+    <!-- 纸本墨晕（CSS，非粒子/光晕） -->
+    <div class="ph__wash" aria-hidden="true"></div>
 
-    <!-- 左轴金线 -->
-    <span class="ink-hero__rail" aria-hidden="true"></span>
+    <!-- 右侧竖排题款 -->
+    <p v-if="kuan" class="ph__kuan" aria-hidden="true">{{ kuan }}</p>
 
-    <!-- 内容 -->
-    <div ref="content" class="ink-hero__inner">
-      <span v-if="eyebrow" class="ink-hero__eyebrow">{{ eyebrow }}</span>
-      <h1 ref="titleEl" class="ink-hero__title">{{ title }}</h1>
-      <p v-if="subtitle" ref="subtitleEl" class="ink-hero__subtitle">{{ subtitle }}</p>
+    <div ref="content" class="ph__inner">
+      <div class="ph__head">
+        <span class="ph__seal" aria-hidden="true">{{ sealChar || title.charAt(0) }}</span>
+        <span v-if="eyebrow" class="ph__eyebrow">{{ eyebrow }}</span>
+      </div>
+      <h1 ref="titleEl" class="ph__title">{{ title }}</h1>
+      <p v-if="subtitle" ref="subtitleEl" class="ph__subtitle">{{ subtitle }}</p>
       <StatTicker
         v-if="stats && stats.length"
-        class="ink-hero__stats"
+        ref="ticker"
+        class="ph__stats"
         :stats="stats"
-        tone="dark"
+        tone="light"
       />
-      <button v-if="ctaLabel" ref="ctaEl" class="ink-hero__cta" @click="$emit('cta')">
+      <button v-if="ctaLabel" ref="ctaEl" class="ph__cta" @click="$emit('cta')">
         <span>{{ ctaLabel }}</span>
-        <span class="ink-hero__cta-arrow">→</span>
+        <span class="ph__cta-arrow">→</span>
       </button>
+
+      <!-- river variant: 横向河流时间线 -->
+      <div v-if="variant === 'river'" class="ph-river" aria-hidden="true">
+        <span class="ph-river__line"></span>
+        <span class="ph-river__dot" v-for="i in 9" :key="i"></span>
+      </div>
+    </div>
+
+    <!-- landscape variant: 横展地平线 + 远山 -->
+    <div v-if="variant === 'landscape'" class="ph-horizon" aria-hidden="true">
+      <span class="ph-horizon__peak p1"></span>
+      <span class="ph-horizon__peak p2"></span>
+      <span class="ph-horizon__peak p3"></span>
+      <span class="ph-horizon__water"></span>
+    </div>
+
+    <!-- roster variant: 右侧诗书画印纵列 -->
+    <div v-else-if="variant === 'roster'" class="ph-roster" aria-hidden="true">
+      <span class="ph-roster__seal" v-for="c in rosterChars" :key="c">{{ c }}</span>
     </div>
   </section>
 </template>
@@ -52,9 +55,6 @@ import StatTicker from './StatTicker.vue'
 const prefersReduce = () =>
   typeof window !== 'undefined' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches
-const isDesktop = () =>
-  typeof window !== 'undefined' &&
-  window.matchMedia('(min-width: 768px)').matches
 
 const props = defineProps({
   eyebrow: { type: String, default: '' },
@@ -62,7 +62,9 @@ const props = defineProps({
   subtitle: { type: String, default: '' },
   stats: { type: Array, default: () => [] },
   ctaLabel: { type: String, default: '' },
-  minHeight: { type: String, default: '58vh' },
+  variant: { type: String, default: 'landscape' }, // landscape | roster | river
+  sealChar: { type: String, default: '' },
+  kuan: { type: String, default: '' },
 })
 defineEmits(['cta'])
 
@@ -72,38 +74,36 @@ const subtitleEl = ref(null)
 const ctaEl = ref(null)
 let tl = null
 
-// 金粉粒子（仅桌面 + 非 reduced-motion）
-const particleCount = isDesktop() && !prefersReduce() ? 16 : 0
-const particles = Array.from({ length: particleCount }, (_, i) => ({
-  left: (i * 7.3 + 4) % 100,
-  top: (i * 13.7 + 8) % 88,
-  delay: ((i * 0.7) % 6).toFixed(2),
-  dur: (6 + (i % 5) * 2.2).toFixed(2),
-  size: 2 + (i % 3),
-}))
+const rosterChars = ['诗', '书', '画', '印']
 
 onMounted(() => {
   if (prefersReduce() || !root.value) return
-  tl = gsap.timeline({ delay: 0.18 })
+  tl = gsap.timeline({ delay: 0.12 })
+  const seal = root.value.querySelector('.ph__seal')
+  if (seal) tl.from(seal, { scale: 0.6, opacity: 0, duration: 0.5, ease: 'power2.out' })
   if (titleEl.value)
-    tl.from(titleEl.value, { y: 30, opacity: 0, duration: 0.7, ease: 'power3.out' })
+    tl.from(
+      titleEl.value,
+      { y: 24, opacity: 0, duration: 0.7, ease: 'power3.out' },
+      '-=0.25',
+    )
   if (subtitleEl.value)
     tl.from(
       subtitleEl.value,
-      { y: 18, opacity: 0, duration: 0.6, ease: 'power3.out' },
+      { y: 14, opacity: 0, duration: 0.5, ease: 'power3.out' },
       '-=0.4',
     )
-  const tickerEl = root.value.querySelector('.ink-hero__stats')
-  if (tickerEl)
+  const statsEl = root.value.querySelector('.ph__stats')
+  if (statsEl)
     tl.from(
-      tickerEl,
-      { y: 14, opacity: 0, duration: 0.5, ease: 'power3.out' },
+      statsEl,
+      { y: 12, opacity: 0, duration: 0.5, ease: 'power3.out' },
       '-=0.3',
     )
   if (ctaEl.value)
     tl.from(
       ctaEl.value,
-      { y: 12, opacity: 0, duration: 0.5, ease: 'power3.out' },
+      { y: 10, opacity: 0, duration: 0.4, ease: 'power3.out' },
       '-=0.25',
     )
 })
@@ -115,119 +115,114 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.ink-hero {
+.ph {
   position: relative;
-  display: flex;
-  align-items: center;
   padding: 88px 48px 72px;
   overflow: hidden;
-  background: linear-gradient(135deg, #1c1a17 0%, #2a2620 55%, #15130f 100%);
-  color: #f2ebd9;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+  background: var(--bg-primary);
 }
-
-.ink-hero__bg {
+.ph__wash {
   position: absolute;
   inset: 0;
-  z-index: 0;
   pointer-events: none;
-}
-.ink-hero__bg::before {
-  content: '';
-  position: absolute;
-  inset: 0;
+  z-index: 0;
   background: radial-gradient(
-      120% 80% at 16% 28%,
-      rgba(212, 175, 55, 0.1),
+      110% 80% at 88% 12%,
+      rgba(61, 43, 31, 0.05),
       transparent 55%
     ),
-    radial-gradient(100% 70% at 86% 92%, rgba(158, 43, 37, 0.12), transparent 60%);
+    radial-gradient(90% 70% at 8% 92%, rgba(158, 43, 37, 0.04), transparent 60%);
 }
-.ink-hero__range {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  width: 100%;
-  height: 40%;
-  fill: rgba(18, 16, 12, 0.92);
-}
-.ink-hero__particle {
-  position: absolute;
-  border-radius: 50%;
-  background: #d4af37;
-  opacity: 0;
-  box-shadow: 0 0 6px rgba(212, 175, 55, 0.55);
-  animation-name: ink-float;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-}
-@keyframes ink-float {
-  0% { opacity: 0; transform: translateY(12px); }
-  25% { opacity: 0.7; }
-  100% { opacity: 0; transform: translateY(-52px); }
+.theme-inkwash .ph__wash {
+  background: radial-gradient(
+      110% 80% at 88% 12%,
+      rgba(0, 0, 0, 0.04),
+      transparent 55%
+    ),
+    radial-gradient(90% 70% at 8% 92%, rgba(194, 58, 43, 0.05), transparent 60%);
 }
 
-.ink-hero__rail {
+.ph__kuan {
   position: absolute;
-  left: 0;
-  top: 20%;
-  bottom: 20%;
-  width: 2px;
-  background: linear-gradient(180deg, transparent, #d4af37 28%, #9e2b25 72%, transparent);
-  z-index: 1;
+  top: 80px;
+  right: 56px;
+  z-index: 2;
+  writing-mode: vertical-rl;
+  font-family: var(--font-heading);
+  font-size: 15px;
+  letter-spacing: 7px;
+  color: var(--text-muted);
+  opacity: 0.75;
+  max-height: 56vh;
+  margin: 0;
 }
 
-.ink-hero__inner {
+.ph__inner {
   position: relative;
   z-index: 2;
   max-width: 880px;
-  text-align: left;
 }
-.ink-hero__eyebrow {
-  display: inline-flex;
+.ph__head {
+  display: flex;
   align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.ph__seal {
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #9e2b25;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 900;
+  border-radius: 3px;
+  transform: rotate(-3deg);
+  box-shadow: 0 3px 10px rgba(158, 43, 37, 0.28);
+  flex-shrink: 0;
+}
+.theme-real .ph__seal {
+  background: #b23a2b;
+}
+.ph__eyebrow {
   font-family: var(--font-heading);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 4px;
-  color: #f0d9a0;
-  border: 1px solid rgba(212, 175, 55, 0.5);
-  background: rgba(158, 43, 37, 0.2);
-  padding: 5px 14px;
-  border-radius: 2px;
-  margin-bottom: 22px;
+  color: var(--accent);
 }
-.ink-hero__title {
+.ph__title {
   font-family: var(--font-display);
-  font-size: clamp(40px, 7vw, 80px);
+  font-size: clamp(48px, 9vw, 104px);
   font-weight: 900;
-  letter-spacing: 6px;
+  letter-spacing: 8px;
   line-height: 1.05;
-  margin: 0 0 18px 0;
-  color: #f2ebd9;
-  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.4);
+  color: var(--text-primary);
+  margin: 0 0 22px 0;
 }
-.ink-hero__subtitle {
+.ph__subtitle {
   font-size: 15px;
   line-height: 1.9;
   letter-spacing: 1px;
-  color: rgba(242, 235, 217, 0.72);
+  color: var(--text-secondary);
   max-width: 560px;
   margin: 0 0 28px 0;
 }
-.ink-hero__stats {
+.ph__stats {
   margin-bottom: 8px;
 }
-.ink-hero__cta {
-  margin-top: 28px;
+.ph__cta {
+  margin-top: 30px;
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 28px;
-  background: #9e2b25;
-  color: #fff;
-  border: 1px solid #c23a2b;
+  padding: 13px 30px;
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--text-primary);
   border-radius: 2px;
   font-family: var(--font-heading);
   font-size: 14px;
@@ -236,39 +231,154 @@ onBeforeUnmount(() => {
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
-.ink-hero__cta:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(158, 43, 37, 0.4);
-  background: #b23a2e;
+.ph__cta:hover {
+  background: var(--text-primary);
+  color: var(--bg-primary);
 }
-.ink-hero__cta:active {
-  transform: translateY(0);
+.ph__cta:active {
+  transform: translateY(1px);
 }
-.ink-hero__cta-arrow {
+.ph__cta-arrow {
   transition: transform 0.3s;
 }
-.ink-hero__cta:hover .ink-hero__cta-arrow {
+.ph__cta:hover .ph__cta-arrow {
   transform: translateX(4px);
 }
 
+/* ============ variant: landscape（山河图志）============ */
+.ph--landscape {
+  padding-bottom: 96px;
+}
+.ph-horizon {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 96px;
+  pointer-events: none;
+  z-index: 1;
+}
+.ph-horizon__water {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 56px;
+  background: linear-gradient(180deg, transparent, rgba(61, 43, 31, 0.05) 60%, rgba(61, 43, 31, 0.08));
+}
+.theme-inkwash .ph-horizon__water {
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.04) 60%, rgba(0, 0, 0, 0.07));
+}
+.ph-horizon__peak {
+  position: absolute;
+  bottom: 36px;
+  width: 0;
+  height: 0;
+  border-left: 90px solid transparent;
+  border-right: 90px solid transparent;
+  border-bottom: 60px solid rgba(61, 43, 31, 0.08);
+}
+.theme-inkwash .ph-horizon__peak {
+  border-bottom-color: rgba(0, 0, 0, 0.07);
+}
+.ph-horizon__peak.p1 { left: 12%; border-bottom-color: rgba(61, 43, 31, 0.1); }
+.ph-horizon__peak.p2 { left: 42%; border-bottom-width: 78px; border-bottom-color: rgba(61, 43, 31, 0.07); }
+.ph-horizon__peak.p3 { left: 68%; }
+
+/* ============ variant: roster（齐鲁名士）============ */
+.ph--roster .ph__inner {
+  max-width: 640px;
+}
+.ph-roster {
+  position: absolute;
+  right: 64px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 2;
+}
+.ph-roster__seal {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(158, 43, 37, 0.1);
+  border: 1.5px solid rgba(158, 43, 37, 0.45);
+  color: #9e2b25;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 900;
+  border-radius: 3px;
+}
+.theme-real .ph-roster__seal {
+  background: rgba(184, 134, 11, 0.1);
+  border-color: rgba(184, 134, 11, 0.45);
+  color: var(--accent-dark);
+}
+.theme-inkwash .ph-roster__seal {
+  background: rgba(194, 58, 43, 0.1);
+  border-color: rgba(194, 58, 43, 0.45);
+  color: var(--accent);
+}
+
+/* ============ variant: river（文脉长河）============ */
+.ph-river {
+  position: relative;
+  margin-top: 44px;
+  height: 28px;
+  width: 100%;
+  max-width: 920px;
+}
+.ph-river__line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--border) 8%,
+    var(--accent) 50%,
+    var(--border) 92%,
+    transparent
+  );
+}
+.ph-river__dot {
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translate(-50%, -50%);
+  opacity: 0.7;
+}
+.ph-river__dot:nth-child(2) { left: 5%; }
+.ph-river__dot:nth-child(3) { left: 17%; }
+.ph-river__dot:nth-child(4) { left: 29%; }
+.ph-river__dot:nth-child(5) { left: 41%; }
+.ph-river__dot:nth-child(6) { left: 53%; }
+.ph-river__dot:nth-child(7) { left: 65%; }
+.ph-river__dot:nth-child(8) { left: 77%; }
+.ph-river__dot:nth-child(9) { left: 89%; }
+.ph-river__dot:nth-child(10) { left: 95%; }
+
 @media (max-width: 768px) {
-  .ink-hero {
-    padding: 72px 20px 56px;
-  }
-  .ink-hero__title {
-    letter-spacing: 3px;
-  }
-  .ink-hero__subtitle {
-    font-size: 14px;
-  }
-  .ink-hero__rail {
-    display: none;
-  }
+  .ph { padding: 64px 20px 56px; }
+  .ph__title { letter-spacing: 4px; }
+  .ph__kuan { display: none; }
+  .ph-roster { right: 20px; gap: 10px; }
+  .ph-roster__seal { width: 42px; height: 42px; font-size: 20px; }
+  .ph-horizon__peak { border-left-width: 60px; border-right-width: 60px; border-bottom-width: 44px; }
+  .ph-horizon__peak.p2 { border-bottom-width: 56px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ink-hero__particle {
-    animation: none;
-    opacity: 0.25;
-  }
+  .ph-horizon,
+  .ph-river,
+  .ph-roster { opacity: 0.9; }
 }
 </style>

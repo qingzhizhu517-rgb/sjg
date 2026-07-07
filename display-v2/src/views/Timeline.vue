@@ -1,6 +1,9 @@
 <template>
   <div class="timeline-page">
     <InkHero
+      variant="river"
+      seal-char="文"
+      kuan="文脉绵延 近四千年"
       eyebrow="朝代年轮"
       title="文脉长河"
       subtitle="沿着历史的河流，见证诗与时代的交响。"

@@ -1,12 +1,13 @@
 <template>
   <div class="poets-view" :class="{ 'anime-layout': isAnime }">
     <InkHero
+      variant="roster"
+      seal-char="名"
+      kuan="济南名士多"
       eyebrow="齐鲁文脉"
       title="齐鲁名士"
       subtitle="探寻黄河流域历代齐鲁大家之生平轨迹与文学连结。"
       :stats="heroStats"
-      cta-label="切换至关系图谱"
-      @cta="activeTab = 'graph'"
     />
 
     <div ref="revealRoot" class="poets-content">

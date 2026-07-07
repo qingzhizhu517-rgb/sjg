@@ -5,6 +5,9 @@
     <!-- 墨卷 Hero（inkwash 主题沿用既有 calligraphy hero，避免双 hero）-->
     <InkHero
       v-if="isReal"
+      variant="landscape"
+      seal-char="山"
+      kuan="黄河入海 齐鲁胜境"
       eyebrow="山东 · 黄河入海"
       title="山河图志"
       subtitle="数字人文视域下黄河流域（山东段）文学景观时空交互。"
