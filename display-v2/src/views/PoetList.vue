@@ -518,7 +518,7 @@ onBeforeUnmount(() => {
   background: rgba(194, 58, 43, 0.05);
 }
 .toggle-btn.active {
-  background: var(--accent);
+  background: var(--accent-dark);
   color: #fff;
   box-shadow: 0 2px 6px rgba(184, 134, 11, 0.2);
 }

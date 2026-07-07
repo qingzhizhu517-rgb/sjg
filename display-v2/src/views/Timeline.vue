@@ -26,7 +26,7 @@
         <header class="tl-detail-head">
           <div class="tl-detail-title-row">
             <h2 class="tl-detail-name">{{ selected.dynasty.name }}</h2>
-            <span class="tl-detail-years">{{ formatYear(selected.dynasty.startYear) }} — {{ formatYear(selected.dynasty.endYear) }}</span>
+            <span class="tl-detail-years">{{ formatYear(selected.dynasty.startYear) }} 至 {{ formatYear(selected.dynasty.endYear) }}</span>
           </div>
           <p v-if="selected.dynasty.description" class="tl-detail-desc">{{ selected.dynasty.description }}</p>
           <div class="tl-detail-stats">
@@ -44,7 +44,7 @@
             <h3 class="tl-col-title"><span class="tl-col-icon">事</span>历史事件</h3>
             <div v-if="selected.events.length" class="tl-events">
               <div v-for="ev in selected.events" :key="ev.id" class="tl-event">
-                <span class="tl-event-year">{{ ev.year != null ? formatYear(ev.year) : '—' }}</span>
+                <span class="tl-event-year">{{ formatYear(ev.year) }}</span>
                 <div class="tl-event-body">
                   <p class="tl-event-title">{{ ev.title }}</p>
                   <p v-if="ev.significance" class="tl-event-sig">{{ ev.significance }}</p>
@@ -151,7 +151,7 @@ const selectedDynastyId = ref(4) // 默认隋唐
 const revealRoot = ref(null)
 
 const formatYear = (y) =>
-  y == null ? '—' : y < 0 ? '前' + Math.abs(y) : String(y)
+  y == null ? '' : y < 0 ? '前' + Math.abs(y) : String(y)
 
 const dynastyItems = computed(() =>
   timeline.value.map((t) => ({

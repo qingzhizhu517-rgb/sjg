@@ -11,7 +11,7 @@
     >
       <span class="rail__name">{{ d.name }}</span>
       <span v-if="d.id !== null" class="rail__count">{{ d.poetCount }}</span>
-      <span v-if="d.startYear" class="rail__year">{{ formatYear(d.startYear) }}–{{ formatYear(d.endYear) }}</span>
+      <span v-if="d.startYear" class="rail__year">{{ formatYear(d.startYear) }}-{{ formatYear(d.endYear) }}</span>
     </button>
   </div>
 </template>
@@ -64,8 +64,8 @@ const formatYear = (y) => (y == null ? '' : y < 0 ? '前' + Math.abs(y) : String
   box-shadow: 0 4px 14px rgba(158, 43, 37, 0.28);
 }
 .theme-real .rail__chip.is-active {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
   box-shadow: 0 4px 14px rgba(184, 134, 11, 0.28);
 }
 .rail__chip.is-faded {

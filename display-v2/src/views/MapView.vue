@@ -2,8 +2,9 @@
   <div class="map-view" :class="{ 'anime-layout': isAnime }" @mousemove="handleMouseMove" @mouseleave="resetParallax">
     <!-- 双主题布局容器 -->
 
-    <!-- 墨卷 Hero -->
+    <!-- 墨卷 Hero（inkwash 主题沿用既有 calligraphy hero，避免双 hero）-->
     <InkHero
+      v-if="isReal"
       eyebrow="山东 · 黄河入海"
       title="山河图志"
       subtitle="数字人文视域下黄河流域（山东段）文学景观时空交互。"
@@ -136,7 +137,7 @@
             <div class="seal-red">天下大观</div>
             <div class="calligraphy-text">
               <h1 class="calligraphy-title">山东揽胜</h1>
-              <span class="calligraphy-subtitle">— 黄河入海 —</span>
+              <span class="calligraphy-subtitle">黄河入海</span>
             </div>
           </div>
           <p class="ink-intro-para">
