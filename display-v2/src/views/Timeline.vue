@@ -1,342 +1,565 @@
 <template>
   <div class="timeline-page">
-    <!-- HERO -->
-    <header class="page-hero">
-      <div class="hero-inner">
-        <span class="hero-eyebrow">— 历 朝 年 轮 —</span>
-        <h1 class="page-title">文脉长河</h1>
-        <p class="page-desc">沿着历史的河流，见证诗与时代的交响。从诗经楚辞到唐诗宋词，<br class="hero-break" />齐鲁文脉一脉相承又各具风姿。</p>
+    <InkHero
+      eyebrow="朝代年轮"
+      title="文脉长河"
+      subtitle="沿着历史的河流，见证诗与时代的交响。"
+      :stats="heroStats"
+    />
 
-        <div class="hero-stats">
-          <div class="stat">
-            <span class="stat-num">8</span>
-            <span class="stat-lbl">朝代</span>
+    <div ref="revealRoot" class="timeline-content">
+      <!-- 朝代年轮选择器 -->
+      <section class="tl-section" data-reveal>
+        <SectionHeading
+          title="朝代年轮"
+          subtitle="点选朝代，纵览其史事、名士与诗篇"
+        />
+        <DynastyRail
+          v-model="selectedDynastyId"
+          :dynasties="dynastyItems"
+          aria-label="朝代年轮"
+        />
+      </section>
+
+      <!-- 选中朝代详情 -->
+      <section v-if="selected" :key="selected.dynasty.id" class="tl-section tl-detail" data-reveal>
+        <header class="tl-detail-head">
+          <div class="tl-detail-title-row">
+            <h2 class="tl-detail-name">{{ selected.dynasty.name }}</h2>
+            <span class="tl-detail-years">{{ formatYear(selected.dynasty.startYear) }} — {{ formatYear(selected.dynasty.endYear) }}</span>
           </div>
-          <span class="stat-divider"></span>
-          <div class="stat">
-            <span class="stat-num">50<span class="stat-plus">+</span></span>
-            <span class="stat-lbl">历史事件</span>
+          <p v-if="selected.dynasty.description" class="tl-detail-desc">{{ selected.dynasty.description }}</p>
+          <div class="tl-detail-stats">
+            <span><b>{{ selected.poets.length }}</b> 位名士</span>
+            <span class="tl-detail-sep">·</span>
+            <span><b>{{ selected.poems.length }}</b> 篇诗卷</span>
+            <span class="tl-detail-sep">·</span>
+            <span><b>{{ selected.events.length }}</b> 件史事</span>
           </div>
-          <span class="stat-divider"></span>
-          <div class="stat">
-            <span class="stat-num">6</span>
-            <span class="stat-lbl">代表诗人</span>
+        </header>
+
+        <div class="tl-detail-grid">
+          <!-- 史事 -->
+          <div class="tl-col">
+            <h3 class="tl-col-title"><span class="tl-col-icon">事</span>历史事件</h3>
+            <div v-if="selected.events.length" class="tl-events">
+              <div v-for="ev in selected.events" :key="ev.id" class="tl-event">
+                <span class="tl-event-year">{{ ev.year != null ? formatYear(ev.year) : '—' }}</span>
+                <div class="tl-event-body">
+                  <p class="tl-event-title">{{ ev.title }}</p>
+                  <p v-if="ev.significance" class="tl-event-sig">{{ ev.significance }}</p>
+                </div>
+              </div>
+            </div>
+            <p v-else class="tl-empty">暂无史事录入</p>
           </div>
-          <span class="stat-divider"></span>
-          <div class="stat">
-            <span class="stat-num">8</span>
-            <span class="stat-lbl">传世名篇</span>
+
+          <!-- 名士 -->
+          <div class="tl-col">
+            <h3 class="tl-col-title"><span class="tl-col-icon">人</span>代表名士</h3>
+            <div v-if="selected.poets.length" class="tl-poets">
+              <router-link
+                v-for="p in selected.poets.slice(0, 12)"
+                :key="p.id"
+                :to="`/poets/${p.id}`"
+                class="tl-poet-chip"
+              >{{ p.name }}</router-link>
+              <span v-if="selected.poets.length > 12" class="tl-more">等 {{ selected.poets.length }} 位</span>
+            </div>
+            <p v-else class="tl-empty">暂无名士录入</p>
+          </div>
+
+          <!-- 诗篇 -->
+          <div class="tl-col">
+            <h3 class="tl-col-title"><span class="tl-col-icon">诗</span>传世诗篇</h3>
+            <div v-if="selected.poems.length" class="tl-poems">
+              <router-link
+                v-for="pm in selected.poems.slice(0, 8)"
+                :key="pm.id"
+                :to="`/poems/${pm.id}`"
+                class="tl-poem-row"
+              >
+                <span class="tl-poem-title">{{ pm.title }}</span>
+                <span class="tl-poem-arrow">→</span>
+              </router-link>
+            </div>
+            <p v-else class="tl-empty">暂无诗篇录入</p>
           </div>
         </div>
-      </div>
-      <div class="hero-rule"></div>
-    </header>
+      </section>
 
-    <!-- MAIN -->
-    <div class="timeline-container">
-      <div class="timeline-axis" aria-hidden="true">
-        <span class="axis-tick" v-for="i in 8" :key="i"></span>
-      </div>
-      <div class="timeline-track">
-        <TimelineItem
-          v-for="item in timeline"
-          :key="item.dynasty.id"
-          :dynasty="item.dynasty"
-          :events="item.events"
-          :poets="item.poets"
-          :poems="item.poems"
+      <!-- 诗风演变 -->
+      <section class="tl-section tl-evo" data-reveal>
+        <SectionHeading
+          eyebrow="诗风演变"
+          title="跨朝代文脉"
+          subtitle="从诗经现实主义到元曲民俗，一脉相承又各具风姿"
         />
-      </div>
-    </div>
+        <div class="tl-evo-track">
+          <div v-for="(s, i) in evolution" :key="i" class="tl-evo-stage">
+            <div class="tl-evo-stage-inner">
+              <span class="tl-evo-name">{{ s.name }}</span>
+              <span class="tl-evo-style">{{ s.style }}</span>
+            </div>
+            <span v-if="i < evolution.length - 1" class="tl-evo-arrow" aria-hidden="true">→</span>
+          </div>
+        </div>
+      </section>
 
-    <div v-if="errorMsg" class="error-state">
-      <div class="error-content">
-        <p class="error-icon">!</p>
-        <p class="error-text">{{ errorMsg }}</p>
-        <button class="error-retry-btn" @click="loadTimeline">重新加载</button>
-      </div>
-    </div>
+      <!-- 文脉之最 -->
+      <section v-if="extremes" class="tl-section tl-most" data-reveal>
+        <SectionHeading title="文脉之最" subtitle="数据中的齐鲁文脉" />
+        <div class="tl-most-grid">
+          <div class="tl-most-card">
+            <span class="tl-most-num">{{ extremes.topDynastyPoets.count }}</span>
+            <span class="tl-most-lbl">{{ extremes.topDynastyPoets.name }} 名士最盛</span>
+          </div>
+          <div class="tl-most-card">
+            <span class="tl-most-num">{{ extremes.topDynastyPoems.count }}</span>
+            <span class="tl-most-lbl">{{ extremes.topDynastyPoems.name }} 诗篇最丰</span>
+          </div>
+          <div class="tl-most-card">
+            <span class="tl-most-num">{{ extremes.longestSpan.years }}</span>
+            <span class="tl-most-lbl">{{ extremes.longestSpan.name }} 跨度最长</span>
+          </div>
+          <div class="tl-most-card">
+            <span class="tl-most-num">{{ extremes.totalPoets }}</span>
+            <span class="tl-most-lbl">齐鲁名士总数</span>
+          </div>
+        </div>
+      </section>
 
-    <div v-else-if="!timeline.length && loaded" class="empty-state">
-      <p>暂无朝代数据</p>
+      <ErrorState v-if="errorMsg" :message="errorMsg" @retry="loadTimeline" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import api from '../api'
-import TimelineItem from '../components/TimelineItem.vue'
+import InkHero from '../components/homepage/InkHero.vue'
+import SectionHeading from '../components/homepage/SectionHeading.vue'
+import DynastyRail from '../components/homepage/DynastyRail.vue'
+import ErrorState from '../components/homepage/ErrorState.vue'
+import { useReveal } from '../composables/useReveal'
 
+const { reveal } = useReveal()
 const timeline = ref([])
 const loaded = ref(false)
 const errorMsg = ref(null)
+const selectedDynastyId = ref(4) // 默认隋唐
+const revealRoot = ref(null)
+
+const formatYear = (y) =>
+  y == null ? '—' : y < 0 ? '前' + Math.abs(y) : String(y)
+
+const dynastyItems = computed(() =>
+  timeline.value.map((t) => ({
+    id: t.dynasty.id,
+    name: t.dynasty.name,
+    startYear: t.dynasty.startYear,
+    endYear: t.dynasty.endYear,
+    poetCount: t.poets.length,
+  })),
+)
+
+const selected = computed(
+  () =>
+    timeline.value.find((t) => t.dynasty.id === selectedDynastyId.value) ||
+    timeline.value[0] ||
+    null,
+)
+
+const evolution = [
+  { name: '诗经', style: '现实主义' },
+  { name: '楚辞', style: '浪漫主义' },
+  { name: '唐诗', style: '气象万千' },
+  { name: '宋词', style: '婉约豪放' },
+  { name: '元曲', style: '民俗市井' },
+]
+
+const extremes = computed(() => {
+  if (!timeline.value.length) return null
+  let topPoets = { name: '', count: 0 }
+  let topPoems = { name: '', count: 0 }
+  let longest = { name: '', years: 0 }
+  let totalPoets = 0
+  timeline.value.forEach((t) => {
+    if (t.poets.length > topPoets.count)
+      topPoets = { name: t.dynasty.name, count: t.poets.length }
+    if (t.poems.length > topPoems.count)
+      topPoems = { name: t.dynasty.name, count: t.poems.length }
+    totalPoets += t.poets.length
+    const span = (t.dynasty.endYear || 0) - (t.dynasty.startYear || 0)
+    if (span > longest.years)
+      longest = { name: t.dynasty.name, years: span }
+  })
+  return {
+    topDynastyPoets: topPoets,
+    topDynastyPoems: topPoems,
+    longestSpan: longest,
+    totalPoets,
+  }
+})
+
+const heroStats = computed(() => {
+  if (!loaded.value || !timeline.value.length) return []
+  const totalPoets = timeline.value.reduce((s, t) => s + t.poets.length, 0)
+  const totalPoems = timeline.value.reduce((s, t) => s + t.poems.length, 0)
+  const firstStart = Math.min(...timeline.value.map((t) => t.dynasty.startYear || 0))
+  const lastEnd = Math.max(...timeline.value.map((t) => t.dynasty.endYear || 0))
+  const span = lastEnd - firstStart
+  return [
+    { value: timeline.value.length, suffix: '朝', label: '朝代跨度' },
+    { value: totalPoets, suffix: '位', label: '历代名士' },
+    { value: totalPoems, suffix: '篇', label: '传世诗卷' },
+    { value: span, suffix: '年', label: '文脉绵延' },
+  ]
+})
 
 const loadTimeline = async () => {
   errorMsg.value = null
   try {
     timeline.value = await api.get('/timeline')
-  } catch (err) {
-    console.error('加载朝代时间线失败:', err)
+  } catch (e) {
+    console.error('加载朝代时间线失败:', e)
     errorMsg.value = '加载朝代数据失败，请稍后重试'
   } finally {
     loaded.value = true
   }
 }
 
-onMounted(() => {
-  loadTimeline()
+onMounted(async () => {
+  await loadTimeline()
+  await nextTick()
+  if (revealRoot.value) reveal(revealRoot.value)
 })
 </script>
 
 <style scoped>
-/* ============================================
-   TIMELINE PAGE — Typeset 2026
-   ============================================ */
-
 .timeline-page {
-  max-width: 880px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 0 32px 96px;
+}
+.timeline-content {
+  padding: 56px 48px 96px;
 }
 
-/* ---------- HERO ---------- */
-.page-hero {
-  position: relative;
-  padding: 80px 0 64px;
-  text-align: center;
+.tl-section {
+  margin-bottom: 56px;
 }
 
-.hero-inner {
-  position: relative;
-  z-index: 2;
+/* ---------- detail ---------- */
+.tl-detail {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
+  border-radius: 4px;
+  padding: 32px 36px;
 }
-
-.hero-eyebrow {
-  display: inline-block;
-  font-family: var(--font-heading);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 6px;
-  color: var(--accent);
-  margin-bottom: 20px;
-  text-indent: 6px; /* compensate for trailing letter-spacing */
+.theme-real .tl-detail {
+  box-shadow: var(--card-shadow);
 }
-
-.page-title {
+.tl-detail-head {
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-light);
+}
+.tl-detail-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.tl-detail-name {
   font-family: var(--font-display);
-  font-size: 52px;
+  font-size: 38px;
   font-weight: 900;
   color: var(--text-primary);
-  letter-spacing: 4px;            /* tighter than before (was 8px) */
+  letter-spacing: 6px;
+  margin: 0;
   line-height: 1.1;
-  margin: 0 0 20px 0;
 }
-
-.page-desc {
-  font-size: 15px;
-  line-height: 1.9;
+.tl-detail-years {
+  font-size: 13px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  font-weight: 600;
+}
+.tl-detail-desc {
+  font-size: 14px;
   color: var(--text-secondary);
+  line-height: 1.8;
+  margin: 0 0 14px 0;
+}
+.tl-detail-stats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
   letter-spacing: 1px;
-  margin: 0 auto 36px;
-  max-width: 560px;
-  text-align: center;
+}
+.tl-detail-stats b {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--accent);
+  margin-right: 2px;
+}
+.tl-detail-sep {
+  color: var(--border);
 }
 
-.hero-break { display: none; }
-
-/* Stats row */
-.hero-stats {
-  display: inline-flex;
-  align-items: center;
+.tl-detail-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
   gap: 32px;
-  padding: 18px 36px;
+}
+.tl-col {
+  min-width: 0;
+}
+.tl-col-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 16px 0;
+  letter-spacing: 2px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--border-light);
+}
+.tl-col-icon {
+  font-family: var(--font-display);
+  font-size: 12px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 2px;
+  font-weight: 700;
+}
+
+/* events */
+.tl-events {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.tl-event {
+  display: flex;
+  gap: 14px;
+  padding: 4px 0;
+}
+.tl-event-year {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 60px;
+  flex-shrink: 0;
+}
+.tl-event-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  line-height: 1.5;
+}
+.tl-event-sig {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* poets */
+.tl-poets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tl-poet-chip {
+  padding: 6px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid transparent;
+  border-radius: 100px;
+  font-size: 13px;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: all 0.25s ease;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.tl-poet-chip:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  transform: translateY(-1px);
+}
+.theme-inkwash .tl-poet-chip {
+  background: var(--bg-tertiary);
+  border-color: var(--border);
+}
+.tl-more {
+  font-size: 11px;
+  color: var(--text-muted);
+  align-self: center;
+  letter-spacing: 1px;
+}
+
+/* poems */
+.tl-poems {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.tl-poem-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-radius: 2px;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: all 0.25s ease;
+  border: 1px solid transparent;
+}
+.tl-poem-row:hover {
+  background: var(--bg-secondary);
+  border-color: var(--border-light);
+}
+.theme-inkwash .tl-poem-row:hover {
+  background: rgba(194, 58, 43, 0.04);
+  border-color: var(--accent-light);
+}
+.tl-poem-title {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.tl-poem-arrow {
+  font-size: 14px;
+  color: var(--text-muted);
+  transition: transform 0.25s ease;
+}
+.tl-poem-row:hover .tl-poem-arrow {
+  transform: translateX(4px);
+  color: var(--accent);
+}
+
+.tl-empty {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  letter-spacing: 1px;
+}
+
+/* ---------- evolution ---------- */
+.tl-evo-track {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  flex-wrap: wrap;
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: 4px;
-  box-shadow: 0 6px 20px rgba(61, 43, 31, 0.04);
+  padding: 20px 12px;
 }
-
-.stat {
+.tl-evo-stage {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 120px;
+  justify-content: center;
+}
+.tl-evo-stage-inner {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 72px;
+  gap: 4px;
+  padding: 8px 12px;
 }
-
-.stat-num {
+.tl-evo-name {
   font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 900;
-  color: var(--accent);
-  line-height: 1;
-  letter-spacing: 0;
-}
-
-.stat-plus {
   font-size: 18px;
-  color: var(--accent);
-  font-weight: 600;
-  margin-left: 1px;
-}
-
-.stat-lbl {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
+  font-weight: 900;
+  color: var(--text-primary);
   letter-spacing: 2px;
-  margin-top: 6px;
 }
-
-.stat-divider {
-  width: 1px;
-  height: 28px;
-  background: var(--border);
-}
-
-/* Hero bottom rule: brush-stroke feel via gradient dashes */
-.hero-rule {
-  position: relative;
-  margin: 56px auto 0;
-  width: 100%;
-  max-width: 720px;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0,
-    transparent 4%,
-    var(--border) 4%,
-    var(--border) 8%,
-    transparent 8%,
-    transparent 18%,
-    var(--border) 18%,
-    var(--border) 22%,
-    transparent 22%,
-    transparent 100%
-  );
-}
-
-/* ---------- TIMELINE BODY ---------- */
-.timeline-container {
-  position: relative;
-  padding-left: 40px;
-  margin-top: 8px;
-}
-
-/* Subtle dotted ruler next to the axis for visual depth */
-.timeline-axis {
-  position: absolute;
-  left: 12px;
-  top: 0;
-  bottom: 48px;
-  width: 1px;
-  background-image: linear-gradient(
-    to bottom,
-    var(--border) 0,
-    var(--border) 4px,
-    transparent 4px,
-    transparent 12px
-  );
-  background-size: 1px 12px;
-  background-repeat: repeat-y;
-  opacity: 0.45;
-  pointer-events: none;
-}
-
-.axis-tick {
-  display: none;
-}
-
-.timeline-track {
-  position: relative;
-}
-
-/* ---------- STATES ---------- */
-.empty-state {
-  text-align: center;
-  padding: 96px 0;
-  color: var(--text-muted);
-  font-size: 15px;
+.tl-evo-style {
+  font-size: 11px;
+  color: var(--accent);
   letter-spacing: 1px;
 }
-
-.error-state {
-  text-align: center;
-  padding: 96px 0;
+.tl-evo-arrow {
+  color: var(--accent);
+  font-size: 18px;
+  font-weight: 700;
+  opacity: 0.6;
 }
 
-.error-content {
+/* ---------- 文脉之最 ---------- */
+.tl-most-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.tl-most-card {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 6px;
+  padding: 24px 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
-
-.error-icon {
-  font-size: 48px;
+.tl-most-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(61, 43, 31, 0.1);
+}
+.tl-most-num {
+  font-family: var(--font-display);
+  font-size: 34px;
   font-weight: 900;
   color: var(--accent);
-  margin-bottom: 16px;
-  opacity: 0.6;
   line-height: 1;
 }
-
-.error-text {
-  font-size: 15px;
+.tl-most-lbl {
+  font-size: 12px;
   color: var(--text-secondary);
-  margin-bottom: 24px;
+  letter-spacing: 1px;
+  line-height: 1.5;
 }
 
-.error-retry-btn {
-  font-size: 13px;
-  color: var(--text-muted);
-  background: none;
-  border: 1px solid var(--border);
-  padding: 10px 24px;
-  border-radius: 2px;
-  cursor: pointer;
-  font-family: inherit;
-  font-weight: 600;
-  letter-spacing: 2px;
-  transition: all 0.3s;
-}
-
-.error-retry-btn:hover {
-  color: var(--accent);
-  border-color: var(--accent);
-}
-
-/* ============================================
-   RESPONSIVE — three tiers
-   ============================================ */
-
-/* Tablet portrait: tighten padding, keep single column */
+/* ---------- responsive ---------- */
 @media (max-width: 1024px) {
-  .timeline-page { padding: 0 24px 80px; }
-  .page-hero { padding: 64px 0 48px; }
-  .page-title { font-size: 44px; letter-spacing: 3px; }
-  .hero-stats { gap: 24px; padding: 16px 24px; }
-  .stat-num { font-size: 24px; }
-  .timeline-container { padding-left: 32px; }
+  .timeline-content { padding: 40px 32px 80px; }
+  .tl-detail-grid { grid-template-columns: 1fr 1fr; }
+  .tl-most-grid { grid-template-columns: repeat(2, 1fr); }
+  .tl-detail { padding: 28px 28px; }
+  .tl-detail-name { font-size: 32px; letter-spacing: 4px; }
 }
-
-/* Mobile: stack stats, smaller title, axis narrower */
 @media (max-width: 640px) {
-  .timeline-page { padding: 0 16px 64px; }
-  .page-hero { padding: 48px 0 36px; }
-  .hero-eyebrow { font-size: 11px; letter-spacing: 4px; margin-bottom: 14px; }
-  .page-title { font-size: 34px; letter-spacing: 2px; }
-  .page-desc { font-size: 14px; line-height: 1.8; margin-bottom: 28px; }
-  .hero-break { display: inline; }
-  .hero-stats {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px 0;
-    padding: 16px;
-    width: 100%;
-  }
-  .stat-divider { display: none; }
-  .hero-rule { margin-top: 40px; }
-  .timeline-container { padding-left: 24px; }
-  .timeline-axis { left: 6px; }
+  .timeline-content { padding: 32px 16px 64px; }
+  .tl-section { margin-bottom: 40px; }
+  .tl-detail-grid { grid-template-columns: 1fr; gap: 24px; }
+  .tl-detail { padding: 22px 18px; }
+  .tl-detail-name { font-size: 28px; letter-spacing: 3px; }
+  .tl-evo-track { flex-direction: column; gap: 4px; }
+  .tl-evo-stage { flex-direction: row; min-width: 0; }
+  .tl-evo-arrow { transform: rotate(90deg); }
+  .tl-most-grid { grid-template-columns: 1fr 1fr; }
+  .tl-most-num { font-size: 28px; }
 }
 </style>

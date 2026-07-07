@@ -2,6 +2,16 @@
   <div class="map-view" :class="{ 'anime-layout': isAnime }" @mousemove="handleMouseMove" @mouseleave="resetParallax">
     <!-- 双主题布局容器 -->
 
+    <!-- 墨卷 Hero -->
+    <InkHero
+      eyebrow="山东 · 黄河入海"
+      title="山河图志"
+      subtitle="数字人文视域下黄河流域（山东段）文学景观时空交互。"
+      :stats="heroStats"
+      cta-label="开启沉浸式探索"
+      @cta="scrollToMap"
+    />
+
     <!-- 错误状态 -->
     <div v-if="errorMsg" class="map-error-state">
       <div class="error-overlay">
@@ -188,6 +198,19 @@
       </div>
     </div>
 
+    <!-- 沿黄九城快入 -->
+    <section v-if="regions.length" class="map-cities">
+      <SectionHeading title="沿黄九城" subtitle="自菏泽入境，至东营归海，沿黄九城一站直达" />
+      <div class="map-cities-grid">
+        <CityQuickCard
+          v-for="r in regions"
+          :key="r.name"
+          :city="r"
+          @click="$router.push(`/regions/${r.name}`)"
+        />
+      </div>
+    </section>
+
     <!-- AI Chatbot Box (Global Sidebar) -->
     <AiChatBox />
   </div>
@@ -198,7 +221,11 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
 import { mockCities } from '../config/mockDetailData'
+import api from '../api'
 import AiChatBox from '../components/AiChatBox.vue'
+import InkHero from '../components/homepage/InkHero.vue'
+import SectionHeading from '../components/homepage/SectionHeading.vue'
+import CityQuickCard from '../components/homepage/CityQuickCard.vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
@@ -208,6 +235,36 @@ const { isReal, isAnime } = useTheme()
 const cityLabels = ref([])
 const showLabels = ref(true)
 const errorMsg = ref(null)
+const regions = ref([])
+const heroStats = ref([])
+
+const scrollToMap = () => {
+  const el = document.querySelector('.real-3d-container, .anime-ink-container')
+  el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+const loadHeroData = async () => {
+  try {
+    const [regionsRes, spotsRes, poetsRes, poemsRes] = await Promise.allSettled([
+      api.get('/spots/regions'),
+      api.get('/spots', { params: { page: 1, size: 1 } }),
+      api.get('/poets', { params: { page: 1, size: 1 } }),
+      api.get('/poems', { params: { page: 1, size: 1 } }),
+    ])
+    if (regionsRes.status === 'fulfilled') regions.value = regionsRes.value || []
+    const spots = spotsRes.status === 'fulfilled' ? spotsRes.value?.total : 0
+    const poets = poetsRes.status === 'fulfilled' ? poetsRes.value?.total : 0
+    const poems = poemsRes.status === 'fulfilled' ? poemsRes.value?.total : 0
+    heroStats.value = [
+      { value: spots || 0, suffix: '处', label: '文学景观' },
+      { value: poets || 0, suffix: '位', label: '文人大家' },
+      { value: poems || 0, suffix: '篇', label: '传世名篇' },
+      { value: regions.value.length || 9, suffix: '城', label: '沿黄城市' },
+    ]
+  } catch (e) {
+    /* 静默失败，Hero 不阻塞 3D */
+  }
+}
 
 const clickLabel = (cityName) => {
   selectedCity.value = cityName
@@ -1076,6 +1133,7 @@ const startThreeSafe = async () => {
 }
 
 onMounted(() => {
+  loadHeroData()
   if (isReal.value) {
     setTimeout(startThreeSafe, 150)
   }
@@ -1089,18 +1147,37 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .map-view {
-  width: 100vw;
-  height: calc(100vh - var(--nav-height));
+  width: 100%;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+}
+
+/* 沿黄九城 */
+.map-cities {
+  max-width: 1200px;
+  margin: 56px auto;
+  padding: 0 40px;
+}
+.map-cities-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+@media (max-width: 1024px) {
+  .map-cities-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .map-cities { padding: 0 20px; margin: 40px auto; }
+  .map-cities-grid { grid-template-columns: 1fr; }
 }
 
 /* REAL MODE HUD GRAPHICS */
 .real-3d-container {
   width: 100%;
-  height: 100%;
+  height: calc(100vh - var(--nav-height));
   position: relative;
   background: #fbf8f3;
+  overflow: hidden;
 }
 
 .canvas-3d-wrap {
@@ -1359,12 +1436,13 @@ onBeforeUnmount(() => {
    ========================================== */
 .anime-ink-container {
   width: 100%;
-  height: 100%;
+  height: calc(100vh - var(--nav-height));
   background: #f4efe4; /* Traditional ink wash paper base */
   padding: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .ink-layout-wrap {
