@@ -30,6 +30,9 @@
           <router-link :to="`/regions/${spot.region}`" class="spot-link">{{ spot.name }}</router-link>
         </span>
       </div>
+      <div v-if="sentimentTags.length" class="header-tags">
+        <span v-for="t in sentimentTags" :key="t" class="header-tag">{{ t }}</span>
+      </div>
     </div>
 
     <!-- Poem Body -->
@@ -96,6 +99,21 @@ const showAnnotation = ref(false)
 const errorMsg = ref(null)
 
 const poemLines = computed(() => poem.value?.content?.split('\n').filter(l => l.trim()) || [])
+
+const parseTags = (v) => {
+  if (!v) return []
+  if (Array.isArray(v)) return v
+  if (typeof v === 'string') {
+    try {
+      const p = JSON.parse(v)
+      return Array.isArray(p) ? p : []
+    } catch {
+      return []
+    }
+  }
+  return []
+}
+const sentimentTags = computed(() => parseTags(poem.value?.sentimentTags))
 
 onMounted(async () => {
   try {
@@ -199,6 +217,26 @@ onMounted(async () => {
 
 .spot-link:hover {
   opacity: 0.7;
+}
+
+.header-tags {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+.header-tag {
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: rgba(184, 134, 11, 0.07);
+  border: 1px solid var(--border-light);
+  padding: 3px 11px;
+  border-radius: 100px;
+  letter-spacing: 1px;
+}
+.theme-inkwash .header-tag {
+  background: rgba(194, 58, 43, 0.06);
 }
 
 /* Poem Body */
