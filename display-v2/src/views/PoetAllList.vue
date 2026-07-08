@@ -44,7 +44,7 @@
                 v-for="p in filteredEnrichedPoets"
                 :key="p.id"
                 class="poet-card-wrap card hover-lift"
-                @click="$router.push(`/poets/${p.id}`)"
+                @click="$router.push(`/poets/${p.id}?from=all`)"
                 :aria-label="`查看 ${p.name} 详情`"
               >
                 <div class="poet-avatar-box">
@@ -320,7 +320,7 @@ const initG6 = () => {
   graphInstance.on('node:click', (evt) => {
     const modelId = evt.target?.id
     if (modelId && ['1', '2', '3', '4', '5', '6'].includes(modelId)) {
-      router.push(`/poets/${modelId}`)
+      router.push(`/poets/${modelId}?from=all`)
     } else if (modelId === 'c1') {
       router.push('/regions/济南')
     } else if (modelId === 'c2') {

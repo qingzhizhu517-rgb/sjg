@@ -22,6 +22,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { pickSignaturePoem } from '../../utils/poem'
 
 const props = defineProps({
   poet: { type: Object, required: true },
@@ -31,40 +32,11 @@ const props = defineProps({
 })
 defineEmits(['click'])
 
-const parseTags = (v) => {
-  if (!v) return []
-  if (Array.isArray(v)) return v
-  if (typeof v === 'string') {
-    try {
-      const p = JSON.parse(v)
-      return Array.isArray(p) ? p : []
-    } catch {
-      return []
-    }
-  }
-  return []
-}
-
-const firstLine = (content) => {
-  if (!content) return ''
-  const c = String(content).replace(/\s+/g, '')
-  const f = c.split(/[。！？；]/)[0] || c.slice(0, 16)
-  return f.length > 16 ? f.slice(0, 16) + '…' : f
-}
-
 const sealChar = computed(() => props.poet?.name?.charAt(0) || '名')
 const poemCount = computed(() => props.poems.length)
 
-// 代表作：取 sentimentTags 最丰富的诗
-const signature = computed(() => {
-  const withContent = props.poems.filter((p) => p && p.content)
-  const sorted = [...withContent].sort(
-    (a, b) => parseTags(b.sentimentTags).length - parseTags(a.sentimentTags).length,
-  )
-  const p = sorted[0] || props.poems[0]
-  if (!p) return null
-  return { id: p.id, firstLine: firstLine(p.content), title: p.title }
-})
+// 代表作：统一用 pickSignaturePoem，与 PoetAllList 卡片 / PoetDetail 三处一致
+const signature = computed(() => pickSignaturePoem(props.poems))
 
 const otherTitles = computed(() => {
   const sigId = signature.value?.id

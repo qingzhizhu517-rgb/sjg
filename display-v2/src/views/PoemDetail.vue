@@ -89,6 +89,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '../api'
+import { parseTags } from '../utils/poem'
 
 const route = useRoute()
 const poem = ref(null)
@@ -100,19 +101,6 @@ const errorMsg = ref(null)
 
 const poemLines = computed(() => poem.value?.content?.split('\n').filter(l => l.trim()) || [])
 
-const parseTags = (v) => {
-  if (!v) return []
-  if (Array.isArray(v)) return v
-  if (typeof v === 'string') {
-    try {
-      const p = JSON.parse(v)
-      return Array.isArray(p) ? p : []
-    } catch {
-      return []
-    }
-  }
-  return []
-}
 const sentimentTags = computed(() => parseTags(poem.value?.sentimentTags))
 
 onMounted(async () => {

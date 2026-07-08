@@ -83,6 +83,7 @@ import { useTheme } from '../composables/useTheme'
 import { useImage } from '../composables/useImage'
 import { useReveal } from '../composables/useReveal'
 import api from '../api'
+import { parseTags, firstLine, pickSignaturePoem } from '../utils/poem'
 import SectionHeading from '../components/homepage/SectionHeading.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
@@ -98,11 +99,9 @@ const dynasty = ref(null)
 const errorMsg = ref(null)
 const revealRoot = ref(null)
 
-// 从哪来回哪去：来自 /poets/all 则返回全量列表，否则返回 showcase
-const backTo = computed(() => {
-  if (typeof document !== 'undefined' && document.referrer?.includes('/poets/all')) return '/poets/all'
-  return '/poets'
-})
+// 从哪来回哪去：从 /poets/all 进来则回全量列表，否则回 showcase。
+// 用 query.from 标记（SPA pushState 不更新 document.referrer，原先的 referrer 判断永不成立）。
+const backTo = computed(() => (route.query.from === 'all' ? '/poets/all' : '/poets'))
 
 const avatar = computed(() => {
   if (!poet.value) return ''
@@ -113,36 +112,8 @@ const onAvatarError = (e) => {
   e.target.style.display = 'none'
 }
 
-const parseTags = (v) => {
-  if (!v) return []
-  if (Array.isArray(v)) return v
-  if (typeof v === 'string') {
-    try {
-      const p = JSON.parse(v)
-      return Array.isArray(p) ? p : []
-    } catch {
-      return []
-    }
-  }
-  return []
-}
-const firstLine = (content) => {
-  if (!content) return ''
-  const c = String(content).replace(/\s+/g, '')
-  const f = c.split(/[。！？；]/)[0] || c.slice(0, 16)
-  return f.length > 16 ? f.slice(0, 16) + '…' : f
-}
-
-// 代表作：sentiment 最丰富的诗
-const signature = computed(() => {
-  const withContent = poems.value.filter((p) => p && p.content)
-  const sorted = [...withContent].sort(
-    (a, b) => parseTags(b.sentimentTags).length - parseTags(a.sentimentTags).length,
-  )
-  const p = sorted[0] || poems.value[0]
-  if (!p) return null
-  return { id: p.id, firstLine: firstLine(p.content), title: p.title }
-})
+// 代表作：统一用 pickSignaturePoem，与 ShowcasePoetCard / PoetAllList 一致
+const signature = computed(() => pickSignaturePoem(poems.value))
 
 const loadDetail = async () => {
   errorMsg.value = null
