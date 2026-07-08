@@ -34,6 +34,7 @@ yarn-error.log*
 
 # Claude Code
 .claude/
+.mcp.json
 
 # Maven local
 backend/.m2/
