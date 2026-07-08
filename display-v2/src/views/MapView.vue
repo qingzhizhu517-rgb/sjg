@@ -27,15 +27,60 @@
 
     <!-- WRITE-UP 3D REAL THEME -->
     <div class="real-3d-container" v-if="isReal">
-      <div class="hud-panel left-hud animate-slide-in">
-        <div class="hud-header">
-          <span class="hud-seal">山河<br/>图志</span>
-          <div class="hud-title-wrap">
-            <span class="hud-eyebrow">数字人文 · 时空交互</span>
-            <h2 class="hud-title">三维地理文脉舱</h2>
+      <div class="map-stage">
+        <!-- 左：沙盘 3D 地图 -->
+        <div class="map-frame">
+          <div class="map-frame__title">
+            <span class="map-frame__seal">沙盘</span>
+            <span class="map-frame__name">山河图志</span>
+            <span class="map-frame__sub">山东 · 黄河流域</span>
+          </div>
+          <div class="canvas-3d-wrap" style="position: relative;">
+            <canvas ref="canvas3d" class="webgl-canvas"></canvas>
+
+            <!-- 浮动城市标签 -->
+            <div class="labels-overlay-3d" v-show="showLabels">
+              <div
+                v-for="label in cityLabels"
+                :key="label.name"
+                v-show="label.visible"
+                class="city-3d-label"
+                :class="[isReal ? 'label-theme-real' : 'label-theme-inkwash']"
+                :style="{ left: `${label.x}px`, top: `${label.y}px` }"
+                @click="clickLabel(label.name)"
+              >
+                <div class="label-plaque-card">
+                  <div class="decor-corner corner-tl"></div>
+                  <div class="decor-corner corner-tr"></div>
+                  <div class="decor-corner corner-bl"></div>
+                  <div class="decor-corner corner-br"></div>
+                  <div class="plaque-content">
+                    <span class="plaque-name">{{ label.name }}</span>
+                    <span class="plaque-divider"></span>
+                    <span class="plaque-tag">{{ getCityData(label.name).tag }}</span>
+                  </div>
+                </div>
+                <div class="label-connector-line"></div>
+                <div class="label-glow-pin">
+                  <span class="ring-pulse pulse-1" :style="{ borderColor: label.colorHex }"></span>
+                  <span class="ring-pulse pulse-2" :style="{ borderColor: label.colorHex }"></span>
+                  <div class="pin-dot" :style="{ backgroundColor: label.colorHex }"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="hud-body">
+
+        <!-- 右：册页信息面板 -->
+        <aside class="map-album">
+          <div class="map-album__hud" v-show="!selectedCity">
+          <div class="hud-header">
+            <span class="hud-seal">山河<br/>图志</span>
+            <div class="hud-title-wrap">
+              <span class="hud-eyebrow">数字人文 · 时空交互</span>
+              <h2 class="hud-title">三维地理文脉舱</h2>
+            </div>
+          </div>
           <p class="hud-desc">数字人文视域下黄河流域（山东段）文学景观时空交互。拖拽旋转视角，双击节点飞往对应城市。</p>
           <div class="hud-stats">
             <template v-for="(s, i) in hudStats" :key="i">
@@ -52,8 +97,6 @@
               </div>
             </template>
           </div>
-          
-          <!-- Immersive HUD label control action -->
           <div class="hud-actions">
             <button class="action-btn-toggle" @click="showLabels = !showLabels" :title="showLabels ? '隐藏标签' : '显示标签'">
               <svg v-if="showLabels" class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -67,68 +110,28 @@
               <span>{{ showLabels ? '隐藏地区标签' : '显示地区标签' }}</span>
             </button>
           </div>
-          
           <div class="hud-tips">
-            <span class="tip-txt">说明：单击发光节点可快速预览城市文学名胜，双击进入城市专栏。</span>
+            <span class="tip-txt">说明：单击发光节点预览城市文学名胜，双击进入城市专栏。</span>
           </div>
-        </div>
-      </div>
-
-      <!-- WebGL Three.js Canvas -->
-      <div class="canvas-3d-wrap" style="position: relative;">
-        <canvas ref="canvas3d" class="webgl-canvas"></canvas>
-        
-        <!-- Floating City Labels HTML Overlay -->
-        <div class="labels-overlay-3d" v-show="showLabels">
-          <div
-            v-for="label in cityLabels"
-            :key="label.name"
-            v-show="label.visible"
-            class="city-3d-label"
-            :class="[isReal ? 'label-theme-real' : 'label-theme-inkwash']"
-            :style="{ left: `${label.x}px`, top: `${label.y}px` }"
-            @click="clickLabel(label.name)"
-          >
-            <!-- Chinese Heritage Plaque Card -->
-            <div class="label-plaque-card">
-              <div class="decor-corner corner-tl"></div>
-              <div class="decor-corner corner-tr"></div>
-              <div class="decor-corner corner-bl"></div>
-              <div class="decor-corner corner-br"></div>
-              
-              <div class="plaque-content">
-                <span class="plaque-name">{{ label.name }}</span>
-                <span class="plaque-divider"></span>
-                <span class="plaque-tag">{{ getCityData(label.name).tag }}</span>
-              </div>
-            </div>
-            
-            <!-- Elegant Gradient Connecting Line -->
-            <div class="label-connector-line"></div>
-            
-            <!-- Glowing Interactive Ripple Pin -->
-            <div class="label-glow-pin">
-              <span class="ring-pulse pulse-1" :style="{ borderColor: label.colorHex }"></span>
-              <span class="ring-pulse pulse-2" :style="{ borderColor: label.colorHex }"></span>
-              <div class="pin-dot" :style="{ backgroundColor: label.colorHex }"></div>
-            </div>
           </div>
-        </div>
-      </div>
 
-      <!-- 浮动城市详情卡（就近吸附被点击节点） -->
-      <transition name="fade">
-        <div class="city-card-anchor" v-if="selectedCity" :style="anchorStyle">
-          <CityDetailCard
-            :name="selectedCity"
-            :archive="getCityData(selectedCity)"
-            :detail="cityDetail"
-            :loading="cityLoading"
-            @close="closeCity"
-            @go="onCardGo"
-          />
-        </div>
-      </transition>
+          <!-- 点城市 -> 城市卡替换文脉舱 HUD；关闭(×/Esc/返回)恢复 HUD -->
+          <transition name="fade">
+            <div v-if="selectedCity" class="map-album__card-slot">
+              <div class="map-album__eyebrow">名城档案</div>
+              <CityDetailCard
+                :name="selectedCity"
+                :archive="getCityData(selectedCity)"
+                :detail="cityDetail"
+                :loading="cityLoading"
+                @close="closeCity"
+                @go="onCardGo"
+              />
+              <button class="map-album__back" @click="closeCity">← 返回文脉舱</button>
+            </div>
+          </transition>
+        </aside>
+      </div>
     </div>
 
     <!-- ANIME WATER-INK THEME (鼠标视差画轴地图) -->
@@ -244,42 +247,18 @@ const errorMsg = ref(null)
 const regions = ref([])
 const heroStats = ref([])
 
-// ===== 城市详情卡（点击节点弹出，就近吸附）=====
+// ===== 城市详情卡（点击节点 -> 右册页 dock 显示）=====
 const { enrichCity, ensurePoets } = useCityEnrichment()
 const cityDetail = ref(null)
 const cityLoading = ref(false)
-const cardPos = ref({ left: 32, top: 32 })
-const isMobile = ref(typeof window !== 'undefined' && window.innerWidth < 768)
 
 const hudStats = computed(() => heroStats.value.slice(0, 3))
 
-const anchorStyle = computed(() => {
-  if (isMobile.value) {
-    return { left: '50%', transform: 'translateX(-50%)', bottom: '16px', top: 'auto', right: 'auto' }
-  }
-  return { left: `${cardPos.value.left}px`, top: `${cardPos.value.top}px` }
-})
-
-// 弹出城市卡：吸附到被点击节点的当前屏幕坐标（clamp 防溢出），并异步补全真实数据
+// 选中城市：在右册页 dock 显示城市卡，异步补全真实数据
 const openCity = async (name) => {
   selectedCity.value = name
   cityDetail.value = null
   cityLoading.value = true
-  if (!isMobile.value) {
-    const label = cityLabels.value.find((l) => l.name === name)
-    const wrap = canvas3d.value && canvas3d.value.parentElement
-    const ww = (wrap && wrap.clientWidth) || 800
-    const wh = (wrap && wrap.clientHeight) || 600
-    const CARD_W = 340 + 28
-    const CARD_H = 480
-    let x = label ? label.x : ww / 2
-    let y = label ? label.y : wh / 2
-    let left = x + 18
-    if (x > ww / 2) left = x - CARD_W - 18 // 节点在右半屏时，卡放左侧
-    left = Math.min(Math.max(left, 12), Math.max(12, ww - CARD_W))
-    const top = Math.min(Math.max(y + 18, 12), Math.max(12, wh - CARD_H))
-    cardPos.value = { left, top }
-  }
   try {
     cityDetail.value = await enrichCity(name)
   } catch (e) {
@@ -1136,7 +1115,6 @@ const initThree = (geojson) => {
 
 // Window resizing
 const handleResize = () => {
-  isMobile.value = window.innerWidth < 768
   if (isReal.value && renderer && camera && canvas3d.value) {
     const width = canvas3d.value.parentElement.clientWidth
     const height = canvas3d.value.parentElement.clientHeight
@@ -1242,18 +1220,78 @@ onBeforeUnmount(() => {
   .map-cities-grid { grid-template-columns: 1fr; }
 }
 
-/* REAL MODE HUD GRAPHICS */
+/* REAL MODE: 左图右册 框体化布局 */
 .real-3d-container {
   width: 100%;
-  height: calc(100vh - var(--nav-height));
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 28px 40px 40px;
   position: relative;
   background: #fbf8f3;
+  box-sizing: border-box;
+}
+
+.map-stage {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 24px;
+  height: calc(100vh - var(--nav-height) - 76px);
+  min-height: 520px;
+}
+
+/* 左：沙盘框 */
+.map-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #f3ede0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   overflow: hidden;
+  box-shadow: 0 12px 32px rgba(61, 43, 31, 0.1);
+}
+
+.map-frame__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, #efe7d6, #e8dfca);
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+
+.map-frame__seal {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  background: #8e352e;
+  padding: 3px 7px;
+  border-radius: 2px;
+  letter-spacing: 2px;
+}
+
+.map-frame__name {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: 2px;
+}
+
+.map-frame__sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  margin-left: auto;
 }
 
 .canvas-3d-wrap {
   width: 100%;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
+  position: relative;
 }
 
 .webgl-canvas {
@@ -1262,23 +1300,74 @@ onBeforeUnmount(() => {
   display: block;
 }
 
-/* HUD Panel */
-.hud-panel {
-  position: absolute;
-  top: 32px;
-  left: 32px;
-  width: 340px;
-  max-height: calc(100% - 64px);
-  overflow-y: auto;
-  background: rgba(253, 250, 245, 0.88);
+/* 右：册页信息面板 */
+.map-album {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 22px;
+  background: rgba(253, 250, 245, 0.9);
   border: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
   border-radius: var(--radius-md);
-  padding: 28px 26px;
-  z-index: 10;
   box-shadow: 0 10px 30px rgba(61, 43, 31, 0.08);
   backdrop-filter: blur(16px);
   text-align: left;
+  overflow-y: auto;
   scrollbar-width: thin;
+}
+
+.map-album__hud {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.map-album__card-slot {
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.map-album__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 4px;
+}
+
+.map-album__eyebrow::before,
+.map-album__eyebrow::after {
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: var(--border);
+}
+
+.map-album__back {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 6px 16px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.map-album__back:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(184, 134, 11, 0.04);
 }
 
 .hud-header {
@@ -1434,13 +1523,6 @@ onBeforeUnmount(() => {
   font-size: 11px;
   color: var(--text-muted);
   line-height: 1.5;
-}
-
-/* 浮动城市详情卡锚点（就近吸附点击节点；z 20 高于 HUD z 10） */
-.city-card-anchor {
-  position: absolute;
-  z-index: 20;
-  max-width: calc(100vw - 24px);
 }
 
 .stat-suffix {
@@ -1783,16 +1865,16 @@ onBeforeUnmount(() => {
    RESPONSIVE — three tiers
    ============================================ */
 
-/* Wide desktop: keep generous spacing, larger HUD */
+/* Wide desktop */
 @media (min-width: 1600px) {
   .ink-layout-wrap { max-width: 1560px; grid-template-columns: 380px 1fr; gap: 56px; }
   .scroll-outer-frame { height: 620px; }
   .scroll-wooden-rod { height: 640px; }
   .scroll-middle-paper { height: 580px; }
-  .hud-panel { width: 360px; }
+  .real-3d-container { max-width: 1480px; }
 }
 
-/* Tablet: collapse to single column, HUD slides to bottom */
+/* Tablet: map-stage 单列堆叠 */
 @media (max-width: 1024px) {
   .ink-layout-wrap {
     grid-template-columns: 1fr;
@@ -1813,17 +1895,14 @@ onBeforeUnmount(() => {
   .scroll-wooden-rod { height: 420px; }
   .scroll-middle-paper { height: 370px; }
 
-  .hud-panel {
-    top: auto;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(100% - 40px);
-    max-width: 480px;
-    max-height: 45vh;
-  }}
+  .map-stage {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .map-frame { height: 60vh; min-height: 360px; }
+}
 
-/* Mobile: stack ink panel, shrink stamps */
+/* Mobile */
 @media (max-width: 640px) {
   .anime-ink-container { padding: 24px 16px; }
   .ink-left-panel { gap: 14px; }
@@ -1835,7 +1914,10 @@ onBeforeUnmount(() => {
   .scroll-middle-paper { height: 310px; }
   .stamp-seal-red { width: 32px; height: 36px; font-size: 10px; }
   .label-plaque-card { min-width: 110px; padding: 6px 10px; }
-  .hud-panel { padding: 20px 18px; }
+  .real-3d-container { padding: 20px 16px; }
+  .map-stage { gap: 16px; }
+  .map-frame { height: 52vh; min-height: 320px; }
+  .map-album { padding: 18px 16px; }
   .hud-title { font-size: 20px; }
   .stat-num { font-size: 22px; }
 }

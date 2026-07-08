@@ -126,8 +126,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
 <style scoped>
 .city-card {
-  width: 340px;
-  max-width: calc(100vw - 32px);
+  width: 100%;
+  max-width: 460px;
   background: rgba(253, 250, 245, 0.95);
   border: 1px solid var(--border);
   border-top: 3px solid var(--accent);
