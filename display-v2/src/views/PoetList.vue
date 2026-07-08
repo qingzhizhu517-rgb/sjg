@@ -39,7 +39,7 @@
       <!-- 查看全部 -->
       <section class="poets-section poets-more" data-reveal>
         <router-link to="/poets/all" class="more-btn">
-          <span class="more-btn__text">查看全部 {{ poets.length || 130 }} 位名士</span>
+          <span class="more-btn__text">查看全部 {{ poets.length }} 位名士</span>
           <span class="more-btn__arrow">→</span>
         </router-link>
         <p class="more-btn__hint">按朝代筛选 · 关系图谱 · 全量诗人卡墙</p>

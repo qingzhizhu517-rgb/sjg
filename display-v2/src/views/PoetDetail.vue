@@ -9,8 +9,9 @@
       <!-- 详情头：左肖像 + 右印章/名/元信息/代表作 -->
       <header class="pd-head" data-reveal>
         <div class="pd-portrait">
+          <!-- 印章常驻底层、头像在上层；头像 URL 404 时 onAvatarError 隐藏 img，露出印章，避免空框 -->
+          <span class="pd-portrait-stamp">{{ poet.name ? poet.name.charAt(0) : '文' }}</span>
           <img v-if="avatar" :src="avatar" :alt="poet.name" class="pd-portrait-img" @error="onAvatarError" />
-          <span v-else class="pd-portrait-stamp">{{ poet.name ? poet.name.charAt(0) : '文' }}</span>
         </div>
 
         <div class="pd-head-main">

@@ -39,7 +39,10 @@
               <span class="section-bar-count">{{ filteredEnrichedPoets.length }} 位</span>
             </div>
 
-            <div class="cards-grid-list" v-if="filteredEnrichedPoets.length">
+            <div class="cards-grid-list" v-if="!enrichmentLoaded">
+              <SkeletonBlock v-for="n in 6" :key="n" height="200px" />
+            </div>
+            <div class="cards-grid-list" v-else-if="filteredEnrichedPoets.length">
               <article
                 v-for="p in filteredEnrichedPoets"
                 :key="p.id"
@@ -120,6 +123,7 @@ import api from '../api'
 import { Graph } from '@antv/g6'
 import DynastyRail from '../components/homepage/DynastyRail.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
+import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 
 const router = useRouter()
 const { isAnime } = useTheme()
