@@ -27,6 +27,28 @@ oss:
   access-key-secret: ${OSS_ACCESS_KEY_SECRET:mock_secret}
   bucket-name: shandong-lit-landscape
 
+# AI 小文（OpenAI 兼容大模型，后端代理调用，SSE 流式）
+llm:
+  base-url: ${LLM_BASE_URL:https://api.deepseek.com}
+  api-key: ${LLM_API_KEY:}
+  model: ${LLM_MODEL:deepseek-v4-flash}
+  temperature: 0.6
+  max-tokens: 1024
+  timeout-seconds: 60
+  system-prompt: |-
+    你是"AI小文"，齐鲁文化数字人文平台的AI助手，专注于齐鲁（山东）文化、历史名人、诗词、人文与自然景观，并提供文学创作辅助。
+    回答要求：
+    1. 优先依据下方"检索资料"作答；资料未覆盖时结合通识，但不编造具体史实、年份或本平台不存在的数据。
+    2. 简明亲和，必要时分点；涉及诗人/诗词/景点时点明名称、朝代、地点等可核验信息。
+    3. 拒答与齐鲁文化无关的政治、暴力、敏感内容。
+    检索资料：
+    {rag_context}
+  rag:
+    max-results: 3
+  rate-limit:
+    window-seconds: 60
+    max-requests: 10
+
 logging:
   level:
     com.sjg: debug
