@@ -29,26 +29,28 @@
     <div class="real-3d-container" v-if="isReal">
       <div class="hud-panel left-hud animate-slide-in">
         <div class="hud-header">
-          <span class="hud-badge">DH SYSTEM</span>
-          <h2 class="hud-title">三维地理<br/>文脉舱</h2>
+          <span class="hud-seal">山河<br/>图志</span>
+          <div class="hud-title-wrap">
+            <span class="hud-eyebrow">数字人文 · 时空交互</span>
+            <h2 class="hud-title">三维地理文脉舱</h2>
+          </div>
         </div>
         <div class="hud-body">
           <p class="hud-desc">数字人文视域下黄河流域（山东段）文学景观时空交互。拖拽旋转视角，双击节点飞往对应城市。</p>
           <div class="hud-stats">
-            <div class="stat-item">
-              <span class="stat-num">10</span>
-              <span class="stat-lbl">核心景点</span>
-            </div>
-            <span class="stat-divider"></span>
-            <div class="stat-item">
-              <span class="stat-num">6</span>
-              <span class="stat-lbl">文人大家</span>
-            </div>
-            <span class="stat-divider"></span>
-            <div class="stat-item">
-              <span class="stat-num">8</span>
-              <span class="stat-lbl">传世名篇</span>
-            </div>
+            <template v-for="(s, i) in hudStats" :key="i">
+              <span v-if="i > 0" class="stat-divider"></span>
+              <div class="stat-item">
+                <span class="stat-num">{{ s.value || '–' }}<i class="stat-suffix">{{ s.suffix || '' }}</i></span>
+                <span class="stat-lbl">{{ s.label }}</span>
+              </div>
+            </template>
+            <template v-if="!hudStats.length">
+              <div class="stat-item">
+                <span class="stat-num">–</span>
+                <span class="stat-lbl">载入中</span>
+              </div>
+            </template>
           </div>
           
           <!-- Immersive HUD label control action -->
@@ -114,19 +116,17 @@
         </div>
       </div>
 
-      <!-- Floating HUD Details Card -->
+      <!-- 浮动城市详情卡（就近吸附被点击节点） -->
       <transition name="fade">
-        <div class="hud-detail-card card" v-if="selectedCity">
-          <div class="detail-card-header">
-            <h3 class="city-title-real">{{ selectedCity }}</h3>
-            <button class="close-card-btn" @click="selectedCity = null">×</button>
-          </div>
-          <p class="city-desc-real">{{ getCityData(selectedCity).desc }}</p>
-          <div class="card-footer-action">
-            <button class="action-btn-primary" @click="$router.push(`/regions/${selectedCity}`)">
-              探索该市文学景观 →
-            </button>
-          </div>
+        <div class="city-card-anchor" v-if="selectedCity" :style="anchorStyle">
+          <CityDetailCard
+            :name="selectedCity"
+            :archive="getCityData(selectedCity)"
+            :detail="cityDetail"
+            :loading="cityLoading"
+            @close="closeCity"
+            @go="onCardGo"
+          />
         </div>
       </transition>
     </div>
@@ -221,7 +221,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
 import { mockCities } from '../config/mockDetailData'
@@ -230,6 +230,8 @@ import AiChatBox from '../components/AiChatBox.vue'
 import InkHero from '../components/homepage/InkHero.vue'
 import SectionHeading from '../components/homepage/SectionHeading.vue'
 import CityQuickCard from '../components/homepage/CityQuickCard.vue'
+import CityDetailCard from '../components/homepage/CityDetailCard.vue'
+import { useCityEnrichment } from '../composables/useCityEnrichment'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
@@ -241,6 +243,61 @@ const showLabels = ref(true)
 const errorMsg = ref(null)
 const regions = ref([])
 const heroStats = ref([])
+
+// ===== 城市详情卡（点击节点弹出，就近吸附）=====
+const { enrichCity, ensurePoets } = useCityEnrichment()
+const cityDetail = ref(null)
+const cityLoading = ref(false)
+const cardPos = ref({ left: 32, top: 32 })
+const isMobile = ref(typeof window !== 'undefined' && window.innerWidth < 768)
+
+const hudStats = computed(() => heroStats.value.slice(0, 3))
+
+const anchorStyle = computed(() => {
+  if (isMobile.value) {
+    return { left: '50%', transform: 'translateX(-50%)', bottom: '16px', top: 'auto', right: 'auto' }
+  }
+  return { left: `${cardPos.value.left}px`, top: `${cardPos.value.top}px` }
+})
+
+// 弹出城市卡：吸附到被点击节点的当前屏幕坐标（clamp 防溢出），并异步补全真实数据
+const openCity = async (name) => {
+  selectedCity.value = name
+  cityDetail.value = null
+  cityLoading.value = true
+  if (!isMobile.value) {
+    const label = cityLabels.value.find((l) => l.name === name)
+    const wrap = canvas3d.value && canvas3d.value.parentElement
+    const ww = (wrap && wrap.clientWidth) || 800
+    const wh = (wrap && wrap.clientHeight) || 600
+    const CARD_W = 340 + 28
+    const CARD_H = 480
+    let x = label ? label.x : ww / 2
+    let y = label ? label.y : wh / 2
+    let left = x + 18
+    if (x > ww / 2) left = x - CARD_W - 18 // 节点在右半屏时，卡放左侧
+    left = Math.min(Math.max(left, 12), Math.max(12, ww - CARD_W))
+    const top = Math.min(Math.max(y + 18, 12), Math.max(12, wh - CARD_H))
+    cardPos.value = { left, top }
+  }
+  try {
+    cityDetail.value = await enrichCity(name)
+  } catch (e) {
+    cityDetail.value = null
+  } finally {
+    cityLoading.value = false
+  }
+}
+
+const closeCity = () => {
+  selectedCity.value = null
+  cityDetail.value = null
+}
+
+const onCardGo = (route) => {
+  if (route) router.push(route)
+  closeCity()
+}
 
 const scrollToMap = () => {
   const el = document.querySelector('.real-3d-container, .anime-ink-container')
@@ -271,7 +328,7 @@ const loadHeroData = async () => {
 }
 
 const clickLabel = (cityName) => {
-  selectedCity.value = cityName
+  openCity(cityName)
   const targetPin = cityObjects.find(c => c.name === cityName)
   if (targetPin) {
     const startPos = camera.position.clone()
@@ -324,7 +381,15 @@ const getParallaxStyle = (factor) => {
 const cities = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '滨州', '淄博', '东营']
 
 const getCityData = (cityName) => {
-  return mockCities[cityName] || { desc: '齐鲁重镇，文脉千秋。' }
+  return mockCities[cityName] || {
+    english: 'CITY VIEW',
+    subtitle: '古韵齐鲁 · 山东胜景',
+    desc: '齐鲁重镇，文脉千秋。',
+    geo: '山东省境内',
+    history: '古齐鲁之地，中华文明摇篮',
+    season: '四季皆宜',
+    tag: '文化重镇'
+  }
 }
 
 const getCityStampPos = (city) => {
@@ -942,7 +1007,7 @@ const initThree = (geojson) => {
     }
     
     if (clickedCity) {
-      selectedCity.value = clickedCity
+      openCity(clickedCity)
       
       // Fly to node animation
       const targetPin = cityObjects.find(c => c.name === clickedCity)
@@ -1071,6 +1136,7 @@ const initThree = (geojson) => {
 
 // Window resizing
 const handleResize = () => {
+  isMobile.value = window.innerWidth < 768
   if (isReal.value && renderer && camera && canvas3d.value) {
     const width = canvas3d.value.parentElement.clientWidth
     const height = canvas3d.value.parentElement.clientHeight
@@ -1138,6 +1204,7 @@ const startThreeSafe = async () => {
 
 onMounted(() => {
   loadHeroData()
+  ensurePoets()
   if (isReal.value) {
     setTimeout(startThreeSafe, 150)
   }
@@ -1215,21 +1282,43 @@ onBeforeUnmount(() => {
 }
 
 .hud-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
   border-bottom: 2px solid var(--accent);
   padding-bottom: 14px;
   margin-bottom: 18px;
 }
 
-.hud-badge {
-  font-size: 9px;
+.hud-seal {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: var(--font-display);
+  font-size: 13px;
   font-weight: 800;
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  padding: 2px 6px;
+  color: #fff;
+  background: #8e352e;
+  padding: 8px 5px;
   border-radius: 2px;
-  letter-spacing: 1.5px;
-  display: inline-block;
-  margin-bottom: 10px;
+  letter-spacing: 3px;
+  box-shadow: 2px 2px 6px rgba(142, 53, 46, 0.3);
+  flex-shrink: 0;
+  line-height: 1.1;
+}
+
+.hud-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hud-eyebrow {
+  font-family: var(--font-heading);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 2px;
+  opacity: 0.8;
 }
 
 .hud-title {
@@ -1347,92 +1436,18 @@ onBeforeUnmount(() => {
   line-height: 1.5;
 }
 
-/* Floating Click Details Card */
-.hud-detail-card {
+/* 浮动城市详情卡锚点（就近吸附点击节点；z 20 高于 HUD z 10） */
+.city-card-anchor {
   position: absolute;
-  bottom: 32px;
-  left: 32px;
-  width: 340px;
-  background: rgba(253, 250, 245, 0.92);
-  border: 1px solid var(--accent);
-  border-top: 4px solid var(--accent);
-  padding: 22px 24px;
-  z-index: 10;
-  box-shadow: 0 12px 36px rgba(142, 53, 46, 0.15);
-  backdrop-filter: blur(16px);
-  text-align: left;
+  z-index: 20;
+  max-width: calc(100vw - 24px);
 }
 
-.detail-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px dashed var(--border-light);
-  padding-bottom: 10px;
-  margin-bottom: 14px;
-}
-
-.city-title-real {
-  font-family: var(--font-heading);
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: 2px;
-  margin: 0;
-  line-height: 1.1;
-}
-
-.close-card-btn {
-  background: transparent;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: var(--text-muted);
-  transition: color 0.2s;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  line-height: 1;
-}
-
-.close-card-btn:hover {
-  color: var(--accent);
-  background: rgba(184, 134, 11, 0.08);
-}
-
-.city-desc-real {
-  font-size: 13px;
-  line-height: 1.8;
-  color: var(--text-secondary);
-  margin-bottom: 18px;
-  letter-spacing: 0.3px;
-}
-
-.card-footer-action {
-  display: flex;
-}
-
-.action-btn-primary {
-  width: 100%;
-  padding: 10px 16px;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 2px;
+.stat-suffix {
+  font-style: normal;
+  font-size: 12px;
   font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  letter-spacing: 2px;
-  transition: all 0.2s;
-  font-family: inherit;
-}
-
-.action-btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(142, 53, 46, 0.25);
+  margin-left: 1px;
 }
 
 /* ==========================================
@@ -1806,16 +1821,7 @@ onBeforeUnmount(() => {
     width: calc(100% - 40px);
     max-width: 480px;
     max-height: 45vh;
-  }
-  .hud-detail-card {
-    top: 20px;
-    bottom: auto;
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(100% - 40px);
-    max-width: 360px;
-  }
-}
+  }}
 
 /* Mobile: stack ink panel, shrink stamps */
 @media (max-width: 640px) {
