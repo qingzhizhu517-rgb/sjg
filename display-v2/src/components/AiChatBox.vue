@@ -60,7 +60,8 @@
             </div>
             <!-- Bubble -->
             <div class="msg-bubble">
-              <p class="bubble-txt">{{ msg.content }}</p>
+              <div v-if="msg.role === 'assistant'" class="bubble-txt md-body" v-html="renderMd(msg.content)"></div>
+              <p v-else class="bubble-txt">{{ msg.content }}</p>
             </div>
           </div>
           <!-- Typing indicator -->
@@ -98,6 +99,20 @@
 
 <script setup>
 import { ref, nextTick, reactive } from 'vue'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
+
+// Markdown 渲染：breaks(单换行-><br>) + gfm(表格/删除线)
+marked.setOptions({ breaks: true, gfm: true })
+// 链接强制新标签打开 + noopener，避免覆盖当前应用页
+DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+  if (node.tagName === 'A') {
+    node.setAttribute('target', '_blank')
+    node.setAttribute('rel', 'noopener noreferrer')
+  }
+})
+// LLM 输出不可信：marked 解析后必须经 DOMPurify 消毒再 v-html，防 <script>/onerror 等 XSS
+const renderMd = (md) => (md ? DOMPurify.sanitize(marked.parse(md)) : '')
 
 const isOpen = ref(false)
 const inputMsg = ref('')
@@ -450,6 +465,90 @@ const sendMessage = async () => {
 
 .message-row.user .bubble-txt {
   color: #fff;
+}
+
+/* Markdown 渲染（助手气泡；v-html 内容需用 :deep 穿透 scoped） */
+.bubble-txt.md-body {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.bubble-txt.md-body :deep(p) { margin: 0 0 8px; }
+.bubble-txt.md-body :deep(p:last-child) { margin-bottom: 0; }
+.bubble-txt.md-body :deep(ul),
+.bubble-txt.md-body :deep(ol) { margin: 6px 0; padding-left: 20px; }
+.bubble-txt.md-body :deep(li) { margin: 2px 0; }
+.bubble-txt.md-body :deep(li > ul),
+.bubble-txt.md-body :deep(li > ol) { margin: 2px 0; }
+.bubble-txt.md-body :deep(h1),
+.bubble-txt.md-body :deep(h2),
+.bubble-txt.md-body :deep(h3),
+.bubble-txt.md-body :deep(h4) {
+  margin: 10px 0 6px;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  line-height: 1.3;
+}
+.bubble-txt.md-body :deep(h1) { font-size: 16px; }
+.bubble-txt.md-body :deep(h2) { font-size: 15px; }
+.bubble-txt.md-body :deep(h3) { font-size: 14px; }
+.bubble-txt.md-body :deep(h4) { font-size: 13px; }
+.bubble-txt.md-body :deep(strong) { font-weight: 700; }
+.bubble-txt.md-body :deep(em) { font-style: italic; }
+.bubble-txt.md-body :deep(a) {
+  color: var(--accent);
+  text-decoration: underline;
+  word-break: break-all;
+}
+.bubble-txt.md-body :deep(blockquote) {
+  margin: 6px 0;
+  padding: 4px 10px;
+  border-left: 3px solid var(--accent);
+  background: rgba(142, 53, 46, 0.04);
+  color: var(--text-secondary);
+}
+.bubble-txt.md-body :deep(blockquote p) { margin: 0; }
+.bubble-txt.md-body :deep(code) {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.06);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+.bubble-txt.md-body :deep(pre) {
+  margin: 8px 0;
+  padding: 10px 12px;
+  background: #2b2b2b;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+.bubble-txt.md-body :deep(pre code) {
+  background: transparent;
+  padding: 0;
+  color: #f8f8f2;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.bubble-txt.md-body :deep(table) {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8px 0;
+  font-size: 12px;
+}
+.bubble-txt.md-body :deep(th),
+.bubble-txt.md-body :deep(td) {
+  border: 1px solid var(--border-light);
+  padding: 4px 8px;
+  text-align: left;
+}
+.bubble-txt.md-body :deep(th) {
+  background: rgba(0, 0, 0, 0.03);
+  font-weight: 700;
+}
+.bubble-txt.md-body :deep(hr) {
+  border: none;
+  border-top: 1px solid var(--border-light);
+  margin: 10px 0;
 }
 
 /* Typing bubble dots */
