@@ -31,7 +31,7 @@
         </div>
       </section>
 
-      <Transition name="tab-fade" mode="out-in">
+      <Transition name="tab-fade" mode="out-in" @after-enter="onTabAfterEnter">
         <div v-if="activeTab === 'gallery'" key="gallery" class="gallery-tab-content">
           <section class="pa-section" data-reveal>
             <div class="section-bar">
@@ -329,18 +329,22 @@ const initG6 = () => {
   })
 }
 
+// out-in 模式下，图谱面板要等画廊 leave(250ms) 完成后才挂载进 DOM。
+// 之前用 nextTick+setTimeout(100) 调 initG6，100ms < 250ms，容器仍为 null -> 早退，图谱永不渲染。
+// 改用 Transition 的 @after-enter：面板真正进入 DOM 后才初始化，杜绝竞态。
+const onTabAfterEnter = () => {
+  if (activeTab.value === 'graph') initG6()
+}
 watch([activeTab, isAnime], () => {
-  if (activeTab.value === 'graph') {
-    nextTick(() => {
-      setTimeout(() => {
-        initG6()
-      }, 100)
-    })
-  } else {
+  if (activeTab.value !== 'graph') {
+    // 离开图谱 tab：销毁实例释放资源
     if (graphInstance) {
       graphInstance.destroy()
       graphInstance = null
     }
+  } else if (graphInstance) {
+    // 已在图谱 tab 上切换主题：用新配色重建（切到 graph 的首次初始化交给 @after-enter）
+    nextTick(() => initG6())
   }
 })
 

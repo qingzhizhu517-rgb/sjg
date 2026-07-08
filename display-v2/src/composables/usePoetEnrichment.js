@@ -13,8 +13,10 @@ async function loadAllPoems() {
       const res = await api.get('/poems', { params: { page: 1, size: 500 } })
       _poems = (res && (res.records || res)) || []
     } catch (e) {
+      // 不缓存失败结果（置 null 而非 []）：[] 为 truthy 会被 line-9 守卫永久返回，
+      // 一次瞬时错误就会让整站补全数据永久为空。置 null 后下次调用会自动重试。
       console.warn('[usePoetEnrichment] 加载诗词失败', e)
-      _poems = []
+      _poems = null
     }
     _loading = null
     return _poems
@@ -57,7 +59,8 @@ export function usePoetEnrichment() {
   const map = ref({})
 
   const build = async () => {
-    const poems = await loadAllPoems()
+    // loadAllPoems 失败时返回 null，这里兜底为 []，保证 forEach 不抛
+    const poems = (await loadAllPoems()) || []
     const m = {}
     poems.forEach((pm) => {
       const pid = pm.poetId
