@@ -61,17 +61,6 @@
             <!-- Bubble -->
             <div class="msg-bubble">
               <p class="bubble-txt">{{ msg.content }}</p>
-              <!-- Interactive Action Buttons -->
-              <div class="bubble-actions" v-if="msg.actions && msg.actions.length">
-                <button
-                  v-for="action in msg.actions"
-                  :key="action.label"
-                  class="bubble-action-btn"
-                  @click="triggerAction(action)"
-                >
-                  {{ action.label }}
-                </button>
-              </div>
             </div>
           </div>
           <!-- Typing indicator -->
@@ -95,7 +84,7 @@
             required
             ref="inputRef"
           />
-          <button type="submit" class="chat-send-btn">
+          <button type="submit" class="chat-send-btn" :disabled="isTyping">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="send-svg">
               <line x1="22" y1="2" x2="11" y2="13" />
               <polygon points="22 2 15 22 11 13 2 9 22 2" />
@@ -108,10 +97,8 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, nextTick, reactive } from 'vue'
 
-const router = useRouter()
 const isOpen = ref(false)
 const inputMsg = ref('')
 const isTyping = ref(false)
@@ -145,72 +132,81 @@ const scrollToBottom = () => {
   })
 }
 
-// Custom mock response mapper
-const getMockResponse = (text) => {
-  const query = text.toLowerCase()
-  if (query.includes('李白') || query.includes('杜甫') || query.includes('同游')) {
-    return {
-      content: '天宝三载至四载（744-745年），李白与杜甫同游齐鲁大地。他们曾同游济南大明湖历下亭、登临泰山，最后在曲阜东石门山送别。这是中国文学史上最伟大的会面，留下了李白《鲁郡东石门送杜二甫》与杜甫《望岳》等不朽名篇。',
-      actions: [
-        { label: '飞往泰山', type: 'route', path: '/spots/3' },
-        { label: '飞往大明湖', type: 'route', path: '/spots/2' }
-      ]
-    }
-  } else if (query.includes('大明湖') || query.includes('历下亭')) {
-    return {
-      content: '大明湖是历代名士汇聚之所。杜甫在此写下"海右此亭古，济南名士多"；李清照少女时代在此泛舟迷路，写下《如梦令·常记溪亭日暮》；元代赵孟頫在此任职画下《鹊华秋色图》。',
-      actions: [
-        { label: '品读《如梦令》', type: 'route', path: '/poems/3' },
-        { label: '品读《陪李北海宴历下亭》', type: 'route', path: '/poems/2' }
-      ]
-    }
-  } else if (query.includes('泰山') || query.includes('抵达')) {
-    return {
-      content: '泰山为五岳之首，是帝王封禅与文人望岳之圣地。已为您定位到泰山景观地标，您可以直接点击一键飞往。',
-      actions: [
-        { label: '直达泰山详情', type: 'route', path: '/spots/3' }
-      ]
-    }
-  } else if (query.includes('大模型') || query.includes('齐鲁文化')) {
-    return {
-      content: '齐鲁文化大模型整合了山东六大文化板块的46个典型标识，包括三孔、泰山、大明湖、运河、聊斋等核心景观，旨在通过数字人文方式重塑黄河流域（山东段）的教学与科学普及应用。',
-      actions: [
-        { label: '探索文脉长河', type: 'route', path: '/timeline' }
-      ]
-    }
-  } else {
-    return {
-      content: `关于“${text}”，根据齐鲁文献库记载，这与山东沿黄黄河流域的文学地标高度关联。建议您可以前往“山河图志”中进行沙盘探索或问询其他经典景点。`,
-      actions: [
-        { label: '返回地图大沙盘', type: 'route', path: '/map' }
-      ]
-    }
-  }
-}
+/**
+ * 发送消息：POST /api/public/chat（SSE 流式）。
+ * 后端经 RAG 检索 + 大模型流式生成，逐 token 返回 {"delta":"..."} 事件。
+ */
+const sendMessage = async () => {
+  const text = inputMsg.value.trim()
+  if (!text || isTyping.value) return
 
-const sendMessage = () => {
-  if (!inputMsg.value.trim()) return
-  
-  const userText = inputMsg.value
-  messages.value.push({ role: 'user', content: userText })
+  messages.value.push({ role: 'user', content: text })
+  // 历史：不含当前提问，取最近 10 条作多轮上下文
+  const history = messages.value.slice(0, -1).slice(-10).map(m => ({ role: m.role, content: m.content }))
   inputMsg.value = ''
-  
   scrollToBottom()
-  isTyping.value = true
-  
-  // Simulated streaming delay
-  setTimeout(() => {
-    isTyping.value = false
-    const res = getMockResponse(userText)
-    messages.value.push(res)
-    scrollToBottom()
-  }, 1200)
-}
 
-const triggerAction = (action) => {
-  if (action.type === 'route') {
-    isOpen.value = false
-    router.push(action.path)
+  isTyping.value = true
+  const assistantMsg = reactive({ role: 'assistant', content: '' })
+  messages.value.push(assistantMsg)
+  scrollToBottom()
+
+  try {
+    const res = await fetch('/api/public/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+      body: JSON.stringify({ message: text, history })
+    })
+    if (!res.ok || !res.body) {
+      isTyping.value = false
+      assistantMsg.content = '（服务暂不可用，请稍后再试）'
+      return
+    }
+
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder('utf-8')
+    let buffer = ''
+    let firstDelta = true
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+
+      // SSE 事件以空行(\n\n)分隔
+      let idx
+      while ((idx = buffer.indexOf('\n\n')) >= 0) {
+        const event = buffer.slice(0, idx)
+        buffer = buffer.slice(idx + 2)
+        const dataLines = event
+          .split('\n')
+          .filter(l => l.startsWith('data:'))
+          .map(l => l.slice(5))
+        if (!dataLines.length) continue
+        const payload = dataLines.join('\n').trim()
+        if (!payload || payload === '[DONE]') continue
+        try {
+          const obj = JSON.parse(payload)
+          if (obj.delta) {
+            if (firstDelta) { isTyping.value = false; firstDelta = false }
+            assistantMsg.content += obj.delta
+            scrollToBottom()
+          } else if (obj.error) {
+            isTyping.value = false
+            assistantMsg.content += (assistantMsg.content ? '\n' : '') + '⚠ ' + obj.error
+            scrollToBottom()
+          }
+        } catch {
+          // 非 JSON 数据块，忽略
+        }
+      }
+    }
+
+    isTyping.value = false
+    if (!assistantMsg.content) assistantMsg.content = '（未收到回复，请重试）'
+  } catch (e) {
+    isTyping.value = false
+    assistantMsg.content = '（网络异常，请稍后再试）'
   }
 }
 </script>
@@ -449,36 +445,10 @@ const triggerAction = (action) => {
   font-size: 13px;
   line-height: 1.6;
   word-break: break-all;
+  white-space: pre-wrap;
 }
 
 .message-row.user .bubble-txt {
-  color: #fff;
-}
-
-/* Bubble Actions */
-.bubble-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
-  border-top: 1px dashed var(--border-light);
-  padding-top: 8px;
-}
-
-.bubble-action-btn {
-  font-size: 11px;
-  font-weight: 700;
-  background: var(--card-bg);
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  padding: 3px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.bubble-action-btn:hover {
-  background: var(--accent);
   color: #fff;
 }
 
@@ -545,9 +515,14 @@ const triggerAction = (action) => {
   transition: all 0.2s;
 }
 
-.chat-send-btn:hover {
+.chat-send-btn:hover:not(:disabled) {
   box-shadow: 0 2px 8px rgba(142, 53, 46, 0.25);
   transform: scale(1.02);
+}
+
+.chat-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .send-svg {
@@ -559,6 +534,7 @@ const triggerAction = (action) => {
 .drawer-fade-enter-active, .drawer-fade-leave-active {
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
 .drawer-fade-enter-from, .drawer-fade-leave-to {
   opacity: 0;
   transform: translateY(30px) scale(0.95);
