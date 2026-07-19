@@ -65,6 +65,9 @@ public class PublicPoetController {
 
         Dynasty dynasty = dynastyMapper.selectById(poet.getDynastyId());
 
+        poet.setCompleteness(
+            com.sjg.util.PoetCompletenessCalculator.compute(poet, poems.size()));
+
         Map<String, Object> result = new HashMap<>();
         result.put("poet", poet);
         result.put("poems", poems);
