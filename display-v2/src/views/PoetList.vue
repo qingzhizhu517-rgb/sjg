@@ -11,7 +11,7 @@
     />
 
     <div ref="revealRoot" class="poets-content">
-      <!-- 今日名句 -->scenic_spot
+      <!-- 今日名句 -->
       <section v-if="todayPoem" class="poets-section poets-quote" data-reveal>
         <FeaturedPoemCard :poem="todayPoem" @click="goPoem(todayPoem.id)" />
       </section>
@@ -70,12 +70,12 @@
           <section class="poets-section" data-reveal>
             <div class="section-bar">
               <span class="section-bar-title">{{ selectedDynastyName }}</span>
-              <span class="section-bar-count">{{ filteredEnrichedPoets.length }} 位</span>
+              <span class="section-bar-count">{{ standardPoets.length }} 位</span>
             </div>
 
-            <div class="cards-grid-list" v-if="filteredEnrichedPoets.length">
+            <div class="cards-grid-list" v-if="standardPoets.length">
               <article
-                v-for="p in filteredEnrichedPoets"
+                v-for="p in standardPoets"
                 :key="p.id"
                 class="poet-card-wrap card hover-lift"
                 @click="$router.push(`/poets/${p.id}`)"
@@ -111,9 +111,51 @@
               </article>
             </div>
 
-            <div class="empty-card" v-else>
+            <div class="empty-card" v-if="!filteredEnrichedPoets.length">
               <p class="empty-icon">∅</p>
               <p>该朝代暂无收录诗人</p>
+            </div>
+
+            <!-- 折叠: 信息待考的名士(完整度<40), 默认收起 -->
+            <div v-if="marginalPoets.length" class="marginal-wrap">
+              <button class="marginal-toggle" @click="showMarginal = !showMarginal">
+                {{ showMarginal ? '收起' : '展开' }}更多 {{ marginalPoets.length }} 位(信息待考)
+                <span class="marginal-arrow" :class="{ open: showMarginal }">▾</span>
+              </button>
+              <Transition name="tab-fade">
+                <div v-show="showMarginal" class="cards-grid-list marginal-grid">
+                  <article
+                    v-for="p in marginalPoets"
+                    :key="p.id"
+                    class="poet-card-wrap card hover-lift is-marginal"
+                    @click="$router.push(`/poets/${p.id}`)"
+                    :aria-label="`查看 ${p.name} 详情`"
+                  >
+                    <div class="poet-avatar-box">
+                      <img
+                        v-if="getPoetAvatar(p)"
+                        :src="getPoetAvatar(p)"
+                        :alt="p.name"
+                        class="poet-img"
+                        @error="onAvatarError"
+                      />
+                      <span class="poet-avatar-stamp">{{ p.name ? p.name.charAt(0) : '文' }}</span>
+                      <span class="poet-stamp">文</span>
+                    </div>
+                    <div class="poet-card-body">
+                      <div class="poet-title-row">
+                        <h3 class="poet-name-tag">{{ p.name }}</h3>
+                        <span class="poet-dynasty-badge">{{ getDynastyName(p.dynastyId) }}</span>
+                      </div>
+                      <p class="poet-biography poet-biography--empty">生平待考，然其诗已传。</p>
+                      <div class="poet-style-box">
+                        <span class="style-lbl">传世</span>
+                        <span class="style-val">{{ p.poemCount || 0 }} 篇</span>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+              </Transition>
             </div>
           </section>
         </div>
@@ -198,7 +240,7 @@ const dynastyItems = computed(() => [
     startYear: d.start,
     endYear: d.end,
     poetCount: countByDynasty(d.id),
-  })),
+  })).filter((d) => d.poetCount > 0),
 ])
 
 const selectedDynastyName = computed(() => {
@@ -213,11 +255,28 @@ const filteredEnrichedPoets = computed(() => {
   return enrichedPoets.value.filter((p) => p.dynastyId === selectedDynastyId.value)
 })
 
-const featuredPoets = computed(() =>
-  [...enrichedPoets.value]
-    .sort((a, b) => (b.poemCount || 0) - (a.poemCount || 0))
-    .slice(0, 3),
+// 卡墙常规层(完整度 40-69): 默认展示
+const standardPoets = computed(() =>
+  filteredEnrichedPoets.value.filter((p) => {
+    const c = p.completeness ?? 0
+    return c >= 40 && c < 70
+  }),
 )
+// 卡墙折叠层(完整度 <40): 信息薄, 默认收起
+const marginalPoets = computed(() =>
+  filteredEnrichedPoets.value.filter((p) => (p.completeness ?? 0) < 40),
+)
+const showMarginal = ref(false)
+
+const featuredPoets = computed(() => {
+  const premium = [...enrichedPoets.value]
+    .filter((p) => (p.completeness ?? 0) >= 70)
+    .sort((a, b) => (b.poemCount || 0) - (a.poemCount || 0))
+  if (premium.length) return premium.slice(0, 6)
+  return [...enrichedPoets.value]
+    .sort((a, b) => (b.poemCount || 0) - (a.poemCount || 0))
+    .slice(0, 3)
+})
 
 const todayPoem = computed(() => {
   if (!enrichmentLoaded.value || !enrichedPoets.value.length) return null
@@ -247,7 +306,7 @@ const heroStats = computed(() => {
   const dynastiesWithPoets = DYNASTIES.filter((d) => countByDynasty(d.id) > 0).length
   return [
     { value: poets.value.length, suffix: '位', label: '齐鲁名士' },
-    { value: DYNASTIES.length, suffix: '朝', label: '跨越朝代' },
+    { value: dynastiesWithPoets, suffix: '朝', label: '跨越朝代' },
     { value: totalPoems, suffix: '篇', label: '传世诗卷' },
     { value: dynastiesWithPoets, suffix: '朝', label: '有录可考' },
   ]
@@ -726,6 +785,47 @@ onBeforeUnmount(() => {
   color: var(--border);
   margin-bottom: 12px;
   line-height: 1;
+}
+
+/* ---------- marginal folded ---------- */
+.marginal-wrap {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px dashed var(--border-light);
+}
+.marginal-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 auto;
+  padding: 8px 22px;
+  background: var(--card-bg);
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+  transition: all 0.25s;
+}
+.marginal-toggle:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+.marginal-arrow {
+  transition: transform 0.25s;
+  font-size: 11px;
+}
+.marginal-arrow.open {
+  transform: rotate(180deg);
+}
+.marginal-grid {
+  margin-top: 20px;
+}
+.is-marginal {
+  opacity: 0.85;
 }
 
 /* ---------- graph tab ---------- */
