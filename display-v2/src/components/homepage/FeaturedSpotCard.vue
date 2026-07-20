@@ -135,7 +135,7 @@ const onImgError = (e) => {
 .hover-lift:hover {
   transform: translateY(-4px);
   border-color: var(--accent);
-  box-shadow: 0 12px 28px rgba(61, 43, 31, 0.12);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--text-primary) 0.12%, transparent);
 }
 @media (max-width: 640px) {
   .spot__cover { height: 140px; }

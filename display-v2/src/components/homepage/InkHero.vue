@@ -128,7 +128,7 @@ onBeforeUnmount(() => {
   z-index: 0;
   background: radial-gradient(
       110% 80% at 88% 12%,
-      rgba(61, 43, 31, 0.05),
+      color-mix(in srgb, var(--text-primary) 0.05%, transparent),
       transparent 55%
     ),
     radial-gradient(90% 70% at 8% 92%, rgba(158, 43, 37, 0.04), transparent 60%);
@@ -139,7 +139,7 @@ onBeforeUnmount(() => {
       rgba(0, 0, 0, 0.04),
       transparent 55%
     ),
-    radial-gradient(90% 70% at 8% 92%, rgba(194, 58, 43, 0.05), transparent 60%);
+    radial-gradient(90% 70% at 8% 92%, color-mix(in srgb, var(--accent) 0.05%, transparent), transparent 60%);
 }
 
 .ph__kuan {
@@ -264,7 +264,7 @@ onBeforeUnmount(() => {
   right: 0;
   bottom: 0;
   height: 56px;
-  background: linear-gradient(180deg, transparent, rgba(61, 43, 31, 0.05) 60%, rgba(61, 43, 31, 0.08));
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--text-primary) 0.05%, transparent) 60%, color-mix(in srgb, var(--text-primary) 0.08%, transparent));
 }
 .theme-inkwash .ph-horizon__water {
   background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.04) 60%, rgba(0, 0, 0, 0.07));
@@ -276,13 +276,13 @@ onBeforeUnmount(() => {
   height: 0;
   border-left: 90px solid transparent;
   border-right: 90px solid transparent;
-  border-bottom: 60px solid rgba(61, 43, 31, 0.08);
+  border-bottom: 60px solid color-mix(in srgb, var(--text-primary) 0.08%, transparent);
 }
 .theme-inkwash .ph-horizon__peak {
   border-bottom-color: rgba(0, 0, 0, 0.07);
 }
-.ph-horizon__peak.p1 { left: 12%; border-bottom-color: rgba(61, 43, 31, 0.1); }
-.ph-horizon__peak.p2 { left: 42%; border-bottom-width: 78px; border-bottom-color: rgba(61, 43, 31, 0.07); }
+.ph-horizon__peak.p1 { left: 12%; border-bottom-color: color-mix(in srgb, var(--text-primary) 0.1%, transparent); }
+.ph-horizon__peak.p2 { left: 42%; border-bottom-width: 78px; border-bottom-color: color-mix(in srgb, var(--text-primary) 0.07%, transparent); }
 .ph-horizon__peak.p3 { left: 68%; }
 
 /* ============ variant: roster（齐鲁名士）============ */
@@ -314,13 +314,13 @@ onBeforeUnmount(() => {
   border-radius: 3px;
 }
 .theme-real .ph-roster__seal {
-  background: rgba(184, 134, 11, 0.1);
-  border-color: rgba(184, 134, 11, 0.45);
+  background: color-mix(in srgb, var(--accent) 0.1%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 0.45%, transparent);
   color: var(--accent-dark);
 }
 .theme-inkwash .ph-roster__seal {
-  background: rgba(194, 58, 43, 0.1);
-  border-color: rgba(194, 58, 43, 0.45);
+  background: color-mix(in srgb, var(--accent) 0.1%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 0.45%, transparent);
   color: var(--accent);
 }
 

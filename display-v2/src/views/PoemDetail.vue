@@ -217,14 +217,14 @@ onMounted(async () => {
 .header-tag {
   font-size: 11px;
   color: var(--text-secondary);
-  background: rgba(184, 134, 11, 0.07);
+  background: color-mix(in srgb, var(--accent) 0.07%, transparent);
   border: 1px solid var(--border-light);
   padding: 3px 11px;
   border-radius: 100px;
   letter-spacing: 1px;
 }
 .theme-inkwash .header-tag {
-  background: rgba(194, 58, 43, 0.06);
+  background: color-mix(in srgb, var(--accent) 0.06%, transparent);
 }
 
 /* Poem Body */
@@ -238,7 +238,7 @@ onMounted(async () => {
 }
 
 .theme-real .poem-body {
-  background-image: linear-gradient(rgba(184, 134, 11, 0.02) 1px, transparent 1px);
+  background-image: linear-gradient(color-mix(in srgb, var(--accent) 0.02%, transparent) 1px, transparent 1px);
   background-size: 100% 3em;
   border-radius: var(--radius-md);
   box-shadow: var(--card-shadow);
@@ -246,8 +246,8 @@ onMounted(async () => {
 
 .theme-inkwash .poem-body {
   background-image: 
-    radial-gradient(circle at 0% 0%, rgba(194,58,43,0.015) 30%, transparent 31%),
-    radial-gradient(circle at 100% 100%, rgba(194,58,43,0.015) 30%, transparent 31%);
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--accent) 0.015%, transparent) 30%, transparent 31%),
+    radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--accent) 0.015%, transparent) 30%, transparent 31%);
   border-radius: var(--radius-sm);
 }
 
@@ -338,8 +338,8 @@ onMounted(async () => {
   position: relative;
   /* Concertina fold visual lines */
   background-image: 
-    linear-gradient(90deg, rgba(61,43,31,0.03) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(61,43,31,0.02) 1px, transparent 1px);
+    linear-gradient(90deg, color-mix(in srgb, var(--text-primary) 0.03%, transparent) 1px, transparent 1px),
+    linear-gradient(180deg, color-mix(in srgb, var(--text-primary) 0.02%, transparent) 1px, transparent 1px);
   background-size: 40px 100%, 100% 24px;
   box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.04);
 }
@@ -429,7 +429,7 @@ onMounted(async () => {
 .theme-inkwash .media-wrap {
   border: 2px solid var(--accent);
   outline: none;
-  box-shadow: 0 4px 16px rgba(194, 58, 43, 0.1);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 0.1%, transparent);
   border-radius: var(--radius-sm);
 }
 

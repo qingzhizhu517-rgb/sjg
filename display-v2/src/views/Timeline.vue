@@ -439,7 +439,7 @@ onMounted(async () => {
   border-color: var(--border-light);
 }
 .theme-inkwash .tl-poem-row:hover {
-  background: rgba(194, 58, 43, 0.04);
+  background: color-mix(in srgb, var(--accent) 0.04%, transparent);
   border-color: var(--accent-light);
 }
 .tl-poem-title {
@@ -529,7 +529,7 @@ onMounted(async () => {
 .tl-most-card:hover {
   border-color: var(--accent);
   transform: translateY(-3px);
-  box-shadow: 0 10px 24px rgba(61, 43, 31, 0.1);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--text-primary) 0.1%, transparent);
 }
 .tl-most-num {
   font-family: var(--font-display);

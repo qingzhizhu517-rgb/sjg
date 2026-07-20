@@ -133,7 +133,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   border-top: 3px solid var(--accent);
   border-radius: 4px;
   padding: 18px 20px 16px;
-  box-shadow: 0 16px 40px rgba(61, 43, 31, 0.18);
+  box-shadow: 0 16px 40px color-mix(in srgb, var(--text-primary) 0.18%, transparent);
   backdrop-filter: blur(16px);
   text-align: left;
   position: relative;
@@ -228,7 +228,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 }
 .city-card__close:hover {
   color: var(--accent);
-  background: rgba(184, 134, 11, 0.1);
+  background: color-mix(in srgb, var(--accent) 0.1%, transparent);
 }
 
 .city-card__subtitle {
@@ -375,7 +375,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   width: 90px;
   height: 12px;
   border-radius: 2px;
-  background: linear-gradient(90deg, rgba(184,134,11,0.08), rgba(184,134,11,0.18), rgba(184,134,11,0.08));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 0.08%, transparent), color-mix(in srgb, var(--accent) 0.18%, transparent), color-mix(in srgb, var(--accent) 0.08%, transparent));
   background-size: 200% 100%;
   animation: cityCardSkel 1.2s ease-in-out infinite;
 }
@@ -406,7 +406,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   border-color: var(--accent);
   color: var(--accent);
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(184, 134, 11, 0.12);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--accent) 0.12%, transparent);
 }
 .city-card__btn:disabled {
   opacity: 0.4;

@@ -14,7 +14,7 @@ defineProps({
 <style scoped>
 .skel {
   position: relative;
-  background: rgba(61, 43, 31, 0.05);
+  background: color-mix(in srgb, var(--text-primary) 0.05%, transparent);
   border: 1px solid var(--border-light);
   border-radius: 4px;
   overflow: hidden;

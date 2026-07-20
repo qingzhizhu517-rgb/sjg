@@ -64,12 +64,12 @@ const otherTitles = computed(() => {
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 .theme-real .sc {
-  box-shadow: 0 1px 3px rgba(61, 43, 31, 0.04);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--text-primary) 0.04%, transparent);
 }
 .sc:hover {
   transform: translateY(-4px);
   border-color: var(--accent);
-  box-shadow: 0 14px 32px rgba(61, 43, 31, 0.12);
+  box-shadow: 0 14px 32px color-mix(in srgb, var(--text-primary) 0.12%, transparent);
 }
 
 .sc__top {
@@ -167,14 +167,14 @@ const otherTitles = computed(() => {
 .sc__other-pill {
   font-size: 12px;
   color: var(--text-secondary);
-  background: rgba(184, 134, 11, 0.06);
+  background: color-mix(in srgb, var(--accent) 0.06%, transparent);
   border: 1px solid var(--border-light);
   padding: 3px 10px;
   border-radius: 100px;
   letter-spacing: 0.5px;
 }
 .theme-inkwash .sc__other-pill {
-  background: rgba(194, 58, 43, 0.06);
+  background: color-mix(in srgb, var(--accent) 0.06%, transparent);
 }
 
 /* featured：横跨两列，横向布局，更大字 */

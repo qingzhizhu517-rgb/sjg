@@ -1248,7 +1248,7 @@ onBeforeUnmount(() => {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: 0 12px 32px rgba(61, 43, 31, 0.1);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--text-primary) 0.1%, transparent);
 }
 
 .map-frame__title {
@@ -1310,7 +1310,7 @@ onBeforeUnmount(() => {
   border: 1px solid var(--border);
   border-top: 3px solid var(--accent);
   border-radius: var(--radius-md);
-  box-shadow: 0 10px 30px rgba(61, 43, 31, 0.08);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--text-primary) 0.08%, transparent);
   backdrop-filter: blur(16px);
   text-align: left;
   overflow-y: auto;
@@ -1367,7 +1367,7 @@ onBeforeUnmount(() => {
 .map-album__back:hover {
   border-color: var(--accent);
   color: var(--accent);
-  background: rgba(184, 134, 11, 0.04);
+  background: color-mix(in srgb, var(--accent) 0.04%, transparent);
 }
 
 .hud-header {
@@ -1433,8 +1433,8 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 22px;
-  background: rgba(184, 134, 11, 0.04);
-  border: 1px solid rgba(184, 134, 11, 0.15);
+  background: color-mix(in srgb, var(--accent) 0.04%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 0.15%, transparent);
   border-radius: 4px;
   padding: 16px 12px;
 }
@@ -1450,8 +1450,8 @@ onBeforeUnmount(() => {
   justify-content: center;
   gap: 8px;
   padding: 10px 16px;
-  background: rgba(184, 134, 11, 0.08);
-  border: 1px solid rgba(184, 134, 11, 0.25);
+  background: color-mix(in srgb, var(--accent) 0.08%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 0.25%, transparent);
   border-radius: var(--radius-sm);
   color: var(--accent-dark);
   font-family: var(--font-heading);
@@ -1467,7 +1467,7 @@ onBeforeUnmount(() => {
   border-color: var(--accent);
   color: #fff;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(184, 134, 11, 0.15);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 0.15%, transparent);
 }
 
 .action-icon {
@@ -1503,7 +1503,7 @@ onBeforeUnmount(() => {
 .stat-divider {
   width: 1px;
   height: 28px;
-  background: rgba(184, 134, 11, 0.2);
+  background: color-mix(in srgb, var(--accent) 0.2%, transparent);
   flex-shrink: 0;
 }
 
@@ -1538,7 +1538,7 @@ onBeforeUnmount(() => {
 .anime-ink-container {
   width: 100%;
   height: calc(100vh - var(--nav-height));
-  background: #f4efe4; /* Traditional ink wash paper base */
+  background: var(--bg-primary); /* Traditional ink wash paper base */
   padding: 48px;
   display: flex;
   align-items: center;
@@ -1975,7 +1975,7 @@ onBeforeUnmount(() => {
 }
 
 .label-theme-inkwash .label-plaque-card {
-  background: rgba(26, 26, 26, 0.92);
+  background: color-mix(in srgb, var(--text-primary) 0.92%, transparent);
   border: 1px solid var(--accent);
 }
 
@@ -2074,12 +2074,12 @@ onBeforeUnmount(() => {
 
 .label-theme-real .plaque-tag {
   color: var(--accent-dark);
-  background: rgba(184, 134, 11, 0.12);
+  background: color-mix(in srgb, var(--accent) 0.12%, transparent);
 }
 
 .label-theme-inkwash .plaque-tag {
   color: #e85d4f;
-  background: rgba(194, 58, 43, 0.15);
+  background: color-mix(in srgb, var(--accent) 0.15%, transparent);
 }
 
 /* Connecting Line */
@@ -2212,7 +2212,7 @@ onBeforeUnmount(() => {
 .error-overlay .error-retry-btn:hover {
   color: var(--accent);
   border-color: var(--accent);
-  background: rgba(184, 134, 11, 0.03);
+  background: color-mix(in srgb, var(--accent) 0.03%, transparent);
 }
 
 </style>

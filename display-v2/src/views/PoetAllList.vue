@@ -474,15 +474,15 @@ onBeforeUnmount(() => {
 }
 .toggle-btn:hover {
   color: var(--text-primary);
-  background: rgba(184, 134, 11, 0.05);
+  background: color-mix(in srgb, var(--accent) 0.05%, transparent);
 }
 .theme-inkwash .toggle-btn:hover {
-  background: rgba(194, 58, 43, 0.05);
+  background: color-mix(in srgb, var(--accent) 0.05%, transparent);
 }
 .toggle-btn.active {
   background: var(--accent-dark);
   color: #fff;
-  box-shadow: 0 2px 6px rgba(184, 134, 11, 0.2);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--accent) 0.2%, transparent);
 }
 
 .pa-section {
@@ -539,7 +539,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   border: 1px solid var(--border);
   flex-shrink: 0;
-  background: #f4efe4;
+  background: var(--bg-primary);
 }
 .theme-inkwash .poet-avatar-box {
   background: #2a2520;
@@ -569,7 +569,7 @@ onBeforeUnmount(() => {
   background: linear-gradient(135deg, #9e2b25, #6b2820);
 }
 .theme-real .poet-avatar-stamp {
-  background: linear-gradient(135deg, #b8860b, #8b6508);
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
 }
 .poet-stamp {
   position: absolute;
@@ -616,12 +616,12 @@ onBeforeUnmount(() => {
   color: var(--accent);
   letter-spacing: 1px;
   padding: 2px 8px;
-  background: rgba(184, 134, 11, 0.08);
+  background: color-mix(in srgb, var(--accent) 0.08%, transparent);
   border-radius: 2px;
   white-space: nowrap;
 }
 .theme-inkwash .poet-dynasty-badge {
-  background: rgba(194, 58, 43, 0.08);
+  background: color-mix(in srgb, var(--accent) 0.08%, transparent);
 }
 .poet-biography {
   font-size: 12.5px;
@@ -701,7 +701,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: rgba(184, 134, 11, 0.04);
+  background: color-mix(in srgb, var(--accent) 0.04%, transparent);
   border-left: 3px solid var(--accent);
   padding: 12px 18px;
   margin-bottom: 20px;
@@ -709,7 +709,7 @@ onBeforeUnmount(() => {
   text-align: left;
 }
 .theme-inkwash .graph-instructions {
-  background: rgba(194, 58, 43, 0.04);
+  background: color-mix(in srgb, var(--accent) 0.04%, transparent);
 }
 .instruction-tag {
   font-size: 10px;

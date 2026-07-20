@@ -67,13 +67,13 @@ const onImgError = (e) => {
   border-radius: 2px;
   overflow: hidden;
   border: 1px solid var(--border);
-  background: linear-gradient(135deg, #f4efe4, #e8e0cc);
+  background: linear-gradient(135deg, var(--bg-primary), #e8e0cc);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .theme-inkwash .fpoet__avatar {
-  background: linear-gradient(135deg, #2a2520, #1a1a1a);
+  background: linear-gradient(135deg, #2a2520, var(--text-primary));
 }
 .fpoet__avatar img {
   width: 100%;
@@ -97,7 +97,7 @@ const onImgError = (e) => {
   justify-content: center;
 }
 .theme-real .fpoet__stamp {
-  background: linear-gradient(135deg, #b8860b, #8b6508);
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
 }
 .fpoet__body {
   display: flex;
@@ -127,11 +127,11 @@ const onImgError = (e) => {
   color: var(--accent);
   letter-spacing: 1px;
   padding: 2px 8px;
-  background: rgba(184, 134, 11, 0.08);
+  background: color-mix(in srgb, var(--accent) 0.08%, transparent);
   border-radius: 2px;
 }
 .theme-inkwash .fpoet__dyn {
-  background: rgba(194, 58, 43, 0.08);
+  background: color-mix(in srgb, var(--accent) 0.08%, transparent);
 }
 .fpoet__bio {
   font-size: 12.5px;
@@ -195,7 +195,7 @@ const onImgError = (e) => {
 }
 .hover-lift:hover {
   border-color: var(--accent);
-  box-shadow: 0 10px 28px rgba(61, 43, 31, 0.1);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--text-primary) 0.1%, transparent);
 }
 @media (max-width: 640px) {
   .fpoet__avatar { width: 72px; height: 96px; }

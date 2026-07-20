@@ -66,7 +66,7 @@ const formatYear = (y) => (y == null ? '' : y < 0 ? '前' + Math.abs(y) : String
 .theme-real .rail__chip.is-active {
   background: var(--accent-dark);
   border-color: var(--accent-dark);
-  box-shadow: 0 4px 14px rgba(184, 134, 11, 0.28);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 0.28%, transparent);
 }
 .rail__chip.is-faded {
   opacity: 0.5;

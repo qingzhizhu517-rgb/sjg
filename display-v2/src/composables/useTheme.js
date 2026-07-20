@@ -9,7 +9,12 @@ const toggle = () => {
 
 watch(themeState, (val) => {
   localStorage.setItem('sjg-theme', val)
-  document.documentElement.setAttribute('data-theme', val)
+  const root = document.documentElement
+  root.setAttribute('data-theme', val)
+  // 主题类上提到 <html>: 统一 .theme-real/.theme-inkwash 机制,
+  // 让 fixed/teleport 出 .app-root 的元素也吃到主题 token
+  root.classList.remove('theme-real', 'theme-inkwash')
+  root.classList.add(val === 'inkwash' ? 'theme-inkwash' : 'theme-real')
 }, { immediate: true })
 
 export function useTheme() {

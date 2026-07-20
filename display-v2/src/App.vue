@@ -268,7 +268,7 @@ onUnmounted(() => {
 
 .main-header.scrolled {
   border-bottom-color: var(--border-light);
-  box-shadow: 0 4px 20px rgba(61, 43, 31, 0.05);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--text-primary) 0.05%, transparent);
   height: calc(var(--nav-height) - 10px);
 }
 
@@ -312,7 +312,7 @@ onUnmounted(() => {
 }
 
 .theme-real .brand-logo-box {
-  background: #c23a2b;
+  background: var(--accent);
 }
 
 .site-brand:hover .brand-logo-box {
@@ -368,11 +368,11 @@ onUnmounted(() => {
 
 .nav-link:hover {
   color: var(--text-primary);
-  background: rgba(61, 43, 31, 0.04);
+  background: color-mix(in srgb, var(--text-primary) 0.04%, transparent);
 }
 
 .theme-inkwash .nav-link:hover {
-  background: rgba(194, 58, 43, 0.04);
+  background: color-mix(in srgb, var(--accent) 0.04%, transparent);
 }
 
 .nav-link.active {
@@ -380,14 +380,14 @@ onUnmounted(() => {
 }
 
 .theme-real .nav-link.active {
-  background: rgba(184, 134, 11, 0.05);
-  box-shadow: inset 0 0 10px rgba(184, 134, 11, 0.05);
+  background: color-mix(in srgb, var(--accent) 0.05%, transparent);
+  box-shadow: inset 0 0 10px color-mix(in srgb, var(--accent) 0.05%, transparent);
 }
 
 .theme-inkwash .nav-link.active {
   background: var(--card-bg);
   font-weight: 800;
-  box-shadow: 0 2px 6px rgba(194, 58, 43, 0.08);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--accent) 0.08%, transparent);
 }
 
 /* Underline link sliding animation */
@@ -506,7 +506,7 @@ onUnmounted(() => {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 18px;
-  box-shadow: 0 12px 36px rgba(61, 43, 31, 0.12);
+  box-shadow: 0 12px 36px color-mix(in srgb, var(--text-primary) 0.12%, transparent);
   opacity: 0;
   visibility: hidden;
   transform: translateY(15px) rotateX(-12deg);
@@ -560,8 +560,8 @@ onUnmounted(() => {
 }
 
 .theme-real .city-link:hover {
-  background: rgba(184, 134, 11, 0.04);
-  box-shadow: 0 4px 10px rgba(184, 134, 11, 0.08);
+  background: color-mix(in srgb, var(--accent) 0.04%, transparent);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--accent) 0.08%, transparent);
 }
 
 .city-name {
@@ -691,7 +691,7 @@ onUnmounted(() => {
 
 .theme-real .drawer-nav-link:hover,
 .theme-real .drawer-nav-link.active {
-  background: rgba(184, 134, 11, 0.04);
+  background: color-mix(in srgb, var(--accent) 0.04%, transparent);
 }
 
 .drawer-nav-icon {

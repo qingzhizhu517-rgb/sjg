@@ -14,9 +14,14 @@
   --border: #E0D5C5;
   --border-light: #EDE6DA;
   --card-bg: #FFFFFF;
-  --card-shadow: 0 1px 3px rgba(61, 43, 31, 0.06), 0 4px 16px rgba(61, 43, 31, 0.04);
-  --card-shadow-hover: 0 4px 12px rgba(61, 43, 31, 0.1), 0 12px 40px rgba(61, 43, 31, 0.08);
+  --card-shadow: 0 4px 20px rgba(61, 43, 31, 0.05), 0 10px 40px rgba(61, 43, 31, 0.04);
+  --card-shadow-hover: 0 10px 30px rgba(61, 43, 31, 0.12), 0 20px 60px rgba(61, 43, 31, 0.08);
   --overlay: rgba(61, 43, 31, 0.5);
+  /* 透明度派生 token: 让组件内 rgba 主题色泄漏可映射为 token (color-mix, 现代浏览器) */
+  --accent-soft: color-mix(in srgb, var(--accent) 8%, transparent);
+  --accent-faint: color-mix(in srgb, var(--accent) 4%, transparent);
+  --shadow-soft: color-mix(in srgb, var(--text-primary) 10%, transparent);
+  --glass-bg: color-mix(in srgb, var(--bg-primary) 80%, transparent);
   --font-body: 'Noto Serif SC', 'Songti SC', 'SimSun', Georgia, serif;
   --font-heading: 'Noto Serif SC', 'Songti SC', Georgia, serif;
   --font-display: 'Noto Serif SC', Georgia, serif;
@@ -27,30 +32,9 @@
   --page-padding: 80px;
 }
 
-[data-theme="inkwash"] {
-  /* ===== Inkwash Theme: Calligraphy Scroll ===== */
-  --bg-primary: #F4EFE4;
-  --bg-secondary: #EBE5D8;
-  --bg-tertiary: #DDD6C6;
-  --text-primary: #1A1A1A;
-  --text-secondary: #4A4A4A;
-  --text-muted: #7A7A7A;
-  --accent: #C23A2B;
-  --accent-dark: #8B1A1A;
-  --accent-light: #E85D4F;
-  --border: #C8C0B0;
-  --border-light: #D8D0C0;
-  --card-bg: #FAF6EE;
-  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(0, 0, 0, 0.03);
-  --card-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 12px 40px rgba(0, 0, 0, 0.06);
-  --overlay: rgba(26, 26, 26, 0.5);
-  --font-body: 'LXGW WenKai', 'Noto Serif SC', 'KaiTi', 'STKaiti', serif;
-  --font-heading: 'LXGW WenKai', 'KaiTi', 'STKaiti', serif;
-  --font-display: 'LXGW WenKai', 'LiSu', 'STLiti', serif;
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 16px;
-}
+/* Inkwash 主题 token 唯一源在 styles/inkwash.css 的 .theme-inkwash;
+   机制统一后 <html> 同时带 .theme-real/.theme-inkwash 类 (见 useTheme.js),
+   故此处不再保留并行 [data-theme] 覆盖, 避免同名 token 值打架。 */
 
 /* ===== Global Reset ===== */
 *, *::before, *::after {
@@ -126,14 +110,14 @@ button {
 
 /* Glassmorphism Class */
 .glass-effect {
-  background: rgba(253, 250, 245, 0.8) !important;
+  background: var(--glass-bg) !important;
   backdrop-filter: blur(12px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(12px) saturate(180%) !important;
   border-bottom: 1px solid var(--border-light) !important;
 }
 
 .theme-inkwash .glass-effect {
-  background: rgba(244, 239, 228, 0.85) !important;
+  --glass-bg: color-mix(in srgb, var(--bg-primary) 85%, transparent);
   border-bottom-color: var(--border) !important;
 }
 

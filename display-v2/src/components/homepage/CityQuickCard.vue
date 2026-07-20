@@ -45,7 +45,7 @@ defineEmits(['click'])
   border-radius: 2px;
 }
 .theme-real .city__stamp {
-  background: linear-gradient(135deg, #b8860b, #8b6508);
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
 }
 .city__body {
   flex: 1;
@@ -73,7 +73,7 @@ defineEmits(['click'])
 .hover-lift:hover {
   transform: translateY(-3px);
   border-color: var(--accent);
-  box-shadow: 0 8px 20px rgba(61, 43, 31, 0.1);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--text-primary) 0.1%, transparent);
 }
 .hover-lift:hover .city__arrow {
   transform: translateX(4px);
