@@ -476,9 +476,6 @@ onBeforeUnmount(() => {
   color: var(--text-primary);
   background: color-mix(in srgb, var(--accent) 0.05%, transparent);
 }
-.theme-inkwash .toggle-btn:hover {
-  background: color-mix(in srgb, var(--accent) 0.05%, transparent);
-}
 .toggle-btn.active {
   background: var(--accent-dark);
   color: #fff;
@@ -620,9 +617,6 @@ onBeforeUnmount(() => {
   border-radius: 2px;
   white-space: nowrap;
 }
-.theme-inkwash .poet-dynasty-badge {
-  background: color-mix(in srgb, var(--accent) 0.08%, transparent);
-}
 .poet-biography {
   font-size: 12.5px;
   line-height: 1.7;
@@ -707,9 +701,6 @@ onBeforeUnmount(() => {
   margin-bottom: 20px;
   border-radius: 0 4px 4px 0;
   text-align: left;
-}
-.theme-inkwash .graph-instructions {
-  background: color-mix(in srgb, var(--accent) 0.04%, transparent);
 }
 .instruction-tag {
   font-size: 10px;

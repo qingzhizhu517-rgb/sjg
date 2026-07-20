@@ -130,9 +130,6 @@ const onImgError = (e) => {
   background: color-mix(in srgb, var(--accent) 0.08%, transparent);
   border-radius: 2px;
 }
-.theme-inkwash .fpoet__dyn {
-  background: color-mix(in srgb, var(--accent) 0.08%, transparent);
-}
 .fpoet__bio {
   font-size: 12.5px;
   line-height: 1.7;

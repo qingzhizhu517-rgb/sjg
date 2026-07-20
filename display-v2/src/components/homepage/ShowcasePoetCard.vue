@@ -173,10 +173,6 @@ const otherTitles = computed(() => {
   border-radius: 100px;
   letter-spacing: 0.5px;
 }
-.theme-inkwash .sc__other-pill {
-  background: color-mix(in srgb, var(--accent) 0.06%, transparent);
-}
-
 /* featured：横跨两列，横向布局，更大字 */
 .sc--featured {
   grid-column: span 2;
