@@ -461,15 +461,15 @@ const createCityShape = (coordinates) => {
 
 // Geographical coordinates (Lon, Lat) of core cities (accurate administrative centers)
 const cityGeoCoords = [
-  { name: '菏泽', lon: 115.48, lat: 35.23, color: 0xc23a2b },
+  { name: '菏泽', lon: 115.48, lat: 35.23, color: 0xc23a2b, river: true },
   { name: '济宁', lon: 116.59, lat: 35.38, color: 0xe69138 },
   { name: '泰安', lon: 117.08, lat: 36.20, color: 0xd4af37 },
-  { name: '聊城', lon: 115.97, lat: 36.45, color: 0x8e352e },
-  { name: '济南', lon: 117.00, lat: 36.67, color: 0x3d85c6 },
-  { name: '德州', lon: 116.29, lat: 37.43, color: 0x674ea7 },
-  { name: '淄博', lon: 118.00, lat: 36.81, color: 0x6aa84f },
-  { name: '滨州', lon: 118.02, lat: 37.37, color: 0x5b8c85 },
-  { name: '东营', lon: 118.49, lat: 37.46, color: 0x008080 }
+  { name: '聊城', lon: 115.97, lat: 36.45, color: 0x8e352e, river: true },
+  { name: '济南', lon: 117.00, lat: 36.67, color: 0x3d85c6, river: true },
+  { name: '德州', lon: 116.29, lat: 37.43, color: 0x674ea7, river: true },
+  { name: '淄博', lon: 118.00, lat: 36.81, color: 0x6aa84f, river: true },
+  { name: '滨州', lon: 118.02, lat: 37.37, color: 0x5b8c85, river: true },
+  { name: '东营', lon: 118.49, lat: 37.46, color: 0x008080, river: true }
 ]
 
 const city3dCoords = cityGeoCoords.map(city => {
@@ -478,7 +478,8 @@ const city3dCoords = cityGeoCoords.map(city => {
     name: city.name,
     x,
     z,
-    color: city.color
+    color: city.color,
+    river: !!city.river
   }
 })
 
@@ -840,12 +841,45 @@ const initThree = (geojson) => {
   // 6. Glowing Yellow River path representation
   const riverCurve = new THREE.CatmullRomCurve3(riverPoints)
   const riverGeom = new THREE.TubeGeometry(riverCurve, 64, 0.15, 8, false)
-  const riverMat = new THREE.MeshBasicMaterial({
-    color: 0xc27b38, // Golden river glowing color
-    transparent: true,
-    opacity: 0.85
-  })
+  // 流光黄河: 沿管长动画 UV 的流动光带(ShaderMaterial); 低端机退静态材质
+  const lowPerfRiver = (navigator.hardwareConcurrency || 4) <= 2 ||
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  let riverMat
+  if (lowPerfRiver) {
+    riverMat = new THREE.MeshBasicMaterial({ color: 0xc27b38, transparent: true, opacity: 0.85 })
+  } else {
+    riverMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uColor: { value: new THREE.Color(0xc27b38) },
+        uHighlight: { value: new THREE.Color(0xffe896) },
+        uFlowSpeed: { value: 0.6 }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+      fragmentShader: `
+        varying vec2 vUv;
+        uniform float uTime;
+        uniform vec3 uColor;
+        uniform vec3 uHighlight;
+        uniform float uFlowSpeed;
+        void main() {
+          // 沿管长流动光带; 入海端(uv.x->1)渐亮
+          float b = 0.55 + 0.45 * sin(vUv.x * 18.0 - uTime * uFlowSpeed * 6.0);
+          b += smoothstep(0.7, 1.0, vUv.x) * 0.25;
+          vec3 col = mix(uColor, uHighlight, clamp(b, 0.0, 1.0));
+          float alpha = 0.7 + 0.25 * b;
+          gl_FragColor = vec4(col, clamp(alpha, 0.0, 1.0));
+        }`,
+      transparent: true
+    })
+  }
   const riverMesh = new THREE.Mesh(riverGeom, riverMat)
+  riverMesh.name = 'yellow-river'
   scene.add(riverMesh)
   
   // Flowing river dots (Particle pipeline along the river)
@@ -919,7 +953,23 @@ const initThree = (geojson) => {
     ringMesh.rotation.x = -Math.PI / 2
     ringMesh.position.y = 0.01
     pinGroup.add(ringMesh)
-    
+
+    // 3b) River mark: 沿河城加一道金色环, 呼应黄河流光(图例"黄河流经")
+    if (city.river) {
+      const riverRingGeom = new THREE.RingGeometry(0.30, 0.33, 48)
+      const riverRingMat = new THREE.MeshBasicMaterial({
+        color: 0xffe896,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.55,
+        blending: THREE.AdditiveBlending
+      })
+      const riverRingMesh = new THREE.Mesh(riverRingGeom, riverRingMat)
+      riverRingMesh.rotation.x = -Math.PI / 2
+      riverRingMesh.position.y = 0.02
+      pinGroup.add(riverRingMesh)
+    }
+
     // 4) Holographic inner ring (compass pointer)
     const innerRingGeom = new THREE.RingGeometry(0.08, 0.13, 4, 1)
     const innerRingMat = new THREE.MeshBasicMaterial({
@@ -984,7 +1034,32 @@ const initThree = (geojson) => {
       }
       if (clickedCity) break
     }
-    
+
+    // 未点中城市时, 检查是否点中黄河 -> 飞往距命中点最近的沿河城
+    if (!clickedCity) {
+      const riverHit = intersects.find(hit => {
+        let p = hit.object
+        while (p) {
+          if (p.name === 'yellow-river') return true
+          p = p.parent
+        }
+        return false
+      })
+      if (riverHit) {
+        const hp = riverHit.point
+        let nearest = null
+        let minDist = Infinity
+        city3dCoords.forEach(c => {
+          if (!c.river) return
+          const dx = c.x - hp.x
+          const dz = c.z - hp.z
+          const d = Math.sqrt(dx * dx + dz * dz)
+          if (d < minDist) { minDist = d; nearest = c }
+        })
+        if (nearest) clickedCity = nearest.name
+      }
+    }
+
     if (clickedCity) {
       openCity(clickedCity)
       
@@ -1029,7 +1104,12 @@ const initThree = (geojson) => {
   
   const tick = () => {
     const elapsedTime = clock.getElapsedTime()
-    
+
+    // 流光黄河: 更新 shader uTime(低端静态材质无 uniforms, 跳过)
+    if (riverMat.uniforms && riverMat.uniforms.uTime) {
+      riverMat.uniforms.uTime.value = elapsedTime
+    }
+
     // Pulse the river dots along the path
     const positions = riverPointsObj.geometry.attributes.position.array
     for (let i = 0; i < dotCount; i++) {
