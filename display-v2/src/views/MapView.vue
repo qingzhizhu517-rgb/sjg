@@ -2,17 +2,10 @@
   <div class="map-view" :class="{ 'anime-layout': isAnime }" @mousemove="handleMouseMove" @mouseleave="resetParallax">
     <!-- 双主题布局容器 -->
 
-    <!-- 墨卷 Hero（inkwash 主题沿用既有 calligraphy hero，避免双 hero）-->
-    <InkHero
+    <!-- 黄河意境 Hero：左国画主视觉 + 右分行大标题 -->
+    <RiverHero
       v-if="isReal"
-      variant="landscape"
-      seal-char="山"
-      kuan="黄河入海 齐鲁胜境"
-      eyebrow="山东 · 黄河入海"
-      title="山河图志"
-      subtitle="数字人文视域下黄河流域（山东段）文学景观时空交互。"
       :stats="heroStats"
-      cta-label="开启沉浸式探索"
       @cta="scrollToMap"
     />
 
@@ -205,18 +198,8 @@
       </div>
     </div>
 
-    <!-- 沿黄九城快入 -->
-    <section v-if="regions.length" class="map-cities">
-      <SectionHeading title="沿黄九城" subtitle="自菏泽入境，至东营归海，沿黄九城一站直达" />
-      <div class="map-cities-grid">
-        <CityQuickCard
-          v-for="r in regions"
-          :key="r.name"
-          :city="r"
-          @click="$router.push(`/regions/${r.name}`)"
-        />
-      </div>
-    </section>
+    <!-- 沿黄九城 · 沿河分布 -->
+    <RiverCityRail :regions="regions" @go="(name) => $router.push(`/regions/${name}`)" />
 
     <!-- AI Chatbot Box (Global Sidebar) -->
     <AiChatBox />
@@ -230,9 +213,8 @@ import { useTheme } from '../composables/useTheme'
 import { mockCities } from '../config/mockDetailData'
 import api from '../api'
 import AiChatBox from '../components/AiChatBox.vue'
-import InkHero from '../components/homepage/InkHero.vue'
-import SectionHeading from '../components/homepage/SectionHeading.vue'
-import CityQuickCard from '../components/homepage/CityQuickCard.vue'
+import RiverHero from '../components/homepage/RiverHero.vue'
+import RiverCityRail from '../components/homepage/RiverCityRail.vue'
 import CityDetailCard from '../components/homepage/CityDetailCard.vue'
 import { useCityEnrichment } from '../composables/useCityEnrichment'
 import * as THREE from 'three'
