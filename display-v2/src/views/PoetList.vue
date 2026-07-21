@@ -339,7 +339,7 @@ const handleGraphResize = () => {
   }
 }
 
-const initG6 = () => {
+const initG6 = async () => {
   if (!g6Container.value) return
   if (graphInstance) {
     graphInstance.destroy()
@@ -375,41 +375,47 @@ const initG6 = () => {
         lineDash: [4, 4],
       }
 
-  const data = {
-    nodes: [
-      { id: '1', label: '李白', sub: '唐朝 · 诗仙', size: 55, isPoet: true, fillColor: graphTheme.poetFill, strokeColor: graphTheme.poetStroke, labelSize: 13 },
-      { id: '2', label: '杜甫', sub: '唐朝 · 诗圣', size: 55, isPoet: true, fillColor: graphTheme.poetFill, strokeColor: graphTheme.poetStroke, labelSize: 13 },
-      { id: '3', label: '李清照', sub: '宋朝 · 千古才女', size: 55, isPoet: true, fillColor: graphTheme.poetFill, strokeColor: graphTheme.poetStroke, labelSize: 13 },
-      { id: '4', label: '辛弃疾', sub: '宋朝 · 稼轩豪杰', size: 55, isPoet: true, fillColor: graphTheme.poetFill, strokeColor: graphTheme.poetStroke, labelSize: 13 },
-      { id: '5', label: '赵孟頫', sub: '元朝 · 松雪道人', size: 50, isPoet: true, fillColor: graphTheme.poetFill, strokeColor: graphTheme.poetStroke, labelSize: 12 },
-      { id: '6', label: '蒲松龄', sub: '清朝 · 聊斋先生', size: 50, isPoet: true, fillColor: graphTheme.poetFill, strokeColor: graphTheme.poetStroke, labelSize: 12 },
-      { id: 'c1', label: '济南', sub: '济南名士多', size: 45, isPoet: false, fillColor: graphTheme.cityFill, strokeColor: graphTheme.cityStroke, labelSize: 12 },
-      { id: 'c2', label: '泰安', sub: '会当凌绝顶', size: 45, isPoet: false, fillColor: graphTheme.cityFill, strokeColor: graphTheme.cityStroke, labelSize: 12 },
-    ],
-    edges: [
-      { source: '1', target: '2', label: '李杜齐鲁相会', eStroke: graphTheme.poetStroke, eLineWidth: 2, eDashed: false },
-      { source: '2', target: 'c1', label: '历下亭同宴', eStroke: graphTheme.poetStroke, eLineWidth: 1, eDashed: true },
-      { source: '1', target: 'c2', label: '游历泰山', eStroke: graphTheme.poetStroke, eLineWidth: 1, eDashed: true },
-      { source: '2', target: 'c2', label: '写《望岳》', eStroke: graphTheme.poetStroke, eLineWidth: 1, eDashed: true },
-      { source: '3', target: 'c1', label: '生平与居所', eStroke: graphTheme.edgeColor, eLineWidth: 1, eDashed: true },
-      { source: '4', target: 'c1', label: '生平与归宋', eStroke: graphTheme.edgeColor, eLineWidth: 1, eDashed: true },
-      { source: '3', target: '4', label: '济南二安', eStroke: graphTheme.poetStroke, eLineWidth: 1.5, eDashed: false },
-      { source: '5', target: 'c1', label: '出任总管/描摹鹊华', eStroke: graphTheme.edgeColor, eLineWidth: 1, eDashed: true },
-    ],
-  }
-
-  const positions = {
-    '1': [width * 0.2, height * 0.3], '2': [width * 0.4, height * 0.15],
-    '3': [width * 0.6, height * 0.3], '4': [width * 0.8, height * 0.25],
-    '5': [width * 0.3, height * 0.7], '6': [width * 0.5, height * 0.8],
-    'c1': [width * 0.7, height * 0.6], 'c2': [width * 0.15, height * 0.55],
-  }
-  data.nodes.forEach((n) => {
-    if (positions[n.id]) {
-      n.x = positions[n.id][0]
-      n.y = positions[n.id][1]
+  // 从后端拉真实关系图谱(/api/public/poet-relations), 转 G6 nodes/edges
+  let graphData = { nodes: [], edges: [] }
+  try {
+    const g = await api.get('/poet-relations')
+    const inNodes = (g && g.nodes) || []
+    const inEdges = (g && g.edges) || []
+    const degree = {}
+    inEdges.forEach(e => {
+      degree[e.source] = (degree[e.source] || 0) + 1
+      degree[e.target] = (degree[e.target] || 0) + 1
+    })
+    graphData = {
+      nodes: inNodes.map(n => ({
+        id: n.id,
+        poetId: n.poetId,
+        label: n.name,
+        sub: `${n.dynasty || ''}${n.style ? ' · ' + n.style : ''}`,
+        size: Math.min(64, 36 + (degree[n.id] || 0) * 7),
+        isPoet: true,
+        fillColor: graphTheme.poetFill,
+        strokeColor: graphTheme.poetStroke,
+        labelSize: (degree[n.id] || 0) >= 2 ? 13 : 12,
+      })),
+      edges: inEdges.map(e => {
+        const bincheng = e.relationType === '并称'
+        const dashed = e.relationType === '师承' || e.relationType === '亲属'
+        return {
+          source: e.source,
+          target: e.target,
+          label: e.description || e.relationType,
+          eStroke: bincheng ? graphTheme.poetStroke : graphTheme.edgeColor,
+          eLineWidth: bincheng ? 2 : 1.5,
+          eDashed: dashed,
+        }
+      }),
     }
-  })
+  } catch (err) {
+    graphData = { nodes: [], edges: [] }
+  }
+  const data = graphData
+
   graphInstance = new Graph({
     container: g6Container.value,
     width,
@@ -462,12 +468,8 @@ const initG6 = () => {
 
   graphInstance.on('node:click', (evt) => {
     const modelId = evt.target?.id
-    if (modelId && ['1', '2', '3', '4', '5', '6'].includes(modelId)) {
+    if (modelId) {
       router.push(`/poets/${modelId}`)
-    } else if (modelId === 'c1') {
-      router.push('/regions/济南')
-    } else if (modelId === 'c2') {
-      router.push('/regions/泰安')
     }
   })
 }
