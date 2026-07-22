@@ -20,7 +20,7 @@
 
     <!-- WRITE-UP 3D REAL THEME -->
     <div class="real-3d-container" v-if="isReal">
-      <div class="map-stage">
+      <div class="map-stage" :class="{ 'map-stage--has-city': selectedCity }">
         <!-- 左：沙盘 3D 地图 -->
         <div class="map-frame">
           <div class="map-frame__title">
@@ -74,7 +74,7 @@
               <h2 class="hud-title">三维地理文脉舱</h2>
             </div>
           </div>
-          <p class="hud-desc">数字人文视域下黄河流域（山东段）文学景观时空交互。拖拽旋转视角，双击节点飞往对应城市。</p>
+          <p class="hud-desc">拖拽旋转视角，双击节点飞往对应城市。</p>
           <div class="hud-stats">
             <template v-for="(s, i) in hudStats" :key="i">
               <span v-if="i > 0" class="stat-divider"></span>
@@ -1186,6 +1186,20 @@ const handleResize = () => {
   }
 }
 
+// 沙盘容器尺寸跟随（grid 列宽过渡/侧栏展开时，canvas 平滑 resize 不拉伸）
+let canvasResizeObserver = null
+const observeCanvasResize = () => {
+  if (canvasResizeObserver || !canvas3d.value?.parentElement) return
+  canvasResizeObserver = new ResizeObserver(() => handleResize())
+  canvasResizeObserver.observe(canvas3d.value.parentElement)
+}
+const disconnectCanvasResize = () => {
+  if (canvasResizeObserver) {
+    canvasResizeObserver.disconnect()
+    canvasResizeObserver = null
+  }
+}
+
 // Cache GeoJSON to avoid redundant fetch on theme switch
 let cachedGeojson = null
 let geojsonLoading = null
@@ -1214,6 +1228,7 @@ const startThree = async () => {
   const geojson = await loadGeojson()
   initThree(geojson)
   window.addEventListener('resize', handleResize)
+  observeCanvasResize()
 }
 
 watch(isReal, (newVal) => {
@@ -1222,6 +1237,7 @@ watch(isReal, (newVal) => {
     setTimeout(startThreeSafe, 150)
   } else {
     window.removeEventListener('resize', handleResize)
+    disconnectCanvasResize()
     cleanupThree()
   }
 })
@@ -1252,6 +1268,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize)
+  disconnectCanvasResize()
   cleanupThree()
 })
 </script>
@@ -1285,7 +1302,7 @@ onBeforeUnmount(() => {
 /* REAL MODE: 左图右册 框体化布局 */
 .real-3d-container {
   width: 100%;
-  max-width: 1320px;
+  max-width: 1560px;
   margin: 0 auto;
   padding: 28px 40px 40px;
   position: relative;
@@ -1295,10 +1312,15 @@ onBeforeUnmount(() => {
 
 .map-stage {
   display: grid;
-  grid-template-columns: 1.6fr 1fr;
+  /* 沙盘为主：右栏固定窄条 280px，仅作说明；选中城市时展开至 400px */
+  grid-template-columns: 1fr 280px;
   gap: 24px;
   height: calc(100vh - var(--nav-height) - 76px);
   min-height: 520px;
+  transition: grid-template-columns 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.map-stage--has-city {
+  grid-template-columns: 1fr 400px;
 }
 
 /* 左：沙盘框 */
@@ -1362,12 +1384,12 @@ onBeforeUnmount(() => {
   display: block;
 }
 
-/* 右：册页信息面板 */
+/* 右：册页信息面板（窄条·仅说明） */
 .map-album {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 24px 22px;
+  gap: 14px;
+  padding: 18px 16px;
   background: rgba(253, 250, 245, 0.9);
   border: 1px solid var(--border);
   border-top: 3px solid var(--accent);
@@ -1435,23 +1457,23 @@ onBeforeUnmount(() => {
 .hud-header {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
+  gap: 10px;
   border-bottom: 2px solid var(--accent);
-  padding-bottom: 14px;
-  margin-bottom: 18px;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .hud-seal {
   writing-mode: vertical-rl;
   text-orientation: upright;
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 800;
   color: #fff;
   background: #8e352e;
-  padding: 8px 5px;
+  padding: 6px 4px;
   border-radius: 2px;
-  letter-spacing: 3px;
+  letter-spacing: 2px;
   box-shadow: 2px 2px 6px rgba(142, 53, 46, 0.3);
   flex-shrink: 0;
   line-height: 1.1;
@@ -1460,12 +1482,12 @@ onBeforeUnmount(() => {
 .hud-title-wrap {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .hud-eyebrow {
   font-family: var(--font-heading);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   color: var(--accent);
   letter-spacing: 2px;
@@ -1474,19 +1496,19 @@ onBeforeUnmount(() => {
 
 .hud-title {
   font-family: var(--font-heading);
-  font-size: 24px;
+  font-size: 17px;
   font-weight: 900;
   color: var(--text-primary);
-  letter-spacing: 3px;
+  letter-spacing: 2px;
   line-height: 1.2;
   margin: 0;
 }
 
 .hud-desc {
-  font-size: 13px;
-  line-height: 1.8;
+  font-size: 12px;
+  line-height: 1.7;
   color: var(--text-secondary);
-  margin: 0 0 22px 0;
+  margin: 0 0 14px 0;
   letter-spacing: 0.3px;
 }
 
@@ -1494,15 +1516,15 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 22px;
+  margin-bottom: 14px;
   background: color-mix(in srgb, var(--accent) 0.04%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent) 0.15%, transparent);
   border-radius: 4px;
-  padding: 16px 12px;
+  padding: 10px 8px;
 }
 
 .hud-actions {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .action-btn-toggle {
@@ -1547,7 +1569,7 @@ onBeforeUnmount(() => {
 
 .stat-num {
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 900;
   color: var(--accent);
   line-height: 1;
@@ -1933,7 +1955,7 @@ onBeforeUnmount(() => {
   .scroll-outer-frame { height: 620px; }
   .scroll-wooden-rod { height: 640px; }
   .scroll-middle-paper { height: 580px; }
-  .real-3d-container { max-width: 1480px; }
+  .real-3d-container { max-width: 1680px; }
 }
 
 /* Tablet: map-stage 单列堆叠 */
