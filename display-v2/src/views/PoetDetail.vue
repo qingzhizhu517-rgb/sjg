@@ -88,6 +88,12 @@ import { parseTags, firstLine, pickSignaturePoem } from '../utils/poem'
 import SectionHeading from '../components/homepage/SectionHeading.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
+import dufuPortrait from '../assets/illustrations/10-poet-dufu.png'
+
+// 核心诗人国画立像（无 API 头像时的本地 fallback）
+const LOCAL_PORTRAITS = {
+  杜甫: dufuPortrait,
+}
 
 const route = useRoute()
 const { isAnime } = useTheme()
@@ -107,7 +113,9 @@ const backTo = computed(() => (route.query.from === 'all' ? '/poets/all' : '/poe
 const avatar = computed(() => {
   if (!poet.value) return ''
   const url = isAnime.value ? poet.value.avatarAnimeUrl || poet.value.avatarUrl : poet.value.avatarUrl
-  return url ? getImageUrl(url, isAnime.value) : ''
+  if (url) return getImageUrl(url, isAnime.value)
+  // 无 API 头像：查本地国画立像（如杜甫），仍无则空 → 露出印章
+  return LOCAL_PORTRAITS[poet.value.name] || ''
 })
 const onAvatarError = (e) => {
   e.target.style.display = 'none'

@@ -1,14 +1,6 @@
 <template>
   <div class="timeline-page">
-    <InkHero
-      variant="river"
-      seal-char="文"
-      kuan="文脉绵延 近四千年"
-      eyebrow="朝代年轮"
-      title="文脉长河"
-      subtitle="沿着历史的河流，见证诗与时代的交响。"
-      :stats="heroStats"
-    />
+    <TimelineHero :stats="heroStats" />
 
     <div ref="revealRoot" class="timeline-content">
       <!-- 朝代年轮选择器 -->
@@ -140,7 +132,7 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
 import api from '../api'
-import InkHero from '../components/homepage/InkHero.vue'
+import TimelineHero from '../components/homepage/TimelineHero.vue'
 import SectionHeading from '../components/homepage/SectionHeading.vue'
 import DynastyRail from '../components/homepage/DynastyRail.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
