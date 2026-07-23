@@ -21,6 +21,8 @@
   --accent-soft: color-mix(in srgb, var(--accent) 8%, transparent);
   --accent-faint: color-mix(in srgb, var(--accent) 4%, transparent);
   --accent-hover: color-mix(in srgb, var(--accent) 30%, transparent);
+  --accent-a35: color-mix(in srgb, var(--accent) 35%, transparent);
+  --accent-a25: color-mix(in srgb, var(--accent) 25%, transparent);
   --accent-a15: color-mix(in srgb, var(--accent) 15%, transparent);
   --accent-a1: color-mix(in srgb, var(--accent) 1%, transparent);
   --shadow-color: color-mix(in srgb, var(--text-primary) 5%, transparent);

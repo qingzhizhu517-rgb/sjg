@@ -59,14 +59,14 @@ const formatYear = (y) => (y == null ? '' : y < 0 ? '前' + Math.abs(y) : String
   transform: translateY(-2px);
 }
 .rail__chip.is-active {
-  background: #9e2b25;
-  border-color: #9e2b25;
+  background: var(--accent);
+  border-color: var(--accent);
   box-shadow: 0 4px 14px rgba(158, 43, 37, 0.28);
 }
 .theme-real .rail__chip.is-active {
   background: var(--accent-dark);
   border-color: var(--accent-dark);
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 0.28%, transparent);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 .rail__chip.is-faded {
   opacity: 0.5;

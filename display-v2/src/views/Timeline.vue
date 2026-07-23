@@ -439,7 +439,7 @@ onMounted(async () => {
   border-color: var(--border-light);
 }
 .theme-inkwash .tl-poem-row:hover {
-  background: color-mix(in srgb, var(--accent) 0.04%, transparent);
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
   border-color: var(--accent-light);
 }
 .tl-poem-title {

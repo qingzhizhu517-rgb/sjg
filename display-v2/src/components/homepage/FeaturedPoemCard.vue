@@ -50,7 +50,7 @@ defineEmits(['click'])
   justify-content: center;
   background: rgba(158, 43, 37, 0.12);
   border: 1px solid rgba(158, 43, 37, 0.4);
-  color: #9e2b25;
+  color: var(--accent);
   font-family: var(--font-display);
   font-size: 13px;
   font-weight: 900;
@@ -59,7 +59,7 @@ defineEmits(['click'])
 }
 .theme-inkwash .poem-card__seal {
   color: var(--accent-light);
-  background: color-mix(in srgb, var(--accent) 0.12%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
   border-color: color-mix(in srgb, var(--accent) 0.4%, transparent);
 }
 .poem-card__quote {
@@ -86,14 +86,14 @@ defineEmits(['click'])
 .poem-card__tag {
   font-size: 10.5px;
   color: var(--text-secondary);
-  background: color-mix(in srgb, var(--accent) 0.07%, transparent);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
   border: 1px solid var(--border-light);
   padding: 2px 8px;
   border-radius: 100px;
   letter-spacing: 1px;
 }
 .theme-inkwash .poem-card__tag {
-  background: color-mix(in srgb, var(--accent) 0.06%, transparent);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
 }
 .poem-card__meta {
   display: flex;

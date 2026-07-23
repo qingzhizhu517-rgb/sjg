@@ -64,12 +64,12 @@ const otherTitles = computed(() => {
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 .theme-real .sc {
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--text-primary) 0.04%, transparent);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--text-primary) 4%, transparent);
 }
 .sc:hover {
   transform: translateY(-4px);
   border-color: var(--accent);
-  box-shadow: 0 14px 32px color-mix(in srgb, var(--text-primary) 0.12%, transparent);
+  box-shadow: 0 14px 32px color-mix(in srgb, var(--text-primary) 12%, transparent);
 }
 
 .sc__top {
@@ -83,7 +83,7 @@ const otherTitles = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #9e2b25;
+  background: var(--accent);
   color: #fff;
   font-family: var(--font-display);
   font-size: 22px;
@@ -93,7 +93,7 @@ const otherTitles = computed(() => {
   flex-shrink: 0;
 }
 .theme-real .sc__seal {
-  background: #b23a2b;
+  background: var(--accent-light);
 }
 .sc__meta {
   font-size: 12px;
@@ -167,7 +167,7 @@ const otherTitles = computed(() => {
 .sc__other-pill {
   font-size: 12px;
   color: var(--text-secondary);
-  background: color-mix(in srgb, var(--accent) 0.06%, transparent);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
   border: 1px solid var(--border-light);
   padding: 3px 10px;
   border-radius: 100px;

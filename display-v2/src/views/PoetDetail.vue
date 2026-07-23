@@ -213,7 +213,7 @@ onMounted(() => {
   font-size: 88px;
   font-weight: 900;
   color: #fff;
-  background: linear-gradient(135deg, #9e2b25, #6b2820);
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
 }
 .theme-real .pd-portrait-stamp {
   background: linear-gradient(135deg, var(--accent), var(--accent-dark));
@@ -234,7 +234,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #9e2b25;
+  background: var(--accent);
   color: #fff;
   font-family: var(--font-display);
   font-size: 22px;
@@ -244,7 +244,7 @@ onMounted(() => {
   flex-shrink: 0;
 }
 .theme-real .pd-seal {
-  background: #b23a2b;
+  background: var(--accent-light);
 }
 .pd-dyn {
   font-size: 12px;
@@ -379,14 +379,14 @@ onMounted(() => {
 .pd-poem-tag {
   font-size: 10.5px;
   color: var(--text-secondary);
-  background: color-mix(in srgb, var(--accent) 0.07%, transparent);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
   border: 1px solid var(--border-light);
   padding: 2px 8px;
   border-radius: 100px;
   letter-spacing: 1px;
 }
 .theme-inkwash .pd-poem-tag {
-  background: color-mix(in srgb, var(--accent) 0.06%, transparent);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
 .pd-state {

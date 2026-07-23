@@ -316,10 +316,10 @@ const initChart = () => {
   
   // Theme color adaptation – read tokens at call-time so theme switches are reflected
   const chartTheme = isAnime.value ? {
-    lineColor: '#8e352e', // cinnabar red (long-tail, deferred to P1)
+    lineColor: cssVar('--accent'),
     itemColor: '#c27b38',
-    areaStart: 'rgba(142, 53, 46, 0.15)',
-    areaEnd: 'rgba(142, 53, 46, 0.01)',
+    areaStart: cssVarAlpha('--accent', 0.15),
+    areaEnd: cssVarAlpha('--accent', 0.01),
     fontFamily: 'var(--font-heading)'
   } : {
     lineColor: cssVar('--accent'),
@@ -543,7 +543,7 @@ onBeforeUnmount(() => {
 
 .theme-real .portrait-frame {
   border: 6px solid #2b1d12; /* Rich mahogany frame */
-  outline: 1px solid #d4a843;
+  outline: 1px solid var(--accent-light);
   outline-offset: -4px;
 }
 
@@ -638,8 +638,8 @@ onBeforeUnmount(() => {
   padding: 6px 4px;
   border-radius: 2px;
   letter-spacing: 2px;
-  background: rgba(142, 53, 46, 0.05);
-  box-shadow: 1px 1px 3px rgba(142, 53, 46, 0.1);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+  box-shadow: 1px 1px 3px color-mix(in srgb, var(--accent) 10%, transparent);
   margin-top: 6px;
 }
 
@@ -873,7 +873,7 @@ onBeforeUnmount(() => {
   padding: 1px 4px;
   border-radius: 2px;
   font-weight: 700;
-  background: rgba(142, 53, 46, 0.02);
+  background: color-mix(in srgb, var(--accent) 2%, transparent);
 }
 
 .poem-card-excerpt {

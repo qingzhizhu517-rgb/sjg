@@ -243,7 +243,7 @@ const sendMessage = async () => {
   color: #fff;
   border: none;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(142, 53, 46, 0.35);
+  box-shadow: 0 6px 20px var(--accent-a35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -253,7 +253,7 @@ const sendMessage = async () => {
 
 .ai-toggle-btn:hover {
   transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 8px 24px rgba(142, 53, 46, 0.45);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 .bot-avatar-inner {
@@ -289,19 +289,15 @@ const sendMessage = async () => {
   right: 0;
   width: 350px;
   height: 480px;
-  background: rgba(253, 250, 245, 0.95);
+  background: color-mix(in srgb, var(--bg-primary) 95%, transparent);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  box-shadow: 0 16px 48px color-mix(in srgb, var(--text-primary) 0.15%, transparent);
+  box-shadow: 0 16px 48px color-mix(in srgb, var(--text-primary) 15%, transparent);
   backdrop-filter: blur(20px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   text-align: left;
-}
-
-.theme-inkwash .ai-chat-drawer {
-  background: rgba(244, 239, 228, 0.95);
 }
 
 .drawer-header-ai {
@@ -371,7 +367,7 @@ const sendMessage = async () => {
 .quick-questions {
   padding: 12px 16px;
   border-bottom: 1px dashed var(--border-light);
-  background: rgba(142, 53, 46, 0.01);
+  background: var(--accent-a1);
 }
 
 .quick-lbl {
@@ -401,7 +397,7 @@ const sendMessage = async () => {
 .quick-btn-tag:hover {
   border-color: var(--accent);
   color: var(--accent);
-  background: rgba(142, 53, 46, 0.02);
+  background: color-mix(in srgb, var(--accent) 2%, transparent);
 }
 
 /* Message log list */
@@ -504,7 +500,7 @@ const sendMessage = async () => {
   margin: 6px 0;
   padding: 4px 10px;
   border-left: 3px solid var(--accent);
-  background: rgba(142, 53, 46, 0.04);
+  background: var(--accent-faint);
   color: var(--text-secondary);
 }
 .bubble-txt.md-body :deep(blockquote p) { margin: 0; }
@@ -615,7 +611,7 @@ const sendMessage = async () => {
 }
 
 .chat-send-btn:hover:not(:disabled) {
-  box-shadow: 0 2px 8px rgba(142, 53, 46, 0.25);
+  box-shadow: 0 2px 8px var(--accent-a25);
   transform: scale(1.02);
 }
 

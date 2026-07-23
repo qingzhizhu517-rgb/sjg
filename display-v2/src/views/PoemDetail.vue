@@ -217,14 +217,14 @@ onMounted(async () => {
 .header-tag {
   font-size: 11px;
   color: var(--text-secondary);
-  background: color-mix(in srgb, var(--accent) 0.07%, transparent);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
   border: 1px solid var(--border-light);
   padding: 3px 11px;
   border-radius: 100px;
   letter-spacing: 1px;
 }
 .theme-inkwash .header-tag {
-  background: color-mix(in srgb, var(--accent) 0.06%, transparent);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
 /* Poem Body */
@@ -238,7 +238,7 @@ onMounted(async () => {
 }
 
 .theme-real .poem-body {
-  background-image: linear-gradient(color-mix(in srgb, var(--accent) 0.02%, transparent) 1px, transparent 1px);
+  background-image: linear-gradient(color-mix(in srgb, var(--accent) 2%, transparent) 1px, transparent 1px);
   background-size: 100% 3em;
   border-radius: var(--radius-md);
   box-shadow: var(--card-shadow);
@@ -331,21 +331,21 @@ onMounted(async () => {
 .annotation-panel {
   margin-top: 32px;
   padding: 32px;
-  background: #f7f2e8;
+  background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   text-align: left;
   position: relative;
   /* Concertina fold visual lines */
   background-image: 
-    linear-gradient(90deg, color-mix(in srgb, var(--text-primary) 0.03%, transparent) 1px, transparent 1px),
-    linear-gradient(180deg, color-mix(in srgb, var(--text-primary) 0.02%, transparent) 1px, transparent 1px);
+    linear-gradient(90deg, color-mix(in srgb, var(--text-primary) 3%, transparent) 1px, transparent 1px),
+    linear-gradient(180deg, color-mix(in srgb, var(--text-primary) 2%, transparent) 1px, transparent 1px);
   background-size: 40px 100%, 100% 24px;
   box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.04);
 }
 
 .theme-inkwash .annotation-panel {
-  background: #f2ebd9;
+  background: var(--bg-tertiary);
   border: 1px double var(--accent);
 }
 
@@ -419,7 +419,7 @@ onMounted(async () => {
   overflow: hidden;
   box-shadow: var(--card-shadow);
   border: 8px solid #2b1d12; /* Mahogany frame */
-  outline: 1px solid #d4a843;
+  outline: 1px solid var(--accent-light);
   outline-offset: -3px;
   background: #000;
   max-width: 640px;
