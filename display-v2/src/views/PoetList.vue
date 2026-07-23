@@ -380,8 +380,6 @@ const initG6 = async () => {
     ? {
         poetFill: cssVar('--text-primary'),
         poetStroke: cssVar('--accent'),
-        cityFill: '#faf6ee',
-        cityStroke: cssVar('--text-primary'),
         edgeColor: '#7a7a7a',
         textPrimary: '#e8e4d8',
         accent: cssVar('--accent'),
@@ -392,8 +390,6 @@ const initG6 = async () => {
     : {
         poetFill: cssVar('--accent'),
         poetStroke: cssVar('--text-primary'),
-        cityFill: '#ffffff',
-        cityStroke: cssVar('--accent'),
         edgeColor: '#c5b8a5',
         textPrimary: cssVar('--text-primary'),
         accent: cssVar('--accent'),
@@ -436,7 +432,6 @@ const initG6 = async () => {
           label: n.name,
           sub: `${n.dynasty || ''}${n.style ? ' · ' + n.style : ''}${!n.style && n.birthplace ? ' · ' + n.birthplace : ''}`,
           size: Math.min(64, 36 + (degree[nid] || 0) * 7),
-          isPoet: true,
           fillColor: graphTheme.poetFill,
           strokeColor: graphTheme.poetStroke,
           labelSize: (degree[nid] || 0) >= 2 ? 13 : 12,
@@ -502,7 +497,7 @@ const initG6 = async () => {
       labelOffsetY: 8,
       labelFontSize: (d) => d.labelSize || 13,
       labelFontWeight: 'bold',
-      labelFill: (d) => (d.isPoet ? graphTheme.textPrimary : graphTheme.accent),
+      labelFill: graphTheme.textPrimary,
     },
     edge: {
       style: (d) => ({
