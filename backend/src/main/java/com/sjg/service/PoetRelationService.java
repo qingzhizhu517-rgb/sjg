@@ -76,6 +76,10 @@ public class PoetRelationService {
         // 组装 edges
         List<Map<String, Object>> edges = new ArrayList<>();
         for (PoetRelation r : relations) {
+            // 跳过引用不存在诗人的关系
+            if (!poetMap.containsKey(r.getPoetAId()) || !poetMap.containsKey(r.getPoetBId())) {
+                continue;
+            }
             Map<String, Object> e = new LinkedHashMap<>();
             e.put("source", String.valueOf(r.getPoetAId()));
             e.put("target", String.valueOf(r.getPoetBId()));
