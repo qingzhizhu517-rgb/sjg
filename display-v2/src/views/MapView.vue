@@ -398,6 +398,7 @@ const selectedCity = ref(null)
 let scene, camera, renderer, controls, animationFrameId
 const cityObjects = []
 let pointerDownRef = null
+let pointerMoveRef = null
 
 // Clean up existing Three.js scene, renderer, and animation loop to prevent leaks
 const cleanupThree = () => {
@@ -410,6 +411,10 @@ const cleanupThree = () => {
     if (renderer.domElement && pointerDownRef) {
       renderer.domElement.removeEventListener('pointerdown', pointerDownRef)
       pointerDownRef = null
+    }
+    if (renderer.domElement && pointerMoveRef) {
+      renderer.domElement.removeEventListener('pointermove', pointerMoveRef)
+      pointerMoveRef = null
     }
     renderer.dispose()
     renderer = null
@@ -846,7 +851,7 @@ const initThree = (geojson) => {
   const riverCurve = new THREE.CatmullRomCurve3(riverPoints)
   const riverGeom = new THREE.TubeGeometry(riverCurve, 64, 0.15, 8, false)
   // 流光黄河: 沿管长动画 UV 的流动光带(ShaderMaterial); 低端机退静态材质
-  const lowPerfRiver = (navigator.hardwareConcurrency || 4) <= 2 ||
+  const lowPerfRiver = (navigator.hardwareConcurrency ?? 4) <= 4 ||
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
   let riverMat
   if (lowPerfRiver) {
@@ -873,13 +878,15 @@ const initThree = (geojson) => {
         uniform float uFlowSpeed;
         void main() {
           // 沿管长流动光带; 入海端(uv.x->1)渐亮
-          float b = 0.55 + 0.45 * sin(vUv.x * 18.0 - uTime * uFlowSpeed * 6.0);
+          float b = 0.6 + 0.4 * sin(vUv.x * 18.0 - uTime * uFlowSpeed * 6.0);
           b += smoothstep(0.7, 1.0, vUv.x) * 0.25;
           vec3 col = mix(uColor, uHighlight, clamp(b, 0.0, 1.0));
           float alpha = 0.7 + 0.25 * b;
           gl_FragColor = vec4(col, clamp(alpha, 0.0, 1.0));
         }`,
-      transparent: true
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
     })
   }
   const riverMesh = new THREE.Mesh(riverGeom, riverMat)
@@ -1102,7 +1109,32 @@ const initThree = (geojson) => {
   
   renderer.domElement.addEventListener('pointerdown', onPointerDown)
   pointerDownRef = onPointerDown
-  
+
+  // Hover cursor: pointer when over river or city pin
+  const onPointerMove = (event) => {
+    const rect = renderer.domElement.getBoundingClientRect()
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+    raycaster.setFromCamera(mouse, camera)
+    const hits = raycaster.intersectObjects(scene.children, true)
+    let hovering = false
+    for (let hit of hits) {
+      let p = hit.object
+      while (p && p !== scene) {
+        // City pin group or river mesh
+        if ((p.parent === scene && city3dCoords.some(c => c.name === p.name)) || p.name === 'yellow-river') {
+          hovering = true
+          break
+        }
+        p = p.parent
+      }
+      if (hovering) break
+    }
+    renderer.domElement.style.cursor = hovering ? 'pointer' : ''
+  }
+  renderer.domElement.addEventListener('pointermove', onPointerMove)
+  pointerMoveRef = onPointerMove
+
   // 9. Animation Loop
   let clock = new THREE.Clock()
   

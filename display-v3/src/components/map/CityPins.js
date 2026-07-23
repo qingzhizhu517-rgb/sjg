@@ -9,15 +9,15 @@ import { projectGeo, getTerrainHeight } from './ShandongMap';
 import { mockCities } from '@/config/mockDetailData';
 
 const cityGeoCoords = [
-  { name: '菏泽', lon: 115.48, lat: 35.23, color: 0xc23a2b },
+  { name: '菏泽', lon: 115.48, lat: 35.23, color: 0xc23a2b, river: true },
   { name: '济宁', lon: 116.59, lat: 35.38, color: 0xe69138 },
   { name: '泰安', lon: 117.08, lat: 36.20, color: 0xd4af37 },
-  { name: '聊城', lon: 115.97, lat: 36.45, color: 0x8e352e },
-  { name: '济南', lon: 117.00, lat: 36.67, color: 0x3d85c6 },
-  { name: '德州', lon: 116.29, lat: 37.43, color: 0x674ea7 },
-  { name: '淄博', lon: 118.00, lat: 36.81, color: 0x6aa84f },
-  { name: '滨州', lon: 118.02, lat: 37.37, color: 0x5b8c85 },
-  { name: '东营', lon: 118.49, lat: 37.46, color: 0x008080 }
+  { name: '聊城', lon: 115.97, lat: 36.45, color: 0x8e352e, river: true },
+  { name: '济南', lon: 117.00, lat: 36.67, color: 0x3d85c6, river: true },
+  { name: '德州', lon: 116.29, lat: 37.43, color: 0x674ea7, river: true },
+  { name: '淄博', lon: 118.00, lat: 36.81, color: 0x6aa84f, river: true },
+  { name: '滨州', lon: 118.02, lat: 37.37, color: 0x5b8c85, river: true },
+  { name: '东营', lon: 118.49, lat: 37.46, color: 0x008080, river: true }
 ];
 
 export default function CityPins({ onSelectCity, onArrival, activeCity, showLabels, themeMode }) {
@@ -35,7 +35,8 @@ export default function CityPins({ onSelectCity, onArrival, activeCity, showLabe
         colorHex,
         position: [x, y, z],
         tag: details.tag,
-        desc: details.desc
+        desc: details.desc,
+        river: !!city.river
       };
     });
   }, []);
@@ -225,6 +226,20 @@ export default function CityPins({ onSelectCity, onArrival, activeCity, showLabe
                 opacity={0.65}
               />
             </mesh>
+
+            {/* 3b) River mark: 沿河城加一道金色环, 呼应黄河流光(图例"黄河流经") */}
+            {city.river && (
+              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
+                <ringGeometry args={[0.30, 0.33, 48]} />
+                <meshBasicMaterial
+                  color={0xffe896}
+                  side={THREE.DoubleSide}
+                  transparent
+                  opacity={0.55}
+                  blending={THREE.AdditiveBlending}
+                />
+              </mesh>
+            )}
 
             {/* 4) Base inner compass pointer */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.015, 0]}>
