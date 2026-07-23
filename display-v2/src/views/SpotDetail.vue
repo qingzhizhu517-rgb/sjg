@@ -142,6 +142,7 @@ import { useImage } from '../composables/useImage'
 import { mockSpots } from '../config/mockDetailData'
 import * as echarts from 'echarts'
 import api from '../api'
+import { cssVar, cssVarAlpha } from '../utils/cssToken'
 
 const route = useRoute()
 const { themeClass, isReal, isAnime } = useTheme()
@@ -313,18 +314,18 @@ const initChart = () => {
   chartInstance = echarts.init(chartRef.value)
   const chartData = getChartData(spot.value.name)
   
-  // Theme color adaptation
+  // Theme color adaptation – read tokens at call-time so theme switches are reflected
   const chartTheme = isAnime.value ? {
-    lineColor: '#8e352e', // cinnabar red
+    lineColor: '#8e352e', // cinnabar red (long-tail, deferred to P1)
     itemColor: '#c27b38',
     areaStart: 'rgba(142, 53, 46, 0.15)',
     areaEnd: 'rgba(142, 53, 46, 0.01)',
     fontFamily: 'var(--font-heading)'
   } : {
-    lineColor: '#b8860b', // digital gold
-    itemColor: '#8b6508',
-    areaStart: 'rgba(184, 134, 11, 0.15)',
-    areaEnd: 'rgba(184, 134, 11, 0.01)',
+    lineColor: cssVar('--accent'),
+    itemColor: cssVar('--accent-dark'),
+    areaStart: cssVarAlpha('--accent', 0.15),
+    areaEnd: cssVarAlpha('--accent', 0.01),
     fontFamily: 'var(--font-body)'
   }
   
@@ -673,7 +674,7 @@ onBeforeUnmount(() => {
   height: 220px;
   object-fit: cover;
   display: block;
-  border: 1px solid rgba(0,0,0,0.08);
+  border: 1px solid var(--shadow-a8);
   border-radius: 2px;
 }
 
@@ -681,7 +682,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: rgba(0,0,0,0.01);
+  background: var(--shadow-a1);
   border-left: 2px solid var(--border);
   padding: 8px 0 8px 16px;
 }
@@ -932,7 +933,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 3px 8px var(--shadow-a6);
   transition: transform 0.3s;
 }
 

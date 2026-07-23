@@ -363,7 +363,7 @@ onMounted(async () => {
 
 .theme-inkwash .biography-section,
 .theme-inkwash .poems-section {
-  background-image: radial-gradient(circle at 100% 150%, rgba(194,58,43,0.02) 24%, transparent 25%);
+  background-image: radial-gradient(circle at 100% 150%, var(--accent-faint) 24%, transparent 25%);
 }
 
 .bio-content p {

@@ -37,7 +37,7 @@
 }
 
 .theme-real .card:hover::after {
-  border-color: rgba(184, 134, 11, 0.3);
+  border-color: var(--accent-hover);
 }
 
 /* Elegant divider */

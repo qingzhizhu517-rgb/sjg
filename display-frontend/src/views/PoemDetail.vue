@@ -199,8 +199,8 @@ onMounted(async () => {
 
 .theme-inkwash .poem-body {
   background-image: 
-    radial-gradient(circle at 0% 0%, rgba(194,58,43,0.015) 30%, transparent 31%),
-    radial-gradient(circle at 100% 100%, rgba(194,58,43,0.015) 30%, transparent 31%);
+    radial-gradient(circle at 0% 0%, var(--accent-faint) 30%, transparent 31%),
+    radial-gradient(circle at 100% 100%, var(--accent-faint) 30%, transparent 31%);
   border-radius: var(--radius-sm);
 }
 
@@ -291,8 +291,8 @@ onMounted(async () => {
   position: relative;
   /* Concertina fold visual lines */
   background-image: 
-    linear-gradient(90deg, rgba(61,43,31,0.03) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(61,43,31,0.02) 1px, transparent 1px);
+    linear-gradient(90deg, var(--shadow-color) 1px, transparent 1px),
+    linear-gradient(180deg, var(--shadow-color) 1px, transparent 1px);
   background-size: 40px 100%, 100% 24px;
   box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.04);
 }

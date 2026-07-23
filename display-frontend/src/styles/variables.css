@@ -17,6 +17,17 @@
   --card-shadow: 0 1px 3px rgba(61, 43, 31, 0.06), 0 4px 16px rgba(61, 43, 31, 0.04);
   --card-shadow-hover: 0 4px 12px rgba(61, 43, 31, 0.1), 0 12px 40px rgba(61, 43, 31, 0.08);
   --overlay: rgba(61, 43, 31, 0.5);
+  /* 透明度派生 token */
+  --accent-soft: color-mix(in srgb, var(--accent) 8%, transparent);
+  --accent-faint: color-mix(in srgb, var(--accent) 4%, transparent);
+  --accent-hover: color-mix(in srgb, var(--accent) 30%, transparent);
+  --accent-a15: color-mix(in srgb, var(--accent) 15%, transparent);
+  --accent-a1: color-mix(in srgb, var(--accent) 1%, transparent);
+  --shadow-color: color-mix(in srgb, var(--text-primary) 5%, transparent);
+  --shadow-soft: color-mix(in srgb, var(--text-primary) 10%, transparent);
+  --shadow-a8: color-mix(in srgb, var(--text-primary) 8%, transparent);
+  --shadow-a6: color-mix(in srgb, var(--text-primary) 6%, transparent);
+  --shadow-a1: color-mix(in srgb, var(--text-primary) 1%, transparent);
   --font-body: 'Noto Serif SC', 'Songti SC', 'SimSun', Georgia, serif;
   --font-heading: 'Noto Serif SC', 'Songti SC', Georgia, serif;
   --font-display: 'Noto Serif SC', Georgia, serif;

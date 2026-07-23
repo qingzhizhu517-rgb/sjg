@@ -1912,7 +1912,7 @@ onBeforeUnmount(() => {
   background: rgba(251, 248, 242, 0.92);
   padding: 4px 2px;
   border-radius: 2px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px var(--shadow-a6);
 }
 
 /* Animations */

@@ -121,6 +121,7 @@ import { usePoetEnrichment } from '../composables/usePoetEnrichment'
 import { useReveal } from '../composables/useReveal'
 import api from '../api'
 import { Graph } from '@antv/g6'
+import { cssVar } from '../utils/cssToken'
 import DynastyRail from '../components/homepage/DynastyRail.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
@@ -212,27 +213,27 @@ const initG6 = () => {
 
   const graphTheme = isAnime.value
     ? {
-        poetFill: '#1a1a1a',
-        poetStroke: '#c23a2b',
+        poetFill: cssVar('--text-primary'),
+        poetStroke: cssVar('--accent'),
         cityFill: '#faf6ee',
-        cityStroke: '#1a1a1a',
+        cityStroke: cssVar('--text-primary'),
         edgeColor: '#7a7a7a',
         textPrimary: '#e8e4d8',
-        accent: '#c23a2b',
+        accent: cssVar('--accent'),
         textSecondary: '#9a9484',
         cardBg: '#2a2520',
         lineDash: [4, 4],
       }
     : {
-        poetFill: '#b8860b',
-        poetStroke: '#3d2b1f',
+        poetFill: cssVar('--accent'),
+        poetStroke: cssVar('--text-primary'),
         cityFill: '#ffffff',
-        cityStroke: '#b8860b',
+        cityStroke: cssVar('--accent'),
         edgeColor: '#c5b8a5',
-        textPrimary: '#3d2b1f',
-        accent: '#b8860b',
+        textPrimary: cssVar('--text-primary'),
+        accent: cssVar('--accent'),
         textSecondary: '#8a7e6b',
-        cardBg: '#fdfaf5',
+        cardBg: cssVar('--bg-primary'),
         lineDash: [4, 4],
       }
 
