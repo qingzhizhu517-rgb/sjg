@@ -171,28 +171,28 @@
             </div>
 
             <!-- 加载态 -->
-            <div v-if="graphLoading" class="graph-status-box">
+            <div v-if="graphStatus === 'loading'" class="graph-status-box">
               <div class="graph-spinner"></div>
               <p class="graph-status-text">关系数据加载中…</p>
             </div>
 
             <!-- 空态 -->
-            <div v-else-if="graphEmpty" class="graph-status-box">
+            <div v-else-if="graphStatus === 'empty'" class="graph-status-box">
               <p class="empty-icon">∅</p>
               <p class="graph-status-text">暂无关系数据</p>
             </div>
 
             <!-- 错误态 -->
-            <div v-else-if="graphError" class="graph-status-box">
+            <div v-else-if="graphStatus === 'error'" class="graph-status-box">
               <p class="empty-icon">⚠</p>
               <p class="graph-status-text">关系数据加载失败</p>
               <button class="graph-retry-btn" @click="initG6">重试</button>
             </div>
 
             <!-- 图谱画布 -->
-            <div v-show="!graphLoading && !graphEmpty && !graphError" ref="g6Container" class="g6-container-canvas"></div>
+            <div v-show="graphStatus === 'ready'" ref="g6Container" class="g6-container-canvas"></div>
 
-            <div v-if="!graphLoading && !graphEmpty && !graphError" class="graph-legend">
+            <div v-if="graphStatus === 'ready'" class="graph-legend">
               <div class="legend-item"><span class="legend-swatch swatch-poet"></span>诗人</div>
               <div class="legend-item"><span class="legend-swatch swatch-edge"></span>并称</div>
               <div class="legend-item"><span class="legend-swatch swatch-dash"></span>师承 / 亲属</div>
@@ -351,9 +351,8 @@ const goPoem = (id) => {
 // AntV G6 Graph
 // ==========================================
 const g6Container = ref(null)
-const graphLoading = ref(false)
-const graphEmpty = ref(false)
-const graphError = ref(false)
+// graphStatus: 'idle' | 'loading' | 'empty' | 'error' | 'ready'
+const graphStatus = ref('idle')
 let graphInstance = null
 let graphRequestSeq = 0
 
@@ -404,8 +403,7 @@ const initG6 = async () => {
       }
 
   // 从后端拉真实关系图谱(/api/public/poet-relations), 转 G6 nodes/edges
-  graphLoading.value = true
-  graphEmpty.value = false
+  graphStatus.value = 'loading'
   let graphData = { nodes: [], edges: [] }
   try {
     const g = await api.get('/poet-relations')
@@ -418,8 +416,7 @@ const initG6 = async () => {
     const inEdges = (g && g.edges) || []
 
     if (!inNodes.length) {
-      graphLoading.value = false
-      graphEmpty.value = true
+      graphStatus.value = 'empty'
       return
     }
 
@@ -460,11 +457,10 @@ const initG6 = async () => {
     }
   } catch (err) {
     console.error('关系图谱加载失败:', err)
-    graphLoading.value = false
-    graphError.value = true
+    graphStatus.value = 'error'
     return
   }
-  graphLoading.value = false
+  graphStatus.value = 'ready'
   const data = graphData
 
   if (currentSeq !== graphRequestSeq) {
@@ -473,7 +469,7 @@ const initG6 = async () => {
 
   // 重新检查 container（组件可能已卸载）
   if (!g6Container.value) {
-    graphLoading.value = false
+    graphStatus.value = 'idle'
     return
   }
 
@@ -547,9 +543,7 @@ watch([activeTab, isAnime], () => {
       graphInstance.destroy()
       graphInstance = null
     }
-    graphLoading.value = false
-    graphEmpty.value = false
-    graphError.value = false
+    graphStatus.value = 'idle'
   }
 })
 
