@@ -8,36 +8,92 @@
   </div>
 
 <div class="region-spots" :class="{ 'anime-layout': isAnime }">
-    <!-- Real Layout (original simple grid style) -->
+    <!-- Real Layout: 城市宣传专题页 -->
     <div class="real-container" v-if="isReal">
-      <div class="page-hero">
-        <div class="hero-back">
-          <router-link to="/map" class="back-link">← 返回地图</router-link>
-        </div>
-        <h1 class="page-title">{{ region }}</h1>
-        <p class="page-desc">该地区的文学景观</p>
-        <div class="divider"></div>
-      </div>
+      <CityHero
+        :city="region"
+        :illustration="illustrationData.img"
+        :reach="illustrationData.reach"
+        :reach-en="illustrationData.reachEn"
+        :subtitle="cityData.subtitle"
+        :quote="illustrationData.quote"
+        :quote-by="illustrationData.quoteBy"
+        :stats="heroStats"
+      />
 
-      <div class="spots-grid">
-        <div
-          v-for="(spot, i) in spots"
-          :key="spot.id"
-          class="spot-card card hover-lift"
-          :style="{ animationDelay: `${i * 0.06}s` }"
-          @click="$router.push(`/spots/${spot.id}`)"
-        >
-          <div class="card-image-wrap">
-            <img :src="getImage(spot)" :alt="spot.name" class="card-image" />
-            <div class="image-overlay"></div>
+      <!-- 城市引言 -->
+      <section class="city-intro" ref="introRef">
+        <div class="city-intro__inner">
+          <div class="city-intro__poetry">
+            <span class="poetry-line">{{ illustrationData.quote }}</span>
+            <span class="poetry-by">{{ illustrationData.quoteBy }}</span>
           </div>
-          <div class="card-body">
-            <h3 class="card-title">{{ spot.name }}</h3>
-            <p v-if="spot.address" class="card-address">{{ spot.address }}</p>
-            <p v-if="spot.description" class="card-desc">{{ spot.description?.substring(0, 60) }}…</p>
+          <div class="city-intro__desc">
+            <p>{{ cityData.desc }}</p>
+            <div class="city-intro__meta">
+              <span class="meta-item"><strong>地理位置</strong>{{ cityData.geo }}</span>
+              <span class="meta-item"><strong>历史文化</strong>{{ cityData.history }}</span>
+              <span class="meta-item"><strong>最佳季节</strong>{{ cityData.season }}</span>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      <!-- 精选景点：交错图文 -->
+      <section v-if="featuredSpots.length" class="city-features">
+        <div class="section-header">
+          <span class="section-tag">精选景观</span>
+          <h2 class="section-title">一城一境 · 文脉流芳</h2>
+        </div>
+        <CityFeatureSpot
+          v-for="(spot, i) in featuredSpots"
+          :key="spot.id"
+          :index="i"
+          :name="spot.name"
+          :description="spot.description"
+          :address="spot.address"
+          :image="getImage(spot)"
+          :tag="getSpotData(spot.name).tag || cityData.tag"
+          :stats="getSpotStats(spot)"
+          :reversed="i % 2 === 1"
+          @click="$router.push(`/spots/${spot.id}`)"
+        />
+      </section>
+
+      <!-- 更多景点 -->
+      <section v-if="moreSpots.length" class="more-spots">
+        <div class="section-header">
+          <span class="section-tag">更多打卡</span>
+          <h2 class="section-title">沿途拾珠</h2>
+        </div>
+        <div class="more-spots-grid">
+          <div
+            v-for="(spot, i) in moreSpots"
+            :key="spot.id"
+            class="more-spot-card card hover-lift"
+            :style="{ animationDelay: `${i * 0.06}s` }"
+            @click="$router.push(`/spots/${spot.id}`)"
+          >
+            <div class="more-spot__image-wrap">
+              <img :src="getImage(spot)" :alt="spot.name" class="more-spot__image" />
+            </div>
+            <div class="more-spot__body">
+              <h3 class="more-spot__title">{{ spot.name }}</h3>
+              <p v-if="spot.address" class="more-spot__address">{{ spot.address }}</p>
+              <p v-if="spot.description" class="more-spot__desc">{{ spot.description?.substring(0, 56) }}…</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 沿河而下 · 下一站 -->
+      <nav v-if="nextCity" class="next-city">
+        <router-link :to="`/regions/${nextCity}`" class="next-city__link">
+          <span class="next-city__label">沿河而下 · 下一站</span>
+          <span class="next-city__name">{{ nextCity }}</span>
+          <span class="next-city__arrow">→</span>
+        </router-link>
+      </nav>
     </div>
 
     <!-- Anime Layout (景点详情页.png replica) -->
@@ -144,7 +200,14 @@ import { useRoute } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
 import { useImage } from '../composables/useImage'
 import { mockCities, mockSpots } from '../config/mockDetailData'
+import { cityIllustration, nextCityOf } from '../config/cityIllustrations'
 import api from '../api'
+import CityHero from '../components/homepage/CityHero.vue'
+import CityFeatureSpot from '../components/homepage/CityFeatureSpot.vue'
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+gsap.registerPlugin(ScrollTrigger)
 
 const route = useRoute()
 const { isReal, isAnime } = useTheme()
@@ -153,6 +216,25 @@ const region = ref(route.params.region)
 const spots = ref([])
 const loaded = ref(false)
 const errorMsg = ref(null)
+const introRef = ref(null)
+
+const illustrationData = computed(() => cityIllustration(region.value))
+const cityData = computed(() => getCityData(region.value))
+
+const heroStats = computed(() => {
+  const list = [
+    { value: spots.value.length, label: '文学景观' },
+    { value: cityData.value.tag || '文化重镇', label: '城市标签' }
+  ]
+  if (illustrationData.value.reachEn && illustrationData.value.reachEn !== 'YELLOW RIVER') {
+    list.push({ value: illustrationData.value.reachEn, label: '河段' })
+  }
+  return list
+})
+
+const featuredSpots = computed(() => spots.value.slice(0, 2))
+const moreSpots = computed(() => spots.value.slice(2))
+const nextCity = computed(() => nextCityOf(region.value))
 
 const getCityData = (cityName) => {
   return mockCities[cityName] || {
@@ -174,6 +256,19 @@ const getSpotData = (name) => {
     history: '',
     play: ''
   }
+}
+
+const getSpotStats = (spot) => {
+  const data = getSpotData(spot.name)
+  const stats = []
+  if (data.history) {
+    stats.push({ label: '历史文化', value: '深厚', icon: '📜' })
+  }
+  if (data.play) {
+    stats.push({ label: '推荐玩法', value: '丰富', icon: '🎯' })
+  }
+  stats.push({ label: '文化印记', value: spot.name, icon: '🏛️' })
+  return stats.slice(0, 3)
 }
 
 const padZero = (num) => num < 10 ? `0${num}` : num
@@ -199,6 +294,39 @@ onMounted(async () => {
   } finally {
     loaded.value = true
   }
+
+  // 城市引言滚动揭示
+  if (introRef.value) {
+    gsap.fromTo(introRef.value.querySelector('.city-intro__poetry'),
+      { x: -40, opacity: 0 },
+      {
+        x: 0,
+        opacity: 1,
+        duration: 0.8,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: introRef.value,
+          start: 'top 80%',
+          toggleActions: 'play none none reverse'
+        }
+      }
+    )
+    gsap.fromTo(introRef.value.querySelector('.city-intro__desc'),
+      { x: 40, opacity: 0 },
+      {
+        x: 0,
+        opacity: 1,
+        duration: 0.8,
+        delay: 0.1,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: introRef.value,
+          start: 'top 80%',
+          toggleActions: 'play none none reverse'
+        }
+      }
+    )
+  }
 })
 </script>
 
@@ -209,59 +337,175 @@ onMounted(async () => {
   padding: 32px 40px 80px;
 }
 
-/* Hero */
-.page-hero {
+/* Real container: 城市宣传专题 */
+.real-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.region-spots:has(.real-container) {
+  max-width: 100%;
+  padding: 0;
+}
+
+/* Section headers */
+.section-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 48px;
   text-align: center;
-  padding: 32px 0 40px;
 }
 
-.hero-back {
-  margin-bottom: 24px;
+.section-tag {
+  display: inline-block;
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: #fff;
+  background: var(--accent, #9e2b25);
+  padding: 5px 12px;
+  border-radius: 2px;
 }
 
-.back-link {
-  font-size: 13px;
+.section-title {
+  font-family: var(--font-heading);
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 900;
+  letter-spacing: 6px;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* City intro */
+.city-intro {
+  background: var(--page-bg, #fbf8f3);
+  padding: 96px 6vw;
+}
+
+.city-intro__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 64px;
+  align-items: start;
+}
+
+.city-intro__poetry {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-left: 24px;
+  border-left: 3px solid var(--accent, #9e2b25);
+}
+
+.poetry-line {
+  font-family: var(--font-heading);
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 500;
+  letter-spacing: 2px;
+  line-height: 1.7;
+  color: var(--text-primary);
+}
+
+.poetry-by {
+  font-size: 14px;
   color: var(--text-muted);
-  text-decoration: none;
-  transition: color 0.2s;
   letter-spacing: 1px;
 }
 
-.back-link:hover {
-  color: var(--accent);
+.city-intro__desc {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
 }
 
-.page-title {
-  font-family: var(--font-display);
-  font-size: 36px;
-  font-weight: 900;
-  color: var(--text-primary);
-  letter-spacing: 8px;
-  margin-bottom: 8px;
-}
-
-.page-desc {
+.city-intro__desc > p {
   font-size: 15px;
+  line-height: 2;
   color: var(--text-secondary);
-  letter-spacing: 2px;
+  margin: 0;
+  text-align: justify;
+  letter-spacing: 0.3px;
 }
 
-/* Grid */
-.spots-grid {
+.city-intro__meta {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
 }
 
-.spot-card {
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px;
+  background: var(--card-bg, #fdfaf5);
+  border: 1px solid var(--border, #e8e0d5);
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.meta-item strong {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+/* City features */
+.city-features {
+  background: var(--page-bg, #fbf8f3);
+  padding: 48px 6vw 96px;
+}
+
+.city-features > .section-header,
+.more-spots > .section-header {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.city-features > .city-feature {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* More spots */
+.more-spots {
+  background: var(--page-bg, #fbf8f3);
+  padding: 48px 6vw 96px;
+}
+
+.more-spots-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 28px;
+}
+
+.more-spot-card {
   cursor: pointer;
   overflow: hidden;
+  background: var(--card-bg, #fdfaf5);
+  border: 1px solid var(--border, #e8e0d5);
+  border-radius: 4px;
   transition: transform 0.35s ease, box-shadow 0.35s ease;
   animation: fadeSlideUp 0.5s ease both;
 }
 
-.spot-card:hover {
+.more-spot-card:hover {
   transform: translateY(-6px);
+  box-shadow: 0 14px 40px rgba(31, 26, 22, 0.08);
 }
 
 @keyframes fadeSlideUp {
@@ -275,55 +519,99 @@ onMounted(async () => {
   }
 }
 
-/* Image */
-.card-image-wrap {
+.more-spot__image-wrap {
   position: relative;
-  height: 200px;
+  height: 180px;
   overflow: hidden;
 }
 
-.card-image {
+.more-spot__image {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.5s ease;
 }
 
-.spot-card:hover .card-image {
+.more-spot-card:hover .more-spot__image {
   transform: scale(1.05);
 }
 
-.image-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.3) 0%, transparent 50%);
-  pointer-events: none;
+.more-spot__body {
+  padding: 18px 20px 22px;
 }
 
-/* Body */
-.card-body {
-  padding: 20px 24px;
-}
-
-.card-title {
+.more-spot__title {
   font-family: var(--font-heading);
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 6px;
   letter-spacing: 2px;
 }
 
-.card-address {
-  font-size: 13px;
+.more-spot__address {
+  font-size: 12px;
   color: var(--text-muted);
   margin-bottom: 6px;
 }
 
-.card-desc {
+.more-spot__desc {
   font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.6;
+  margin: 0;
+}
+
+/* Next city nav */
+.next-city {
+  padding: 0 6vw 96px;
+  background: var(--page-bg, #fbf8f3);
+  display: flex;
+  justify-content: center;
+}
+
+.next-city__link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 64px;
+  background: var(--card-bg, #fdfaf5);
+  border: 1px solid var(--border, #e8e0d5);
+  border-radius: 4px;
+  text-decoration: none;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.next-city__link:hover {
+  border-color: var(--accent, #9e2b25);
+  background: #fff;
+  transform: translateY(-4px);
+  box-shadow: 0 18px 48px rgba(31, 26, 22, 0.1);
+}
+
+.next-city__link:hover .next-city__arrow {
+  transform: translateX(8px);
+}
+
+.next-city__label {
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: var(--text-muted);
+}
+
+.next-city__name {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 48px);
+  font-weight: 900;
+  letter-spacing: 10px;
+  color: var(--text-primary);
+}
+
+.next-city__arrow {
+  font-size: 20px;
+  color: var(--accent, #9e2b25);
+  transition: transform 0.3s ease;
 }
 
 /* Empty */
@@ -614,21 +902,72 @@ onMounted(async () => {
   .spots-list-grid {
     grid-template-columns: 1fr;
   }
+
+  .city-intro__inner {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .city-intro__meta {
+    grid-template-columns: 1fr;
+  }
+
+  .section-title {
+    letter-spacing: 4px;
+  }
 }
 
 @media (max-width: 768px) {
-  .spots-grid {
-    grid-template-columns: 1fr;
+  .city-intro,
+  .city-features,
+  .more-spots,
+  .next-city {
+    padding-left: 20px;
+    padding-right: 20px;
   }
-  .page-title {
-    font-size: 28px;
-    letter-spacing: 4px;
+
+  .city-intro {
+    padding-top: 64px;
+    padding-bottom: 64px;
   }
+
+  .city-features,
+  .more-spots {
+    padding-top: 36px;
+    padding-bottom: 64px;
+  }
+
+  .city-intro__poetry {
+    padding-left: 16px;
+  }
+
+  .poetry-line {
+    letter-spacing: 1px;
+  }
+
+  .section-header {
+    margin-bottom: 32px;
+  }
+
+  .section-title {
+    font-size: 22px;
+    letter-spacing: 3px;
+  }
+
   .anime-layout .spots-split-layout {
     grid-template-columns: 1fr;
   }
+
   .region-spots {
     padding: 24px 20px;
+  }
+
+  .next-city__link {
+    padding: 24px 40px;
+  }
+
+  .next-city__name {
+    letter-spacing: 6px;
   }
 }
 
