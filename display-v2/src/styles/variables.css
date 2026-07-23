@@ -20,6 +20,7 @@
   /* 透明度派生 token: 让组件内 rgba 主题色泄漏可映射为 token (color-mix, 现代浏览器) */
   --accent-soft: color-mix(in srgb, var(--accent) 8%, transparent);
   --accent-faint: color-mix(in srgb, var(--accent) 4%, transparent);
+  --shadow-color: color-mix(in srgb, var(--text-primary) 5%, transparent);
   --shadow-soft: color-mix(in srgb, var(--text-primary) 10%, transparent);
   --glass-bg: color-mix(in srgb, var(--bg-primary) 80%, transparent);
   --font-body: 'Noto Serif SC', 'Songti SC', 'SimSun', Georgia, serif;
