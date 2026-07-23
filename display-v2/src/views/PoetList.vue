@@ -166,15 +166,29 @@
             <div class="graph-instructions">
               <span class="instruction-tag">互动</span>
               <p class="instruction-desc">
-                滚轮缩放 · 拖拽画布 · 点击节点进入专栏。圆圈代表诗人，方框代表城市，连线越粗关系越深。
+                滚轮缩放 · 拖拽画布 · 点击节点进入专栏。圆圈代表诗人，连线越粗关系越深。
               </p>
             </div>
-            <div ref="g6Container" class="g6-container-canvas"></div>
-            <div class="graph-legend">
+
+            <!-- 加载态 -->
+            <div v-if="graphLoading" class="graph-status-box">
+              <div class="graph-spinner"></div>
+              <p class="graph-status-text">关系数据加载中…</p>
+            </div>
+
+            <!-- 空态 -->
+            <div v-else-if="graphEmpty" class="graph-status-box">
+              <p class="empty-icon">∅</p>
+              <p class="graph-status-text">暂无关系数据</p>
+            </div>
+
+            <!-- 图谱画布 -->
+            <div v-show="!graphLoading && !graphEmpty" ref="g6Container" class="g6-container-canvas"></div>
+
+            <div v-if="!graphLoading && !graphEmpty" class="graph-legend">
               <div class="legend-item"><span class="legend-swatch swatch-poet"></span>诗人</div>
-              <div class="legend-item"><span class="legend-swatch swatch-city"></span>城市</div>
-              <div class="legend-item"><span class="legend-swatch swatch-edge"></span>交往</div>
-              <div class="legend-item"><span class="legend-swatch swatch-dash"></span>行迹</div>
+              <div class="legend-item"><span class="legend-swatch swatch-edge"></span>并称</div>
+              <div class="legend-item"><span class="legend-swatch swatch-dash"></span>师承 / 亲属</div>
             </div>
           </div>
         </div>
@@ -330,6 +344,8 @@ const goPoem = (id) => {
 // AntV G6 Graph
 // ==========================================
 const g6Container = ref(null)
+const graphLoading = ref(false)
+const graphEmpty = ref(false)
 let graphInstance = null
 
 const handleGraphResize = () => {
@@ -377,34 +393,48 @@ const initG6 = async () => {
       }
 
   // 从后端拉真实关系图谱(/api/public/poet-relations), 转 G6 nodes/edges
+  graphLoading.value = true
+  graphEmpty.value = false
   let graphData = { nodes: [], edges: [] }
   try {
     const g = await api.get('/poet-relations')
     const inNodes = (g && g.nodes) || []
     const inEdges = (g && g.edges) || []
+
+    if (!inNodes.length) {
+      graphLoading.value = false
+      graphEmpty.value = true
+      return
+    }
+
+    // 统计节点度数，用于大小/字号
     const degree = {}
     inEdges.forEach(e => {
       degree[e.source] = (degree[e.source] || 0) + 1
       degree[e.target] = (degree[e.target] || 0) + 1
     })
+
     graphData = {
-      nodes: inNodes.map(n => ({
-        id: n.id,
-        poetId: n.poetId,
-        label: n.name,
-        sub: `${n.dynasty || ''}${n.style ? ' · ' + n.style : ''}`,
-        size: Math.min(64, 36 + (degree[n.id] || 0) * 7),
-        isPoet: true,
-        fillColor: graphTheme.poetFill,
-        strokeColor: graphTheme.poetStroke,
-        labelSize: (degree[n.id] || 0) >= 2 ? 13 : 12,
-      })),
+      nodes: inNodes.map(n => {
+        const nid = String(n.poetId ?? n.id)
+        return {
+          id: nid,
+          poetId: nid,
+          label: n.name,
+          sub: `${n.dynasty || ''}${n.style ? ' · ' + n.style : ''}${!n.style && n.birthplace ? ' · ' + n.birthplace : ''}`,
+          size: Math.min(64, 36 + (degree[nid] || 0) * 7),
+          isPoet: true,
+          fillColor: graphTheme.poetFill,
+          strokeColor: graphTheme.poetStroke,
+          labelSize: (degree[nid] || 0) >= 2 ? 13 : 12,
+        }
+      }),
       edges: inEdges.map(e => {
         const bincheng = e.relationType === '并称'
         const dashed = e.relationType === '师承' || e.relationType === '亲属'
         return {
-          source: e.source,
-          target: e.target,
+          source: String(e.source),
+          target: String(e.target),
           label: e.description || e.relationType,
           eStroke: bincheng ? graphTheme.poetStroke : graphTheme.edgeColor,
           eLineWidth: bincheng ? 2 : 1.5,
@@ -413,8 +443,11 @@ const initG6 = async () => {
       }),
     }
   } catch (err) {
-    graphData = { nodes: [], edges: [] }
+    graphLoading.value = false
+    graphEmpty.value = true
+    return
   }
+  graphLoading.value = false
   const data = graphData
 
   graphInstance = new Graph({
@@ -487,6 +520,8 @@ watch([activeTab, isAnime], () => {
       graphInstance.destroy()
       graphInstance = null
     }
+    graphLoading.value = false
+    graphEmpty.value = false
   }
 })
 
@@ -888,7 +923,6 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 .swatch-poet { background: var(--accent); border-color: var(--accent); }
-.swatch-city { background: transparent; border-color: var(--text-primary); }
 .swatch-edge { background: transparent; border-color: var(--accent); border-radius: 0; height: 2px; width: 18px; }
 .swatch-dash {
   background: repeating-linear-gradient(90deg, var(--text-muted) 0 4px, transparent 4px 8px);
@@ -896,6 +930,36 @@ onBeforeUnmount(() => {
   height: 2px;
   width: 18px;
   border-radius: 0;
+}
+
+/* graph loading / empty status */
+.graph-status-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 560px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--card-bg);
+  gap: 16px;
+}
+.graph-status-text {
+  font-size: 14px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  margin: 0;
+}
+.graph-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: graph-spin 0.8s linear infinite;
+}
+@keyframes graph-spin {
+  to { transform: rotate(360deg); }
 }
 
 .tab-fade-enter-active,
@@ -923,6 +987,7 @@ onBeforeUnmount(() => {
   .poet-avatar-stamp { font-size: 28px; }
   .poet-name-tag { font-size: 18px; }
   .g6-container-canvas { height: 440px; }
+  .graph-status-box { height: 440px; }
   .graph-legend { flex-wrap: wrap; gap: 12px 18px; }
   .graph-instructions { flex-direction: column; align-items: flex-start; gap: 8px; }
 }
