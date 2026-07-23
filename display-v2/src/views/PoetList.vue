@@ -471,6 +471,12 @@ const initG6 = async () => {
     return
   }
 
+  // 重新检查 container（组件可能已卸载）
+  if (!g6Container.value) {
+    graphLoading.value = false
+    return
+  }
+
   graphInstance = new Graph({
     container: g6Container.value,
     width,
