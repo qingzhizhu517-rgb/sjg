@@ -182,10 +182,17 @@
               <p class="graph-status-text">暂无关系数据</p>
             </div>
 
-            <!-- 图谱画布 -->
-            <div v-show="!graphLoading && !graphEmpty" ref="g6Container" class="g6-container-canvas"></div>
+            <!-- 错误态 -->
+            <div v-else-if="graphError" class="graph-status-box">
+              <p class="empty-icon">⚠</p>
+              <p class="graph-status-text">关系数据加载失败</p>
+              <button class="graph-retry-btn" @click="initG6">重试</button>
+            </div>
 
-            <div v-if="!graphLoading && !graphEmpty" class="graph-legend">
+            <!-- 图谱画布 -->
+            <div v-show="!graphLoading && !graphEmpty && !graphError" ref="g6Container" class="g6-container-canvas"></div>
+
+            <div v-if="!graphLoading && !graphEmpty && !graphError" class="graph-legend">
               <div class="legend-item"><span class="legend-swatch swatch-poet"></span>诗人</div>
               <div class="legend-item"><span class="legend-swatch swatch-edge"></span>并称</div>
               <div class="legend-item"><span class="legend-swatch swatch-dash"></span>师承 / 亲属</div>
@@ -346,7 +353,9 @@ const goPoem = (id) => {
 const g6Container = ref(null)
 const graphLoading = ref(false)
 const graphEmpty = ref(false)
+const graphError = ref(false)
 let graphInstance = null
+let graphRequestSeq = 0
 
 const handleGraphResize = () => {
   if (graphInstance && g6Container.value) {
@@ -362,6 +371,8 @@ const initG6 = async () => {
     graphInstance.destroy()
     graphInstance = null
   }
+
+  const currentSeq = ++graphRequestSeq
 
   const width = g6Container.value.clientWidth || 800
   const height = g6Container.value.clientHeight || 600
@@ -398,6 +409,11 @@ const initG6 = async () => {
   let graphData = { nodes: [], edges: [] }
   try {
     const g = await api.get('/poet-relations')
+
+    if (currentSeq !== graphRequestSeq) {
+      return
+    }
+
     const inNodes = (g && g.nodes) || []
     const inEdges = (g && g.edges) || []
 
@@ -443,12 +459,17 @@ const initG6 = async () => {
       }),
     }
   } catch (err) {
+    console.error('关系图谱加载失败:', err)
     graphLoading.value = false
-    graphEmpty.value = true
+    graphError.value = true
     return
   }
   graphLoading.value = false
   const data = graphData
+
+  if (currentSeq !== graphRequestSeq) {
+    return
+  }
 
   graphInstance = new Graph({
     container: g6Container.value,
@@ -522,6 +543,7 @@ watch([activeTab, isAnime], () => {
     }
     graphLoading.value = false
     graphEmpty.value = false
+    graphError.value = false
   }
 })
 
@@ -949,6 +971,21 @@ onBeforeUnmount(() => {
   color: var(--text-muted);
   letter-spacing: 1px;
   margin: 0;
+}
+.graph-retry-btn {
+  padding: 6px 16px;
+  background: var(--accent);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  transition: opacity 0.25s;
+}
+.graph-retry-btn:hover {
+  opacity: 0.85;
 }
 .graph-spinner {
   width: 36px;
