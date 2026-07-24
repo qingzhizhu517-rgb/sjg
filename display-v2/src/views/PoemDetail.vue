@@ -68,6 +68,9 @@
       </div>
     </div>
 
+    <!-- AI Analysis -->
+    <PoemAnalysis v-if="poem.id" :poem-id="poem.id" />
+
     <!-- Media -->
     <div v-if="poem.videoUrl" class="detail-section">
       <h2 class="section-heading">诗词赏析视频</h2>
@@ -90,6 +93,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '../api'
 import { parseTags } from '../utils/poem'
+import PoemAnalysis from '../components/PoemAnalysis.vue'
 
 const route = useRoute()
 const poem = ref(null)
