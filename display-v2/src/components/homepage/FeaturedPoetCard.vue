@@ -89,7 +89,7 @@ const onImgError = (e) => {
   font-size: 40px;
   font-weight: 900;
   color: #fff;
-  background: #9e2b25;
+  background: var(--accent);
   width: 100%;
   height: 100%;
   display: flex;
@@ -127,7 +127,7 @@ const onImgError = (e) => {
   color: var(--accent);
   letter-spacing: 1px;
   padding: 2px 8px;
-  background: color-mix(in srgb, var(--accent) 0.08%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
   border-radius: 2px;
 }
 .fpoet__bio {

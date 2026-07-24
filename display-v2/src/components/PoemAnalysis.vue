@@ -74,8 +74,7 @@ async function fetchAnalysis() {
   analysis.value = null
   try {
     const data = await api.get(`/poems/${props.poemId}/analysis`)
-    // Controller wraps as { analysis: {...}, model, generatedAt } — extract inner object
-    analysis.value = data.analysis || data
+    analysis.value = data
   } catch (err) {
     console.error('加载赏析失败:', err)
     error.value = err.message || '赏析加载失败'

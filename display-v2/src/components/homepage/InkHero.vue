@@ -128,7 +128,7 @@ onBeforeUnmount(() => {
   z-index: 0;
   background: radial-gradient(
       110% 80% at 88% 12%,
-      color-mix(in srgb, var(--text-primary) 0.05%, transparent),
+      color-mix(in srgb, var(--text-primary) 5%, transparent),
       transparent 55%
     ),
     radial-gradient(90% 70% at 8% 92%, rgba(158, 43, 37, 0.04), transparent 60%);
@@ -139,7 +139,7 @@ onBeforeUnmount(() => {
       rgba(0, 0, 0, 0.04),
       transparent 55%
     ),
-    radial-gradient(90% 70% at 8% 92%, color-mix(in srgb, var(--accent) 0.05%, transparent), transparent 60%);
+    radial-gradient(90% 70% at 8% 92%, color-mix(in srgb, var(--accent) 5%, transparent), transparent 60%);
 }
 
 .ph__kuan {
@@ -174,7 +174,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #9e2b25;
+  background: var(--accent);
   color: #fff;
   font-family: var(--font-display);
   font-size: 24px;
@@ -185,7 +185,7 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 .theme-real .ph__seal {
-  background: #b23a2b;
+  background: var(--accent-light);
 }
 .ph__eyebrow {
   font-family: var(--font-heading);
@@ -264,7 +264,7 @@ onBeforeUnmount(() => {
   right: 0;
   bottom: 0;
   height: 56px;
-  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--text-primary) 0.05%, transparent) 60%, color-mix(in srgb, var(--text-primary) 0.08%, transparent));
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--text-primary) 5%, transparent) 60%, color-mix(in srgb, var(--text-primary) 8%, transparent));
 }
 .theme-inkwash .ph-horizon__water {
   background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.04) 60%, rgba(0, 0, 0, 0.07));
@@ -276,13 +276,13 @@ onBeforeUnmount(() => {
   height: 0;
   border-left: 90px solid transparent;
   border-right: 90px solid transparent;
-  border-bottom: 60px solid color-mix(in srgb, var(--text-primary) 0.08%, transparent);
+  border-bottom: 60px solid color-mix(in srgb, var(--text-primary) 8%, transparent);
 }
 .theme-inkwash .ph-horizon__peak {
   border-bottom-color: rgba(0, 0, 0, 0.07);
 }
 .ph-horizon__peak.p1 { left: 12%; border-bottom-color: color-mix(in srgb, var(--text-primary) 0.1%, transparent); }
-.ph-horizon__peak.p2 { left: 42%; border-bottom-width: 78px; border-bottom-color: color-mix(in srgb, var(--text-primary) 0.07%, transparent); }
+.ph-horizon__peak.p2 { left: 42%; border-bottom-width: 78px; border-bottom-color: color-mix(in srgb, var(--text-primary) 7%, transparent); }
 .ph-horizon__peak.p3 { left: 68%; }
 
 /* ============ variant: roster（齐鲁名士）============ */
@@ -307,7 +307,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   background: rgba(158, 43, 37, 0.1);
   border: 1.5px solid rgba(158, 43, 37, 0.45);
-  color: #9e2b25;
+  color: var(--accent);
   font-family: var(--font-display);
   font-size: 26px;
   font-weight: 900;
@@ -315,12 +315,12 @@ onBeforeUnmount(() => {
 }
 .theme-real .ph-roster__seal {
   background: color-mix(in srgb, var(--accent) 0.1%, transparent);
-  border-color: color-mix(in srgb, var(--accent) 0.45%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
   color: var(--accent-dark);
 }
 .theme-inkwash .ph-roster__seal {
   background: color-mix(in srgb, var(--accent) 0.1%, transparent);
-  border-color: color-mix(in srgb, var(--accent) 0.45%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
   color: var(--accent);
 }
 

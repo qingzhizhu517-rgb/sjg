@@ -1,3 +1,9 @@
+/* Inkwash theme token唯一源。
+   透明度派生 token (--accent-soft, --accent-faint, --shadow-color, --shadow-soft, --glass-bg)
+   定义在 variables.css :root，用 color-mix() + var() 引用基础 token。
+   当 .theme-inkwash 覆盖 --accent / --text-primary / --bg-primary 时，
+   color-mix() 自动解析为 inkwash 值，无需在此重复定义。 */
+
 .theme-inkwash {
   --bg-primary: #F4EFE4;
   --bg-secondary: #EBE5D8;
@@ -50,14 +56,14 @@
   content: '';
   position: absolute;
   inset: -1px;
-  border: 1px solid rgba(194, 58, 43, 0.06);
+  border: 1px solid var(--accent-soft);
   border-radius: inherit;
   pointer-events: none;
   transition: border-color 0.4s;
 }
 
 .theme-inkwash .card:hover::before {
-  border-color: rgba(194, 58, 43, 0.35);
+  border-color: var(--accent-hover);
 }
 
 /* Cinnabar divider */

@@ -37,7 +37,7 @@ defineEmits(['click'])
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #9e2b25;
+  background: var(--accent);
   color: #fff;
   font-family: var(--font-display);
   font-size: 18px;

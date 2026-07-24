@@ -121,6 +121,7 @@ import { usePoetEnrichment } from '../composables/usePoetEnrichment'
 import { useReveal } from '../composables/useReveal'
 import api from '../api'
 import { Graph } from '@antv/g6'
+import { cssVar } from '../utils/cssToken'
 import DynastyRail from '../components/homepage/DynastyRail.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
@@ -212,27 +213,27 @@ const initG6 = () => {
 
   const graphTheme = isAnime.value
     ? {
-        poetFill: '#1a1a1a',
-        poetStroke: '#c23a2b',
+        poetFill: cssVar('--text-primary'),
+        poetStroke: cssVar('--accent'),
         cityFill: '#faf6ee',
-        cityStroke: '#1a1a1a',
+        cityStroke: cssVar('--text-primary'),
         edgeColor: '#7a7a7a',
         textPrimary: '#e8e4d8',
-        accent: '#c23a2b',
+        accent: cssVar('--accent'),
         textSecondary: '#9a9484',
         cardBg: '#2a2520',
         lineDash: [4, 4],
       }
     : {
-        poetFill: '#b8860b',
-        poetStroke: '#3d2b1f',
+        poetFill: cssVar('--accent'),
+        poetStroke: cssVar('--text-primary'),
         cityFill: '#ffffff',
-        cityStroke: '#b8860b',
+        cityStroke: cssVar('--accent'),
         edgeColor: '#c5b8a5',
-        textPrimary: '#3d2b1f',
-        accent: '#b8860b',
+        textPrimary: cssVar('--text-primary'),
+        accent: cssVar('--accent'),
         textSecondary: '#8a7e6b',
-        cardBg: '#fdfaf5',
+        cardBg: cssVar('--bg-primary'),
         lineDash: [4, 4],
       }
 
@@ -474,7 +475,7 @@ onBeforeUnmount(() => {
 }
 .toggle-btn:hover {
   color: var(--text-primary);
-  background: color-mix(in srgb, var(--accent) 0.05%, transparent);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
 }
 .toggle-btn.active {
   background: var(--accent-dark);
@@ -563,7 +564,7 @@ onBeforeUnmount(() => {
   font-size: 34px;
   font-weight: 900;
   color: #fff;
-  background: linear-gradient(135deg, #9e2b25, #6b2820);
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
 }
 .theme-real .poet-avatar-stamp {
   background: linear-gradient(135deg, var(--accent), var(--accent-dark));
@@ -613,7 +614,7 @@ onBeforeUnmount(() => {
   color: var(--accent);
   letter-spacing: 1px;
   padding: 2px 8px;
-  background: color-mix(in srgb, var(--accent) 0.08%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
   border-radius: 2px;
   white-space: nowrap;
 }
@@ -695,7 +696,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: color-mix(in srgb, var(--accent) 0.04%, transparent);
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
   border-left: 3px solid var(--accent);
   padding: 12px 18px;
   margin-bottom: 20px;

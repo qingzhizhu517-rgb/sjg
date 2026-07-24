@@ -157,7 +157,7 @@ onMounted(async () => {
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(184, 134, 11, 0.15);
+  box-shadow: 0 4px 12px var(--accent-a15);
 }
 
 /* Inkwash theme: Bamboo slip (竹简) style */

@@ -168,7 +168,7 @@
                 <path
                   d="M100,520 Q200,420 300,480 T500,320 T700,260 T900,100"
                   fill="none"
-                  stroke="rgba(142, 53, 46, 0.4)"
+                  :stroke="svgAccent40"
                   stroke-width="8"
                   stroke-dasharray="10 8"
                   class="svg-river-dash"
@@ -210,6 +210,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
+import { cssVarAlpha } from '../utils/cssToken'
 import { mockCities } from '../config/mockDetailData'
 import api from '../api'
 import AiChatBox from '../components/AiChatBox.vue'
@@ -222,6 +223,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 const router = useRouter()
 const { isReal, isAnime } = useTheme()
+
+// SVG accent color computed at runtime for theme reactivity
+const svgAccent40 = computed(() => cssVarAlpha('--accent', 0.4))
 
 const cityLabels = ref([])
 const showLabels = ref(true)
@@ -376,6 +380,7 @@ const selectedCity = ref(null)
 let scene, camera, renderer, controls, animationFrameId
 const cityObjects = []
 let pointerDownRef = null
+let pointerMoveRef = null
 
 // Clean up existing Three.js scene, renderer, and animation loop to prevent leaks
 const cleanupThree = () => {
@@ -388,6 +393,10 @@ const cleanupThree = () => {
     if (renderer.domElement && pointerDownRef) {
       renderer.domElement.removeEventListener('pointerdown', pointerDownRef)
       pointerDownRef = null
+    }
+    if (renderer.domElement && pointerMoveRef) {
+      renderer.domElement.removeEventListener('pointermove', pointerMoveRef)
+      pointerMoveRef = null
     }
     renderer.dispose()
     renderer = null
@@ -824,7 +833,7 @@ const initThree = (geojson) => {
   const riverCurve = new THREE.CatmullRomCurve3(riverPoints)
   const riverGeom = new THREE.TubeGeometry(riverCurve, 64, 0.15, 8, false)
   // 流光黄河: 沿管长动画 UV 的流动光带(ShaderMaterial); 低端机退静态材质
-  const lowPerfRiver = (navigator.hardwareConcurrency || 4) <= 2 ||
+  const lowPerfRiver = (navigator.hardwareConcurrency ?? 4) <= 4 ||
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
   let riverMat
   if (lowPerfRiver) {
@@ -851,13 +860,15 @@ const initThree = (geojson) => {
         uniform float uFlowSpeed;
         void main() {
           // 沿管长流动光带; 入海端(uv.x->1)渐亮
-          float b = 0.55 + 0.45 * sin(vUv.x * 18.0 - uTime * uFlowSpeed * 6.0);
+          float b = 0.6 + 0.4 * sin(vUv.x * 18.0 - uTime * uFlowSpeed * 6.0);
           b += smoothstep(0.7, 1.0, vUv.x) * 0.25;
           vec3 col = mix(uColor, uHighlight, clamp(b, 0.0, 1.0));
           float alpha = 0.7 + 0.25 * b;
           gl_FragColor = vec4(col, clamp(alpha, 0.0, 1.0));
         }`,
-      transparent: true
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
     })
   }
   const riverMesh = new THREE.Mesh(riverGeom, riverMat)
@@ -1080,7 +1091,32 @@ const initThree = (geojson) => {
   
   renderer.domElement.addEventListener('pointerdown', onPointerDown)
   pointerDownRef = onPointerDown
-  
+
+  // Hover cursor: pointer when over river or city pin
+  const onPointerMove = (event) => {
+    const rect = renderer.domElement.getBoundingClientRect()
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+    raycaster.setFromCamera(mouse, camera)
+    const hits = raycaster.intersectObjects(scene.children, true)
+    let hovering = false
+    for (let hit of hits) {
+      let p = hit.object
+      while (p && p !== scene) {
+        // City pin group or river mesh
+        if ((p.parent === scene && city3dCoords.some(c => c.name === p.name)) || p.name === 'yellow-river') {
+          hovering = true
+          break
+        }
+        p = p.parent
+      }
+      if (hovering) break
+    }
+    renderer.domElement.style.cursor = hovering ? 'pointer' : ''
+  }
+  renderer.domElement.addEventListener('pointermove', onPointerMove)
+  pointerMoveRef = onPointerMove
+
   // 9. Animation Loop
   let clock = new THREE.Clock()
   
@@ -1306,7 +1342,7 @@ onBeforeUnmount(() => {
   margin: 0 auto;
   padding: 28px 40px 40px;
   position: relative;
-  background: #fbf8f3;
+  background: var(--bg-primary);
   box-sizing: border-box;
 }
 
@@ -1328,7 +1364,7 @@ onBeforeUnmount(() => {
   position: relative;
   display: flex;
   flex-direction: column;
-  background: #f3ede0;
+  background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -1340,7 +1376,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 10px;
   padding: 10px 16px;
-  background: linear-gradient(180deg, #efe7d6, #e8dfca);
+  background: linear-gradient(180deg, var(--bg-secondary), var(--bg-tertiary));
   border-bottom: 1px solid var(--border-light);
   flex-shrink: 0;
 }
@@ -1350,7 +1386,7 @@ onBeforeUnmount(() => {
   font-size: 11px;
   font-weight: 800;
   color: #fff;
-  background: #8e352e;
+  background: var(--accent);
   padding: 3px 7px;
   border-radius: 2px;
   letter-spacing: 2px;
@@ -1394,7 +1430,7 @@ onBeforeUnmount(() => {
   border: 1px solid var(--border);
   border-top: 3px solid var(--accent);
   border-radius: var(--radius-md);
-  box-shadow: 0 10px 30px color-mix(in srgb, var(--text-primary) 0.08%, transparent);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--text-primary) 8%, transparent);
   backdrop-filter: blur(16px);
   text-align: left;
   overflow-y: auto;
@@ -1451,7 +1487,7 @@ onBeforeUnmount(() => {
 .map-album__back:hover {
   border-color: var(--accent);
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 0.04%, transparent);
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
 }
 
 .hud-header {
@@ -1470,11 +1506,11 @@ onBeforeUnmount(() => {
   font-size: 11px;
   font-weight: 800;
   color: #fff;
-  background: #8e352e;
-  padding: 6px 4px;
+  background: var(--accent);
+  padding: 8px 5px;
   border-radius: 2px;
-  letter-spacing: 2px;
-  box-shadow: 2px 2px 6px rgba(142, 53, 46, 0.3);
+  letter-spacing: 3px;
+  box-shadow: 2px 2px 6px color-mix(in srgb, var(--accent) 30%, transparent);
   flex-shrink: 0;
   line-height: 1.1;
 }
@@ -1516,9 +1552,9 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
-  background: color-mix(in srgb, var(--accent) 0.04%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 0.15%, transparent);
+  margin-bottom: 22px;
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 15%, transparent);
   border-radius: 4px;
   padding: 10px 8px;
 }
@@ -1534,8 +1570,8 @@ onBeforeUnmount(() => {
   justify-content: center;
   gap: 8px;
   padding: 10px 16px;
-  background: color-mix(in srgb, var(--accent) 0.08%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 0.25%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
   border-radius: var(--radius-sm);
   color: var(--accent-dark);
   font-family: var(--font-heading);
@@ -1551,7 +1587,7 @@ onBeforeUnmount(() => {
   border-color: var(--accent);
   color: #fff;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 0.15%, transparent);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
 .action-icon {
@@ -1661,11 +1697,11 @@ onBeforeUnmount(() => {
   font-size: 12px;
   font-weight: 700;
   color: #fff;
-  background: #8e352e;
+  background: var(--accent);
   padding: 8px 5px;
   border-radius: 2px;
   letter-spacing: 3px;
-  box-shadow: 2px 2px 6px rgba(142, 53, 46, 0.25);
+  box-shadow: 2px 2px 6px color-mix(in srgb, var(--accent) 25%, transparent);
   flex-shrink: 0;
 }
 
@@ -1714,17 +1750,17 @@ onBeforeUnmount(() => {
 .category-stamp {
   font-size: 12px;
   font-weight: 700;
-  border: 1px solid rgba(142, 53, 46, 0.4);
-  color: #8e352e;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  color: var(--accent);
   padding: 6px 14px;
   border-radius: 2px;
-  background: rgba(142, 53, 46, 0.03);
+  background: color-mix(in srgb, var(--accent) 3%, transparent);
   letter-spacing: 2px;
   transition: all 0.2s;
 }
 
 .category-stamp:hover {
-  background: rgba(142, 53, 46, 0.1);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
   transform: translateY(-1px);
 }
 
@@ -1732,7 +1768,7 @@ onBeforeUnmount(() => {
 .ink-legend {
   margin-top: 8px;
   padding-top: 16px;
-  border-top: 1px dashed rgba(142, 53, 46, 0.2);
+  border-top: 1px dashed color-mix(in srgb, var(--accent) 20%, transparent);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1764,7 +1800,7 @@ onBeforeUnmount(() => {
 .mark-stamp {
   width: 14px;
   height: 14px;
-  background: #8e352e;
+  background: var(--accent);
   border: 1px dashed rgba(255,255,255,0.4);
   border-radius: 1px;
 }
@@ -1772,7 +1808,7 @@ onBeforeUnmount(() => {
 .mark-river {
   width: 24px;
   height: 0;
-  border-top: 2px dashed rgba(142, 53, 46, 0.6);
+  border-top: 2px dashed color-mix(in srgb, var(--accent) 60%, transparent);
 }
 
 /* Right Scroll Frame */
@@ -1814,9 +1850,9 @@ onBeforeUnmount(() => {
 .scroll-middle-paper {
   flex: 1;
   height: 520px;
-  background: #fbf8f2;
-  border-top: 1px solid rgba(142, 53, 46, 0.12);
-  border-bottom: 1px solid rgba(142, 53, 46, 0.12);
+  background: var(--bg-primary);
+  border-top: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
   box-shadow: inset 0 0 40px rgba(115, 69, 29, 0.06), 0 10px 30px rgba(0,0,0,0.15);
   position: relative;
   overflow: hidden;
@@ -1891,14 +1927,14 @@ onBeforeUnmount(() => {
   justify-content: center;
   width: 38px;
   height: 42px;
-  background: #8e352e;
+  background: var(--accent);
   border-radius: 2px;
   color: #fff;
   font-family: var(--font-display);
   font-size: 12px;
   line-height: 1.1;
   font-weight: 900;
-  box-shadow: 3px 3px 8px rgba(142, 53, 46, 0.4);
+  box-shadow: 3px 3px 8px color-mix(in srgb, var(--accent) 40%, transparent);
   border: 1px dashed rgba(255, 255, 255, 0.3);
   padding: 3px 2px;
   letter-spacing: 0;
@@ -1916,7 +1952,7 @@ onBeforeUnmount(() => {
   background: rgba(251, 248, 242, 0.92);
   padding: 4px 2px;
   border-radius: 2px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px var(--shadow-a6);
 }
 
 /* Animations */
@@ -2059,7 +2095,7 @@ onBeforeUnmount(() => {
 }
 
 .label-theme-inkwash .label-plaque-card {
-  background: color-mix(in srgb, var(--text-primary) 0.92%, transparent);
+  background: color-mix(in srgb, var(--text-primary) 92%, transparent);
   border: 1px solid var(--accent);
 }
 
@@ -2158,12 +2194,12 @@ onBeforeUnmount(() => {
 
 .label-theme-real .plaque-tag {
   color: var(--accent-dark);
-  background: color-mix(in srgb, var(--accent) 0.12%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .label-theme-inkwash .plaque-tag {
-  color: #e85d4f;
-  background: color-mix(in srgb, var(--accent) 0.15%, transparent);
+  color: var(--accent-light);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
 /* Connecting Line */
@@ -2296,7 +2332,7 @@ onBeforeUnmount(() => {
 .error-overlay .error-retry-btn:hover {
   color: var(--accent);
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 0.03%, transparent);
+  background: color-mix(in srgb, var(--accent) 3%, transparent);
 }
 
 </style>

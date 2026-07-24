@@ -166,15 +166,36 @@
             <div class="graph-instructions">
               <span class="instruction-tag">互动</span>
               <p class="instruction-desc">
-                滚轮缩放 · 拖拽画布 · 点击节点进入专栏。圆圈代表诗人，方框代表城市，连线越粗关系越深。
+                滚轮缩放 · 拖拽画布 · 点击节点进入专栏。圆圈代表诗人，连线越粗关系越深。
               </p>
             </div>
-            <div ref="g6Container" class="g6-container-canvas"></div>
-            <div class="graph-legend">
+
+            <!-- 加载态 -->
+            <div v-if="graphStatus === 'loading'" class="graph-status-box">
+              <div class="graph-spinner"></div>
+              <p class="graph-status-text">关系数据加载中…</p>
+            </div>
+
+            <!-- 空态 -->
+            <div v-else-if="graphStatus === 'empty'" class="graph-status-box">
+              <p class="empty-icon">∅</p>
+              <p class="graph-status-text">暂无关系数据</p>
+            </div>
+
+            <!-- 错误态 -->
+            <div v-else-if="graphStatus === 'error'" class="graph-status-box">
+              <p class="empty-icon">⚠</p>
+              <p class="graph-status-text">关系数据加载失败</p>
+              <button class="graph-retry-btn" @click="initG6">重试</button>
+            </div>
+
+            <!-- 图谱画布 -->
+            <div v-show="graphStatus === 'ready'" ref="g6Container" class="g6-container-canvas"></div>
+
+            <div v-if="graphStatus === 'ready'" class="graph-legend">
               <div class="legend-item"><span class="legend-swatch swatch-poet"></span>诗人</div>
-              <div class="legend-item"><span class="legend-swatch swatch-city"></span>城市</div>
-              <div class="legend-item"><span class="legend-swatch swatch-edge"></span>交往</div>
-              <div class="legend-item"><span class="legend-swatch swatch-dash"></span>行迹</div>
+              <div class="legend-item"><span class="legend-swatch swatch-edge"></span>并称</div>
+              <div class="legend-item"><span class="legend-swatch swatch-dash"></span>师承 / 亲属</div>
             </div>
           </div>
         </div>
@@ -194,6 +215,7 @@ import { usePoetEnrichment } from '../composables/usePoetEnrichment'
 import { useReveal } from '../composables/useReveal'
 import api from '../api'
 import { Graph } from '@antv/g6'
+import { cssVar } from '../utils/cssToken'
 import InkHero from '../components/homepage/InkHero.vue'
 import SectionHeading from '../components/homepage/SectionHeading.vue'
 import FeaturedPoemCard from '../components/homepage/FeaturedPoemCard.vue'
@@ -329,7 +351,10 @@ const goPoem = (id) => {
 // AntV G6 Graph
 // ==========================================
 const g6Container = ref(null)
+// graphStatus: 'idle' | 'loading' | 'empty' | 'error' | 'ready'
+const graphStatus = ref('idle')
 let graphInstance = null
+let graphRequestSeq = 0
 
 const handleGraphResize = () => {
   if (graphInstance && g6Container.value) {
@@ -346,64 +371,78 @@ const initG6 = async () => {
     graphInstance = null
   }
 
+  const currentSeq = ++graphRequestSeq
+
   const width = g6Container.value.clientWidth || 800
   const height = g6Container.value.clientHeight || 600
 
   const graphTheme = isAnime.value
     ? {
-        poetFill: '#1a1a1a',
-        poetStroke: '#c23a2b',
-        cityFill: '#faf6ee',
-        cityStroke: '#1a1a1a',
+        poetFill: cssVar('--text-primary'),
+        poetStroke: cssVar('--accent'),
         edgeColor: '#7a7a7a',
         textPrimary: '#e8e4d8',
-        accent: '#c23a2b',
+        accent: cssVar('--accent'),
         textSecondary: '#9a9484',
         cardBg: '#2a2520',
         lineDash: [4, 4],
       }
     : {
-        poetFill: '#b8860b',
-        poetStroke: '#3d2b1f',
-        cityFill: '#ffffff',
-        cityStroke: '#b8860b',
+        poetFill: cssVar('--accent'),
+        poetStroke: cssVar('--text-primary'),
         edgeColor: '#c5b8a5',
-        textPrimary: '#3d2b1f',
-        accent: '#b8860b',
+        textPrimary: cssVar('--text-primary'),
+        accent: cssVar('--accent'),
         textSecondary: '#8a7e6b',
-        cardBg: '#fdfaf5',
+        cardBg: cssVar('--bg-primary'),
         lineDash: [4, 4],
       }
 
   // 从后端拉真实关系图谱(/api/public/poet-relations), 转 G6 nodes/edges
+  graphStatus.value = 'loading'
   let graphData = { nodes: [], edges: [] }
   try {
     const g = await api.get('/poet-relations')
+
+    if (currentSeq !== graphRequestSeq) {
+      return
+    }
+
     const inNodes = (g && g.nodes) || []
     const inEdges = (g && g.edges) || []
+
+    if (!inNodes.length) {
+      graphStatus.value = 'empty'
+      return
+    }
+
+    // 统计节点度数，用于大小/字号
     const degree = {}
     inEdges.forEach(e => {
       degree[e.source] = (degree[e.source] || 0) + 1
       degree[e.target] = (degree[e.target] || 0) + 1
     })
+
     graphData = {
-      nodes: inNodes.map(n => ({
-        id: n.id,
-        poetId: n.poetId,
-        label: n.name,
-        sub: `${n.dynasty || ''}${n.style ? ' · ' + n.style : ''}`,
-        size: Math.min(64, 36 + (degree[n.id] || 0) * 7),
-        isPoet: true,
-        fillColor: graphTheme.poetFill,
-        strokeColor: graphTheme.poetStroke,
-        labelSize: (degree[n.id] || 0) >= 2 ? 13 : 12,
-      })),
+      nodes: inNodes.map(n => {
+        const nid = String(n.poetId ?? n.id)
+        return {
+          id: nid,
+          poetId: nid,
+          label: n.name,
+          sub: `${n.dynasty || ''}${n.style ? ' · ' + n.style : ''}${!n.style && n.birthplace ? ' · ' + n.birthplace : ''}`,
+          size: Math.min(64, 36 + (degree[nid] || 0) * 7),
+          fillColor: graphTheme.poetFill,
+          strokeColor: graphTheme.poetStroke,
+          labelSize: (degree[nid] || 0) >= 2 ? 13 : 12,
+        }
+      }),
       edges: inEdges.map(e => {
         const bincheng = e.relationType === '并称'
         const dashed = e.relationType === '师承' || e.relationType === '亲属'
         return {
-          source: e.source,
-          target: e.target,
+          source: String(e.source),
+          target: String(e.target),
           label: e.description || e.relationType,
           eStroke: bincheng ? graphTheme.poetStroke : graphTheme.edgeColor,
           eLineWidth: bincheng ? 2 : 1.5,
@@ -412,9 +451,22 @@ const initG6 = async () => {
       }),
     }
   } catch (err) {
-    graphData = { nodes: [], edges: [] }
+    console.error('关系图谱加载失败:', err)
+    graphStatus.value = 'error'
+    return
   }
+  graphStatus.value = 'ready'
   const data = graphData
+
+  if (currentSeq !== graphRequestSeq) {
+    return
+  }
+
+  // 重新检查 container（组件可能已卸载）
+  if (!g6Container.value) {
+    graphStatus.value = 'idle'
+    return
+  }
 
   graphInstance = new Graph({
     container: g6Container.value,
@@ -445,7 +497,7 @@ const initG6 = async () => {
       labelOffsetY: 8,
       labelFontSize: (d) => d.labelSize || 13,
       labelFontWeight: 'bold',
-      labelFill: (d) => (d.isPoet ? graphTheme.textPrimary : graphTheme.accent),
+      labelFill: graphTheme.textPrimary,
     },
     edge: {
       style: (d) => ({
@@ -486,6 +538,7 @@ watch([activeTab, isAnime], () => {
       graphInstance.destroy()
       graphInstance = null
     }
+    graphStatus.value = 'idle'
   }
 })
 
@@ -574,7 +627,7 @@ onBeforeUnmount(() => {
 }
 .toggle-btn:hover {
   color: var(--text-primary);
-  background: color-mix(in srgb, var(--accent) 0.05%, transparent);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
 }
 .toggle-btn.active {
   background: var(--accent-dark);
@@ -661,7 +714,7 @@ onBeforeUnmount(() => {
   font-size: 34px;
   font-weight: 900;
   color: #fff;
-  background: linear-gradient(135deg, #9e2b25, #6b2820);
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
 }
 .theme-real .poet-avatar-stamp {
   background: linear-gradient(135deg, var(--accent), var(--accent-dark));
@@ -711,7 +764,7 @@ onBeforeUnmount(() => {
   color: var(--accent);
   letter-spacing: 1px;
   padding: 2px 8px;
-  background: color-mix(in srgb, var(--accent) 0.08%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
   border-radius: 2px;
   white-space: nowrap;
 }
@@ -834,7 +887,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: color-mix(in srgb, var(--accent) 0.04%, transparent);
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
   border-left: 3px solid var(--accent);
   padding: 12px 18px;
   margin-bottom: 20px;
@@ -887,7 +940,6 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 .swatch-poet { background: var(--accent); border-color: var(--accent); }
-.swatch-city { background: transparent; border-color: var(--text-primary); }
 .swatch-edge { background: transparent; border-color: var(--accent); border-radius: 0; height: 2px; width: 18px; }
 .swatch-dash {
   background: repeating-linear-gradient(90deg, var(--text-muted) 0 4px, transparent 4px 8px);
@@ -895,6 +947,51 @@ onBeforeUnmount(() => {
   height: 2px;
   width: 18px;
   border-radius: 0;
+}
+
+/* graph loading / empty status */
+.graph-status-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 560px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--card-bg);
+  gap: 16px;
+}
+.graph-status-text {
+  font-size: 14px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  margin: 0;
+}
+.graph-retry-btn {
+  padding: 6px 16px;
+  background: var(--accent);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  transition: opacity 0.25s;
+}
+.graph-retry-btn:hover {
+  opacity: 0.85;
+}
+.graph-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: graph-spin 0.8s linear infinite;
+}
+@keyframes graph-spin {
+  to { transform: rotate(360deg); }
 }
 
 .tab-fade-enter-active,
@@ -922,6 +1019,7 @@ onBeforeUnmount(() => {
   .poet-avatar-stamp { font-size: 28px; }
   .poet-name-tag { font-size: 18px; }
   .g6-container-canvas { height: 440px; }
+  .graph-status-box { height: 440px; }
   .graph-legend { flex-wrap: wrap; gap: 12px 18px; }
   .graph-instructions { flex-direction: column; align-items: flex-start; gap: 8px; }
 }

@@ -133,7 +133,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   border-top: 3px solid var(--accent);
   border-radius: 4px;
   padding: 18px 20px 16px;
-  box-shadow: 0 16px 40px color-mix(in srgb, var(--text-primary) 0.18%, transparent);
+  box-shadow: 0 16px 40px color-mix(in srgb, var(--text-primary) 18%, transparent);
   backdrop-filter: blur(16px);
   text-align: left;
   position: relative;
@@ -176,11 +176,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   font-size: 12px;
   font-weight: 800;
   color: #fff;
-  background: #8e352e;
+  background: var(--accent);
   padding: 6px 4px;
   border-radius: 2px;
   letter-spacing: 2px;
-  box-shadow: 2px 2px 6px rgba(142, 53, 46, 0.3);
+  box-shadow: 2px 2px 6px color-mix(in srgb, var(--accent) 30%, transparent);
   flex-shrink: 0;
   line-height: 1.1;
   max-height: 92px;
@@ -375,7 +375,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   width: 90px;
   height: 12px;
   border-radius: 2px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 0.08%, transparent), color-mix(in srgb, var(--accent) 0.18%, transparent), color-mix(in srgb, var(--accent) 0.08%, transparent));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 8%, transparent), color-mix(in srgb, var(--accent) 18%, transparent), color-mix(in srgb, var(--accent) 8%, transparent));
   background-size: 200% 100%;
   animation: cityCardSkel 1.2s ease-in-out infinite;
 }
@@ -406,7 +406,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   border-color: var(--accent);
   color: var(--accent);
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px color-mix(in srgb, var(--accent) 0.12%, transparent);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 .city-card__btn:disabled {
   opacity: 0.4;
@@ -419,7 +419,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 }
 .city-card__btn--primary:hover:not(:disabled) {
   color: #fff;
-  box-shadow: 0 4px 12px rgba(142, 53, 46, 0.25);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 /* 移动端：卡片由父级定位为固定底部时，占满宽度 */

@@ -143,7 +143,7 @@ defineProps({
 .theme-inkwash .timeline-content {
   border-top: 4px solid var(--accent); /* Cinnabar topper */
   border-radius: var(--radius-sm);
-  background-image: radial-gradient(circle at 100% 0%, rgba(194,58,43,0.01) 20%, transparent 21%);
+  background-image: radial-gradient(circle at 100% 0%, var(--accent-faint) 20%, transparent 21%);
 }
 
 .timeline-item:hover .timeline-content {

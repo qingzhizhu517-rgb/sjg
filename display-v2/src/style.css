@@ -39,10 +39,10 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(142, 53, 46, 0.15);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(142, 53, 46, 0.3);
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
 }

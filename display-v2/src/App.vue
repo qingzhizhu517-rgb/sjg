@@ -253,28 +253,22 @@ onUnmounted(() => {
   height: var(--nav-height);
   display: flex;
   align-items: center;
-  background: rgba(253, 250, 245, 0.82);
+  background: color-mix(in srgb, var(--bg-primary) 85%, transparent);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid transparent;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.theme-inkwash.main-header,
-.theme-inkwash .main-header {
-  background: rgba(244, 239, 228, 0.85);
-  border-bottom: 1px solid rgba(200, 192, 176, 0.3);
-}
-
 .main-header.scrolled {
   border-bottom-color: var(--border-light);
-  box-shadow: 0 4px 20px color-mix(in srgb, var(--text-primary) 0.05%, transparent);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--text-primary) 5%, transparent);
   height: calc(var(--nav-height) - 10px);
 }
 
 .theme-inkwash .main-header.scrolled {
   border-bottom-color: var(--border);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 16px var(--shadow-a1);
 }
 
 .header-inner {
@@ -368,11 +362,11 @@ onUnmounted(() => {
 
 .nav-link:hover {
   color: var(--text-primary);
-  background: color-mix(in srgb, var(--text-primary) 0.04%, transparent);
+  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
 }
 
 .theme-inkwash .nav-link:hover {
-  background: color-mix(in srgb, var(--accent) 0.04%, transparent);
+  background: var(--accent-faint);
 }
 
 .nav-link.active {
@@ -380,14 +374,14 @@ onUnmounted(() => {
 }
 
 .theme-real .nav-link.active {
-  background: color-mix(in srgb, var(--accent) 0.05%, transparent);
-  box-shadow: inset 0 0 10px color-mix(in srgb, var(--accent) 0.05%, transparent);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+  box-shadow: inset 0 0 10px color-mix(in srgb, var(--accent) 5%, transparent);
 }
 
 .theme-inkwash .nav-link.active {
   background: var(--card-bg);
   font-weight: 800;
-  box-shadow: 0 2px 6px color-mix(in srgb, var(--accent) 0.08%, transparent);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 /* Underline link sliding animation */
@@ -506,7 +500,7 @@ onUnmounted(() => {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 18px;
-  box-shadow: 0 12px 36px color-mix(in srgb, var(--text-primary) 0.12%, transparent);
+  box-shadow: 0 12px 36px color-mix(in srgb, var(--text-primary) 12%, transparent);
   opacity: 0;
   visibility: hidden;
   transform: translateY(15px) rotateX(-12deg);
@@ -553,15 +547,10 @@ onUnmounted(() => {
 }
 
 .city-link:hover {
-  background: rgba(142, 53, 46, 0.04);
+  background: var(--accent-faint);
   border-color: var(--accent);
   transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(142, 53, 46, 0.08);
-}
-
-.theme-real .city-link:hover {
-  background: color-mix(in srgb, var(--accent) 0.04%, transparent);
-  box-shadow: 0 4px 10px color-mix(in srgb, var(--accent) 0.08%, transparent);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 .city-name {
@@ -685,13 +674,8 @@ onUnmounted(() => {
 .drawer-nav-link:hover,
 .drawer-nav-link.active {
   color: var(--accent);
-  background: rgba(142, 53, 46, 0.04);
+  background: var(--accent-faint);
   border-color: var(--accent);
-}
-
-.theme-real .drawer-nav-link:hover,
-.theme-real .drawer-nav-link.active {
-  background: color-mix(in srgb, var(--accent) 0.04%, transparent);
 }
 
 .drawer-nav-icon {
