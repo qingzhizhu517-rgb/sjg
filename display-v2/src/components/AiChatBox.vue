@@ -500,7 +500,7 @@ const sendMessage = async () => {
   margin: 6px 0;
   padding: 4px 10px;
   border-left: 3px solid var(--accent);
-  background: var(--accent-faint);
+  background: rgba(142, 53, 46, 0.04);
   color: var(--text-secondary);
 }
 .bubble-txt.md-body :deep(blockquote p) { margin: 0; }
@@ -611,7 +611,7 @@ const sendMessage = async () => {
 }
 
 .chat-send-btn:hover:not(:disabled) {
-  box-shadow: 0 2px 8px var(--accent-a25);
+  box-shadow: 0 2px 8px rgba(142, 53, 46, 0.25);
   transform: scale(1.02);
 }
 
