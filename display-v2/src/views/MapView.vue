@@ -2,6 +2,13 @@
   <div class="map-view" :class="{ 'anime-layout': isAnime }" @mousemove="handleMouseMove" @mouseleave="resetParallax">
     <!-- 双主题布局容器 -->
 
+    <!-- 黄河意境 Hero：左国画主视觉 + 右分行大标题 -->
+    <RiverHero
+      v-if="isReal"
+      :stats="heroStats"
+      @cta="scrollToMap"
+    />
+
     <!-- 错误状态 -->
     <div v-if="errorMsg" class="map-error-state">
       <div class="error-overlay">
@@ -13,31 +20,76 @@
 
     <!-- WRITE-UP 3D REAL THEME -->
     <div class="real-3d-container" v-if="isReal">
-      <div class="hud-panel left-hud animate-slide-in">
-        <div class="hud-header">
-          <span class="hud-badge">DH SYSTEM</span>
-          <h2 class="hud-title">三维地理<br/>文脉舱</h2>
-        </div>
-        <div class="hud-body">
-          <p class="hud-desc">数字人文视域下黄河流域（山东段）文学景观时空交互。拖拽旋转视角，双击节点飞往对应城市。</p>
-          <div class="hud-stats">
-            <div class="stat-item">
-              <span class="stat-num">10</span>
-              <span class="stat-lbl">核心景点</span>
-            </div>
-            <span class="stat-divider"></span>
-            <div class="stat-item">
-              <span class="stat-num">6</span>
-              <span class="stat-lbl">文人大家</span>
-            </div>
-            <span class="stat-divider"></span>
-            <div class="stat-item">
-              <span class="stat-num">8</span>
-              <span class="stat-lbl">传世名篇</span>
+      <div class="map-stage" :class="{ 'map-stage--has-city': selectedCity }">
+        <!-- 左：沙盘 3D 地图 -->
+        <div class="map-frame">
+          <div class="map-frame__title">
+            <span class="map-frame__seal">沙盘</span>
+            <span class="map-frame__name">山河图志</span>
+            <span class="map-frame__sub">山东 · 黄河流域</span>
+          </div>
+          <div class="canvas-3d-wrap" style="position: relative;">
+            <canvas ref="canvas3d" class="webgl-canvas"></canvas>
+
+            <!-- 浮动城市标签 -->
+            <div class="labels-overlay-3d" v-show="showLabels">
+              <div
+                v-for="label in cityLabels"
+                :key="label.name"
+                v-show="label.visible"
+                class="city-3d-label"
+                :class="[isReal ? 'label-theme-real' : 'label-theme-inkwash']"
+                :style="{ left: `${label.x}px`, top: `${label.y}px` }"
+                @click="clickLabel(label.name)"
+              >
+                <div class="label-plaque-card">
+                  <div class="decor-corner corner-tl"></div>
+                  <div class="decor-corner corner-tr"></div>
+                  <div class="decor-corner corner-bl"></div>
+                  <div class="decor-corner corner-br"></div>
+                  <div class="plaque-content">
+                    <span class="plaque-name">{{ label.name }}</span>
+                    <span class="plaque-divider"></span>
+                    <span class="plaque-tag">{{ getCityData(label.name).tag }}</span>
+                  </div>
+                </div>
+                <div class="label-connector-line"></div>
+                <div class="label-glow-pin">
+                  <span class="ring-pulse pulse-1" :style="{ borderColor: label.colorHex }"></span>
+                  <span class="ring-pulse pulse-2" :style="{ borderColor: label.colorHex }"></span>
+                  <div class="pin-dot" :style="{ backgroundColor: label.colorHex }"></div>
+                </div>
+              </div>
             </div>
           </div>
-          
-          <!-- Immersive HUD label control action -->
+        </div>
+
+        <!-- 右：册页信息面板 -->
+        <aside class="map-album">
+          <div class="map-album__hud" v-show="!selectedCity">
+          <div class="hud-header">
+            <span class="hud-seal">山河<br/>图志</span>
+            <div class="hud-title-wrap">
+              <span class="hud-eyebrow">数字人文 · 时空交互</span>
+              <h2 class="hud-title">三维地理文脉舱</h2>
+            </div>
+          </div>
+          <p class="hud-desc">拖拽旋转视角，双击节点飞往对应城市。</p>
+          <div class="hud-stats">
+            <template v-for="(s, i) in hudStats" :key="i">
+              <span v-if="i > 0" class="stat-divider"></span>
+              <div class="stat-item">
+                <span class="stat-num">{{ s.value || '–' }}<i class="stat-suffix">{{ s.suffix || '' }}</i></span>
+                <span class="stat-lbl">{{ s.label }}</span>
+              </div>
+            </template>
+            <template v-if="!hudStats.length">
+              <div class="stat-item">
+                <span class="stat-num">–</span>
+                <span class="stat-lbl">载入中</span>
+              </div>
+            </template>
+          </div>
           <div class="hud-actions">
             <button class="action-btn-toggle" @click="showLabels = !showLabels" :title="showLabels ? '隐藏标签' : '显示标签'">
               <svg v-if="showLabels" class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -51,70 +103,28 @@
               <span>{{ showLabels ? '隐藏地区标签' : '显示地区标签' }}</span>
             </button>
           </div>
-          
           <div class="hud-tips">
-            <span class="tip-txt">说明：单击发光节点可快速预览城市文学名胜，双击进入城市专栏。</span>
+            <span class="tip-txt">说明：单击发光节点预览城市文学名胜，双击进入城市专栏。</span>
           </div>
-        </div>
-      </div>
+          </div>
 
-      <!-- WebGL Three.js Canvas -->
-      <div class="canvas-3d-wrap" style="position: relative;">
-        <canvas ref="canvas3d" class="webgl-canvas"></canvas>
-        
-        <!-- Floating City Labels HTML Overlay -->
-        <div class="labels-overlay-3d" v-show="showLabels">
-          <div
-            v-for="label in cityLabels"
-            :key="label.name"
-            v-show="label.visible"
-            class="city-3d-label"
-            :class="[isReal ? 'label-theme-real' : 'label-theme-inkwash']"
-            :style="{ left: `${label.x}px`, top: `${label.y}px` }"
-            @click="clickLabel(label.name)"
-          >
-            <!-- Chinese Heritage Plaque Card -->
-            <div class="label-plaque-card">
-              <div class="decor-corner corner-tl"></div>
-              <div class="decor-corner corner-tr"></div>
-              <div class="decor-corner corner-bl"></div>
-              <div class="decor-corner corner-br"></div>
-              
-              <div class="plaque-content">
-                <span class="plaque-name">{{ label.name }}</span>
-                <span class="plaque-divider"></span>
-                <span class="plaque-tag">{{ getCityData(label.name).tag }}</span>
-              </div>
+          <!-- 点城市 -> 城市卡替换文脉舱 HUD；关闭(×/Esc/返回)恢复 HUD -->
+          <transition name="fade">
+            <div v-if="selectedCity" class="map-album__card-slot">
+              <div class="map-album__eyebrow">名城档案</div>
+              <CityDetailCard
+                :name="selectedCity"
+                :archive="getCityData(selectedCity)"
+                :detail="cityDetail"
+                :loading="cityLoading"
+                @close="closeCity"
+                @go="onCardGo"
+              />
+              <button class="map-album__back" @click="closeCity">← 返回文脉舱</button>
             </div>
-            
-            <!-- Elegant Gradient Connecting Line -->
-            <div class="label-connector-line"></div>
-            
-            <!-- Glowing Interactive Ripple Pin -->
-            <div class="label-glow-pin">
-              <span class="ring-pulse pulse-1" :style="{ borderColor: label.colorHex }"></span>
-              <span class="ring-pulse pulse-2" :style="{ borderColor: label.colorHex }"></span>
-              <div class="pin-dot" :style="{ backgroundColor: label.colorHex }"></div>
-            </div>
-          </div>
-        </div>
+          </transition>
+        </aside>
       </div>
-
-      <!-- Floating HUD Details Card -->
-      <transition name="fade">
-        <div class="hud-detail-card card" v-if="selectedCity">
-          <div class="detail-card-header">
-            <h3 class="city-title-real">{{ selectedCity }}</h3>
-            <button class="close-card-btn" @click="selectedCity = null">×</button>
-          </div>
-          <p class="city-desc-real">{{ getCityData(selectedCity).desc }}</p>
-          <div class="card-footer-action">
-            <button class="action-btn-primary" @click="$router.push(`/regions/${selectedCity}`)">
-              探索该市文学景观 →
-            </button>
-          </div>
-        </div>
-      </transition>
     </div>
 
     <!-- ANIME WATER-INK THEME (鼠标视差画轴地图) -->
@@ -126,7 +136,7 @@
             <div class="seal-red">天下大观</div>
             <div class="calligraphy-text">
               <h1 class="calligraphy-title">山东揽胜</h1>
-              <span class="calligraphy-subtitle">— 黄河入海 —</span>
+              <span class="calligraphy-subtitle">黄河入海</span>
             </div>
           </div>
           <p class="ink-intro-para">
@@ -188,17 +198,25 @@
       </div>
     </div>
 
+    <!-- 沿黄九城 · 沿河分布 -->
+    <RiverCityRail :regions="regions" @go="(name) => $router.push(`/regions/${name}`)" />
+
     <!-- AI Chatbot Box (Global Sidebar) -->
     <AiChatBox />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
 import { mockCities } from '../config/mockDetailData'
+import api from '../api'
 import AiChatBox from '../components/AiChatBox.vue'
+import RiverHero from '../components/homepage/RiverHero.vue'
+import RiverCityRail from '../components/homepage/RiverCityRail.vue'
+import CityDetailCard from '../components/homepage/CityDetailCard.vue'
+import { useCityEnrichment } from '../composables/useCityEnrichment'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
@@ -208,9 +226,70 @@ const { isReal, isAnime } = useTheme()
 const cityLabels = ref([])
 const showLabels = ref(true)
 const errorMsg = ref(null)
+const regions = ref([])
+const heroStats = ref([])
+
+// ===== 城市详情卡（点击节点 -> 右册页 dock 显示）=====
+const { enrichCity, ensurePoets } = useCityEnrichment()
+const cityDetail = ref(null)
+const cityLoading = ref(false)
+
+const hudStats = computed(() => heroStats.value.slice(0, 3))
+
+// 选中城市：在右册页 dock 显示城市卡，异步补全真实数据
+const openCity = async (name) => {
+  selectedCity.value = name
+  cityDetail.value = null
+  cityLoading.value = true
+  try {
+    cityDetail.value = await enrichCity(name)
+  } catch (e) {
+    cityDetail.value = null
+  } finally {
+    cityLoading.value = false
+  }
+}
+
+const closeCity = () => {
+  selectedCity.value = null
+  cityDetail.value = null
+}
+
+const onCardGo = (route) => {
+  if (route) router.push(route)
+  closeCity()
+}
+
+const scrollToMap = () => {
+  const el = document.querySelector('.real-3d-container, .anime-ink-container')
+  el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+const loadHeroData = async () => {
+  try {
+    const [regionsRes, spotsRes, poetsRes, poemsRes] = await Promise.allSettled([
+      api.get('/spots/regions'),
+      api.get('/spots', { params: { page: 1, size: 1 } }),
+      api.get('/poets', { params: { page: 1, size: 1 } }),
+      api.get('/poems', { params: { page: 1, size: 1 } }),
+    ])
+    if (regionsRes.status === 'fulfilled') regions.value = regionsRes.value || []
+    const spots = spotsRes.status === 'fulfilled' ? spotsRes.value?.total : 0
+    const poets = poetsRes.status === 'fulfilled' ? poetsRes.value?.total : 0
+    const poems = poemsRes.status === 'fulfilled' ? poemsRes.value?.total : 0
+    heroStats.value = [
+      { value: spots || 0, suffix: '处', label: '文学景观' },
+      { value: poets || 0, suffix: '位', label: '文人大家' },
+      { value: poems || 0, suffix: '篇', label: '传世名篇' },
+      { value: regions.value.length || 9, suffix: '城', label: '沿黄城市' },
+    ]
+  } catch (e) {
+    /* 静默失败，Hero 不阻塞 3D */
+  }
+}
 
 const clickLabel = (cityName) => {
-  selectedCity.value = cityName
+  openCity(cityName)
   const targetPin = cityObjects.find(c => c.name === cityName)
   if (targetPin) {
     const startPos = camera.position.clone()
@@ -263,7 +342,15 @@ const getParallaxStyle = (factor) => {
 const cities = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '滨州', '淄博', '东营']
 
 const getCityData = (cityName) => {
-  return mockCities[cityName] || { desc: '齐鲁重镇，文脉千秋。' }
+  return mockCities[cityName] || {
+    english: 'CITY VIEW',
+    subtitle: '古韵齐鲁 · 山东胜景',
+    desc: '齐鲁重镇，文脉千秋。',
+    geo: '山东省境内',
+    history: '古齐鲁之地，中华文明摇篮',
+    season: '四季皆宜',
+    tag: '文化重镇'
+  }
 }
 
 const getCityStampPos = (city) => {
@@ -356,15 +443,15 @@ const createCityShape = (coordinates) => {
 
 // Geographical coordinates (Lon, Lat) of core cities (accurate administrative centers)
 const cityGeoCoords = [
-  { name: '菏泽', lon: 115.48, lat: 35.23, color: 0xc23a2b },
+  { name: '菏泽', lon: 115.48, lat: 35.23, color: 0xc23a2b, river: true },
   { name: '济宁', lon: 116.59, lat: 35.38, color: 0xe69138 },
   { name: '泰安', lon: 117.08, lat: 36.20, color: 0xd4af37 },
-  { name: '聊城', lon: 115.97, lat: 36.45, color: 0x8e352e },
-  { name: '济南', lon: 117.00, lat: 36.67, color: 0x3d85c6 },
-  { name: '德州', lon: 116.29, lat: 37.43, color: 0x674ea7 },
-  { name: '淄博', lon: 118.00, lat: 36.81, color: 0x6aa84f },
-  { name: '滨州', lon: 118.02, lat: 37.37, color: 0x5b8c85 },
-  { name: '东营', lon: 118.49, lat: 37.46, color: 0x008080 }
+  { name: '聊城', lon: 115.97, lat: 36.45, color: 0x8e352e, river: true },
+  { name: '济南', lon: 117.00, lat: 36.67, color: 0x3d85c6, river: true },
+  { name: '德州', lon: 116.29, lat: 37.43, color: 0x674ea7, river: true },
+  { name: '淄博', lon: 118.00, lat: 36.81, color: 0x6aa84f, river: true },
+  { name: '滨州', lon: 118.02, lat: 37.37, color: 0x5b8c85, river: true },
+  { name: '东营', lon: 118.49, lat: 37.46, color: 0x008080, river: true }
 ]
 
 const city3dCoords = cityGeoCoords.map(city => {
@@ -373,7 +460,8 @@ const city3dCoords = cityGeoCoords.map(city => {
     name: city.name,
     x,
     z,
-    color: city.color
+    color: city.color,
+    river: !!city.river
   }
 })
 
@@ -735,12 +823,45 @@ const initThree = (geojson) => {
   // 6. Glowing Yellow River path representation
   const riverCurve = new THREE.CatmullRomCurve3(riverPoints)
   const riverGeom = new THREE.TubeGeometry(riverCurve, 64, 0.15, 8, false)
-  const riverMat = new THREE.MeshBasicMaterial({
-    color: 0xc27b38, // Golden river glowing color
-    transparent: true,
-    opacity: 0.85
-  })
+  // 流光黄河: 沿管长动画 UV 的流动光带(ShaderMaterial); 低端机退静态材质
+  const lowPerfRiver = (navigator.hardwareConcurrency || 4) <= 2 ||
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  let riverMat
+  if (lowPerfRiver) {
+    riverMat = new THREE.MeshBasicMaterial({ color: 0xc27b38, transparent: true, opacity: 0.85 })
+  } else {
+    riverMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uColor: { value: new THREE.Color(0xc27b38) },
+        uHighlight: { value: new THREE.Color(0xffe896) },
+        uFlowSpeed: { value: 0.6 }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+      fragmentShader: `
+        varying vec2 vUv;
+        uniform float uTime;
+        uniform vec3 uColor;
+        uniform vec3 uHighlight;
+        uniform float uFlowSpeed;
+        void main() {
+          // 沿管长流动光带; 入海端(uv.x->1)渐亮
+          float b = 0.55 + 0.45 * sin(vUv.x * 18.0 - uTime * uFlowSpeed * 6.0);
+          b += smoothstep(0.7, 1.0, vUv.x) * 0.25;
+          vec3 col = mix(uColor, uHighlight, clamp(b, 0.0, 1.0));
+          float alpha = 0.7 + 0.25 * b;
+          gl_FragColor = vec4(col, clamp(alpha, 0.0, 1.0));
+        }`,
+      transparent: true
+    })
+  }
   const riverMesh = new THREE.Mesh(riverGeom, riverMat)
+  riverMesh.name = 'yellow-river'
   scene.add(riverMesh)
   
   // Flowing river dots (Particle pipeline along the river)
@@ -814,7 +935,23 @@ const initThree = (geojson) => {
     ringMesh.rotation.x = -Math.PI / 2
     ringMesh.position.y = 0.01
     pinGroup.add(ringMesh)
-    
+
+    // 3b) River mark: 沿河城加一道金色环, 呼应黄河流光(图例"黄河流经")
+    if (city.river) {
+      const riverRingGeom = new THREE.RingGeometry(0.30, 0.33, 48)
+      const riverRingMat = new THREE.MeshBasicMaterial({
+        color: 0xffe896,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.55,
+        blending: THREE.AdditiveBlending
+      })
+      const riverRingMesh = new THREE.Mesh(riverRingGeom, riverRingMat)
+      riverRingMesh.rotation.x = -Math.PI / 2
+      riverRingMesh.position.y = 0.02
+      pinGroup.add(riverRingMesh)
+    }
+
     // 4) Holographic inner ring (compass pointer)
     const innerRingGeom = new THREE.RingGeometry(0.08, 0.13, 4, 1)
     const innerRingMat = new THREE.MeshBasicMaterial({
@@ -879,9 +1016,34 @@ const initThree = (geojson) => {
       }
       if (clickedCity) break
     }
-    
+
+    // 未点中城市时, 检查是否点中黄河 -> 飞往距命中点最近的沿河城
+    if (!clickedCity) {
+      const riverHit = intersects.find(hit => {
+        let p = hit.object
+        while (p) {
+          if (p.name === 'yellow-river') return true
+          p = p.parent
+        }
+        return false
+      })
+      if (riverHit) {
+        const hp = riverHit.point
+        let nearest = null
+        let minDist = Infinity
+        city3dCoords.forEach(c => {
+          if (!c.river) return
+          const dx = c.x - hp.x
+          const dz = c.z - hp.z
+          const d = Math.sqrt(dx * dx + dz * dz)
+          if (d < minDist) { minDist = d; nearest = c }
+        })
+        if (nearest) clickedCity = nearest.name
+      }
+    }
+
     if (clickedCity) {
-      selectedCity.value = clickedCity
+      openCity(clickedCity)
       
       // Fly to node animation
       const targetPin = cityObjects.find(c => c.name === clickedCity)
@@ -924,7 +1086,12 @@ const initThree = (geojson) => {
   
   const tick = () => {
     const elapsedTime = clock.getElapsedTime()
-    
+
+    // 流光黄河: 更新 shader uTime(低端静态材质无 uniforms, 跳过)
+    if (riverMat.uniforms && riverMat.uniforms.uTime) {
+      riverMat.uniforms.uTime.value = elapsedTime
+    }
+
     // Pulse the river dots along the path
     const positions = riverPointsObj.geometry.attributes.position.array
     for (let i = 0; i < dotCount; i++) {
@@ -1019,6 +1186,20 @@ const handleResize = () => {
   }
 }
 
+// 沙盘容器尺寸跟随（grid 列宽过渡/侧栏展开时，canvas 平滑 resize 不拉伸）
+let canvasResizeObserver = null
+const observeCanvasResize = () => {
+  if (canvasResizeObserver || !canvas3d.value?.parentElement) return
+  canvasResizeObserver = new ResizeObserver(() => handleResize())
+  canvasResizeObserver.observe(canvas3d.value.parentElement)
+}
+const disconnectCanvasResize = () => {
+  if (canvasResizeObserver) {
+    canvasResizeObserver.disconnect()
+    canvasResizeObserver = null
+  }
+}
+
 // Cache GeoJSON to avoid redundant fetch on theme switch
 let cachedGeojson = null
 let geojsonLoading = null
@@ -1047,6 +1228,7 @@ const startThree = async () => {
   const geojson = await loadGeojson()
   initThree(geojson)
   window.addEventListener('resize', handleResize)
+  observeCanvasResize()
 }
 
 watch(isReal, (newVal) => {
@@ -1055,6 +1237,7 @@ watch(isReal, (newVal) => {
     setTimeout(startThreeSafe, 150)
   } else {
     window.removeEventListener('resize', handleResize)
+    disconnectCanvasResize()
     cleanupThree()
   }
 })
@@ -1076,6 +1259,8 @@ const startThreeSafe = async () => {
 }
 
 onMounted(() => {
+  loadHeroData()
+  ensurePoets()
   if (isReal.value) {
     setTimeout(startThreeSafe, 150)
   }
@@ -1083,29 +1268,114 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize)
+  disconnectCanvasResize()
   cleanupThree()
 })
 </script>
 
 <style scoped>
 .map-view {
-  width: 100vw;
-  height: calc(100vh - var(--nav-height));
+  width: 100%;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
-/* REAL MODE HUD GRAPHICS */
+/* 沿黄九城 */
+.map-cities {
+  max-width: 1200px;
+  margin: 56px auto;
+  padding: 0 40px;
+}
+.map-cities-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+@media (max-width: 1024px) {
+  .map-cities-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .map-cities { padding: 0 20px; margin: 40px auto; }
+  .map-cities-grid { grid-template-columns: 1fr; }
+}
+
+/* REAL MODE: 左图右册 框体化布局 */
 .real-3d-container {
   width: 100%;
-  height: 100%;
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: 28px 40px 40px;
   position: relative;
   background: #fbf8f3;
+  box-sizing: border-box;
+}
+
+.map-stage {
+  display: grid;
+  /* 沙盘为主：右栏固定窄条 280px，仅作说明；选中城市时展开至 400px */
+  grid-template-columns: 1fr 280px;
+  gap: 24px;
+  height: calc(100vh - var(--nav-height) - 76px);
+  min-height: 520px;
+  transition: grid-template-columns 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.map-stage--has-city {
+  grid-template-columns: 1fr 400px;
+}
+
+/* 左：沙盘框 */
+.map-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #f3ede0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--text-primary) 0.1%, transparent);
+}
+
+.map-frame__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, #efe7d6, #e8dfca);
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+
+.map-frame__seal {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  background: #8e352e;
+  padding: 3px 7px;
+  border-radius: 2px;
+  letter-spacing: 2px;
+}
+
+.map-frame__name {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: 2px;
+}
+
+.map-frame__sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  margin-left: auto;
 }
 
 .canvas-3d-wrap {
   width: 100%;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
+  position: relative;
 }
 
 .webgl-canvas {
@@ -1114,58 +1384,131 @@ onBeforeUnmount(() => {
   display: block;
 }
 
-/* HUD Panel */
-.hud-panel {
-  position: absolute;
-  top: 32px;
-  left: 32px;
-  width: 340px;
-  max-height: calc(100% - 64px);
-  overflow-y: auto;
-  background: rgba(253, 250, 245, 0.88);
+/* 右：册页信息面板（窄条·仅说明） */
+.map-album {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 16px;
+  background: rgba(253, 250, 245, 0.9);
   border: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
   border-radius: var(--radius-md);
-  padding: 28px 26px;
-  z-index: 10;
-  box-shadow: 0 10px 30px rgba(61, 43, 31, 0.08);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--text-primary) 0.08%, transparent);
   backdrop-filter: blur(16px);
   text-align: left;
+  overflow-y: auto;
   scrollbar-width: thin;
 }
 
-.hud-header {
-  border-bottom: 2px solid var(--accent);
-  padding-bottom: 14px;
-  margin-bottom: 18px;
+.map-album__hud {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.hud-badge {
-  font-size: 9px;
-  font-weight: 800;
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  padding: 2px 6px;
+.map-album__card-slot {
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.map-album__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 4px;
+}
+
+.map-album__eyebrow::before,
+.map-album__eyebrow::after {
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: var(--border);
+}
+
+.map-album__back {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 6px 16px;
   border-radius: 2px;
-  letter-spacing: 1.5px;
-  display: inline-block;
-  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.map-album__back:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 0.04%, transparent);
+}
+
+.hud-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+.hud-seal {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  background: #8e352e;
+  padding: 6px 4px;
+  border-radius: 2px;
+  letter-spacing: 2px;
+  box-shadow: 2px 2px 6px rgba(142, 53, 46, 0.3);
+  flex-shrink: 0;
+  line-height: 1.1;
+}
+
+.hud-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hud-eyebrow {
+  font-family: var(--font-heading);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 2px;
+  opacity: 0.8;
 }
 
 .hud-title {
   font-family: var(--font-heading);
-  font-size: 24px;
+  font-size: 17px;
   font-weight: 900;
   color: var(--text-primary);
-  letter-spacing: 3px;
+  letter-spacing: 2px;
   line-height: 1.2;
   margin: 0;
 }
 
 .hud-desc {
-  font-size: 13px;
-  line-height: 1.8;
+  font-size: 12px;
+  line-height: 1.7;
   color: var(--text-secondary);
-  margin: 0 0 22px 0;
+  margin: 0 0 14px 0;
   letter-spacing: 0.3px;
 }
 
@@ -1173,15 +1516,15 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 22px;
-  background: rgba(184, 134, 11, 0.04);
-  border: 1px solid rgba(184, 134, 11, 0.15);
+  margin-bottom: 14px;
+  background: color-mix(in srgb, var(--accent) 0.04%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 0.15%, transparent);
   border-radius: 4px;
-  padding: 16px 12px;
+  padding: 10px 8px;
 }
 
 .hud-actions {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .action-btn-toggle {
@@ -1191,8 +1534,8 @@ onBeforeUnmount(() => {
   justify-content: center;
   gap: 8px;
   padding: 10px 16px;
-  background: rgba(184, 134, 11, 0.08);
-  border: 1px solid rgba(184, 134, 11, 0.25);
+  background: color-mix(in srgb, var(--accent) 0.08%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 0.25%, transparent);
   border-radius: var(--radius-sm);
   color: var(--accent-dark);
   font-family: var(--font-heading);
@@ -1208,7 +1551,7 @@ onBeforeUnmount(() => {
   border-color: var(--accent);
   color: #fff;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(184, 134, 11, 0.15);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 0.15%, transparent);
 }
 
 .action-icon {
@@ -1226,7 +1569,7 @@ onBeforeUnmount(() => {
 
 .stat-num {
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 900;
   color: var(--accent);
   line-height: 1;
@@ -1244,7 +1587,7 @@ onBeforeUnmount(() => {
 .stat-divider {
   width: 1px;
   height: 28px;
-  background: rgba(184, 134, 11, 0.2);
+  background: color-mix(in srgb, var(--accent) 0.2%, transparent);
   flex-shrink: 0;
 }
 
@@ -1266,92 +1609,11 @@ onBeforeUnmount(() => {
   line-height: 1.5;
 }
 
-/* Floating Click Details Card */
-.hud-detail-card {
-  position: absolute;
-  bottom: 32px;
-  left: 32px;
-  width: 340px;
-  background: rgba(253, 250, 245, 0.92);
-  border: 1px solid var(--accent);
-  border-top: 4px solid var(--accent);
-  padding: 22px 24px;
-  z-index: 10;
-  box-shadow: 0 12px 36px rgba(142, 53, 46, 0.15);
-  backdrop-filter: blur(16px);
-  text-align: left;
-}
-
-.detail-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px dashed var(--border-light);
-  padding-bottom: 10px;
-  margin-bottom: 14px;
-}
-
-.city-title-real {
-  font-family: var(--font-heading);
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: 2px;
-  margin: 0;
-  line-height: 1.1;
-}
-
-.close-card-btn {
-  background: transparent;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: var(--text-muted);
-  transition: color 0.2s;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  line-height: 1;
-}
-
-.close-card-btn:hover {
-  color: var(--accent);
-  background: rgba(184, 134, 11, 0.08);
-}
-
-.city-desc-real {
-  font-size: 13px;
-  line-height: 1.8;
-  color: var(--text-secondary);
-  margin-bottom: 18px;
-  letter-spacing: 0.3px;
-}
-
-.card-footer-action {
-  display: flex;
-}
-
-.action-btn-primary {
-  width: 100%;
-  padding: 10px 16px;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 2px;
+.stat-suffix {
+  font-style: normal;
+  font-size: 12px;
   font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  letter-spacing: 2px;
-  transition: all 0.2s;
-  font-family: inherit;
-}
-
-.action-btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(142, 53, 46, 0.25);
+  margin-left: 1px;
 }
 
 /* ==========================================
@@ -1359,12 +1621,13 @@ onBeforeUnmount(() => {
    ========================================== */
 .anime-ink-container {
   width: 100%;
-  height: 100%;
-  background: #f4efe4; /* Traditional ink wash paper base */
+  height: calc(100vh - var(--nav-height));
+  background: var(--bg-primary); /* Traditional ink wash paper base */
   padding: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .ink-layout-wrap {
@@ -1686,16 +1949,16 @@ onBeforeUnmount(() => {
    RESPONSIVE — three tiers
    ============================================ */
 
-/* Wide desktop: keep generous spacing, larger HUD */
+/* Wide desktop */
 @media (min-width: 1600px) {
   .ink-layout-wrap { max-width: 1560px; grid-template-columns: 380px 1fr; gap: 56px; }
   .scroll-outer-frame { height: 620px; }
   .scroll-wooden-rod { height: 640px; }
   .scroll-middle-paper { height: 580px; }
-  .hud-panel { width: 360px; }
+  .real-3d-container { max-width: 1680px; }
 }
 
-/* Tablet: collapse to single column, HUD slides to bottom */
+/* Tablet: map-stage 单列堆叠 */
 @media (max-width: 1024px) {
   .ink-layout-wrap {
     grid-template-columns: 1fr;
@@ -1716,26 +1979,14 @@ onBeforeUnmount(() => {
   .scroll-wooden-rod { height: 420px; }
   .scroll-middle-paper { height: 370px; }
 
-  .hud-panel {
-    top: auto;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(100% - 40px);
-    max-width: 480px;
-    max-height: 45vh;
+  .map-stage {
+    grid-template-columns: 1fr;
+    height: auto;
   }
-  .hud-detail-card {
-    top: 20px;
-    bottom: auto;
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(100% - 40px);
-    max-width: 360px;
-  }
+  .map-frame { height: 60vh; min-height: 360px; }
 }
 
-/* Mobile: stack ink panel, shrink stamps */
+/* Mobile */
 @media (max-width: 640px) {
   .anime-ink-container { padding: 24px 16px; }
   .ink-left-panel { gap: 14px; }
@@ -1747,7 +1998,10 @@ onBeforeUnmount(() => {
   .scroll-middle-paper { height: 310px; }
   .stamp-seal-red { width: 32px; height: 36px; font-size: 10px; }
   .label-plaque-card { min-width: 110px; padding: 6px 10px; }
-  .hud-panel { padding: 20px 18px; }
+  .real-3d-container { padding: 20px 16px; }
+  .map-stage { gap: 16px; }
+  .map-frame { height: 52vh; min-height: 320px; }
+  .map-album { padding: 18px 16px; }
   .hud-title { font-size: 20px; }
   .stat-num { font-size: 22px; }
 }
@@ -1805,7 +2059,7 @@ onBeforeUnmount(() => {
 }
 
 .label-theme-inkwash .label-plaque-card {
-  background: rgba(26, 26, 26, 0.92);
+  background: color-mix(in srgb, var(--text-primary) 0.92%, transparent);
   border: 1px solid var(--accent);
 }
 
@@ -1904,12 +2158,12 @@ onBeforeUnmount(() => {
 
 .label-theme-real .plaque-tag {
   color: var(--accent-dark);
-  background: rgba(184, 134, 11, 0.12);
+  background: color-mix(in srgb, var(--accent) 0.12%, transparent);
 }
 
 .label-theme-inkwash .plaque-tag {
   color: #e85d4f;
-  background: rgba(194, 58, 43, 0.15);
+  background: color-mix(in srgb, var(--accent) 0.15%, transparent);
 }
 
 /* Connecting Line */
@@ -2042,7 +2296,7 @@ onBeforeUnmount(() => {
 .error-overlay .error-retry-btn:hover {
   color: var(--accent);
   border-color: var(--accent);
-  background: rgba(184, 134, 11, 0.03);
+  background: color-mix(in srgb, var(--accent) 0.03%, transparent);
 }
 
 </style>

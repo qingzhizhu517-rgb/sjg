@@ -30,6 +30,9 @@
           <router-link :to="`/regions/${spot.region}`" class="spot-link">{{ spot.name }}</router-link>
         </span>
       </div>
+      <div v-if="sentimentTags.length" class="header-tags">
+        <span v-for="t in sentimentTags" :key="t" class="header-tag">{{ t }}</span>
+      </div>
     </div>
 
     <!-- Poem Body -->
@@ -65,6 +68,9 @@
       </div>
     </div>
 
+    <!-- AI Analysis -->
+    <PoemAnalysis v-if="poem.id" :poem-id="poem.id" />
+
     <!-- Media -->
     <div v-if="poem.videoUrl" class="detail-section">
       <h2 class="section-heading">诗词赏析视频</h2>
@@ -86,6 +92,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '../api'
+import { parseTags } from '../utils/poem'
+import PoemAnalysis from '../components/PoemAnalysis.vue'
 
 const route = useRoute()
 const poem = ref(null)
@@ -96,6 +104,8 @@ const showAnnotation = ref(false)
 const errorMsg = ref(null)
 
 const poemLines = computed(() => poem.value?.content?.split('\n').filter(l => l.trim()) || [])
+
+const sentimentTags = computed(() => parseTags(poem.value?.sentimentTags))
 
 onMounted(async () => {
   try {
@@ -201,6 +211,26 @@ onMounted(async () => {
   opacity: 0.7;
 }
 
+.header-tags {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+.header-tag {
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--accent) 0.07%, transparent);
+  border: 1px solid var(--border-light);
+  padding: 3px 11px;
+  border-radius: 100px;
+  letter-spacing: 1px;
+}
+.theme-inkwash .header-tag {
+  background: color-mix(in srgb, var(--accent) 0.06%, transparent);
+}
+
 /* Poem Body */
 .poem-body {
   position: relative;
@@ -212,7 +242,7 @@ onMounted(async () => {
 }
 
 .theme-real .poem-body {
-  background-image: linear-gradient(rgba(184, 134, 11, 0.02) 1px, transparent 1px);
+  background-image: linear-gradient(color-mix(in srgb, var(--accent) 0.02%, transparent) 1px, transparent 1px);
   background-size: 100% 3em;
   border-radius: var(--radius-md);
   box-shadow: var(--card-shadow);
@@ -220,8 +250,8 @@ onMounted(async () => {
 
 .theme-inkwash .poem-body {
   background-image: 
-    radial-gradient(circle at 0% 0%, rgba(194,58,43,0.015) 30%, transparent 31%),
-    radial-gradient(circle at 100% 100%, rgba(194,58,43,0.015) 30%, transparent 31%);
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--accent) 0.015%, transparent) 30%, transparent 31%),
+    radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--accent) 0.015%, transparent) 30%, transparent 31%);
   border-radius: var(--radius-sm);
 }
 
@@ -312,8 +342,8 @@ onMounted(async () => {
   position: relative;
   /* Concertina fold visual lines */
   background-image: 
-    linear-gradient(90deg, rgba(61,43,31,0.03) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(61,43,31,0.02) 1px, transparent 1px);
+    linear-gradient(90deg, color-mix(in srgb, var(--text-primary) 0.03%, transparent) 1px, transparent 1px),
+    linear-gradient(180deg, color-mix(in srgb, var(--text-primary) 0.02%, transparent) 1px, transparent 1px);
   background-size: 40px 100%, 100% 24px;
   box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.04);
 }
@@ -403,7 +433,7 @@ onMounted(async () => {
 .theme-inkwash .media-wrap {
   border: 2px solid var(--accent);
   outline: none;
-  box-shadow: 0 4px 16px rgba(194, 58, 43, 0.1);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 0.1%, transparent);
   border-radius: var(--radius-sm);
 }
 

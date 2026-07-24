@@ -4,6 +4,7 @@ const routes = [
   { path: '/', redirect: '/map' },
   { path: '/map', name: 'Map', component: () => import('../views/MapView.vue') },
   { path: '/poets', name: 'Poets', component: () => import('../views/PoetList.vue') },
+  { path: '/poets/all', name: 'PoetsAll', component: () => import('../views/PoetAllList.vue') },
   { path: '/poets/:id', name: 'PoetDetail', component: () => import('../views/PoetDetail.vue') },
   { path: '/poems/:id', name: 'PoemDetail', component: () => import('../views/PoemDetail.vue') },
   { path: '/spots/:id', name: 'SpotDetail', component: () => import('../views/SpotDetail.vue') },
@@ -13,7 +14,11 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition
+    return { top: 0 }
+  }
 })
 
 export default router

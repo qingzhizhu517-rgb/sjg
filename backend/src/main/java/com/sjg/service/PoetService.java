@@ -19,8 +19,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.sjg.util.PoetCompletenessCalculator;
 
 @Service
 public class PoetService {
@@ -43,7 +45,23 @@ public class PoetService {
         }
         wrapper.orderByDesc(Poet::getId);
         Page<Poet> result = poetMapper.selectPage(new Page<>(page, size), wrapper);
-        return new PageResult<>(result.getRecords(), result.getTotal(), page, size);
+        List<Poet> poets = result.getRecords();
+        enrichCompleteness(poets);
+        return new PageResult<>(poets, result.getTotal(), page, size);
+    }
+
+    /** 批量回填完整度分: 一次查出本页诗人关联诗数, 逐人计算。 */
+    private void enrichCompleteness(List<Poet> poets) {
+        if (poets == null || poets.isEmpty()) return;
+        List<Long> ids = poets.stream().map(Poet::getId).collect(Collectors.toList());
+        List<Poem> poems = poemMapper.selectList(
+            new LambdaQueryWrapper<Poem>().in(Poem::getPoetId, ids));
+        Map<Long, Long> countById = poems.stream()
+            .collect(Collectors.groupingBy(Poem::getPoetId, Collectors.counting()));
+        for (Poet p : poets) {
+            int pc = countById.getOrDefault(p.getId(), 0L).intValue();
+            p.setCompleteness(PoetCompletenessCalculator.compute(p, pc));
+        }
     }
 
     public Poet getById(Long id) {

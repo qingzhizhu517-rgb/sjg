@@ -292,7 +292,7 @@ const sendMessage = async () => {
   background: rgba(253, 250, 245, 0.95);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  box-shadow: 0 16px 48px rgba(61, 43, 31, 0.15);
+  box-shadow: 0 16px 48px color-mix(in srgb, var(--text-primary) 0.15%, transparent);
   backdrop-filter: blur(20px);
   display: flex;
   flex-direction: column;

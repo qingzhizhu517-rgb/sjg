@@ -1,6 +1,7 @@
 package com.sjg.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -41,6 +42,10 @@ public class Poet {
 
     @Schema(description = "诗词风格", example = "豪放派")
     private String style;
+
+    @TableField(exist = false)
+    @Schema(description = "完整度分(0-100, 后端计算)", example = "85")
+    private Integer completeness;
 
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
