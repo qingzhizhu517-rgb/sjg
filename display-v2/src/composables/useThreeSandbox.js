@@ -190,6 +190,7 @@ export function useThreeSandbox() {
   let cachedGeojson = null
   let geojsonLoading = null
   let callbacks = {}
+  let initTimerId = null
 
   // Clean up existing Three.js scene, renderer, and animation loop to prevent leaks
   const cleanupThree = () => {
@@ -245,6 +246,8 @@ export function useThreeSandbox() {
     const endTarget = targetPin.position.clone()
     let t = 0
     const animateCamera = () => {
+      // dispose 后 camera/controls 置 null，停止动画避免操作已释放资源
+      if (!camera || !controls) return
       t += 0.05
       if (t <= 1.0) {
         camera.position.lerpVectors(startPos, endPos, t)
@@ -845,7 +848,10 @@ export function useThreeSandbox() {
     geojsonLoading = (async () => {
       try {
         const response = await fetch('/shandong.json')
-        cachedGeojson = await response.json()
+        if (!response.ok) { cachedGeojson = null; return null }
+        const parsed = await response.json()
+        // 仅缓存合法 GeoJSON（含 features）；畸形响应置 null 触发回退/重试
+        cachedGeojson = parsed && parsed.features ? parsed : null
         return cachedGeojson
       } catch (e) {
         console.error('Error loading shandong.json:', e)
@@ -876,19 +882,24 @@ export function useThreeSandbox() {
   }
 
   /**
-   * 初始化引擎。opts 注入编排回调。
+   * 注入回调并（若 canvas 已挂载）启动引擎。
+   * inkwash 时仅注入回调（canvas 未渲染），切 real 时 setTheme 复用，避免点击失效。
    * @param {Object} opts
-   * @param {(cityName: string) => void} [opts.onPickCity]      - 单/双击城市节点（编排负责 openCity）
-   * @param {(cityName: string) => void} [opts.onDoublePickCity] - 双击城市节点（编排负责 router.push）
+   * @param {(cityName: string) => void} [opts.onPickCity]
+   * @param {(cityName: string) => void} [opts.onDoublePickCity]
    */
-  const init = async (opts = {}) => {
+  const init = (opts = {}) => {
     callbacks.onPickCity = opts.onPickCity
     callbacks.onDoublePickCity = opts.onDoublePickCity
-    await startThreeSafe()
+    if (canvas3d.value) {
+      if (initTimerId) clearTimeout(initTimerId)
+      initTimerId = setTimeout(() => { startThreeSafe() }, 150)
+    }
   }
 
   /** 销毁引擎（onBeforeUnmount / 切到 inkwash 时调用） */
   const dispose = () => {
+    if (initTimerId) { clearTimeout(initTimerId); initTimerId = null }
     window.removeEventListener('resize', handleResize)
     disconnectCanvasResize()
     cleanupThree()
@@ -899,9 +910,10 @@ export function useThreeSandbox() {
    * @param {boolean} isReal - 是否为 real 主题
    */
   const setTheme = (isReal) => {
+    if (initTimerId) { clearTimeout(initTimerId); initTimerId = null }
     if (isReal) {
       errorMsg.value = null
-      setTimeout(startThreeSafe, 150)
+      initTimerId = setTimeout(() => { startThreeSafe() }, 150)
     } else {
       dispose()
     }

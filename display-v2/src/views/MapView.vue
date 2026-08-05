@@ -364,14 +364,11 @@ const retryLoadMap = () => {
 onMounted(() => {
   loadHeroData()
   ensurePoets()
-  if (isReal.value) {
-    setTimeout(() => {
-      three.init({
-        onPickCity: (name) => openCity(name),
-        onDoublePickCity: (name) => router.push(`/regions/${name}`),
-      })
-    }, 150)
-  }
+  // 始终注入回调（inkwash 时仅注入不启动；切 real 时 setTheme 复用，修复点击失效）
+  three.init({
+    onPickCity: (name) => openCity(name),
+    onDoublePickCity: (name) => router.push(`/regions/${name}`),
+  })
 })
 
 onBeforeUnmount(() => three.dispose())
