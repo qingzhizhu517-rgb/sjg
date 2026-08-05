@@ -80,7 +80,10 @@
               v-for="poem in enrichedPoems"
               :key="poem.id"
               class="anime-poem-card hover-lift"
+              tabindex="0"
+              role="link"
               @click="$router.push(`/poems/${poem.id}`)"
+              @keydown.enter="$router.push(`/poems/${poem.id}`)"
             >
               <div class="poem-card-header">
                 <div class="poet-avatar-wrap" v-if="poem.poet">

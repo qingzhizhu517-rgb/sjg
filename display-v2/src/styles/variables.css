@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=LXGW+WenKai&family=Noto+Serif+SC:wght@300;400;600;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;900&display=swap');
 
 :root {
   /* ===== Real Theme: Digital Heritage Exhibition ===== */
@@ -7,7 +7,7 @@
   --bg-tertiary: #EDE4D3;
   --text-primary: #3D2B1F;
   --text-secondary: #6B5B4F;
-  --text-muted: #9B8B7F;
+  --text-muted: #6E5D52;
   --accent: #B8860B;
   --accent-dark: #8B6508;
   --accent-light: #D4A843;
@@ -39,6 +39,7 @@
   --radius-lg: 20px;
   --nav-height: 64px;
   --page-padding: 80px;
+  --container-max: 1280px;
 }
 
 /* Inkwash 主题 token 唯一源在 styles/inkwash.css 的 .theme-inkwash;
@@ -109,9 +110,21 @@ button {
   color: #fff;
 }
 
+/* ===== Global focus-visible (键盘可达性) =====
+   real 金色 / inkwash 朱砂（var(--accent) 自动随主题），2px outline + offset。
+   仅键盘聚焦时出现，不影响鼠标点击外观。 */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* 去除鼠标点击的默认 outline，仅保留 :focus-visible */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 /* ===== Utility Classes & Animations ===== */
 .container {
-  max-width: 1200px;
+  max-width: var(--container-max);
   margin: 0 auto;
   padding: 0 24px;
 }

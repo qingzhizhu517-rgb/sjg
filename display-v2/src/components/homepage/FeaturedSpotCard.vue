@@ -1,5 +1,5 @@
 <template>
-  <article class="spot hover-lift" @click="$emit('click')">
+  <article class="spot hover-lift" tabindex="0" role="link" @click="$emit('click')" @keydown.enter="$emit('click')">
     <div class="spot__cover">
       <img v-if="imageUrl" :src="imageUrl" :alt="spot.name" @error="onImgError" />
       <span v-else class="spot__cover-fallback">{{ spot.name ? spot.name.charAt(0) : '景' }}</span>

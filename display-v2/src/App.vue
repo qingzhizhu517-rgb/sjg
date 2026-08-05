@@ -273,7 +273,7 @@ onUnmounted(() => {
 
 .header-inner {
   width: 100%;
-  max-width: 1400px;
+  max-width: var(--container-max);
   margin: 0 auto;
   padding: 0 40px;
   display: flex;
@@ -775,7 +775,7 @@ onUnmounted(() => {
 }
 
 .footer-inner {
-  max-width: 700px;
+  max-width: var(--container-max);
   margin: 0 auto;
 }
 

@@ -78,7 +78,10 @@
                 v-for="p in standardPoets"
                 :key="p.id"
                 class="poet-card-wrap card hover-lift"
+                tabindex="0"
+                role="link"
                 @click="$router.push(`/poets/${p.id}`)"
+                @keydown.enter="$router.push(`/poets/${p.id}`)"
                 :aria-label="`查看 ${p.name} 详情`"
               >
                 <div class="poet-avatar-box">
@@ -128,7 +131,10 @@
                     v-for="p in marginalPoets"
                     :key="p.id"
                     class="poet-card-wrap card hover-lift is-marginal"
+                    tabindex="0"
+                    role="link"
                     @click="$router.push(`/poets/${p.id}`)"
+                    @keydown.enter="$router.push(`/poets/${p.id}`)"
                     :aria-label="`查看 ${p.name} 详情`"
                   >
                     <div class="poet-avatar-box">

@@ -47,7 +47,10 @@
                 v-for="p in filteredEnrichedPoets"
                 :key="p.id"
                 class="poet-card-wrap card hover-lift"
+                tabindex="0"
+                role="link"
                 @click="$router.push(`/poets/${p.id}?from=all`)"
+                @keydown.enter="$router.push(`/poets/${p.id}?from=all`)"
                 :aria-label="`查看 ${p.name} 详情`"
               >
                 <div class="poet-avatar-box">

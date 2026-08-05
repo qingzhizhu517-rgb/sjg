@@ -1,5 +1,5 @@
 <template>
-  <article class="sc" :class="{ 'sc--featured': featured }" @click="$emit('click')">
+  <article class="sc" :class="{ 'sc--featured': featured }" tabindex="0" role="link" @click="$emit('click')" @keydown.enter="$emit('click')">
     <div class="sc__top">
       <span class="sc__seal" aria-hidden="true">{{ sealChar }}</span>
       <span class="sc__meta">{{ dynastyName }} · {{ poemCount }} 篇传世</span>

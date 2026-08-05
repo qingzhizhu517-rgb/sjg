@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=LXGW+WenKai&display=swap');
+
 /* Inkwash theme token唯一源。
    透明度派生 token (--accent-soft, --accent-faint, --shadow-color, --shadow-soft, --glass-bg)
    定义在 variables.css :root，用 color-mix() + var() 引用基础 token。
@@ -10,8 +12,8 @@
   --bg-tertiary: #DDD6C6;
   --text-primary: #1A1A1A;
   --text-secondary: #4A4A4A;
-  --text-muted: #7A7A7A;
-  --accent: #C23A2B;
+  --text-muted: #535353;
+  --accent: #A93226;
   --accent-dark: #8B1A1A;
   --accent-light: #E85D4F;
   --border: #C8C0B0;

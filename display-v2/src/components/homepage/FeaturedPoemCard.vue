@@ -1,5 +1,5 @@
 <template>
-  <article class="poem-card hover-lift" @click="$emit('click')">
+  <article class="poem-card hover-lift" tabindex="0" role="link" @click="$emit('click')" @keydown.enter="$emit('click')">
     <span class="poem-card__seal" aria-hidden="true">印</span>
     <blockquote class="poem-card__quote">
       <p class="poem-card__text">「{{ poem.line || poem.content }}」</p>

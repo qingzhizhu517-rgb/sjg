@@ -72,7 +72,10 @@
             :key="spot.id"
             class="more-spot-card card hover-lift"
             :style="{ animationDelay: `${i * 0.06}s` }"
+            tabindex="0"
+            role="link"
             @click="$router.push(`/spots/${spot.id}`)"
+            @keydown.enter="$router.push(`/spots/${spot.id}`)"
           >
             <div class="more-spot__image-wrap">
               <img :src="getImage(spot)" :alt="spot.name" class="more-spot__image" />
@@ -158,7 +161,10 @@
               v-for="(spot, index) in spots" 
               :key="spot.id" 
               class="anime-spot-card card hover-lift"
+              tabindex="0"
+              role="link"
               @click="$router.push(`/spots/${spot.id}`)"
+              @keydown.enter="$router.push(`/spots/${spot.id}`)"
             >
               <div class="spot-card-header">
                 <span class="spot-num">{{ padZero(index + 1) }}</span>

@@ -1,5 +1,5 @@
 <template>
-  <article class="city hover-lift" @click="$emit('click')">
+  <article class="city hover-lift" tabindex="0" role="link" @click="$emit('click')" @keydown.enter="$emit('click')">
     <span class="city__stamp">{{ city.name ? city.name.charAt(0) : '城' }}</span>
     <div class="city__body">
       <h3 class="city__name">{{ city.name }}</h3>
