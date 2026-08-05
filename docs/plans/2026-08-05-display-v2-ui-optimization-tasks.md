@@ -36,7 +36,7 @@
 - [x] **P1-3** themeAdapter：`adaptSpot/adaptPoet/adaptPoem(entity, theme)` 投影双字段为单一视图模型；组件只消费投影字段；废弃 `imageFor()` 与 `_anime` 字符串替换
 - [x] **P1-4** 内容包分风格：`content/real/cities.js`（展馆解说词风）+ `content/inkwash/cities.js`（诗意题跋风），迁移 `mockDetailData.js` 城市文案，标注为"待后端数据接管"
 - [x] **P1-5** MapView 拆分：Three.js 引擎抽为 `composables/useThreeSandbox.js`（init/dispose/flyTo/raycast 接口），MapView 只留编排；目标单文件 < 600 行
-- [ ] **P1-6** `ThemeTransition` 全屏转场组件：切 inkwash = 墨晕 clip-path 扩散；切 real = 金色光扫 + 亮度缓入；转场期间锁滚动/锁重复点击；three.js 在遮罩下重建
+- [ ] **P1-6** `ThemeTransition` 全屏转场组件：切 inkwash = 墨晕 clip-path 扩散；切 real = 金色光扫 + 亮度缓入；转场期间锁滚动/锁重复点击；three.js 在遮罩下重建（⚠️ 首轮实现有问题：real->inkwash 无效果、inkwash->real 丑；已回退为直接切换，ThemeTransition.vue + useTheme.switchTheme 代码保留待后续重做）
 - [x] **P1-7** `useTheme` 重构：`switchTheme(withTransition)`、`themeProfile` computed、暴露 resolveAsset/resolveContent；保持 localStorage + `<html>` 类机制不变
 - [ ] **P1-8** 验收：切换风格无白闪（录屏逐帧检查）；MapView 双布局经 profile 组件映射渲染
 
@@ -102,3 +102,5 @@
 - 2026-08-05：初版创建；P2-M1~M4 典型案例素材生成完成（本地）；5 项决策定稿。
 - 2026-08-05：P1 批次 A（主题架构资源/数据/状态层）完成 —— themes 骨架(profile+manifest+resolveAsset) + themeAdapter(adaptSpot/Poet/Poem，迁移 FeaturedPoetCard/FeaturedSpotCard) + content 分风格 cities(real 展馆解说词风 / inkwash 诗意题跋风，迁移 mockCities) + useTheme 重构(themeProfile/switchTheme/resolveAsset/resolveContent，删 imageFor)；`npm run build` 通过。P1-3 enrichment 依赖组件待推广。P1-5 MapView 拆分(2338→<600)、P1-6 转场组件待做。
 - 2026-08-05：P1-5 MapView 拆分完成 -- Three.js 引擎(920行)抽为 useThreeSandbox composable(init/dispose/flyToCity/setTheme + onPickCity/onDoublePickCity 回调)；MapView script 1101 降至约 180 行；消除 clickLabel/onPointerDown 重复相机动画(共用 flyToCity)；handleResize 的 isReal 检查改为 renderer&&camera。`npm run build` 通过。总行数 2338 降至 1406（style 1020 占大，<600 总目标受 style 拖累，script 达成；style 拆分另议）。
+- 2026-08-05：P1-6 ThemeTransition 转场组件完成 -- useTheme.switchTheme 编排状态机(idle->enter->cover->exit->idle，cover 阶段换类触发 three.setTheme 在遮罩下重建)；ThemeTransition.vue 全屏遮罩(inkwash=墨晕 circle clip-path 从点击处扩散 / real=金色光条 inset 横扫)；transitionend 推进 + setTimeout 兜底 + Promise.race 超时(防 await 永久挂起死锁)；锁滚动(保存先前 overflow)+_switching 防抖+异常复位；prefers-reduced-motion 降级 opacity；useThreeSandbox.init 预热 GeoJSON 缓存。2 个 code review Agent 发现 3 中危(死锁/reduced-motion 时长/固定 setTimeout 撕裂)+4 低危，全部修复。ThemeSwitcher 改 handleToggle 传点击 origin；App.vue 挂载 ThemeTransition。`npm run build` 通过。P1-8 验收待做。
+- 2026-08-05：P1-6 转场回退 -- 运行时验证发现 real->inkwash 无效果（mask-ink 的 clip-path circle 用 var(--ox/--oy) 作圆心，origin 变化干扰半径扩散过渡；transition 移至 phase 类 + post-flush 强制重排均未解决，疑似 clip-path circle 过渡 + CSS var 时序不可靠）、inkwash->real 视觉不佳（金色光扫丑）。已回退为直接切换：ThemeSwitcher 恢复 toggle（走 switchTheme(false) 同步切换）、App.vue 移除 ThemeTransition 挂载。ThemeTransition.vue 组件 + useTheme.switchTheme 状态机代码保留作后续重做基础（后续考虑改用 GSAP/opacity 纯淡入方案或 SVG mask）。useThreeSandbox.init 的 GeoJSON 预热保留（无害优化）。P1-6 重新标记未完成。

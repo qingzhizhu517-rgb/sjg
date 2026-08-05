@@ -891,6 +891,9 @@ export function useThreeSandbox() {
   const init = (opts = {}) => {
     callbacks.onPickCity = opts.onPickCity
     callbacks.onDoublePickCity = opts.onDoublePickCity
+    // 预热 GeoJSON 缓存：inkwash 首次加载时 canvas 未挂载不启动渲染，
+    // 但提前 fetch+parse，避免首次切 real 时 fetch 阻塞转场遮罩导致露白。
+    void loadGeojson()
     if (canvas3d.value) {
       if (initTimerId) clearTimeout(initTimerId)
       initTimerId = setTimeout(() => { startThreeSafe() }, 150)
