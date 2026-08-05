@@ -205,7 +205,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
 import { useImage } from '../composables/useImage'
-import { mockCities, mockSpots } from '../config/mockDetailData'
+import { mockSpots } from '../config/mockDetailData'
+import { resolveContent } from '../content'
 import { cityIllustration, nextCityOf } from '../config/cityIllustrations'
 import api from '../api'
 import CityHero from '../components/homepage/CityHero.vue'
@@ -216,7 +217,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 gsap.registerPlugin(ScrollTrigger)
 
 const route = useRoute()
-const { isReal, isAnime } = useTheme()
+const { isReal, isAnime, theme } = useTheme()
 const { getImageUrl } = useImage()
 const region = ref(route.params.region)
 const spots = ref([])
@@ -243,7 +244,7 @@ const moreSpots = computed(() => spots.value.slice(2))
 const nextCity = computed(() => nextCityOf(region.value))
 
 const getCityData = (cityName) => {
-  return mockCities[cityName] || {
+  return resolveContent('cities', cityName, theme.value) || {
     english: 'CITY VIEW',
     subtitle: '古韵齐鲁 · 山东胜景',
     desc: '山东黄河流域历史悠久，山水壮阔，拥有极富人文底蕴的自然与文化遗迹。',

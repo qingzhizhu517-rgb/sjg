@@ -76,7 +76,7 @@ import { useImage } from '../../composables/useImage'
 
 const props = defineProps({
   name: { type: String, required: true },
-  // mockCities 静态档案（已合并默认值）
+  // 城市档案（resolveContent 按风格解析，已合并默认值）
   archive: { type: Object, default: () => ({}) },
   // 真实补全数据：{ spotCount, poemCount, firstSpotId, imageUrl, spotNames, poets, firstPoetId, ok }
   detail: { type: Object, default: null },

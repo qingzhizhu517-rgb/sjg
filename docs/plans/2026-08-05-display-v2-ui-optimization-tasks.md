@@ -9,7 +9,7 @@
 | 迭代 | 任务数 | 已完成 | 状态 |
 | :-- | :--: | :--: | :-- |
 | P0 地基清理 | 8 | 8 | ✅ 完成（2026-08-05） |
-| P1 主题架构 | 7 | 0 | 未开始 |
+| P1 主题架构 | 8 | 5 | 进行中（P1-5/6/8 待做）|
 | P2 视觉升级（含素材） | 9 | 4 | 典型案例素材已生成，页面改造未开始 |
 | P3 沉浸交互 | 6 | 0 | 未开始 |
 | P4 双布局补全 | 5 | 0 | 未开始 |
@@ -31,13 +31,13 @@
 
 ## P1 主题架构（依赖 P0-5）
 
-- [ ] **P1-1** 新建 `src/themes/` 骨架：`real/profile.js`、`inkwash/profile.js`、`index.js`（resolveProfile），profile 内含 tokens 引用、字体、动效预设、媒体偏好（real: video-first / inkwash: scroll-first）
-- [ ] **P1-2** 资源 manifest：`import.meta.glob('/public/media/{real,inkwash}/**')` 自动生成两风格资源清单；实现 `resolveAsset(key, theme)`，命名约定 `{场景}.{slug}.{real|ink}.{mp4|jpg|webp}`
-- [ ] **P1-3** themeAdapter：`adaptSpot/adaptPoet/adaptPoem(entity, theme)` 投影双字段为单一视图模型；组件只消费投影字段；废弃 `imageFor()` 与 `_anime` 字符串替换
-- [ ] **P1-4** 内容包分风格：`content/real/cities.js`（展馆解说词风）+ `content/inkwash/cities.js`（诗意题跋风），迁移 `mockDetailData.js` 城市文案，标注为"待后端数据接管"
+- [x] **P1-1** 新建 `src/themes/` 骨架：`real/profile.js`、`inkwash/profile.js`、`index.js`（resolveProfile），profile 内含 tokens 引用、字体、动效预设、媒体偏好（real: video-first / inkwash: scroll-first）
+- [x] **P1-2** 资源 manifest：`import.meta.glob('/public/media/{real,inkwash}/**')` 自动生成两风格资源清单；实现 `resolveAsset(key, theme)`，命名约定 `{场景}.{slug}.{real|ink}.{mp4|jpg|webp}`
+- [x] **P1-3** themeAdapter：`adaptSpot/adaptPoet/adaptPoem(entity, theme)` 投影双字段为单一视图模型；组件只消费投影字段；废弃 `imageFor()` 与 `_anime` 字符串替换
+- [x] **P1-4** 内容包分风格：`content/real/cities.js`（展馆解说词风）+ `content/inkwash/cities.js`（诗意题跋风），迁移 `mockDetailData.js` 城市文案，标注为"待后端数据接管"
 - [ ] **P1-5** MapView 拆分：Three.js 引擎抽为 `composables/useThreeSandbox.js`（init/dispose/flyTo/raycast 接口），MapView 只留编排；目标单文件 < 600 行
 - [ ] **P1-6** `ThemeTransition` 全屏转场组件：切 inkwash = 墨晕 clip-path 扩散；切 real = 金色光扫 + 亮度缓入；转场期间锁滚动/锁重复点击；three.js 在遮罩下重建
-- [ ] **P1-7** `useTheme` 重构：`switchTheme(withTransition)`、`themeProfile` computed、暴露 resolveAsset/resolveContent；保持 localStorage + `<html>` 类机制不变
+- [x] **P1-7** `useTheme` 重构：`switchTheme(withTransition)`、`themeProfile` computed、暴露 resolveAsset/resolveContent；保持 localStorage + `<html>` 类机制不变
 - [ ] **P1-8** 验收：切换风格无白闪（录屏逐帧检查）；MapView 双布局经 profile 组件映射渲染
 
 ## P2 视觉升级（依赖 P1 + 素材）
@@ -100,3 +100,4 @@
 
 ### 变更日志
 - 2026-08-05：初版创建；P2-M1~M4 典型案例素材生成完成（本地）；5 项决策定稿。
+- 2026-08-05：P1 批次 A（主题架构资源/数据/状态层）完成 —— themes 骨架(profile+manifest+resolveAsset) + themeAdapter(adaptSpot/Poet/Poem，迁移 FeaturedPoetCard/FeaturedSpotCard) + content 分风格 cities(real 展馆解说词风 / inkwash 诗意题跋风，迁移 mockCities) + useTheme 重构(themeProfile/switchTheme/resolveAsset/resolveContent，删 imageFor)；`npm run build` 通过。P1-3 enrichment 依赖组件待推广。P1-5 MapView 拆分(2338→<600)、P1-6 转场组件工程量大，单独迭代。

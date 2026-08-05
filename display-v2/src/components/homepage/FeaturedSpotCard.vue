@@ -18,16 +18,15 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useImage } from '../../composables/useImage'
+import { adaptSpot } from '../../composables/themeAdapter'
 
 const props = defineProps({
   spot: { type: Object, required: true },
 })
 defineEmits(['click'])
 
-const { getImageUrl } = useImage()
 const imageUrl = computed(() =>
-  props.spot.imageUrl ? getImageUrl(props.spot.imageUrl, false) : '',
+  props.spot.imageUrl ? adaptSpot(props.spot).image : '',
 )
 const onImgError = (e) => {
   e.target.style.display = 'none'

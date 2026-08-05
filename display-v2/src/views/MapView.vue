@@ -211,7 +211,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
 import { cssVarAlpha } from '../utils/cssToken'
-import { mockCities } from '../config/mockDetailData'
+import { resolveContent } from '../content'
 import api from '../api'
 import AiChatBox from '../components/AiChatBox.vue'
 import RiverHero from '../components/homepage/RiverHero.vue'
@@ -222,7 +222,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 const router = useRouter()
-const { isReal, isAnime } = useTheme()
+const { isReal, isAnime, theme } = useTheme()
 
 // SVG accent color computed at runtime for theme reactivity
 const svgAccent40 = computed(() => cssVarAlpha('--accent', 0.4))
@@ -346,7 +346,7 @@ const getParallaxStyle = (factor) => {
 const cities = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '滨州', '淄博', '东营']
 
 const getCityData = (cityName) => {
-  return mockCities[cityName] || {
+  return resolveContent('cities', cityName, theme.value) || {
     english: 'CITY VIEW',
     subtitle: '古韵齐鲁 · 山东胜景',
     desc: '齐鲁重镇，文脉千秋。',

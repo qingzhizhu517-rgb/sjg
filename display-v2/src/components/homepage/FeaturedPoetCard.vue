@@ -25,7 +25,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useImage } from '../../composables/useImage'
+import { adaptPoet } from '../../composables/themeAdapter'
 
 const props = defineProps({
   // poet: 已 enrichment，含 signaturePoem / poemCount
@@ -34,9 +34,8 @@ const props = defineProps({
 })
 defineEmits(['click'])
 
-const { getImageUrl } = useImage()
 const avatarUrl = computed(() =>
-  props.poet.avatarUrl ? getImageUrl(props.poet.avatarUrl, false) : '',
+  props.poet.avatarUrl ? adaptPoet(props.poet).avatar : '',
 )
 
 const onImgError = (e) => {
