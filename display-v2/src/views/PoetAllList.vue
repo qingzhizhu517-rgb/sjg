@@ -160,27 +160,39 @@
                 <span class="slider-active">{{ activeDynastyNames }}</span>
                 <span class="slider-range">{{ dynastyRange[0] }} — {{ dynastyRange[1] }}</span>
               </div>
-              <div class="slider-track">
-                <input
-                  type="range"
-                  class="slider-input slider-input--min"
-                  :min="DYNASTY_YEAR_RANGE[0]"
-                  :max="DYNASTY_YEAR_RANGE[1]"
-                  :value="dynastyRange[0]"
-                  @input="onSliderMinInput"
-                  :step="1"
-                  aria-label="朝代起点"
-                />
-                <input
-                  type="range"
-                  class="slider-input slider-input--max"
-                  :min="DYNASTY_YEAR_RANGE[0]"
-                  :max="DYNASTY_YEAR_RANGE[1]"
-                  :value="dynastyRange[1]"
-                  @input="onSliderMaxInput"
-                  :step="1"
-                  aria-label="朝代终点"
-                />
+              <div class="slider-row">
+                <div class="slider-track">
+                  <input
+                    type="range"
+                    class="slider-input slider-input--min"
+                    :min="DYNASTY_YEAR_RANGE[0]"
+                    :max="DYNASTY_YEAR_RANGE[1]"
+                    :value="dynastyRange[0]"
+                    @input="onSliderMinInput"
+                    :step="1"
+                    aria-label="朝代起点"
+                  />
+                  <input
+                    type="range"
+                    class="slider-input slider-input--max"
+                    :min="DYNASTY_YEAR_RANGE[0]"
+                    :max="DYNASTY_YEAR_RANGE[1]"
+                    :value="dynastyRange[1]"
+                    @input="onSliderMaxInput"
+                    :step="1"
+                    aria-label="朝代终点"
+                  />
+                </div>
+                <transition name="preview-fade" mode="out-in">
+                  <img
+                    v-if="previewImageUrl"
+                    :key="previewImageUrl"
+                    :src="previewImageUrl"
+                    :alt="previewDynasty?.name || ''"
+                    class="slider-preview"
+                  />
+                  <div v-else class="slider-preview slider-preview--empty">无</div>
+                </transition>
               </div>
             </div>
 
@@ -271,6 +283,19 @@ const activeDynastyNames = computed(() => {
     .join(' · ') || '无朝代'
 })
 
+// 滑块预览图: 优先中间朝代
+const previewDynasty = computed(() => {
+  const [min, max] = dynastyRange.value
+  const mid = Math.round((min + max) / 2)
+  return DYNASTIES
+    .filter((d) => d.start <= mid && d.end >= mid)
+    .sort((a, b) => (b.end - b.start) - (a.end - a.start))[0] || null
+})
+const previewImageUrl = computed(() => {
+  const d = previewDynasty.value
+  return d ? (DYNASTY_IMAGE[d.id] || null) : null
+})
+
 const getPoetStartYear = (dynastyId) => {
   const d = DYNASTIES.find((x) => x.id === dynastyId)
   return d ? d.start : 0
@@ -334,6 +359,15 @@ const getRelationStyles = (inkwash) => inkwash ? RELATION_STYLES_INKWASH : RELAT
 const DYNASTY_STROKE = {
   1: '#a78b6d', 2: '#92785c', 3: '#7d6b58', 4: '#c2410c',
   5: '#3b82a0', 6: '#6b7280', 7: '#92765a', 8: '#a89060', 9: '#9a4d3e',
+}
+
+// 朝代 id -> 本地主题图 (P0#1 资产生成)
+const DYNASTY_IMAGE = {
+  4: '/seedream/dynasty/tang.jpg',
+  5: '/seedream/dynasty/song.jpg',
+  6: '/seedream/dynasty/yuan.jpg',
+  7: '/seedream/dynasty/ming.jpg',
+  8: '/seedream/dynasty/qing.jpg',
 }
 
 // ==========================================
@@ -588,6 +622,15 @@ const initG6 = () => {
   }
 
   // P2#5 派生城市节点: 诗人 birthplace 提取山东相关城市
+  // city name -> {id, imageUrl} 映射 (本地 public 资源)
+  const CITY_IMAGE_MAP = {
+    '济南': '/seedream/city/jinan.jpg',
+    '泰安': '/seedream/city/taian.jpg',
+    '淄博': '/seedream/city/zibo.jpg',
+    '曲阜': '/seedream/city/qufu.jpg',
+    '青岛': '/seedream/city/qingdao.jpg',
+    '蓬莱': '/seedream/city/penglai.jpg',
+  }
   const cityByName = new Map()
   const poetCityMap = new Map() // poetId -> cityId
   for (const n of rawNodes) {
@@ -597,7 +640,12 @@ const initG6 = () => {
     const cityName = m[1]
     const cityId = `city_${cityName}`
     if (!cityByName.has(cityId)) {
-      cityByName.set(cityId, { id: cityId, name: `${cityName}`, poetIds: [] })
+      cityByName.set(cityId, {
+        id: cityId,
+        name: `${cityName}`,
+        poetIds: [],
+        imageUrl: CITY_IMAGE_MAP[cityName] || null,
+      })
     }
     cityByName.get(cityId).poetIds.push(String(n.id))
     poetCityMap.set(String(n.id), cityId)
@@ -628,9 +676,10 @@ const initG6 = () => {
         name: c.name,
         dynasty: '',
         dynastyId: null,
-        size: 36,
+        size: [84, 56],
         isPoet: false,
         isCity: true,
+        imageUrl: c.imageUrl,
         fillColor: graphTheme.cardBg,
         strokeColor: graphTheme.textSecondary,
       })),
@@ -719,23 +768,34 @@ const initG6 = () => {
           alphaMin: 0.01,
         },
     node: {
-      type: (d) => (d.isCity ? 'rect' : 'circle'),
-      style: (d) => d.isCity
-        ? {
+      type: (d) => (d.isCity && d.imageUrl ? 'image' : (d.isCity ? 'rect' : 'circle')),
+      style: (d) => {
+        if (d.isCity && d.imageUrl) {
+          return {
+            src: d.imageUrl,
+            size: d.size,
+            cursor: 'pointer',
+            opacity: 1,
+          }
+        }
+        if (d.isCity) {
+          return {
             fill: d.fillColor,
             stroke: d.strokeColor,
             lineWidth: 1.5,
             radius: 4,
-            size: [70, 36],
+            size: d.size,
             cursor: 'pointer',
           }
-        : {
-            fill: d.fillColor,
-            stroke: d.strokeColor,
-            lineWidth: 2.5,
-            size: d.size || 50,
-            cursor: 'pointer',
-          },
+        }
+        return {
+          fill: d.fillColor,
+          stroke: d.strokeColor,
+          lineWidth: 2.5,
+          size: d.size || 50,
+          cursor: 'pointer',
+        }
+      },
       labelText: (d) => d.isCity ? d.name : `${d.name} · ${d.dynasty || ''}`,
       labelPlacement: 'bottom',
       labelOffsetY: 8,
@@ -1444,7 +1504,36 @@ onBeforeUnmount(() => {
 .slider-track {
   position: relative;
   height: 24px;
+  flex: 1;
 }
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.slider-preview {
+  width: 96px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  flex-shrink: 0;
+}
+.slider-preview--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 11px;
+  background: var(--card-bg);
+}
+.preview-fade-enter-active,
+.preview-fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+.preview-fade-enter-from,
+.preview-fade-leave-to { opacity: 0; }
 .slider-input {
   position: absolute;
   inset: 0;
