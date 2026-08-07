@@ -102,7 +102,7 @@ onMounted(() => {
       0,
     )
   }
-  tl.fromTo(el.querySelector('.city-hero__veil'), { opacity: 1 }, { opacity: 0.55, duration: 1.2 })
+  tl.fromTo(el.querySelector('.city-hero__veil'), { opacity: 1 }, { opacity: 0.55, duration: 1.2 }, 0)
     .fromTo(el.querySelector('.city-hero__back'), { y: -20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, 0.2)
     .fromTo(el.querySelector('.eyebrow-chip'), { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5 }, 0.4)
     .fromTo(el.querySelector('.title-main'), { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 1 }, 0.45)
