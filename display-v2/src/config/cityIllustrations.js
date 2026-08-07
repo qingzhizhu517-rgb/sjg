@@ -81,19 +81,6 @@ export const CITY_ILLUSTRATIONS = {
 }
 
 // 河段顺序索引（菏泽 0 → 东营 8），用于"沿河而下·下一站"导航
-// 城市名 -> 素材 slug（与 public/media/real/cities/ 文件命名对应，供 resolveCityHeroMedia 使用）
-export const CITY_SLUGS = {
-  菏泽: 'heze',
-  济宁: 'jining',
-  泰安: 'taian',
-  聊城: 'liaocheng',
-  济南: 'jinan',
-  德州: 'dezhou',
-  淄博: 'zibo',
-  滨州: 'binzhou',
-  东营: 'dongying',
-}
-
 export const cityRiverIndex = (name) => CITY_RIVER_ORDER.indexOf(name)
 
 export const nextCityOf = (name) => {
@@ -109,3 +96,16 @@ export const cityIllustration = (name) =>
     quote: '黄河九曲，齐鲁揽胜。',
     quoteBy: '山河图志',
   }
+
+// 城市名 -> 素材 slug（与 public/media/real/cities/ 文件命名对应，供 resolveCityHeroMedia 使用）
+export const CITY_SLUGS = {
+  菏泽: 'heze',
+  济宁: 'jining',
+  泰安: 'taian',
+  聊城: 'liaocheng',
+  济南: 'jinan',
+  德州: 'dezhou',
+  淄博: 'zibo',
+  滨州: 'binzhou',
+  东营: 'dongying',
+}
