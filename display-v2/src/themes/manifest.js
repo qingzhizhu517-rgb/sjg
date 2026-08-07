@@ -6,7 +6,13 @@
 // 兼容现有命名：hero-map.mp4 / hero-open.mp4 / hero-scroll.png / spots/three_confucius.png
 // resolveAsset 的 key 即资源 base 名（去扩展名、去 -poster），如 'hero-map' / 'hero-scroll'。
 
-const OssBase = import.meta.env.VITE_OSS_BUCKET_URL || ''
+import { resolveMediaBase } from '../utils/mediaBase'
+
+// dev 恒用本地 public/media；prod 才走 OSS（素材上传见 P2-M9）
+const OssBase = resolveMediaBase({
+  dev: import.meta.env.DEV,
+  ossUrl: import.meta.env.VITE_OSS_BUCKET_URL,
+})
 
 const realKeys = Object.keys(import.meta.glob('/public/media/real/**/*.{mp4,jpg,jpeg,png,webp}'))
 const inkwashKeys = Object.keys(import.meta.glob('/public/media/inkwash/**/*.{mp4,jpg,jpeg,png,webp}'))

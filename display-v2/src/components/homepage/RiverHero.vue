@@ -3,7 +3,7 @@
     <!-- real：全屏视频背景 + 深色蒙版 -->
     <template v-if="isReal">
       <video
-        v-if="!reduce && heroBg?.type === 'video'"
+        v-if="!reduce && !videoErr && heroBg?.type === 'video'"
         class="rh__video-bg"
         :src="heroBg.url"
         :poster="heroBg.poster"
@@ -12,6 +12,7 @@
         loop
         playsinline
         aria-hidden="true"
+        @error="videoErr = true"
       />
       <img v-else class="rh__video-bg" :src="heroBg?.poster || heroImg" alt="" decoding="async" />
       <div class="rh__overlay"></div>
@@ -29,6 +30,7 @@
         playsinline
         aria-hidden="true"
         @ended="showScroll = true"
+        @error="showScroll = true"
       />
       <img v-else :src="heroBg?.url || heroImg" alt="" class="rh__img" decoding="async" />
       <div class="rh__art-frame"></div>
@@ -98,8 +100,11 @@ const inkOpen = computed(() => (!isReal.value ? resolveAsset('hero-open') : null
 
 // inkwash 开场视频播完定格长卷
 const showScroll = ref(false)
+// real 视频加载失败降级 poster/插画
+const videoErr = ref(false)
 watch(isReal, () => {
   showScroll.value = false
+  videoErr.value = false
 })
 
 const reduce = ref(
