@@ -1,8 +1,34 @@
 <template>
-  <section ref="root" class="rh">
-    <!-- 左：国画主视觉 -->
-    <div ref="artRef" class="rh__art" aria-hidden="true">
-      <img :src="heroImg" alt="" class="rh__img" />
+  <section ref="root" class="rh" :class="isReal ? 'rh--real' : 'rh--inkwash'">
+    <!-- real：全屏视频背景 + 深色蒙版 -->
+    <template v-if="isReal">
+      <video
+        v-if="!reduce && heroBg?.type === 'video'"
+        class="rh__video-bg"
+        :src="heroBg.url"
+        :poster="heroBg.poster"
+        autoplay
+        muted
+        loop
+        playsinline
+      />
+      <img v-else class="rh__video-bg" :src="heroBg?.poster" alt="" />
+      <div class="rh__overlay"></div>
+    </template>
+
+    <!-- inkwash：左 art 区（开场晕染视频 -> 定格长卷） -->
+    <div v-else ref="artRef" class="rh__art" aria-hidden="true">
+      <video
+        v-if="!reduce && !showScroll && inkOpen?.type === 'video'"
+        class="rh__img"
+        :src="inkOpen.url"
+        :poster="inkOpen.poster"
+        autoplay
+        muted
+        playsinline
+        @ended="showScroll = true"
+      />
+      <img v-else :src="heroBg?.url || heroImg" alt="" class="rh__img" />
       <div class="rh__art-frame"></div>
       <!-- 画轴左侧题款 -->
       <p class="rh__art-kuan">黄河之水天上来</p>
@@ -10,7 +36,7 @@
       <span class="rh__art-seal"></span>
     </div>
 
-    <!-- 右：分行大标题 + 数据 + CTA -->
+    <!-- 右：分行大标题 + 数据 + CTA（双布局共用） -->
     <div class="rh__content">
       <div ref="headRef" class="rh__head">
         <span class="rh__seal">{{ sealChar }}</span>
@@ -42,9 +68,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import gsap from 'gsap'
 import heroImg from '../../assets/illustrations/00-hero-yellow-river.png'
+import { useTheme } from '../../composables/useTheme'
 
 defineProps({
   eyebrow: { type: String, default: '山东 · 黄河入海' },
@@ -61,6 +88,23 @@ defineProps({
 })
 defineEmits(['cta'])
 
+const { isReal, resolveAsset } = useTheme()
+
+// 媒体解析：real -> hero-map 视频（+poster）；inkwash -> hero-scroll 长卷图 + hero-open 开场视频
+const heroBg = computed(() => (isReal.value ? resolveAsset('hero-map') : resolveAsset('hero-scroll')))
+const inkOpen = computed(() => (!isReal.value ? resolveAsset('hero-open') : null))
+
+// inkwash 开场视频播完定格长卷
+const showScroll = ref(false)
+watch(isReal, () => {
+  showScroll.value = false
+})
+
+const reduce = ref(
+  typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+)
+
 const root = ref(null)
 const artRef = ref(null)
 const headRef = ref(null)
@@ -70,14 +114,10 @@ const statsRef = ref(null)
 const ctaRef = ref(null)
 let tl = null
 
-const prefersReduce = () =>
-  typeof window !== 'undefined' &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
 onMounted(() => {
-  if (prefersReduce() || !root.value) return
+  if (reduce.value || !root.value) return
   tl = gsap.timeline({ delay: 0.15 })
-  if (artRef.value)
+  if (!isReal.value && artRef.value)
     tl.from(artRef.value, { opacity: 0, x: -28, duration: 0.9, ease: 'power3.out' })
   if (headRef.value)
     tl.from(
@@ -112,16 +152,82 @@ onBeforeUnmount(() => {
 <style scoped>
 .rh {
   position: relative;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+/* ============ real：全屏视频背景 ============ */
+.rh--real {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 72vh;
+  padding: 96px 56px;
+}
+.rh__video-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+.rh__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.55) 100%);
+  z-index: 1;
+}
+.rh--real .rh__content {
+  position: relative;
+  z-index: 2;
+  max-width: 640px;
+  text-align: center;
+}
+.rh--real .rh__head {
+  justify-content: center;
+}
+.rh--real .rh__title {
+  align-items: center;
+}
+.rh--real .rh__title-line {
+  color: #f5efe3;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+.rh--real .rh__subtitle {
+  color: rgba(245, 239, 227, 0.85);
+  margin-left: auto;
+  margin-right: auto;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+.rh--real .rh__stats {
+  border-color: rgba(245, 239, 227, 0.25);
+}
+.rh--real .rh__stat-label,
+.rh--real .rh__stat-suffix {
+  color: rgba(245, 239, 227, 0.7);
+}
+.rh--real .rh__cta {
+  background: #f5efe3;
+  color: #1a1206;
+  border-color: #f5efe3;
+}
+.rh--real .rh__cta:hover {
+  background: var(--accent);
+  color: #f5efe3;
+  border-color: var(--accent);
+}
+
+/* ============ inkwash：左右分栏 ============ */
+.rh--inkwash {
   display: grid;
   grid-template-columns: 55% 45%;
   gap: 48px;
   align-items: center;
   padding: 64px 56px 96px;
-  background: var(--bg-primary);
-  overflow: hidden;
 }
 
-/* ============ 左：国画 ============ */
+/* ============ 左：国画/媒体 ============ */
 .rh__art {
   position: relative;
   aspect-ratio: 4 / 3;
@@ -325,10 +431,13 @@ onBeforeUnmount(() => {
 
 /* ============ 响应式 ============ */
 @media (max-width: 1024px) {
-  .rh {
+  .rh--inkwash {
     grid-template-columns: 1fr;
     gap: 32px;
     padding: 48px 32px 72px;
+  }
+  .rh--real {
+    padding: 72px 32px;
   }
   .rh__content {
     max-width: 640px;
@@ -338,9 +447,13 @@ onBeforeUnmount(() => {
   }
 }
 @media (max-width: 640px) {
-  .rh {
+  .rh--inkwash {
     padding: 32px 20px 56px;
     gap: 24px;
+  }
+  .rh--real {
+    padding: 56px 20px;
+    min-height: 60vh;
   }
   .rh__title-line {
     font-size: clamp(40px, 11vw, 56px);
