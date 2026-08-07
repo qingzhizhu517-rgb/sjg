@@ -136,7 +136,4 @@ const onImgError = (e) => {
   border-color: var(--accent);
   box-shadow: 0 12px 28px color-mix(in srgb, var(--text-primary) 12%, transparent);
 }
-@media (max-width: 640px) {
-  .spot__cover { aspect-ratio: 16 / 10; }
-}
 </style>
