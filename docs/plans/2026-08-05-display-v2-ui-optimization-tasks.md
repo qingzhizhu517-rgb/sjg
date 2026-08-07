@@ -38,7 +38,7 @@
 - [x] **P1-5** MapView 拆分：Three.js 引擎抽为 `composables/useThreeSandbox.js`（init/dispose/flyTo/raycast 接口），MapView 只留编排；目标单文件 < 600 行
 - [ ] **P1-6** `ThemeTransition` 全屏转场组件：切 inkwash = 墨晕 clip-path 扩散；切 real = 金色光扫 + 亮度缓入；转场期间锁滚动/锁重复点击；three.js 在遮罩下重建（⚠️ 首轮实现有问题：real->inkwash 无效果、inkwash->real 丑；已回退为直接切换，ThemeTransition.vue + useTheme.switchTheme 代码保留待后续重做）
 - [x] **P1-7** `useTheme` 重构：`switchTheme(withTransition)`、`themeProfile` computed、暴露 resolveAsset/resolveContent；保持 localStorage + `<html>` 类机制不变
-- [ ] **P1-8** 验收：切换风格无白闪（录屏逐帧检查）；MapView 双布局经 profile 组件映射渲染
+- [~] **P1-8** 验收：切换风格无白闪（录屏逐帧检查）；MapView 双布局经 profile 组件映射渲染（代码就绪，待人工录屏验收）
 
 ## P2 视觉升级（依赖 P1 + 素材）
 
@@ -59,11 +59,11 @@
 
 ### 页面改造
 
-- [ ] **P2-1** 首页双风格 Hero：real 视频背景（muted/autoplay/loop/playsinline + poster + 深色蒙版）；inkwash 晕染开场后定格长卷；`prefers-reduced-motion`/省流模式降级静态图
-- [ ] **P2-2** CityHero 背景媒体化：real 城市实景大图（srcset + blur-up LQIP）；inkwash 复用城市插画做卷轴横展开场
-- [ ] **P2-3** 详情页意境背景：PoemDetail/SpotDetail 取关联图模糊铺底（OSS 图片处理参数或 CSS blur），PoemDetail 增加视觉锚点 Hero
-- [ ] **P2-4** 图片工程规范：全站 `<img>` 补 `loading="lazy" decoding="async"`；列表图统一 16:10 + `object-fit: cover`；视频 `preload="none"` + IntersectionObserver 入视口播放
-- [ ] **P2-5** 验收：Lighthouse LCP < 2.5s；单页媒体增量 < 3MB；两风格 Hero 录屏对比确认差异化
+- [x] **P2-1** 首页双风格 Hero：real 视频背景（muted/autoplay/loop/playsinline + poster + 深色蒙版）；inkwash 晕染开场后定格长卷；`prefers-reduced-motion`/省流模式降级静态图（2026-08-07 完成；⚠️ 计划外改动：MapView 原 `v-if="isReal"` 门控使 inkwash 分支死代码，已解除门控双主题渲染，旧 anime-ink-container 地图区块保留待 P4-1 重建）
+- [x] **P2-2** CityHero 背景媒体化：real 城市实景大图 + 缺素材回退插画（`resolveCityHeroMedia` 纯函数 + 6 单测）；inkwash 卷轴横展开场落在 anime-container 现有 `.city-image-box` 插画上（2026-08-07 完成；⚠️ 计划外决策：城市页 inkwash 是独立布局不渲染 CityHero，动画落插画框而非 CityHero；srcset/LQIP 待 OSS 图片处理参数后补）
+- [x] **P2-3** 详情页意境背景：PoemDetail/SpotDetail 取关联图模糊铺底（CSS blur 60-70px，占位印章自动排除）；PoemDetail 增加 38vh 视觉锚点 Hero 带（2026-08-07 完成）
+- [x] **P2-4** 图片工程规范：全站 `<img>` 补 `loading="lazy" decoding="async"`（首屏 LCP 图仅 async）；景观缩略图 16:10 + `object-fit: cover`（3 处，既有比例/flex 固定高 2 处跳过）；PoemDetail 视频 `preload="none"`（2026-08-07 完成；IntersectionObserver 入视口播放本轮未做——仅 hero 视频在首屏，无收益）
+- [~] **P2-5** 验收：Lighthouse LCP < 2.5s；单页媒体增量 < 3MB；两风格 Hero 录屏对比确认差异化（代码全就绪，构建+9 单测通过；待人工走查 + Lighthouse）
 
 ## P3 沉浸交互（依赖 P1）
 
