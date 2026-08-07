@@ -15,9 +15,15 @@
   </div>
 
 <div class="poem-detail" v-else>
+    <div v-if="moodBg" class="mood-bg" :style="{ backgroundImage: `url(${moodBg})` }" aria-hidden="true"></div>
     <!-- Back -->
     <div class="detail-top">
       <button class="back-link" @click="$router.back()">← 返回</button>
+    </div>
+
+    <!-- 视觉锚点：关联景观图 Hero 带 -->
+    <div v-if="moodBg" class="poem-hero-anchor" :style="{ backgroundImage: `url(${moodBg})` }" aria-hidden="true">
+      <div class="poem-hero-anchor__veil"></div>
     </div>
 
     <!-- Poem Header -->
@@ -93,6 +99,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '../api'
 import { parseTags } from '../utils/poem'
+import { adaptSpot, adaptPoem } from '../composables/themeAdapter'
+import { pickMoodBackdrop } from '../utils/moodBackdrop'
 import PoemAnalysis from '../components/PoemAnalysis.vue'
 
 const route = useRoute()
@@ -102,6 +110,14 @@ const dynasty = ref(null)
 const spot = ref(null)
 const showAnnotation = ref(false)
 const errorMsg = ref(null)
+
+// 意境背景：优先诗词自身配图，其次关联景点图；占位印章不算
+const moodBg = computed(() =>
+  pickMoodBackdrop(
+    poem.value ? adaptPoem(poem.value).image : null,
+    spot.value ? adaptSpot(spot.value).image : null,
+  ),
+)
 
 const poemLines = computed(() => poem.value?.content?.split('\n').filter(l => l.trim()) || [])
 
@@ -126,6 +142,7 @@ onMounted(async () => {
   max-width: 800px;
   margin: 0 auto;
   padding: 24px 24px 80px;
+  position: relative;
 }
 
 /* Top bar */
@@ -544,6 +561,39 @@ onMounted(async () => {
 .error-back-link:hover {
   color: var(--accent);
   border-color: var(--accent);
+}
+
+/* 意境背景：关联图模糊铺底，内容层之上无交互 */
+.mood-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  filter: blur(60px) saturate(0.85);
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+:global(.theme-inkwash) .mood-bg {
+  filter: blur(70px) grayscale(0.4);
+  opacity: 0.12;
+}
+
+/* 视觉锚点 Hero 带 */
+.poem-hero-anchor {
+  position: relative;
+  height: 38vh;
+  min-height: 220px;
+  margin: 0 calc(50% - 50vw); /* 破容器全宽 */
+  background-size: cover;
+  background-position: center 35%;
+}
+
+.poem-hero-anchor__veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--bg-primary) 0%, transparent 30%, transparent 70%, var(--bg-primary) 100%);
 }
 
 </style>

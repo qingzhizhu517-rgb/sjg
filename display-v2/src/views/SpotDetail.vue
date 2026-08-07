@@ -1,5 +1,6 @@
 <template>
   <div class="spot-detail" :class="themeClass" v-if="spot">
+    <div v-if="moodBg" class="mood-bg" :style="{ backgroundImage: `url(${moodBg})` }" aria-hidden="true"></div>
     <!-- BACK BUTTON -->
     <div class="detail-top">
       <router-link to="/map" class="back-link">← 返回地图</router-link>
@@ -146,6 +147,7 @@ import { mockSpots } from '../config/mockDetailData'
 import * as echarts from 'echarts'
 import api from '../api'
 import { cssVar, cssVarAlpha } from '../utils/cssToken'
+import { pickMoodBackdrop } from '../utils/moodBackdrop'
 
 const route = useRoute()
 const { themeClass, isReal, isAnime } = useTheme()
@@ -161,6 +163,8 @@ const imageUrl = computed(() => {
   const url = isReal.value ? spot.value.imageUrl : (spot.value.imageAnimeUrl || spot.value.imageUrl)
   return getImageUrl(url, isAnime.value)
 })
+
+const moodBg = computed(() => pickMoodBackdrop(imageUrl.value))
 
 const getSpotData = (name) => {
   return mockSpots[name] || {
@@ -1016,6 +1020,23 @@ onBeforeUnmount(() => {
   .scroll-body {
     width: 95%;
   }
+}
+
+/* 意境背景：关联图模糊铺底，内容层之上无交互 */
+.mood-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  filter: blur(60px) saturate(0.85);
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+:global(.theme-inkwash) .mood-bg {
+  filter: blur(70px) grayscale(0.4);
+  opacity: 0.12;
 }
 </style>
 
