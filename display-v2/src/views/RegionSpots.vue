@@ -111,8 +111,8 @@
             <div class="city-subtitle-tag">{{ getCityData(region).subtitle }}</div>
           </div>
 
-          <div class="city-image-box card">
-            <img :src="cityRepresentativeImage" :alt="region" class="city-landscape-img" />
+          <div ref="cityImageBoxRef" class="city-image-box card">
+            <img :src="illustrationData.img" :alt="region" class="city-landscape-img" />
           </div>
 
           <div class="city-intro-section">
@@ -226,6 +226,11 @@ const spots = ref([])
 const loaded = ref(false)
 const errorMsg = ref(null)
 const introRef = ref(null)
+const cityImageBoxRef = ref(null)
+const reduce = ref(
+  typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+)
 
 const illustrationData = computed(() => cityIllustration(region.value))
 const heroMedia = computed(() =>
@@ -296,12 +301,16 @@ const getImage = (spot) => {
   return getImageUrl(url, isAnime.value)
 }
 
-const cityRepresentativeImage = computed(() => {
-  if (!spots.value.length) return ''
-  return getImage(spots.value[0])
-})
-
 onMounted(async () => {
+  // inkwash 城市插画卷轴横展开场；reduced-motion 跳过
+  if (isAnime.value && !reduce.value && cityImageBoxRef.value) {
+    gsap.fromTo(
+      cityImageBoxRef.value,
+      { clipPath: 'inset(0 100% 0 0)' },
+      { clipPath: 'inset(0 0% 0 0)', duration: 1.4, ease: 'power2.inOut' },
+    )
+  }
+
   try {
     const data = await api.get('/spots', { params: { region: region.value, size: 100 } })
     spots.value = data.records

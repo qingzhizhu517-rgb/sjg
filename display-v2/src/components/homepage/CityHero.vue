@@ -1,7 +1,7 @@
 <template>
   <section ref="heroRef" class="city-hero">
     <!-- 背景媒体层：视频（real 有素材）或图片（插画/实景图） -->
-    <div ref="bgRef" class="city-hero__bg" aria-hidden="true">
+    <div class="city-hero__bg" aria-hidden="true">
       <video
         v-if="media?.type === 'video' && !reduce"
         class="city-hero__bg-media"
@@ -63,9 +63,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { gsap } from 'gsap'
-import { useTheme } from '../../composables/useTheme'
 
 const props = defineProps({
   city: { type: String, required: true },
@@ -80,8 +79,6 @@ const props = defineProps({
 })
 
 const heroRef = ref(null)
-const { isReal } = useTheme()
-const bgRef = ref(null)
 const reduce = ref(
   typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -89,19 +86,12 @@ const reduce = ref(
 
 const hasQuote = computed(() => !!props.quote)
 
+let tl = null
+
 onMounted(() => {
   const el = heroRef.value
   if (!el) return
-  const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
-  // inkwash 插画：卷轴横向展开（从左到右揭示）；reduced-motion 跳过
-  if (!isReal.value && !reduce.value && bgRef.value) {
-    tl.fromTo(
-      bgRef.value,
-      { clipPath: 'inset(0 100% 0 0)' },
-      { clipPath: 'inset(0 0% 0 0)', duration: 1.4, ease: 'power2.inOut' },
-      0,
-    )
-  }
+  tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
   tl.fromTo(el.querySelector('.city-hero__veil'), { opacity: 1 }, { opacity: 0.55, duration: 1.2 }, 0)
     .fromTo(el.querySelector('.city-hero__back'), { y: -20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, 0.2)
     .fromTo(el.querySelector('.eyebrow-chip'), { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5 }, 0.4)
@@ -111,6 +101,11 @@ onMounted(() => {
   if (hasQuote.value) {
     tl.fromTo(el.querySelector('.city-hero__quote'), { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7 }, 0.95)
   }
+})
+
+onBeforeUnmount(() => {
+  if (tl) tl.kill()
+  tl = null
 })
 </script>
 
@@ -421,5 +416,9 @@ onMounted(() => {
   .stat-chip__num {
     font-size: 18px;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-line { animation: none; }
 }
 </style>
