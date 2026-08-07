@@ -12,6 +12,7 @@
     <div class="real-container" v-if="isReal">
       <CityHero
         :city="region"
+        :media="heroMedia"
         :illustration="illustrationData.img"
         :reach="illustrationData.reach"
         :reach-en="illustrationData.reachEn"
@@ -207,7 +208,8 @@ import { useTheme } from '../composables/useTheme'
 import { useImage } from '../composables/useImage'
 import { mockSpots } from '../config/mockDetailData'
 import { resolveContent } from '../content'
-import { cityIllustration, nextCityOf } from '../config/cityIllustrations'
+import { cityIllustration, nextCityOf, CITY_SLUGS } from '../config/cityIllustrations'
+import { resolveCityHeroMedia } from '../utils/cityHeroMedia'
 import api from '../api'
 import CityHero from '../components/homepage/CityHero.vue'
 import CityFeatureSpot from '../components/homepage/CityFeatureSpot.vue'
@@ -217,7 +219,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 gsap.registerPlugin(ScrollTrigger)
 
 const route = useRoute()
-const { isReal, isAnime, theme } = useTheme()
+const { isReal, isAnime, theme, resolveAsset } = useTheme()
 const { getImageUrl } = useImage()
 const region = ref(route.params.region)
 const spots = ref([])
@@ -226,6 +228,14 @@ const errorMsg = ref(null)
 const introRef = ref(null)
 
 const illustrationData = computed(() => cityIllustration(region.value))
+const heroMedia = computed(() =>
+  resolveCityHeroMedia({
+    isReal: isReal.value,
+    slug: CITY_SLUGS[region.value],
+    resolveAsset,
+    illustration: illustrationData.value?.img,
+  }),
+)
 const cityData = computed(() => getCityData(region.value))
 
 const heroStats = computed(() => {

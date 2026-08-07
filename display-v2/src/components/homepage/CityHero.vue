@@ -1,5 +1,24 @@
 <template>
-  <section ref="heroRef" class="city-hero" :style="{ backgroundImage: `url(${illustration})` }">
+  <section ref="heroRef" class="city-hero">
+    <!-- 背景媒体层：视频（real 有素材）或图片（插画/实景图） -->
+    <div ref="bgRef" class="city-hero__bg" aria-hidden="true">
+      <video
+        v-if="media?.type === 'video' && !reduce"
+        class="city-hero__bg-media"
+        :src="media.url"
+        :poster="media.poster"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="metadata"
+      />
+      <div
+        v-else
+        class="city-hero__bg-media city-hero__bg-media--img"
+        :style="{ backgroundImage: `url(${media?.url || illustration})` }"
+      ></div>
+    </div>
     <div class="city-hero__veil"></div>
 
     <div class="city-hero__back">
@@ -46,6 +65,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { gsap } from 'gsap'
+import { useTheme } from '../../composables/useTheme'
 
 const props = defineProps({
   city: { type: String, required: true },
@@ -55,10 +75,17 @@ const props = defineProps({
   subtitle: { type: String, default: '' },
   quote: { type: String, default: '' },
   quoteBy: { type: String, default: '' },
-  stats: { type: Array, default: () => [] }
+  stats: { type: Array, default: () => [] },
+  media: { type: Object, default: null } // resolveCityHeroMedia 返回值；null 时回退 illustration
 })
 
 const heroRef = ref(null)
+const { isReal } = useTheme()
+const bgRef = ref(null)
+const reduce = ref(
+  typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+)
 
 const hasQuote = computed(() => !!props.quote)
 
@@ -66,6 +93,15 @@ onMounted(() => {
   const el = heroRef.value
   if (!el) return
   const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+  // inkwash 插画：卷轴横向展开（从左到右揭示）；reduced-motion 跳过
+  if (!isReal.value && !reduce.value && bgRef.value) {
+    tl.fromTo(
+      bgRef.value,
+      { clipPath: 'inset(0 100% 0 0)' },
+      { clipPath: 'inset(0 0% 0 0)', duration: 1.4, ease: 'power2.inOut' },
+      0,
+    )
+  }
   tl.fromTo(el.querySelector('.city-hero__veil'), { opacity: 1 }, { opacity: 0.55, duration: 1.2 })
     .fromTo(el.querySelector('.city-hero__back'), { y: -20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, 0.2)
     .fromTo(el.querySelector('.eyebrow-chip'), { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5 }, 0.4)
@@ -83,8 +119,6 @@ onMounted(() => {
   position: relative;
   width: 100%;
   min-height: 92vh;
-  background-size: cover;
-  background-position: center 30%;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -92,6 +126,24 @@ onMounted(() => {
   padding: 120px 6vw 64px;
   box-sizing: border-box;
   overflow: hidden;
+}
+
+.city-hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.city-hero__bg-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.city-hero__bg-media--img {
+  background-size: cover;
+  background-position: center 30%;
 }
 
 .city-hero__veil {
@@ -332,6 +384,9 @@ onMounted(() => {
   .city-hero {
     padding: 100px 24px 56px;
     min-height: 100svh;
+  }
+
+  .city-hero__bg-media--img {
     background-position: 62% center;
   }
 
