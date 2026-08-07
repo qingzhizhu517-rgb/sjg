@@ -11,8 +11,9 @@
         muted
         loop
         playsinline
+        aria-hidden="true"
       />
-      <img v-else class="rh__video-bg" :src="heroBg?.poster" alt="" />
+      <img v-else class="rh__video-bg" :src="heroBg?.poster || heroImg" alt="" />
       <div class="rh__overlay"></div>
     </template>
 
@@ -26,6 +27,7 @@
         autoplay
         muted
         playsinline
+        aria-hidden="true"
         @ended="showScroll = true"
       />
       <img v-else :src="heroBg?.url || heroImg" alt="" class="rh__img" />
@@ -179,8 +181,6 @@ onBeforeUnmount(() => {
   z-index: 1;
 }
 .rh--real .rh__content {
-  position: relative;
-  z-index: 2;
   max-width: 640px;
   text-align: center;
 }

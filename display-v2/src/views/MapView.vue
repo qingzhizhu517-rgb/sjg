@@ -4,7 +4,6 @@
 
     <!-- 黄河意境 Hero：左国画主视觉 + 右分行大标题 -->
     <RiverHero
-      v-if="isReal"
       :stats="heroStats"
       @cta="scrollToMap"
     />
