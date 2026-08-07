@@ -2,7 +2,7 @@
   <section ref="root" class="th">
     <!-- 背景：时间长河国画（全幅横卷，低透明） -->
     <div ref="artRef" class="th__art" aria-hidden="true">
-      <img :src="riverImg" alt="" class="th__img" />
+      <img :src="riverImg" alt="" class="th__img" decoding="async" />
       <div class="th__art-veil"></div>
     </div>
 

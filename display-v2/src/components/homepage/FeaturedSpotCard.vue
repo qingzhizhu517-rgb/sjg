@@ -1,7 +1,7 @@
 <template>
   <article class="spot hover-lift" tabindex="0" role="link" @click="$emit('click')" @keydown.enter="$emit('click')">
     <div class="spot__cover">
-      <img v-if="imageUrl" :src="imageUrl" :alt="spot.name" @error="onImgError" />
+      <img v-if="imageUrl" :src="imageUrl" :alt="spot.name" loading="lazy" decoding="async" @error="onImgError" />
       <span v-else class="spot__cover-fallback">{{ spot.name ? spot.name.charAt(0) : '景' }}</span>
       <span class="spot__region">{{ spot.region }}</span>
     </div>
@@ -48,7 +48,7 @@ const onImgError = (e) => {
 }
 .spot__cover {
   position: relative;
-  height: 160px;
+  aspect-ratio: 16 / 10;
   overflow: hidden;
   background: linear-gradient(135deg, #e8e0cc, #d4cab0);
 }
@@ -137,6 +137,6 @@ const onImgError = (e) => {
   box-shadow: 0 12px 28px color-mix(in srgb, var(--text-primary) 12%, transparent);
 }
 @media (max-width: 640px) {
-  .spot__cover { height: 140px; }
+  .spot__cover { aspect-ratio: 16 / 10; }
 }
 </style>

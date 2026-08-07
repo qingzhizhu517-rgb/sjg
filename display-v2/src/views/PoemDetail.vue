@@ -81,7 +81,7 @@
     <div v-if="poem.videoUrl" class="detail-section">
       <h2 class="section-heading">诗词赏析视频</h2>
       <div class="media-wrap">
-        <video :src="poem.videoUrl" controls class="video-player" />
+        <video :src="poem.videoUrl" controls preload="none" class="video-player" />
       </div>
     </div>
 

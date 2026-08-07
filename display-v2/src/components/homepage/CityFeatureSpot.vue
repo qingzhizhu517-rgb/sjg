@@ -2,7 +2,7 @@
   <article ref="featureRef" class="city-feature" :class="{ 'is-reversed': reversed }">
     <div class="feature__media">
       <div class="feature__image-wrap">
-        <img :src="image" :alt="name" class="feature__image" />
+        <img :src="image" :alt="name" class="feature__image" loading="lazy" decoding="async" />
         <div class="feature__image-veil"></div>
       </div>
       <span class="feature__num">{{ padNum(index + 1) }}</span>

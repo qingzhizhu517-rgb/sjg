@@ -90,6 +90,8 @@
                     :src="getPoetAvatar(p)"
                     :alt="p.name"
                     class="poet-img"
+                    loading="lazy"
+                    decoding="async"
                     @error="onAvatarError"
                   />
                   <span class="poet-avatar-stamp">{{ p.name ? p.name.charAt(0) : '文' }}</span>
@@ -143,6 +145,8 @@
                         :src="getPoetAvatar(p)"
                         :alt="p.name"
                         class="poet-img"
+                        loading="lazy"
+                        decoding="async"
                         @error="onAvatarError"
                       />
                       <span class="poet-avatar-stamp">{{ p.name ? p.name.charAt(0) : '文' }}</span>

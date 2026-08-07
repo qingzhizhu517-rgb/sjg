@@ -17,7 +17,7 @@
     <!-- 代表景观图 + 景点预览 + 计数 -->
     <div class="city-card__media">
       <div class="city-card__img-wrap">
-        <img v-if="imgSrc && imgOk" :src="imgSrc" :alt="name" class="city-card__img" @error="onImgError" />
+        <img v-if="imgSrc && imgOk" :src="imgSrc" :alt="name" class="city-card__img" loading="lazy" decoding="async" @error="onImgError" />
         <span v-else class="city-card__img-fallback">{{ name ? name.charAt(0) : '城' }}</span>
       </div>
       <div class="city-card__stats">
@@ -248,7 +248,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
 .city-card__img-wrap {
   width: 96px;
-  height: 72px;
+  aspect-ratio: 16 / 10;
   flex-shrink: 0;
   border-radius: 3px;
   overflow: hidden;

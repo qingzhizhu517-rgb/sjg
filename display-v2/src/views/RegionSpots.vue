@@ -79,7 +79,7 @@
             @keydown.enter="$router.push(`/spots/${spot.id}`)"
           >
             <div class="more-spot__image-wrap">
-              <img :src="getImage(spot)" :alt="spot.name" class="more-spot__image" />
+              <img :src="getImage(spot)" :alt="spot.name" class="more-spot__image" loading="lazy" decoding="async" />
             </div>
             <div class="more-spot__body">
               <h3 class="more-spot__title">{{ spot.name }}</h3>
@@ -112,7 +112,7 @@
           </div>
 
           <div ref="cityImageBoxRef" class="city-image-box card">
-            <img :src="illustrationData.img" :alt="region" class="city-landscape-img" />
+            <img :src="illustrationData.img" :alt="region" class="city-landscape-img" decoding="async" />
           </div>
 
           <div class="city-intro-section">
@@ -175,7 +175,7 @@
 
               <div class="spot-card-body-section">
                 <div class="spot-image-box">
-                  <img :src="getImage(spot)" :alt="spot.name" class="spot-list-img" />
+                  <img :src="getImage(spot)" :alt="spot.name" class="spot-list-img" loading="lazy" decoding="async" />
                 </div>
                 <div class="spot-vertical-poetry">
                   {{ getSpotData(spot.name).verticalText }}
@@ -547,7 +547,7 @@ onMounted(async () => {
 
 .more-spot__image-wrap {
   position: relative;
-  height: 180px;
+  aspect-ratio: 16 / 10;
   overflow: hidden;
 }
 

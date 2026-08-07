@@ -13,7 +13,7 @@
         playsinline
         aria-hidden="true"
       />
-      <img v-else class="rh__video-bg" :src="heroBg?.poster || heroImg" alt="" />
+      <img v-else class="rh__video-bg" :src="heroBg?.poster || heroImg" alt="" decoding="async" />
       <div class="rh__overlay"></div>
     </template>
 
@@ -30,7 +30,7 @@
         aria-hidden="true"
         @ended="showScroll = true"
       />
-      <img v-else :src="heroBg?.url || heroImg" alt="" class="rh__img" />
+      <img v-else :src="heroBg?.url || heroImg" alt="" class="rh__img" decoding="async" />
       <div class="rh__art-frame"></div>
       <!-- 画轴左侧题款 -->
       <p class="rh__art-kuan">黄河之水天上来</p>

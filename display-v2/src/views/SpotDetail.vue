@@ -21,12 +21,12 @@
           <div class="scroll-wrapper" v-if="isAnime">
             <div class="scroll-rod top-rod"></div>
             <div class="scroll-body card">
-              <img :src="imageUrl" :alt="spot.name" class="scroll-img" />
+              <img :src="imageUrl" :alt="spot.name" class="scroll-img" decoding="async" />
             </div>
             <div class="scroll-rod bottom-rod"></div>
           </div>
           <div class="portrait-frame card" v-else>
-            <img :src="imageUrl" :alt="spot.name" class="portrait-img" />
+            <img :src="imageUrl" :alt="spot.name" class="portrait-img" decoding="async" />
             <div class="frame-border-decor"></div>
           </div>
         </div>
@@ -88,7 +88,7 @@
             >
               <div class="poem-card-header">
                 <div class="poet-avatar-wrap" v-if="poem.poet">
-                  <img :src="getPoetAvatar(poem.poet)" :alt="poem.poet.name" class="poet-avatar-img" />
+                  <img :src="getPoetAvatar(poem.poet)" :alt="poem.poet.name" class="poet-avatar-img" loading="lazy" decoding="async" />
                 </div>
                 <div class="poem-meta-info">
                   <h4 class="poem-card-title">{{ poem.title }}</h4>

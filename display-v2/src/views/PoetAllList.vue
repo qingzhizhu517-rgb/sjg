@@ -59,6 +59,8 @@
                     :src="getPoetAvatar(p)"
                     :alt="p.name"
                     class="poet-img"
+                    loading="lazy"
+                    decoding="async"
                     @error="onAvatarError"
                   />
                   <span class="poet-avatar-stamp">{{ p.name ? p.name.charAt(0) : '文' }}</span>
@@ -193,6 +195,8 @@
                     :src="previewImageUrl"
                     :alt="previewDynasty?.name || ''"
                     class="slider-preview"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div v-else class="slider-preview slider-preview--empty">无</div>
                 </transition>

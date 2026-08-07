@@ -59,7 +59,7 @@
           @click="$emit('go', c.name)"
         >
           <div class="rcr__city-frame">
-            <img :src="c.img" :alt="c.name" class="rcr__city-img" loading="lazy" />
+            <img :src="c.img" :alt="c.name" class="rcr__city-img" loading="lazy" decoding="async" />
           </div>
           <div class="rcr__city-info">
             <span class="rcr__city-tag">{{ c.tag }}</span>
