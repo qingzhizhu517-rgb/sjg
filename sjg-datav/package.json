@@ -1,0 +1,32 @@
+{
+  "name": "sjg-datav",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.7.6",
+    "@react-three/fiber": "^9.4.2",
+    "autofit.js": "^3.2.8",
+    "echarts": "^6.0.0",
+    "gsap": "^3.13.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "styled-components": "^6.1.19",
+    "swr": "^2.5.0",
+    "three": "^0.183.2",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.16",
+    "@types/react-dom": "^19.1.9",
+    "@types/three": "^0.181.0",
+    "@vitejs/plugin-react": "^6.0.0",
+    "typescript": "~5.9.3",
+    "vite": "^8.0.0"
+  }
+}
