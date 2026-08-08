@@ -66,6 +66,12 @@ public class ChatService {
                 String sys = systemPrompt.replace("{rag_context}",
                         ragCtx.isEmpty() ? "（无相关资料）" : ragCtx);
 
+                // 注入前端页面上下文
+                String contextHint = buildContextHint(req.context());
+                if (!contextHint.isEmpty()) {
+                    sys = sys + "\n\n" + contextHint;
+                }
+
                 List<ChatMessage> messages = new ArrayList<>();
                 messages.add(new ChatMessage("system", sys));
                 if (req.history() != null) {
@@ -117,5 +123,22 @@ public class ChatService {
             times.add(now);
             return true;
         }
+    }
+
+    /**
+     * 根据前端上下文生成提示语，注入到 system prompt 末尾。
+     */
+    private String buildContextHint(Map<String, String> context) {
+        if (context == null || context.isEmpty()) return "";
+        String type = context.getOrDefault("type", "");
+        return switch (type) {
+            case "city" -> "【上下文】用户正在浏览「" + context.getOrDefault("city", "") + "」城市页面，请优先回答与该城市相关的问题。";
+            case "poet" -> "【上下文】用户正在查看一位诗人的详情页，请优先回答与该诗人相关的问题。";
+            case "poem" -> "【上下文】用户正在查看一首诗词的详情页，请优先回答与该诗词及其作者相关的问题。";
+            case "spot" -> "【上下文】用户正在查看一处文学景观的详情页，请优先回答与该景观相关的问题。";
+            case "timeline" -> "【上下文】用户正在浏览朝代时间线页面，请优先回答与朝代、历史时期相关的问题。";
+            case "poets" -> "【上下文】用户正在浏览诗人列表页面，请优先回答与齐鲁名士相关的问题。";
+            default -> "";
+        };
     }
 }

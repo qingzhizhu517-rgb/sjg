@@ -98,7 +98,8 @@
 </template>
 
 <script setup>
-import { ref, nextTick, reactive } from 'vue'
+import { ref, nextTick, reactive, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 
@@ -120,12 +121,70 @@ const isTyping = ref(false)
 const chatLogRef = ref(null)
 const inputRef = ref(null)
 
-const quickList = [
-  '李白与杜甫在山东同游过哪些地方？',
-  '大明湖有哪些经典诗词？',
-  '带我去泰山风景区一键抵达。',
-  '齐鲁文化大模型包含什么？'
-]
+// ===== 上下文感知 =====
+const route = useRoute()
+
+const chatContext = computed(() => {
+  const ctx = { type: 'map' }
+  if (route.name === 'RegionSpots') {
+    ctx.type = 'city'
+    ctx.city = route.params.region
+  } else if (route.name === 'PoetDetail') {
+    ctx.type = 'poet'
+    ctx.poetId = route.params.id
+  } else if (route.name === 'PoemDetail') {
+    ctx.type = 'poem'
+    ctx.poemId = route.params.id
+  } else if (route.name === 'SpotDetail') {
+    ctx.type = 'spot'
+    ctx.spotId = route.params.id
+  } else if (route.name === 'Timeline') {
+    ctx.type = 'timeline'
+  } else if (route.name === 'Poets' || route.name === 'PoetsAll') {
+    ctx.type = 'poets'
+  }
+  return ctx
+})
+
+const quickList = computed(() => {
+  const ctx = chatContext.value
+  if (ctx.type === 'city') {
+    return [
+      `${ctx.city}有哪些著名诗人？`,
+      `${ctx.city}的文学景观有哪些？`,
+      `推荐${ctx.city}的经典诗词`,
+      `${ctx.city}的历史文化背景`,
+    ]
+  }
+  if (ctx.type === 'poet') {
+    return [
+      `这位诗人的代表作是什么？`,
+      `他在山东留下过哪些足迹？`,
+      `与他同时代的齐鲁诗人有哪些？`,
+    ]
+  }
+  if (ctx.type === 'poem') {
+    return [
+      `这首诗的创作背景是什么？`,
+      `这首诗的意境赏析`,
+      `这位诗人还写过哪些名篇？`,
+    ]
+  }
+  if (ctx.type === 'timeline') {
+    return [
+      `哪个朝代的齐鲁诗人最多？`,
+      `唐宋时期的山东文学特点`,
+      `齐鲁文脉的演变历程`,
+    ]
+  }
+  // 默认（地图/首页）
+  return [
+    '李白与杜甫在山东同游过哪些地方？',
+    '大明湖有哪些经典诗词？',
+    '齐鲁文化大模型包含什么？',
+    '沿黄九城各有什么文学特色？',
+  ]
+})
 
 const messages = ref([
   {
@@ -170,7 +229,7 @@ const sendMessage = async () => {
     const res = await fetch('/api/public/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-      body: JSON.stringify({ message: text, history })
+      body: JSON.stringify({ message: text, history, context: chatContext.value })
     })
     if (!res.ok || !res.body) {
       isTyping.value = false

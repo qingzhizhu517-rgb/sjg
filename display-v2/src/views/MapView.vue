@@ -251,9 +251,6 @@
     <section class="sn-section sn-footer-cta">
       <FooterCTA @cta="scrollToMap" />
     </section>
-
-    <!-- AI Chatbot Box (Global Sidebar) -->
-    <AiChatBox />
   </div>
 </template>
 
@@ -264,7 +261,6 @@ import { useTheme } from '../composables/useTheme'
 import { cssVarAlpha } from '../utils/cssToken'
 import { resolveContent } from '../content'
 import api from '../api'
-import AiChatBox from '../components/AiChatBox.vue'
 import RiverHero from '../components/homepage/RiverHero.vue'
 import RiverCityRail from '../components/homepage/RiverCityRail.vue'
 import CityDetailCard from '../components/homepage/CityDetailCard.vue'

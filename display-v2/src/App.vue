@@ -155,6 +155,9 @@
         <p class="footer-copy">Digital Humanities · Literary Landscapes of the Yellow River Basin</p>
       </div>
     </footer>
+
+    <!-- AI 小文全局挂载 -->
+    <AiChatBox />
   </div>
 </template>
 
@@ -164,6 +167,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useTheme } from './composables/useTheme'
 import ThemeSwitcher from './components/ThemeSwitcher.vue'
 import RouteProgress from './components/RouteProgress.vue'
+import AiChatBox from './components/AiChatBox.vue'
 import { resolveNavDirection, createProgress } from './utils/routeFeedback'
 import './styles/real.css'
 import './styles/inkwash.css'
