@@ -293,6 +293,15 @@ export function useThreeSandbox() {
     controls.minDistance = 5
     controls.maxDistance = 35
 
+    // 触屏（coarse pointer）：单指留给页面纵向滚动，双指操作沙盘；单击=预览卡（不走双击进入）
+    const isCoarse =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(pointer: coarse)').matches
+    if (isCoarse) {
+      controls.touches.ONE = null // 单指不旋转 → 浏览器接管滚动
+      renderer.domElement.style.touchAction = 'pan-y' // 覆盖 OrbitControls 内置 touch-action: none
+    }
+
     // 4. Lights & Geographically calibrated shadows
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
     scene.add(ambientLight)
@@ -697,8 +706,8 @@ export function useThreeSandbox() {
         // 编排负责 openCity（单/双击都触发）
         callbacks.onPickCity?.(clickedCity)
 
-        if (isDoubleClick) {
-          // 双击直接跳路由（编排负责）
+        if (isDoubleClick && !isCoarse) {
+          // 双击直接跳路由（编排负责）；触屏无双击，进入由预览卡按钮完成
           callbacks.onDoublePickCity?.(clickedCity)
         } else {
           // 单击：相机飞行（引擎内部）

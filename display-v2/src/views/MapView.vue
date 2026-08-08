@@ -73,7 +73,7 @@
               <h2 class="hud-title">三维地理文脉舱</h2>
             </div>
           </div>
-          <p class="hud-desc">拖拽旋转视角，双击节点飞往对应城市。</p>
+          <p class="hud-desc">{{ isCoarsePointer ? '双指旋转缩放视角，单指上下滑动浏览页面。' : '拖拽旋转视角，双击节点飞往对应城市。' }}</p>
           <div class="hud-stats">
             <template v-for="(s, i) in hudStats" :key="i">
               <span v-if="i > 0" class="stat-divider"></span>
@@ -103,7 +103,7 @@
             </button>
           </div>
           <div class="hud-tips">
-            <span class="tip-txt">说明：单击发光节点预览城市文学名胜，双击进入城市专栏。</span>
+            <span class="tip-txt">{{ isCoarsePointer ? '说明：点按发光节点预览城市文学名胜，点卡片「进入景观」进入城市专栏。' : '说明：单击发光节点预览城市文学名胜，双击进入城市专栏。' }}</span>
           </div>
           </div>
 
@@ -232,6 +232,11 @@ const svgAccent40 = computed(() => cssVarAlpha('--accent', 0.4))
 const showLabels = ref(true)
 const regions = ref([])
 const heroStats = ref([])
+
+// 触屏设备：HUD 文案与沙盘交互双态（单击预览、无双击）
+const isCoarsePointer = ref(
+  typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches,
+)
 
 // ===== 城市详情卡（点击节点 -> 右册页 dock 显示）=====
 const { enrichCity, ensurePoets } = useCityEnrichment()
