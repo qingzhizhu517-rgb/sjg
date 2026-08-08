@@ -8,7 +8,9 @@
     </div>
   </div>
   <ErrorState v-else-if="loadError" :message="loadError" @retry="loadSpot" />
-  <div class="spot-detail" :class="themeClass" v-else-if="spot">
+  <!-- 接口 200 但数据为空的兜底（loading=false、无 error、无 spot） -->
+  <EmptyState v-else-if="!spot" icon="景" message="此景观暂未收录" hint="返回地图看看别处" />
+  <div class="spot-detail" :class="themeClass" v-else>
     <div v-if="moodBg" class="mood-bg" :style="{ backgroundImage: `url(${moodBg})` }" aria-hidden="true"></div>
     <!-- BACK BUTTON -->
     <div class="detail-top">

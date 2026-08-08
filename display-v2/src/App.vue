@@ -178,6 +178,7 @@ const progressValue = ref(0)
 const progressVisible = ref(false)
 const navDirection = ref('fade')
 let progressTimer = null
+let progressHideTimer = null
 let lastPos = null
 let routerHookCleanups = []
 
@@ -238,6 +239,8 @@ onMounted(() => {
   const removeBefore = router.beforeEach((to, from, next) => {
     navDirection.value = resolveNavDirection(lastPos, window.history.state?.position ?? null)
     lastPos = window.history.state?.position ?? lastPos
+    // 清掉上一轮导航遗留的淡出定时器，防快速连跳时进度条被中途掐灭
+    clearTimeout(progressHideTimer)
     progress.start()
     progressValue.value = progress.value()
     progressVisible.value = true
@@ -253,7 +256,7 @@ onMounted(() => {
     progressTimer = null
     progress.finish()
     progressValue.value = 1
-    setTimeout(() => {
+    progressHideTimer = setTimeout(() => {
       progressVisible.value = false
       progress.reset()
       progressValue.value = 0
@@ -266,6 +269,7 @@ onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
   routerHookCleanups.forEach((remove) => remove())
   clearInterval(progressTimer)
+  clearTimeout(progressHideTimer)
 })
 </script>
 

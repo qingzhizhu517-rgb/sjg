@@ -3,7 +3,6 @@
     class="route-progress"
     :class="{ 'route-progress--done': progress >= 1 }"
     :style="{ transform: `scaleX(${progress})`, opacity: visible ? 1 : 0 }"
-    role="progressbar"
     aria-hidden="true"
   ></div>
 </template>
