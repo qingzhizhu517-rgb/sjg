@@ -25,7 +25,9 @@
 
 <script setup>
 import { useTheme } from '../composables/useTheme'
-const { isReal, toggle } = useTheme()
+const { isReal, switchTheme } = useTheme()
+
+const toggle = () => switchTheme(true)
 </script>
 
 <style scoped>
