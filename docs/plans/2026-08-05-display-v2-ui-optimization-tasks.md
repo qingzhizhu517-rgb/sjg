@@ -11,7 +11,7 @@
 | P0 地基清理 | 8 | 8 | ✅ 完成（2026-08-05） |
 | P1 主题架构 | 8 | 7 | 进行中（仅 P1-6 转场重做待做）|
 | P2 视觉升级（含素材） | 9 | 9 | ✅ 页面改造完成（2026-08-08 验收）；大批素材 ⏸ 后期 |
-| P3 沉浸交互 | 6 | 3 | 进行中（P3-2 半成；P3-1/P3-6 待做）|
+| P3 沉浸交互 | 6 | 5 | 进行中（P3-6 真机验收待用户操作）|
 | P4 双布局补全 | 5 | 0 | 未开始 |
 | P5 AI 全局化 + 接口风格化 | 5 | 0 | 未开始 |
 | 后端下期跟进（⏸ 占位） | 3 | 0 | 阻塞·等排期 |
@@ -67,12 +67,12 @@
 
 ## P3 沉浸交互（依赖 P1）
 
-- [ ] **P3-1** 首页滚动叙事：视频 Hero → StatTicker 数字滚动 → 沙盘/长卷 sticky 段落（滚动驱动镜头缓推）→ RiverCityRail 横向视差 → 名城精选 → 页尾 CTA
-- [~] **P3-2** 路由共享元素过渡：城市卡图 FLIP 至城市页 Hero；进入=推入/返回=浮出的方向感；路由级顶部进度条（2026-08-08 批次 A：进度条 + 方向感过渡完成——RouteProgress 组件 + createProgress 状态机 5 单测 + page-slide/page-pop/page-fade 三态过渡；FLIP 共享元素延期批次 B）
+- [x] **P3-1** 首页滚动叙事：视频 Hero → StatTicker 数字滚动 → 沙盘/长卷 sticky 段落（滚动驱动镜头缓推）→ RiverCityRail 横向视差 → 名城精选 → 页尾 CTA（2026-08-08 批次 B：新建 useScrollNarrative composable 编排 sticky+视差+相机缓推；MapView 模板重构为 6 段 scroll 叙事；新建 FamousCities + FooterCTA 组件；useThreeSandbox 暴露 getCamera/getControls；叙事文本数据 scrollNarrative.js；12 单测全部通过）
+- [x] **P3-2** 路由共享元素过渡：城市卡图 FLIP 至城市页 Hero；进入=推入/返回=浮出的方向感；路由级顶部进度条（2026-08-08 批次 A：进度条 + 方向感过渡完成——RouteProgress 组件 + createProgress 状态机 5 单测 + page-slide/page-pop/page-fade 三态过渡；批次 B：新建 useFlipTransition composable——module-level singleton capture→animate FLIP；MapView.onCardGo 捕获 CityDetailCard 图片 rect；RegionSpots.onMounted 执行 FLIP 动画；CityDetailCard 加 data-flip-origin 标记；computeFlipDeltas 纯函数 4 单测）
 - [x] **P3-3** 三态统一：列表页全接 SkeletonBlock；空态主题化插画+引导文案；错误态统一 ErrorState（重试 + 错误信息）（2026-08-08 批次 A：新建 EmptyState 印章组件；PoetList/PoetAllList/RegionSpots/Timeline/SpotDetail 空态接入；RegionSpots/PoemDetail/PoetAllList 自定义 error 收敛 ErrorState；⚠️ 设计决策：空态用印章字+文案而非插画图片（YAGNI）；Timeline 三栏内联微空态保留轻量文案不进 EmptyState）
 - [x] **P3-4** 触屏适配：3D 沙盘单击=预览卡、卡片按钮=进入（去双击交互）；HUD 文案按 `pointer: coarse` 切换；OrbitControls 与页面滚动手势冲突处理（2026-08-08 批次 A：coarse 时 touches.ONE=null + touchAction pan-y 单指滚动让位；双击进入仅桌面；HUD 双态文案；⚠️ isCoarsePointer 一次性取值未监听 change，混合设备切换输入方式不更新——可接受；真机手势待 P3-6）
 - [x] **P3-5** 加载态清理：PoemDetail "⌛ 加载中" → 诗笺骨架屏；其余页面排查补骨架（2026-08-08 批次 A：PoemDetail 诗笺骨架 + error/loading 拆分；SpotDetail 补 loading/error/空数据三态（修复加载整页空白 + 主 fetch 无 try/catch 隐患）；RegionSpots/Timeline/PoetList 列表+图谱骨架；PoetAllList 图谱纯文本加载清理；全站 grep"加载中"仅剩 aria-label 与 HUD 数字占位）
-- [ ] **P3-6** 验收：移动端（iOS Safari + Android Chrome）全流程走查无手势冲突、无错位
+- [~] **P3-6** 验收：移动端（iOS Safari + Android Chrome）全流程走查无手势冲突、无错位（2026-08-08 批次 B：代码全部就绪，build + 24 单测全过；真机走查清单已出，待用户实际设备验证）
 
 ## P4 双布局补全（依赖 P1，目标 8/8 页）
 
@@ -112,3 +112,4 @@
 - 2026-08-05：P1-6 ThemeTransition 转场组件完成 -- useTheme.switchTheme 编排状态机(idle->enter->cover->exit->idle，cover 阶段换类触发 three.setTheme 在遮罩下重建)；ThemeTransition.vue 全屏遮罩(inkwash=墨晕 circle clip-path 从点击处扩散 / real=金色光条 inset 横扫)；transitionend 推进 + setTimeout 兜底 + Promise.race 超时(防 await 永久挂起死锁)；锁滚动(保存先前 overflow)+_switching 防抖+异常复位；prefers-reduced-motion 降级 opacity；useThreeSandbox.init 预热 GeoJSON 缓存。2 个 code review Agent 发现 3 中危(死锁/reduced-motion 时长/固定 setTimeout 撕裂)+4 低危，全部修复。ThemeSwitcher 改 handleToggle 传点击 origin；App.vue 挂载 ThemeTransition。`npm run build` 通过。P1-8 验收待做。
 - 2026-08-05：P1-6 转场回退 -- 运行时验证发现 real->inkwash 无效果（mask-ink 的 clip-path circle 用 var(--ox/--oy) 作圆心，origin 变化干扰半径扩散过渡；transition 移至 phase 类 + post-flush 强制重排均未解决，疑似 clip-path circle 过渡 + CSS var 时序不可靠）、inkwash->real 视觉不佳（金色光扫丑）。已回退为直接切换：ThemeSwitcher 恢复 toggle（走 switchTheme(false) 同步切换）、App.vue 移除 ThemeTransition 挂载。ThemeTransition.vue 组件 + useTheme.switchTheme 状态机代码保留作后续重做基础（后续考虑改用 GSAP/opacity 纯淡入方案或 SVG mask）。useThreeSandbox.init 的 GeoJSON 预热保留（无害优化）。P1-6 重新标记未完成。
 - 2026-08-08：P3 批次 A（状态层+触屏+路由反馈）完成 -- 实施计划 `2026-08-08-p3-interaction-batch-a.md`。P3-5 加载态清理（诗笺/详情/列表/图谱骨架屏，SpotDetail 修复加载空白+无 try/catch 隐患）；P3-3 三态统一（新建 EmptyState 印章组件，ErrorState 全站收敛，PoemDetail/RegionSpots/PoetAllList 自定义 error 清除）；P3-4 触屏适配（coarse 时沙盘 touches.ONE=null+pan-y 滚动让位、去双击进入、HUD 双态文案）；P3-2-lite（RouteProgress 顶部进度条 + createProgress 状态机 + 方向感过渡，routeFeedback 纯函数 5 单测）。code review 3 中危（进度条淡出定时器竞态/SpotDetail 空数据无兜底/RouteProgress role 与 aria-hidden 冲突）全部修复。`npm run build` + 17 单测全过。4 commits: 66b565a/8bcc410/136fc37/8ce06ce。P3-2 FLIP 共享元素、P3-1 滚动叙事、P3-6 真机验收留批次 B。
+- 2026-08-08：P3 批次 B（滚动叙事+FLIP+验收）完成 -- 实施计划 `docs/plans/2026-08-08-p3-interaction-batch-b.md`。P3-1 首页滚动叙事（新建 useScrollNarrative composable — sticky 沙盘 camera dolly/inner content 横向平移 + RiverCityRail parallax；MapView 模板重构为 6 段 scroll 叙事；新建 FamousCities + FooterCTA 组件；叙事文本数据 scrollNarrative.js；useThreeSandbox 暴露 getCamera/getControls；3 单测）。P3-2 FLIP 共享元素（新建 useFlipTransition composable — module-level singleton capture→animate；computeFlipDeltas 纯函数 4 单测；MapView.onCardGo 捕获 CityDetailCard 图片 rect；RegionSpots.onMounted 执行 FLIP 动画）。P3-6 真机验收清单就绪（代码全部就绪，待用户设备验证）。`npm run build` + 24 单测全过。新增文件 7 个、修改 4 个。

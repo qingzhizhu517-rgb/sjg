@@ -218,7 +218,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
 import { useImage } from '../composables/useImage'
@@ -234,6 +234,7 @@ import ErrorState from '../components/homepage/ErrorState.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { useFlipTransition } from '../composables/useFlipTransition'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -345,6 +346,16 @@ onMounted(async () => {
   }
 
   await loadSpots()
+  await nextTick()
+
+  // P3-2 FLIP: 城市预览卡 → 城市页 Hero 共享元素过渡
+  const { animate: animateFlip } = useFlipTransition()
+  const flipTarget = document.querySelector(
+    isReal.value ? '.city-hero__bg-media--img' : '.city-landscape-img'
+  )
+  if (flipTarget) {
+    animateFlip(flipTarget, region.value, { duration: 0.6 })
+  }
 
   // 城市引言滚动揭示
   if (introRef.value) {

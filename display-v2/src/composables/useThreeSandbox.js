@@ -181,7 +181,7 @@ export function useThreeSandbox() {
   const cityLabels = ref([])
   const errorMsg = ref(null)
 
-  // ===== 引擎内部状态（不暴露） =====
+  // ===== 引擎内部状态 =====
   let scene, camera, renderer, controls, animationFrameId
   const cityObjects = []
   let pointerDownRef = null
@@ -940,5 +940,8 @@ export function useThreeSandbox() {
     dispose,
     flyToCity,
     setTheme,
+    /** 供外部 composable（如 useScrollNarrative）读取相机状态做 scroll-driven 插值 */
+    getCamera: () => camera,
+    getControls: () => controls,
   }
 }
