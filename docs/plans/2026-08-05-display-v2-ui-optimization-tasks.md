@@ -12,7 +12,7 @@
 | P1 主题架构 | 8 | 7 | 进行中（仅 P1-6 转场重做待做）|
 | P2 视觉升级（含素材） | 9 | 9 | ✅ 页面改造完成（2026-08-08 验收）；大批素材 ⏸ 后期 |
 | P3 沉浸交互 | 6 | 5 | 进行中（P3-6 真机验收待用户操作）|
-| P4 双布局补全 | 5 | 4 | 进行中（仅 P4-2 PoetList 合并待做）|
+| P4 双布局补全 | 5 | 5 | ✅ 完成（2026-08-08）|
 | P5 AI 全局化 + 接口风格化 | 5 | 0 | 未开始 |
 | 后端下期跟进（⏸ 占位） | 3 | 0 | 阻塞·等排期 |
 
@@ -77,7 +77,7 @@
 ## P4 双布局补全（依赖 P1，目标 8/8 页）
 
 - [x] **P4-1** inkwash 水墨长卷地图升级（2026-08-08）：横向滚动画卷 + 触摸惯性滑动；scroll-middle-paper 改为 overflow-x: auto + parallax-layer 宽度扩展至 200% + SVG 黄河曲线 viewBox 扩展至 2000 + 城市印章坐标调整
-- [ ] **P4-2** PoetList 双布局 + `/poets/all` 合并：PoetAllList 能力（全名录 + 关系图谱）并入 PoetList 视图切换（长廊/图谱/全览三 tab）；`/poets/all` 路由重定向 `/poets?view=all`；删除 PoetAllList.vue
+- [x] **P4-2** PoetList 双布局 + `/poets/all` 合并（2026-08-08）：PoetAllList 能力并入 PoetList 视图切换（长廊/全名录/图谱三 tab）；`/poets/all` 路由重定向 `/poets?view=all`；删除 PoetAllList.vue
 - [x] **P4-3** PoemDetail 双布局（2026-08-08）：real 信笺式横排 / inkwash 诗笺式竖排（writing-mode: vertical-rl）；ink-poem-scroll 三栏结构（左侧印章朝代 + 中央竖排诗文 + 右侧注解面板）
 - [x] **P4-4** Timeline 双布局（2026-08-08）：real 年表 / inkwash **朝代年轮划舟**
   - [x] P4-4-M 素材就绪（2026-08-08）：`public/media/inkwash/timeline/` 下 10 张全部生成裁剪完成 —— `scroll-map-base.png`（基础长卷）、`boat-rower.png`（小舟精灵透明）、`scene-{qin,han,weijin,tang,song,yuan,ming,qing}.png`（8 朝代场景，均 1216×764）
