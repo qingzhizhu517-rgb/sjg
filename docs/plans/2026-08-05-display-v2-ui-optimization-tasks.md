@@ -9,7 +9,7 @@
 | 迭代 | 任务数 | 已完成 | 状态 |
 | :-- | :--: | :--: | :-- |
 | P0 地基清理 | 8 | 8 | ✅ 完成（2026-08-05） |
-| P1 主题架构 | 8 | 7 | 进行中（仅 P1-6 转场重做待做）|
+| P1 主题架构 | 8 | 8 | ✅ 完成（2026-08-08）|
 | P2 视觉升级（含素材） | 9 | 9 | ✅ 页面改造完成（2026-08-08 验收）；大批素材 ⏸ 后期 |
 | P3 沉浸交互 | 6 | 5 | 进行中（P3-6 真机验收待用户操作）|
 | P4 双布局补全 | 5 | 5 | ✅ 完成（2026-08-08）|
@@ -36,7 +36,7 @@
 - [x] **P1-3** themeAdapter：`adaptSpot/adaptPoet/adaptPoem(entity, theme)` 投影双字段为单一视图模型；组件只消费投影字段；废弃 `imageFor()` 与 `_anime` 字符串替换
 - [x] **P1-4** 内容包分风格：`content/real/cities.js`（展馆解说词风）+ `content/inkwash/cities.js`（诗意题跋风），迁移 `mockDetailData.js` 城市文案，标注为"待后端数据接管"
 - [x] **P1-5** MapView 拆分：Three.js 引擎抽为 `composables/useThreeSandbox.js`（init/dispose/flyTo/raycast 接口），MapView 只留编排；目标单文件 < 600 行
-- [ ] **P1-6** `ThemeTransition` 全屏转场组件：切 inkwash = 墨晕 clip-path 扩散；切 real = 金色光扫 + 亮度缓入；转场期间锁滚动/锁重复点击；three.js 在遮罩下重建（⚠️ 首轮实现有问题：real->inkwash 无效果、inkwash->real 丑；已回退为直接切换，ThemeTransition.vue + useTheme.switchTheme 代码保留待后续重做）
+- [x] **P1-6** `ThemeTransition` 全屏转场组件（2026-08-08 重做）：弃用 clip-path 方案，改用 GSAP 纯 opacity 淡入淡出；inkwash=暗色径向渐变 / real=暖金色径向渐变；转场期间锁滚动/锁重复点击；three.js 在遮罩下重建
 - [x] **P1-7** `useTheme` 重构：`switchTheme(withTransition)`、`themeProfile` computed、暴露 resolveAsset/resolveContent；保持 localStorage + `<html>` 类机制不变
 - [x] **P1-8** 验收：切换风格无白闪（录屏逐帧检查）；MapView 双布局经 profile 组件映射渲染（2026-08-08 人工验收通过）
 
