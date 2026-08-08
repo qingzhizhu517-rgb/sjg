@@ -261,6 +261,20 @@
     <section class="sn-section sn-footer-cta">
       <FooterCTA @cta="scrollToMap" />
     </section>
+
+    <!-- 数据大屏悬浮按钮 -->
+    <a
+      href="http://localhost:5180"
+      target="_blank"
+      class="datav-float-button"
+      title="打开数据大屏"
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <line x1="3" y1="9" x2="21" y2="9"/>
+        <line x1="9" y1="21" x2="9" y2="9"/>
+      </svg>
+    </a>
   </div>
 </template>
 
@@ -1719,6 +1733,30 @@ onBeforeUnmount(() => {
   color: var(--accent);
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 3%, transparent);
+}
+
+/* 数据大屏悬浮按钮 */
+.datav-float-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  z-index: 1000;
+}
+
+.datav-float-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
 }
 
 </style>
