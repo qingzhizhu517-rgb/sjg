@@ -36,6 +36,15 @@
           </button>
           <button
             class="toggle-btn"
+            :class="{ active: activeTab === 'all' }"
+            role="tab"
+            :aria-selected="activeTab === 'all'"
+            @click="activeTab = 'all'"
+          >
+            全名录
+          </button>
+          <button
+            class="toggle-btn"
             :class="{ active: activeTab === 'graph' }"
             role="tab"
             :aria-selected="activeTab === 'graph'"
@@ -177,6 +186,70 @@
           </section>
         </div>
 
+        <!-- 全名录 -->
+        <div v-else-if="activeTab === 'all'" key="all" class="all-tab-content">
+          <section class="poets-section" data-reveal>
+            <div class="section-bar">
+              <span class="section-bar-title">{{ selectedDynastyName }}</span>
+              <span class="section-bar-count">{{ filteredEnrichedPoets.length }} 位</span>
+            </div>
+
+            <div v-if="!poetsLoaded" class="cards-grid-list" aria-busy="true" aria-label="名士加载中">
+              <SkeletonBlock v-for="i in 6" :key="`skel-${i}`" height="180px" />
+            </div>
+
+            <div class="cards-grid-list" v-else-if="filteredEnrichedPoets.length">
+              <article
+                v-for="p in filteredEnrichedPoets"
+                :key="p.id"
+                class="poet-card-wrap card hover-lift"
+                tabindex="0"
+                role="link"
+                @click="$router.push(`/poets/${p.id}?from=all`)"
+                @keydown.enter="$router.push(`/poets/${p.id}?from=all`)"
+                :aria-label="`查看 ${p.name} 详情`"
+              >
+                <div class="poet-avatar-box">
+                  <img
+                    v-if="getPoetAvatar(p)"
+                    :src="getPoetAvatar(p)"
+                    :alt="p.name"
+                    class="poet-img"
+                    loading="lazy"
+                    decoding="async"
+                    @error="onAvatarError"
+                  />
+                  <span class="poet-avatar-stamp">{{ p.name ? p.name.charAt(0) : '文' }}</span>
+                  <span class="poet-stamp">文</span>
+                </div>
+                <div class="poet-card-body">
+                  <div class="poet-title-row">
+                    <h3 class="poet-name-tag">{{ p.name }}</h3>
+                    <span class="poet-dynasty-badge">{{ getDynastyName(p.dynastyId) }}</span>
+                  </div>
+                  <p v-if="p.biography" class="poet-biography">{{ p.biography.substring(0, 80) }}…</p>
+                  <blockquote v-else-if="p.signaturePoem && p.signaturePoem.firstLine" class="poet-sigline">
+                    「{{ p.signaturePoem.firstLine }}」
+                    <cite v-if="p.signaturePoem.title">《{{ p.signaturePoem.title }}》</cite>
+                  </blockquote>
+                  <p v-else class="poet-biography poet-biography--empty">生平待考，然其诗已传。</p>
+                  <div class="poet-style-box">
+                    <span class="style-lbl">传世</span>
+                    <span class="style-val">{{ p.poemCount || 0 }} 篇</span>
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            <EmptyState
+              v-if="poetsLoaded && !filteredEnrichedPoets.length"
+              icon="名"
+              message="该朝代暂无收录诗人"
+              hint="换个朝代看看"
+            />
+          </section>
+        </div>
+
         <!-- 关系图谱 (AntV G6) -->
         <div v-else key="graph" class="graph-tab-content">
           <div class="graph-panel-inner card">
@@ -221,7 +294,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
 import { useImage } from '../composables/useImage'
 import { usePoetEnrichment } from '../composables/usePoetEnrichment'
@@ -239,6 +312,7 @@ import EmptyState from '../components/homepage/EmptyState.vue'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 
 const router = useRouter()
+const route = useRoute()
 const { isAnime } = useTheme()
 const { getImageUrl } = useImage()
 const { map: enrichMap, build, enrich } = usePoetEnrichment()
@@ -257,7 +331,7 @@ const DYNASTIES = [
   { id: 8, name: '清', start: 1644, end: 1912 },
 ]
 
-const activeTab = ref('gallery')
+const activeTab = ref(route.query.view === 'all' ? 'all' : 'gallery')
 const selectedDynastyId = ref(null)
 const poets = ref([])
 const poetsLoaded = ref(false)
