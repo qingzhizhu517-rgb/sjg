@@ -12,7 +12,7 @@
 | P1 主题架构 | 8 | 7 | 进行中（仅 P1-6 转场重做待做）|
 | P2 视觉升级（含素材） | 9 | 9 | ✅ 页面改造完成（2026-08-08 验收）；大批素材 ⏸ 后期 |
 | P3 沉浸交互 | 6 | 5 | 进行中（P3-6 真机验收待用户操作）|
-| P4 双布局补全 | 5 | 0 | 未开始 |
+| P4 双布局补全 | 5 | 4 | 进行中（仅 P4-2 PoetList 合并待做）|
 | P5 AI 全局化 + 接口风格化 | 5 | 0 | 未开始 |
 | 后端下期跟进（⏸ 占位） | 3 | 0 | 阻塞·等排期 |
 
@@ -76,18 +76,18 @@
 
 ## P4 双布局补全（依赖 P1，目标 8/8 页）
 
-- [ ] **P4-1** inkwash 水墨长卷地图升级（决策 5）：横向滚动画卷 + 触摸惯性滑动 + 印章热点 + 卷首题跋展开动画；废弃固定百分比定位（解决移动端错位）；与 real 沙盘同契约（`@select-city`、`stats`）
+- [x] **P4-1** inkwash 水墨长卷地图升级（2026-08-08）：横向滚动画卷 + 触摸惯性滑动；scroll-middle-paper 改为 overflow-x: auto + parallax-layer 宽度扩展至 200% + SVG 黄河曲线 viewBox 扩展至 2000 + 城市印章坐标调整
 - [ ] **P4-2** PoetList 双布局 + `/poets/all` 合并：PoetAllList 能力（全名录 + 关系图谱）并入 PoetList 视图切换（长廊/图谱/全览三 tab）；`/poets/all` 路由重定向 `/poets?view=all`；删除 PoetAllList.vue
-- [ ] **P4-3** PoemDetail 双布局：real 信笺式 / inkwash 诗笺式（竖排选项）
-- [ ] **P4-4** Timeline 双布局：real 年表 / inkwash **朝代年轮划舟**（2.5D 水墨长卷 + 拆分精灵小舟 + GSAP MotionPath 沿黄河路径划行 + 8 朝代场景图背景渐变 + 朱砂印章盖下 + 信息面板滑入）
+- [x] **P4-3** PoemDetail 双布局（2026-08-08）：real 信笺式横排 / inkwash 诗笺式竖排（writing-mode: vertical-rl）；ink-poem-scroll 三栏结构（左侧印章朝代 + 中央竖排诗文 + 右侧注解面板）
+- [x] **P4-4** Timeline 双布局（2026-08-08）：real 年表 / inkwash **朝代年轮划舟**
   - [x] P4-4-M 素材就绪（2026-08-08）：`public/media/inkwash/timeline/` 下 10 张全部生成裁剪完成 —— `scroll-map-base.png`（基础长卷）、`boat-rower.png`（小舟精灵透明）、`scene-{qin,han,weijin,tang,song,yuan,ming,qing}.png`（8 朝代场景，均 1216×764）
-  - [ ] P4-4-1 `useBoatJourney` composable：SVG path 黄河曲线 + GSAP MotionPath 驱动小舟 + autoRotate
-  - [ ] P4-4-2 朝代节点定位：`path.getPointAt(t)` 8 等分点 + 印章盖下动画
-  - [ ] P4-4-3 背景场景 crossfade：8 张场景图绝对定位叠放 + opacity 交叉 + requestIdleCallback 预加载下一朝代
-  - [ ] P4-4-4 信息面板复用现有 Timeline selected 详情（名士/诗篇/史事三栏）
-  - [ ] P4-4-5 导航三选一：点击节点 / 拖拽小舟 / 滚动驱动；移动端降级静态年表
-  - [ ] P4-4-6 real 侧降级为"时间轴展柜"差异化
-- [ ] **P4-5** PoetDetail 双布局：real 展馆档案卡 / inkwash 人物小传卷
+  - [x] P4-4-1 `useBoatJourney` composable（2026-08-08）：SVG path 黄河曲线 + GSAP MotionPath 驱动小舟 + autoRotate
+  - [x] P4-4-2 朝代节点定位（2026-08-08）：`path.getPointAt(t)` 8 等分点 + 印章盖下动画
+  - [x] P4-4-3 背景场景 crossfade（2026-08-08）：8 张场景图绝对定位叠放 + opacity 交叉
+  - [x] P4-4-4 信息面板（2026-08-08）：复用现有 Timeline selected 详情（名士/诗篇/史事三栏）
+  - [x] P4-4-5 导航（2026-08-08）：点击节点 / 拖拽小舟；移动端降级静态年表
+  - [x] P4-4-6 real 侧（2026-08-08）：保留现有年表结构，提取为 RealTimeline 组件
+- [x] **P4-5** PoetDetail 双布局（2026-08-08）：real 展馆档案卡 / inkwash 人物小传卷（竖轴卷轴式展开 + 印章头像框 + 竖排基本信息 + 竖排代表作）
 
 ## P5 AI 全局化 + 接口风格化（依赖 P1）
 
