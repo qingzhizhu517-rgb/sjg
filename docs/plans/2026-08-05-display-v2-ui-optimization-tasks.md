@@ -38,7 +38,7 @@
 - [x] **P1-5** MapView 拆分：Three.js 引擎抽为 `composables/useThreeSandbox.js`（init/dispose/flyTo/raycast 接口），MapView 只留编排；目标单文件 < 600 行
 - [ ] **P1-6** `ThemeTransition` 全屏转场组件：切 inkwash = 墨晕 clip-path 扩散；切 real = 金色光扫 + 亮度缓入；转场期间锁滚动/锁重复点击；three.js 在遮罩下重建（⚠️ 首轮实现有问题：real->inkwash 无效果、inkwash->real 丑；已回退为直接切换，ThemeTransition.vue + useTheme.switchTheme 代码保留待后续重做）
 - [x] **P1-7** `useTheme` 重构：`switchTheme(withTransition)`、`themeProfile` computed、暴露 resolveAsset/resolveContent；保持 localStorage + `<html>` 类机制不变
-- [~] **P1-8** 验收：切换风格无白闪（录屏逐帧检查）；MapView 双布局经 profile 组件映射渲染（代码就绪，待人工录屏验收）
+- [x] **P1-8** 验收：切换风格无白闪（录屏逐帧检查）；MapView 双布局经 profile 组件映射渲染（2026-08-08 人工验收通过）
 
 ## P2 视觉升级（依赖 P1 + 素材）
 
@@ -63,7 +63,7 @@
 - [x] **P2-2** CityHero 背景媒体化：real 城市实景大图 + 缺素材回退插画（`resolveCityHeroMedia` 纯函数 + 6 单测）；inkwash 卷轴横展开场落在 anime-container 现有 `.city-image-box` 插画上（2026-08-07 完成；⚠️ 计划外决策：城市页 inkwash 是独立布局不渲染 CityHero，动画落插画框而非 CityHero；srcset/LQIP 待 OSS 图片处理参数后补）
 - [x] **P2-3** 详情页意境背景：PoemDetail/SpotDetail 取关联图模糊铺底（CSS blur 60-70px，占位印章自动排除）；PoemDetail 增加 38vh 视觉锚点 Hero 带（2026-08-07 完成）
 - [x] **P2-4** 图片工程规范：全站 `<img>` 补 `loading="lazy" decoding="async"`（首屏 LCP 图仅 async）；景观缩略图 16:10 + `object-fit: cover`（3 处，既有比例/flex 固定高 2 处跳过）；PoemDetail 视频 `preload="none"`（2026-08-07 完成；IntersectionObserver 入视口播放本轮未做——仅 hero 视频在首屏，无收益）
-- [~] **P2-5** 验收：Lighthouse LCP < 2.5s；单页媒体增量 < 3MB；两风格 Hero 录屏对比确认差异化（代码全就绪，构建+9 单测通过；待人工走查 + Lighthouse）
+- [x] **P2-5** 验收：Lighthouse LCP < 2.5s；单页媒体增量 < 3MB；两风格 Hero 录屏对比确认差异化（2026-08-08 人工验收通过；⚠️ 2026-08-07 追加修复：dev 误用 OSS 前缀致视频 404 → `resolveMediaBase` 纯函数 + RiverHero @error 降级守护）
 
 ## P3 沉浸交互（依赖 P1）
 
@@ -79,7 +79,14 @@
 - [ ] **P4-1** inkwash 水墨长卷地图升级（决策 5）：横向滚动画卷 + 触摸惯性滑动 + 印章热点 + 卷首题跋展开动画；废弃固定百分比定位（解决移动端错位）；与 real 沙盘同契约（`@select-city`、`stats`）
 - [ ] **P4-2** PoetList 双布局 + `/poets/all` 合并：PoetAllList 能力（全名录 + 关系图谱）并入 PoetList 视图切换（长廊/图谱/全览三 tab）；`/poets/all` 路由重定向 `/poets?view=all`；删除 PoetAllList.vue
 - [ ] **P4-3** PoemDetail 双布局：real 信笺式 / inkwash 诗笺式（竖排选项）
-- [ ] **P4-4** Timeline 双布局：real 年表 / inkwash 年轮卷
+- [ ] **P4-4** Timeline 双布局：real 年表 / inkwash **朝代年轮划舟**（2.5D 水墨长卷 + 拆分精灵小舟 + GSAP MotionPath 沿黄河路径划行 + 8 朝代场景图背景渐变 + 朱砂印章盖下 + 信息面板滑入）
+  - [x] P4-4-M 素材就绪（2026-08-08）：`public/media/inkwash/timeline/` 下 10 张全部生成裁剪完成 —— `scroll-map-base.png`（基础长卷）、`boat-rower.png`（小舟精灵透明）、`scene-{qin,han,weijin,tang,song,yuan,ming,qing}.png`（8 朝代场景，均 1216×764）
+  - [ ] P4-4-1 `useBoatJourney` composable：SVG path 黄河曲线 + GSAP MotionPath 驱动小舟 + autoRotate
+  - [ ] P4-4-2 朝代节点定位：`path.getPointAt(t)` 8 等分点 + 印章盖下动画
+  - [ ] P4-4-3 背景场景 crossfade：8 张场景图绝对定位叠放 + opacity 交叉 + requestIdleCallback 预加载下一朝代
+  - [ ] P4-4-4 信息面板复用现有 Timeline selected 详情（名士/诗篇/史事三栏）
+  - [ ] P4-4-5 导航三选一：点击节点 / 拖拽小舟 / 滚动驱动；移动端降级静态年表
+  - [ ] P4-4-6 real 侧降级为"时间轴展柜"差异化
 - [ ] **P4-5** PoetDetail 双布局：real 展馆档案卡 / inkwash 人物小传卷
 
 ## P5 AI 全局化 + 接口风格化（依赖 P1）
