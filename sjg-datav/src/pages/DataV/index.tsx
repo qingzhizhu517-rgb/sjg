@@ -1,19 +1,26 @@
-import React from 'react'
+import styled from 'styled-components'
+import AutoFit from '../../components/AutoFit'
+import Map from './map'
+import Panel from './panel'
 
-const DataV: React.FC = () => {
+const DataVWrapper = styled.div`
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: #1a1a2e;
+  overflow: hidden;
+`
+
+export default function DataV() {
   return (
-    <div style={{
-      width: '100%',
-      height: '100%',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      fontSize: '2rem',
-      color: '#667eea'
-    }}>
-      齐鲁文化数据大屏 - 开发中
-    </div>
+    <AutoFit>
+      <DataVWrapper>
+        {/* 3D 地图 */}
+        <Map />
+
+        {/* 面板覆盖层 */}
+        <Panel />
+      </DataVWrapper>
+    </AutoFit>
   )
 }
-
-export default DataV
