@@ -192,9 +192,9 @@
 
                   <!-- Midground Layer: Yellow River -->
                   <div class="parallax-layer river-flow-layer" :style="getParallaxStyle(0.5)">
-                    <svg class="ink-river-svg" viewBox="0 0 1000 600">
+                    <svg class="ink-river-svg" viewBox="0 0 2000 600" preserveAspectRatio="xMidYMid meet">
                       <path
-                        d="M100,520 Q200,420 300,480 T500,320 T700,260 T900,100"
+                        d="M100,520 Q300,420 500,480 T900,320 T1300,260 T1700,100"
                         fill="none"
                         :stroke="svgAccent40"
                         stroke-width="8"
@@ -429,18 +429,19 @@ const getCityData = (cityName) => {
 }
 
 const getCityStampPos = (city) => {
+  // 横向滚动长卷：x 坐标按 200% 宽度分布，保留 y 坐标
   const coords = {
-    '菏泽': { left: '12%', top: '78%' },
-    '济宁': { left: '26%', top: '72%' },
-    '泰安': { left: '42%', top: '60%' },
-    '聊城': { left: '24%', top: '48%' },
-    '济南': { left: '46%', top: '46%' },
-    '德州': { left: '32%', top: '24%' },
-    '淄博': { left: '62%', top: '48%' },
-    '滨州': { left: '64%', top: '26%' },
-    '东营': { left: '80%', top: '22%' }
+    '菏泽': { left: '6%', top: '78%' },
+    '济宁': { left: '13%', top: '72%' },
+    '泰安': { left: '21%', top: '60%' },
+    '聊城': { left: '12%', top: '48%' },
+    '济南': { left: '23%', top: '46%' },
+    '德州': { left: '16%', top: '24%' },
+    '淄博': { left: '31%', top: '48%' },
+    '滨州': { left: '32%', top: '26%' },
+    '东营': { left: '40%', top: '22%' }
   }
-  return coords[city] || { left: '50%', top: '50%' }
+  return coords[city] || { left: '25%', top: '50%' }
 }
 
 
@@ -1151,14 +1152,23 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
   box-shadow: inset 0 0 40px rgba(115, 69, 29, 0.06), 0 10px 30px rgba(0,0,0,0.15);
   position: relative;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+}
+
+.scroll-middle-paper::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 /* Parallax Layer core */
 .parallax-layer {
   position: absolute;
-  inset: 0;
-  width: 100%;
+  top: 0;
+  left: 0;
+  width: 200%; /* 横向滚动长卷 */
   height: 100%;
   pointer-events: none;
   transition: transform 0.1s ease-out;
