@@ -6,25 +6,26 @@ gsap.registerPlugin(MotionPathPlugin)
 
 /**
  * 朝代年轮划舟 composable
- * 驱动小舟沿黄河曲线 SVG path 移动，8 个朝代节点等分定位
+ * 驱动小舟沿黄河曲线 SVG path 移动，9 个朝代节点等分定位
  */
 export function useBoatJourney() {
   const progress = ref(0) // 0→1 全局进度
-  const activeDynastyIndex = ref(0) // 当前朝代索引 0-7
+  const activeDynastyIndex = ref(0) // 当前朝代索引 0-8
 
   let _pathEl = null
   let _boatEl = null
   let _tween = null
-  let _dynastyNodes = []
+  const _dynastyNodes = ref([]) // 响应式，确保 computed 能追踪
   let _onDynastyChange = null
 
-  // 8 朝代定义（与素材对应）
+  // 9 朝代定义（与数据库一致，含金朝）
   const DYNASTIES = [
     { id: 'qin', name: '秦', startYear: -221, endYear: -206 },
     { id: 'han', name: '汉', startYear: -206, endYear: 220 },
     { id: 'weijin', name: '魏晋', startYear: 220, endYear: 420 },
     { id: 'tang', name: '唐', startYear: 618, endYear: 907 },
     { id: 'song', name: '宋', startYear: 960, endYear: 1279 },
+    { id: 'jin', name: '金', startYear: 1115, endYear: 1234 },
     { id: 'yuan', name: '元', startYear: 1271, endYear: 1368 },
     { id: 'ming', name: '明', startYear: 1368, endYear: 1644 },
     { id: 'qing', name: '清', startYear: 1644, endYear: 1912 },
@@ -44,8 +45,8 @@ export function useBoatJourney() {
     _boatEl = boatEl
     _onDynastyChange = onDynastyChange
 
-    // 计算 8 个朝代节点在 path 上的位置
-    _dynastyNodes = DYNASTIES.map((d, i) => {
+    // 计算朝代节点在 path 上的位置
+    _dynastyNodes.value = DYNASTIES.map((d, i) => {
       const t = (i + 0.5) / DYNASTIES.length // 等分点，偏移 0.5 格居中
       const point = pathEl.getPointAtLength(t * pathEl.getTotalLength())
       return { ...d, index: i, x: point.x, y: point.y, t }
@@ -161,7 +162,7 @@ export function useBoatJourney() {
     progress,
     activeDynastyIndex,
     dynasties: DYNASTIES,
-    dynastyNodes: () => _dynastyNodes,
+    dynastyNodes: _dynastyNodes, // 直接返回 ref
     init,
     goToDynasty,
     autoCruise,

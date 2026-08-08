@@ -46,6 +46,9 @@
         :src="boatRower"
         class="ink-timeline__boat"
         alt="小舟"
+        @pointerdown="onPointerDown"
+        @pointermove="onPointerMove"
+        @pointerup="onPointerUp"
       />
 
       <!-- 朝代节点（印章） -->
@@ -193,8 +196,8 @@ const {
   dispose: disposeBoat,
 } = useBoatJourney()
 
-// 朝代节点列表（响应式）
-const dynastyNodeList = computed(() => dynastyNodes())
+// 朝代节点列表（dynastyNodes 已是 ref，直接使用）
+const dynastyNodeList = dynastyNodes
 
 // 当前朝代数据
 const selectedDynasty = computed(() => {

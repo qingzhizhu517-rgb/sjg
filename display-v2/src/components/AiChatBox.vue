@@ -175,6 +175,10 @@ function navigateTo(action) {
   if (action.route) {
     router.push(action.route)
     isOpen.value = false
+  } else {
+    // 非城市目标：跳转到地图页让用户自行探索
+    router.push('/map')
+    isOpen.value = false
   }
 }
 
@@ -194,7 +198,7 @@ const chatContext = computed(() => {
     ctx.spotId = route.params.id
   } else if (route.name === 'Timeline') {
     ctx.type = 'timeline'
-  } else if (route.name === 'Poets' || route.name === 'PoetsAll') {
+  } else if (route.name === 'Poets') {
     ctx.type = 'poets'
   }
   return ctx
@@ -367,9 +371,13 @@ const sendMessage = async () => {
       }
     }
   } catch (e) {
-    // AbortError 是用户主动取消，不显示错误
+    // AbortError 是用户主动取消，移除空 assistant 消息
     if (e.name === 'AbortError') {
       isTyping.value = false
+      const lastIdx = messages.value.length - 1
+      if (lastIdx >= 0 && messages.value[lastIdx] === assistantMsg && !assistantMsg.content) {
+        messages.value.splice(lastIdx, 1)
+      }
       return
     }
     isTyping.value = false
@@ -385,10 +393,12 @@ const retryLastMessage = () => {
   const lastUserMsg = [...messages.value].reverse().find(m => m.role === 'user')
   if (lastUserMsg) {
     inputMsg.value = lastUserMsg.content
-    // 移除最后一条空的 assistant 消息
-    if (messages.value[messages.value.length - 1]?.role === 'assistant' && !messages.value[messages.value.length - 1]?.content) {
-      messages.value.pop()
+    // 移除最后一条 assistant 消息（空的或含错误内容的）
+    const lastIdx = messages.value.length - 1
+    if (lastIdx >= 0 && messages.value[lastIdx]?.role === 'assistant') {
+      messages.value.splice(lastIdx, 1)
     }
+    errorMsg.value = null
     sendMessage()
   }
 }
