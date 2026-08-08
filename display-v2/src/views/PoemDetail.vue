@@ -11,7 +11,8 @@
     </div>
   </div>
 
-<div class="poem-detail" v-else>
+  <!-- REAL 主题：信笺式横排 -->
+  <div v-else-if="isReal" class="poem-detail poem-detail--real">
     <div v-if="moodBg" class="mood-bg" :style="{ backgroundImage: `url(${moodBg})` }" aria-hidden="true"></div>
     <!-- Back -->
     <div class="detail-top">
@@ -89,6 +90,94 @@
       </div>
     </div>
   </div>
+
+  <!-- INKWASH 主题：诗笺式竖排 -->
+  <div v-else class="poem-detail poem-detail--inkwash">
+    <div v-if="moodBg" class="mood-bg mood-bg--inkwash" :style="{ backgroundImage: `url(${moodBg})` }" aria-hidden="true"></div>
+
+    <!-- Back -->
+    <div class="detail-top">
+      <button class="back-link" @click="$router.back()">← 返回</button>
+    </div>
+
+    <!-- 诗笺主体：竖排布局 -->
+    <div class="ink-poem-scroll">
+      <!-- 左侧：印章装饰 + 朝代 -->
+      <aside class="ink-poem-sidebar">
+        <div class="ink-seal-block">
+          <span class="ink-seal-char">{{ dynasty?.name?.charAt(0) || '诗' }}</span>
+          <span class="ink-seal-dynasty">{{ dynasty?.name }}</span>
+        </div>
+        <div v-if="poet" class="ink-poet-info">
+          <router-link :to="`/poets/${poet.id}`" class="ink-poet-link">{{ poet.name }}</router-link>
+        </div>
+        <div v-if="spot" class="ink-spot-info">
+          <router-link :to="`/regions/${spot.region}`" class="ink-spot-link">{{ spot.name }}</router-link>
+        </div>
+      </aside>
+
+      <!-- 中央：竖排诗文 -->
+      <div class="ink-poem-main">
+        <h1 class="ink-poem-title">{{ poem.title }}</h1>
+        <div class="ink-poem-body">
+          <div class="ink-poem-text">
+            <p v-for="(line, i) in poemLines" :key="i" class="ink-poem-line"
+               :style="{ animationDelay: `${i * 0.12}s` }">
+              {{ line }}
+            </p>
+          </div>
+        </div>
+        <!-- 印章落款 -->
+        <div class="ink-poem-seal">
+          <span class="ink-seal-stamp">诗</span>
+        </div>
+      </div>
+
+      <!-- 右侧：注解面板 -->
+      <aside class="ink-annotation-sidebar">
+        <button class="ink-annotation-toggle" @click="showAnnotation = !showAnnotation">
+          {{ showAnnotation ? '合' : '注' }}
+        </button>
+        <transition name="annotation-slide">
+          <div v-if="showAnnotation && poem.annotation" class="ink-annotation-panel">
+            <h3 class="ink-annotation-title">注解</h3>
+            <p class="ink-annotation-text">{{ poem.annotation }}</p>
+          </div>
+        </transition>
+      </aside>
+    </div>
+
+    <!-- 标签 -->
+    <div v-if="sentimentTags.length" class="ink-tags">
+      <span v-for="t in sentimentTags" :key="t" class="ink-tag">{{ t }}</span>
+    </div>
+
+    <!-- Background -->
+    <div v-if="poem.background" class="detail-section">
+      <h2 class="section-heading">创作背景</h2>
+      <div class="background-content">
+        <p>{{ poem.background }}</p>
+      </div>
+    </div>
+
+    <!-- AI Analysis -->
+    <PoemAnalysis v-if="poem.id" :poem-id="poem.id" />
+
+    <!-- Media -->
+    <div v-if="poem.videoUrl" class="detail-section">
+      <h2 class="section-heading">诗词赏析视频</h2>
+      <div class="media-wrap">
+        <video :src="poem.videoUrl" controls preload="none" class="video-player" />
+      </div>
+    </div>
+
+    <div v-if="poem.audioUrl" class="detail-section">
+      <h2 class="section-heading">诗词朗读</h2>
+      <div class="audio-wrap">
+        <audio :src="poem.audioUrl" controls class="audio-player" />
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -98,11 +187,13 @@ import api from '../api'
 import { parseTags } from '../utils/poem'
 import { adaptSpot, adaptPoem } from '../composables/themeAdapter'
 import { pickMoodBackdrop } from '../utils/moodBackdrop'
+import { useTheme } from '../composables/useTheme'
 import PoemAnalysis from '../components/PoemAnalysis.vue'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 
 const route = useRoute()
+const { isReal } = useTheme()
 const poem = ref(null)
 const poet = ref(null)
 const dynasty = ref(null)
@@ -562,6 +653,302 @@ onMounted(loadPoem)
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, var(--bg-primary) 0%, transparent 30%, transparent 70%, var(--bg-primary) 100%);
+}
+
+/* ========== INKWASH 竖排诗笺布局 ========== */
+
+.poem-detail--inkwash {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px 24px 80px;
+  position: relative;
+}
+
+.mood-bg--inkwash {
+  filter: blur(70px) grayscale(0.4);
+  opacity: 0.12;
+}
+
+/* 竖排诗笺主体 */
+.ink-poem-scroll {
+  display: flex;
+  gap: 32px;
+  margin: 32px 0;
+  min-height: 500px;
+}
+
+/* 左侧：印章装饰 */
+.ink-poem-sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 24px 16px;
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.ink-seal-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.ink-seal-char {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--accent);
+  line-height: 1;
+  text-shadow: 2px 2px 4px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.ink-seal-dynasty {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  writing-mode: vertical-rl;
+}
+
+.ink-poet-info {
+  writing-mode: vertical-rl;
+}
+
+.ink-poet-link {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  text-decoration: none;
+  letter-spacing: 4px;
+  border-bottom: 1px dashed var(--accent);
+  padding-bottom: 4px;
+  transition: opacity 0.3s;
+}
+
+.ink-poet-link:hover {
+  opacity: 0.7;
+}
+
+.ink-spot-info {
+  writing-mode: vertical-rl;
+}
+
+.ink-spot-link {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+  letter-spacing: 2px;
+  transition: color 0.3s;
+}
+
+.ink-spot-link:hover {
+  color: var(--accent);
+}
+
+/* 中央：竖排诗文 */
+.ink-poem-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+.ink-poem-title {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: 8px;
+  text-align: center;
+  margin: 0;
+}
+
+.ink-poem-body {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 48px 40px;
+  position: relative;
+  /* 水墨纹理背景 */
+  background-image:
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--accent) 0.015%, transparent) 30%, transparent 31%),
+    radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--accent) 0.015%, transparent) 30%, transparent 31%);
+}
+
+.ink-poem-text {
+  display: flex;
+  flex-direction: row-reverse; /* 竖排从右到左 */
+  gap: 24px;
+  justify-content: center;
+}
+
+.ink-poem-line {
+  writing-mode: vertical-rl;
+  font-size: 24px;
+  line-height: 2;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 6px;
+  animation: inkLineReveal 0.8s cubic-bezier(0.1, 0.8, 0.2, 1) both;
+}
+
+@keyframes inkLineReveal {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0);
+  }
+}
+
+/* 印章落款 */
+.ink-poem-seal {
+  display: flex;
+  justify-content: center;
+}
+
+.ink-seal-stamp {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--accent);
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  transform: rotate(-5deg);
+  box-shadow: 2px 2px 8px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* 右侧：注解面板 */
+.ink-annotation-sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 60px;
+  flex-shrink: 0;
+}
+
+.ink-annotation-toggle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--accent);
+  background: none;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.ink-annotation-toggle:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.ink-annotation-panel {
+  writing-mode: vertical-rl;
+  background: var(--bg-tertiary);
+  border: 1px double var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 24px 16px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.ink-annotation-title {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 0 0 12px 0;
+  letter-spacing: 3px;
+  border-bottom: 1.5px solid var(--accent);
+  padding-bottom: 4px;
+}
+
+.ink-annotation-text {
+  font-size: 14px;
+  line-height: 2;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+/* 标签 */
+.ink-tags {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 24px 0;
+}
+
+.ink-tag {
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  border: 1px solid var(--border-light);
+  padding: 3px 11px;
+  border-radius: 100px;
+  letter-spacing: 1px;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .ink-poem-scroll {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .ink-poem-sidebar {
+    flex-direction: row;
+    width: 100%;
+    padding: 16px;
+  }
+
+  .ink-seal-dynasty {
+    writing-mode: horizontal-tb;
+  }
+
+  .ink-poet-info,
+  .ink-spot-info {
+    writing-mode: horizontal-tb;
+  }
+
+  .ink-poem-text {
+    gap: 16px;
+  }
+
+  .ink-poem-line {
+    font-size: 18px;
+    letter-spacing: 4px;
+  }
+
+  .ink-annotation-sidebar {
+    flex-direction: row;
+    width: 100%;
+  }
+
+  .ink-annotation-panel {
+    writing-mode: horizontal-tb;
+    max-height: 200px;
+  }
 }
 
 </style>
