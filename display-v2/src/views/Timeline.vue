@@ -16,6 +16,14 @@
         />
       </section>
 
+      <!-- 加载骨架：朝代详情三栏占位 -->
+      <section v-if="!loaded && !errorMsg" class="tl-section tl-skeleton" aria-busy="true" aria-label="时间线加载中">
+        <SkeletonBlock height="120px" />
+        <div class="tl-skeleton__grid">
+          <SkeletonBlock v-for="i in 3" :key="i" height="260px" />
+        </div>
+      </section>
+
       <!-- 选中朝代详情 -->
       <section v-if="selected" :key="selected.dynasty.id" class="tl-section tl-detail" data-reveal>
         <header class="tl-detail-head">
@@ -136,6 +144,7 @@ import TimelineHero from '../components/homepage/TimelineHero.vue'
 import SectionHeading from '../components/homepage/SectionHeading.vue'
 import DynastyRail from '../components/homepage/DynastyRail.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
+import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import { useReveal } from '../composables/useReveal'
 
 const { reveal } = useReveal()
@@ -214,6 +223,7 @@ const heroStats = computed(() => {
 
 const loadTimeline = async () => {
   errorMsg.value = null
+  loaded.value = false
   try {
     timeline.value = await api.get('/timeline')
   } catch (e) {
@@ -454,6 +464,25 @@ onMounted(async () => {
   color: var(--text-muted);
   font-style: italic;
   letter-spacing: 1px;
+}
+
+/* 加载骨架 */
+.tl-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tl-skeleton__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .tl-skeleton__grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ---------- evolution ---------- */

@@ -1,16 +1,13 @@
 <template>
-  <div v-if="errorMsg" class="error-state">
-    <div class="error-content">
-      <p class="error-icon">!</p>
-      <p class="error-text">{{ errorMsg }}</p>
-      <button class="error-back-link" @click="$router.back()">← 返回</button>
-    </div>
-  </div>
+  <ErrorState v-if="errorMsg" :message="errorMsg" @retry="loadPoem" />
 
-  <div v-else-if="!poem" class="error-state">
-    <div class="error-content">
-      <p class="error-icon">⌛</p>
-      <p class="error-text">加载中...</p>
+  <!-- 诗笺骨架屏：模拟 锚点带 + 标题 + 正文行 -->
+  <div v-else-if="!poem" class="poem-skeleton" aria-busy="true" aria-label="诗篇加载中">
+    <SkeletonBlock height="38vh" />
+    <div class="poem-skeleton__body">
+      <SkeletonBlock height="34px" width="42%" />
+      <SkeletonBlock height="14px" width="24%" />
+      <SkeletonBlock v-for="i in 5" :key="i" height="18px" :width="`${88 - i * 6}%`" />
     </div>
   </div>
 
@@ -102,6 +99,8 @@ import { parseTags } from '../utils/poem'
 import { adaptSpot, adaptPoem } from '../composables/themeAdapter'
 import { pickMoodBackdrop } from '../utils/moodBackdrop'
 import PoemAnalysis from '../components/PoemAnalysis.vue'
+import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
+import ErrorState from '../components/homepage/ErrorState.vue'
 
 const route = useRoute()
 const poem = ref(null)
@@ -123,7 +122,8 @@ const poemLines = computed(() => poem.value?.content?.split('\n').filter(l => l.
 
 const sentimentTags = computed(() => parseTags(poem.value?.sentimentTags))
 
-onMounted(async () => {
+const loadPoem = async () => {
+  errorMsg.value = null
   try {
     const data = await api.get(`/poems/${route.params.id}`)
     poem.value = data.poem
@@ -134,7 +134,9 @@ onMounted(async () => {
     console.error('加载诗词详情失败:', err)
     errorMsg.value = '加载诗词详情失败，请稍后重试'
   }
-})
+}
+
+onMounted(loadPoem)
 </script>
 
 <style scoped>
@@ -512,55 +514,21 @@ onMounted(async () => {
   }
 }
 
-/* Error state */
-.error-state {
+/* 诗笺骨架屏 */
+.poem-skeleton {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px 24px 80px;
   display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.poem-skeleton__body {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 60vh;
-  padding: 32px 24px;
-}
-
-.error-content {
-  text-align: center;
-  max-width: 400px;
-}
-
-.error-icon {
-  font-size: 48px;
-  font-weight: 900;
-  color: var(--accent);
-  margin-bottom: 16px;
-  opacity: 0.6;
-  line-height: 1;
-}
-
-.error-text {
-  font-size: 15px;
-  color: var(--text-secondary);
-  margin-bottom: 32px;
-  line-height: 1.6;
-}
-
-.error-back-link {
-  display: inline-block;
-  font-size: 14px;
-  color: var(--text-muted);
-  text-decoration: none;
-  font-weight: 600;
-  letter-spacing: 1px;
-  padding: 8px 20px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: none;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.3s;
-}
-
-.error-back-link:hover {
-  color: var(--accent);
-  border-color: var(--accent);
+  gap: 16px;
 }
 
 /* 意境背景：关联图模糊铺底，内容层之上无交互 */

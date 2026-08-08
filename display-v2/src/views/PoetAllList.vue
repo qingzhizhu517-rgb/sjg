@@ -85,10 +85,7 @@
               </article>
             </div>
 
-            <div class="empty-card" v-else>
-              <p class="empty-icon">∅</p>
-              <p>该朝代暂无收录诗人</p>
-            </div>
+            <EmptyState v-else icon="名" message="该朝代暂无收录诗人" hint="换个朝代看看" />
           </section>
         </div>
 
@@ -203,9 +200,15 @@
               </div>
             </div>
 
-            <div v-if="relationLoading" class="graph-skeleton">关系图谱加载中…</div>
-            <div v-else-if="relationError" class="graph-error">{{ relationError }}</div>
-            <div v-else-if="!relationGraph.nodes.length" class="graph-empty">尚无关系数据</div>
+            <div v-if="relationLoading" class="graph-skeleton graph-skeleton--skel" aria-busy="true" aria-label="关系图谱加载中">
+              <SkeletonBlock height="512px" />
+            </div>
+            <div v-else-if="relationError" class="graph-error">
+              <ErrorState :message="relationError" :retry="false" />
+            </div>
+            <div v-else-if="!relationGraph.nodes.length" class="graph-empty">
+              <EmptyState icon="谱" message="尚无关系数据" />
+            </div>
             <div v-show="!relationLoading && relationGraph.nodes.length" ref="g6Container" class="g6-container-canvas"></div>
             <div class="graph-legend">
               <div class="legend-item">
@@ -247,6 +250,7 @@ import { cssVar } from '../utils/cssToken'
 import DynastyRail from '../components/homepage/DynastyRail.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
+import EmptyState from '../components/homepage/EmptyState.vue'
 
 const router = useRouter()
 const { isAnime } = useTheme()
@@ -1304,19 +1308,6 @@ onBeforeUnmount(() => {
   font-weight: 600;
 }
 
-.empty-card {
-  text-align: center;
-  padding: 80px 0;
-  color: var(--text-muted);
-}
-.empty-icon {
-  font-size: 36px;
-  font-weight: 900;
-  color: var(--border);
-  margin-bottom: 12px;
-  line-height: 1;
-}
-
 /* graph tab */
 .graph-panel-inner {
   padding: 28px;
@@ -1439,7 +1430,10 @@ onBeforeUnmount(() => {
   border-radius: 4px;
   background: var(--card-bg);
 }
-.graph-error { color: #c2410c; }
+.graph-skeleton--skel {
+  padding: 24px;
+  align-items: stretch;
+}
 
 .graph-toolbar {
   display: flex;

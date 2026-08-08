@@ -1,5 +1,14 @@
 <template>
-  <div class="spot-detail" :class="themeClass" v-if="spot">
+  <!-- 加载骨架：双栏结构占位 -->
+  <div v-if="loading" class="spot-skeleton" aria-busy="true" aria-label="景观加载中">
+    <SkeletonBlock height="320px" />
+    <div class="spot-skeleton__rows">
+      <SkeletonBlock height="30px" width="38%" />
+      <SkeletonBlock v-for="i in 4" :key="i" height="16px" :width="`${92 - i * 8}%`" />
+    </div>
+  </div>
+  <ErrorState v-else-if="loadError" :message="loadError" @retry="loadSpot" />
+  <div class="spot-detail" :class="themeClass" v-else-if="spot">
     <div v-if="moodBg" class="mood-bg" :style="{ backgroundImage: `url(${moodBg})` }" aria-hidden="true"></div>
     <!-- BACK BUTTON -->
     <div class="detail-top">
@@ -111,7 +120,7 @@
               </div>
             </div>
             <div v-if="!enrichedPoems.length" class="empty-poems">
-              暂无相关诗词记载，待学者考证录入。
+              <EmptyState icon="诗" message="此处暂无关联诗篇" hint="待学者考证录入" />
             </div>
           </div>
         </div>
@@ -148,6 +157,9 @@ import * as echarts from 'echarts'
 import api from '../api'
 import { cssVar, cssVarAlpha } from '../utils/cssToken'
 import { pickMoodBackdrop } from '../utils/moodBackdrop'
+import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
+import ErrorState from '../components/homepage/ErrorState.vue'
+import EmptyState from '../components/homepage/EmptyState.vue'
 
 const route = useRoute()
 const { themeClass, isReal, isAnime } = useTheme()
@@ -156,6 +168,8 @@ const spot = ref(null)
 const poems = ref([])
 const poetsMap = ref({})
 const chartRef = ref(null)
+const loading = ref(true)
+const loadError = ref('')
 let chartInstance = null
 
 const imageUrl = computed(() => {
@@ -468,15 +482,24 @@ watch([isAnime, spot], () => {
   }
 })
 
-onMounted(async () => {
-  window.addEventListener('resize', handleResize)
-  
+const loadSpot = async () => {
+  loading.value = true
+  loadError.value = ''
+
   // Load main details
-  const data = await api.get(`/spots/${route.params.id}`)
-  spot.value = data.spot || data
-  poems.value = data.poems || []
-  
-  // Load poets lookup dictionary
+  try {
+    const data = await api.get(`/spots/${route.params.id}`)
+    spot.value = data.spot || data
+    poems.value = data.poems || []
+  } catch (err) {
+    console.error('加载景观详情失败:', err)
+    loadError.value = '加载景观详情失败，请稍后重试'
+    loading.value = false
+    return
+  }
+  loading.value = false
+
+  // Load poets lookup dictionary (non-fatal)
   try {
     const poetsData = await api.get('/poets', { params: { size: 100 } })
     const map = {}
@@ -487,13 +510,18 @@ onMounted(async () => {
   } catch (e) {
     console.error('Error loading poets map:', e)
   }
-  
+
   // Init chart
   nextTick(() => {
     setTimeout(() => {
       initChart()
     }, 150)
   })
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+  loadSpot()
 })
 
 onBeforeUnmount(() => {
@@ -906,11 +934,22 @@ onBeforeUnmount(() => {
 
 .empty-poems {
   grid-column: span 2;
-  text-align: center;
-  padding: 40px 0;
-  color: var(--text-muted);
-  font-size: 13px;
-  font-style: italic;
+}
+
+/* 加载骨架 */
+.spot-skeleton {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 32px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.spot-skeleton__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 /* Sentiment distribution rings */

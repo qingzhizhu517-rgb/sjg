@@ -73,7 +73,12 @@
               <span class="section-bar-count">{{ standardPoets.length }} 位</span>
             </div>
 
-            <div class="cards-grid-list" v-if="standardPoets.length">
+            <!-- 名士卡墙骨架 -->
+            <div v-if="!poetsLoaded" class="cards-grid-list" aria-busy="true" aria-label="名士加载中">
+              <SkeletonBlock v-for="i in 6" :key="`skel-${i}`" height="180px" />
+            </div>
+
+            <div class="cards-grid-list" v-else-if="standardPoets.length">
               <article
                 v-for="p in standardPoets"
                 :key="p.id"
@@ -116,10 +121,12 @@
               </article>
             </div>
 
-            <div class="empty-card" v-if="!filteredEnrichedPoets.length">
-              <p class="empty-icon">∅</p>
-              <p>该朝代暂无收录诗人</p>
-            </div>
+            <EmptyState
+              v-if="poetsLoaded && !filteredEnrichedPoets.length"
+              icon="名"
+              message="该朝代暂无收录诗人"
+              hint="换个朝代看看"
+            />
 
             <!-- 折叠: 信息待考的名士(完整度<40), 默认收起 -->
             <div v-if="marginalPoets.length" class="marginal-wrap">
@@ -181,22 +188,18 @@
             </div>
 
             <!-- 加载态 -->
-            <div v-if="graphStatus === 'loading'" class="graph-status-box">
-              <div class="graph-spinner"></div>
-              <p class="graph-status-text">关系数据加载中…</p>
+            <div v-if="graphStatus === 'loading'" class="graph-status-box graph-status-box--skel" aria-busy="true" aria-label="关系图谱加载中">
+              <SkeletonBlock height="560px" />
             </div>
 
             <!-- 空态 -->
             <div v-else-if="graphStatus === 'empty'" class="graph-status-box">
-              <p class="empty-icon">∅</p>
-              <p class="graph-status-text">暂无关系数据</p>
+              <EmptyState icon="谱" message="暂无关系数据" hint="等待学者考证补录" />
             </div>
 
             <!-- 错误态 -->
             <div v-else-if="graphStatus === 'error'" class="graph-status-box">
-              <p class="empty-icon">⚠</p>
-              <p class="graph-status-text">关系数据加载失败</p>
-              <button class="graph-retry-btn" @click="initG6">重试</button>
+              <ErrorState message="关系数据加载失败" @retry="initG6" />
             </div>
 
             <!-- 图谱画布 -->
@@ -232,6 +235,8 @@ import FeaturedPoemCard from '../components/homepage/FeaturedPoemCard.vue'
 import FeaturedPoetCard from '../components/homepage/FeaturedPoetCard.vue'
 import DynastyRail from '../components/homepage/DynastyRail.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
+import EmptyState from '../components/homepage/EmptyState.vue'
+import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 
 const router = useRouter()
 const { isAnime } = useTheme()
@@ -833,19 +838,6 @@ onBeforeUnmount(() => {
   font-weight: 600;
 }
 
-.empty-card {
-  text-align: center;
-  padding: 80px 0;
-  color: var(--text-muted);
-}
-.empty-icon {
-  font-size: 36px;
-  font-weight: 900;
-  color: var(--border);
-  margin-bottom: 12px;
-  line-height: 1;
-}
-
 /* ---------- marginal folded ---------- */
 .marginal-wrap {
   margin-top: 28px;
@@ -971,37 +963,9 @@ onBeforeUnmount(() => {
   background: var(--card-bg);
   gap: 16px;
 }
-.graph-status-text {
-  font-size: 14px;
-  color: var(--text-muted);
-  letter-spacing: 1px;
-  margin: 0;
-}
-.graph-retry-btn {
-  padding: 6px 16px;
-  background: var(--accent);
-  color: var(--bg-primary);
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  transition: opacity 0.25s;
-}
-.graph-retry-btn:hover {
-  opacity: 0.85;
-}
-.graph-spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: graph-spin 0.8s linear infinite;
-}
-@keyframes graph-spin {
-  to { transform: rotate(360deg); }
+.graph-status-box--skel {
+  padding: 24px;
+  align-items: stretch;
 }
 
 .tab-fade-enter-active,

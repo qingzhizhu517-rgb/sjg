@@ -1,13 +1,7 @@
 <template>
-    <div v-if="errorMsg" class="error-state">
-    <div class="error-content">
-      <p class="error-icon">!</p>
-      <p class="error-text">{{ errorMsg }}</p>
-      <router-link to="/map" class="error-back-link">← 返回地图</router-link>
-    </div>
-  </div>
+  <ErrorState v-if="errorMsg" :message="errorMsg" @retry="loadSpots" />
 
-<div class="region-spots" :class="{ 'anime-layout': isAnime }">
+<div v-else class="region-spots" :class="{ 'anime-layout': isAnime }">
     <!-- Real Layout: 城市宣传专题页 -->
     <div class="real-container" v-if="isReal">
       <CityHero
@@ -38,6 +32,11 @@
             </div>
           </div>
         </div>
+      </section>
+
+      <!-- 加载骨架：精选景观位 -->
+      <section v-if="!loaded" class="spots-skeleton" aria-busy="true" aria-label="景点加载中">
+        <SkeletonBlock v-for="i in 3" :key="i" height="240px" />
       </section>
 
       <!-- 精选景点：交错图文 -->
@@ -89,6 +88,14 @@
           </div>
         </div>
       </section>
+
+      <!-- 空态：数据加载完仍无景点 -->
+      <EmptyState
+        v-if="loaded && !featuredSpots.length && !moreSpots.length"
+        icon="景"
+        message="此城景观收录中"
+        hint="先去别的城市逛逛"
+      />
 
       <!-- 沿河而下 · 下一站 -->
       <nav v-if="nextCity" class="next-city">
@@ -158,9 +165,12 @@
           </div>
 
           <div class="spots-list-grid">
-            <div 
-              v-for="(spot, index) in spots" 
-              :key="spot.id" 
+            <template v-if="!loaded">
+              <SkeletonBlock v-for="i in 4" :key="`skel-${i}`" height="280px" />
+            </template>
+            <div
+              v-for="(spot, index) in spots"
+              :key="spot.id"
               class="anime-spot-card card hover-lift"
               tabindex="0"
               role="link"
@@ -195,6 +205,12 @@
               </div>
             </div>
           </div>
+          <EmptyState
+            v-if="loaded && !spots.length"
+            icon="景"
+            message="此城景观收录中"
+            hint="先去别的城市逛逛"
+          />
         </section>
       </div>
     </div>
@@ -213,6 +229,9 @@ import { resolveCityHeroMedia } from '../utils/cityHeroMedia'
 import api from '../api'
 import CityHero from '../components/homepage/CityHero.vue'
 import CityFeatureSpot from '../components/homepage/CityFeatureSpot.vue'
+import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
+import ErrorState from '../components/homepage/ErrorState.vue'
+import EmptyState from '../components/homepage/EmptyState.vue'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
@@ -301,6 +320,20 @@ const getImage = (spot) => {
   return getImageUrl(url, isAnime.value)
 }
 
+const loadSpots = async () => {
+  loaded.value = false
+  errorMsg.value = null
+  try {
+    const data = await api.get('/spots', { params: { region: region.value, size: 100 } })
+    spots.value = data.records
+  } catch (err) {
+    console.error('加载地区景点失败:', err)
+    errorMsg.value = '加载景点数据失败，请稍后重试'
+  } finally {
+    loaded.value = true
+  }
+}
+
 onMounted(async () => {
   // inkwash 城市插画卷轴横展开场；reduced-motion 跳过
   if (isAnime.value && !reduce.value && cityImageBoxRef.value) {
@@ -311,15 +344,7 @@ onMounted(async () => {
     )
   }
 
-  try {
-    const data = await api.get('/spots', { params: { region: region.value, size: 100 } })
-    spots.value = data.records
-  } catch (err) {
-    console.error('加载地区景点失败:', err)
-    errorMsg.value = '加载景点数据失败，请稍后重试'
-  } finally {
-    loaded.value = true
-  }
+  await loadSpots()
 
   // 城市引言滚动揭示
   if (introRef.value) {
@@ -640,12 +665,12 @@ onMounted(async () => {
   transition: transform 0.3s ease;
 }
 
-/* Empty */
-.empty-state {
-  text-align: center;
-  padding: 80px 0;
-  color: var(--text-muted);
-  font-size: 15px;
+/* 加载骨架 */
+.spots-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 40px 0;
 }
 
 /* Anime mode split layout */
@@ -995,54 +1020,6 @@ onMounted(async () => {
   .next-city__name {
     letter-spacing: 6px;
   }
-}
-
-/* Error state */
-.error-state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
-  padding: 32px 40px;
-}
-
-.error-content {
-  text-align: center;
-  max-width: 400px;
-}
-
-.error-icon {
-  font-size: 48px;
-  font-weight: 900;
-  color: var(--accent);
-  margin-bottom: 16px;
-  opacity: 0.6;
-  line-height: 1;
-}
-
-.error-text {
-  font-size: 15px;
-  color: var(--text-secondary);
-  margin-bottom: 32px;
-  line-height: 1.6;
-}
-
-.error-back-link {
-  display: inline-block;
-  font-size: 14px;
-  color: var(--text-muted);
-  text-decoration: none;
-  font-weight: 600;
-  letter-spacing: 1px;
-  padding: 8px 20px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  transition: all 0.3s;
-}
-
-.error-back-link:hover {
-  color: var(--accent);
-  border-color: var(--accent);
 }
 
 </style>
