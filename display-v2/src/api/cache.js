@@ -9,6 +9,7 @@
  */
 
 const cache = new Map()
+const inflight = new Map() // 正在进行的请求去重
 const DEFAULT_TTL = 60_000 // 60 秒
 
 /**
@@ -44,20 +45,33 @@ export async function swrGet(key, fetcher, opts = {}) {
     return { data: cached.data, isStale: false }
   }
 
-  // 有缓存但已过期：返回旧数据 + 后台刷新
+  // 有缓存但已过期：返回旧数据 + 后台刷新（复用 inflight）
   if (cached) {
-    // 后台刷新（不 await）
-    fetcher().then(data => {
-      cache.set(key, { data, ts: Date.now() })
-    }).catch(() => {
-      // 刷新失败保留旧缓存
-    })
+    if (!inflight.has(key)) {
+      const p = fetcher()
+        .then(data => { cache.set(key, { data, ts: Date.now() }); return data })
+        .catch(() => null) // 刷新失败保留旧缓存
+        .finally(() => { inflight.delete(key) })
+      inflight.set(key, p)
+    }
     return { data: cached.data, isStale: true }
   }
 
-  // 无缓存：等待取数
-  const data = await fetcher()
-  cache.set(key, { data, ts: now })
+  // 无缓存：复用 inflight 或发起新请求
+  if (inflight.has(key)) {
+    const data = await inflight.get(key)
+    return { data, isStale: false }
+  }
+
+  const p = fetcher()
+    .then(data => {
+      cache.set(key, { data, ts: now })
+      return data
+    })
+    .finally(() => { inflight.delete(key) })
+  inflight.set(key, p)
+
+  const data = await p
   return { data, isStale: false }
 }
 

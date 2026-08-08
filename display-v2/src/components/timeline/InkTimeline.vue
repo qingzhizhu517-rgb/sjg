@@ -163,13 +163,14 @@ const emit = defineEmits(['select-dynasty'])
 const scrollBase = new URL('../../public/media/inkwash/timeline/scroll-map-base.png', import.meta.url).href
 const boatRower = new URL('../../public/media/inkwash/timeline/boat-rower.png', import.meta.url).href
 
-// 场景图
+// 场景图（金朝暂无独立素材，复用宋朝场景——宋金同期）
 const scenes = [
   { id: 'qin', name: '秦', url: new URL('../../public/media/inkwash/timeline/scene-qin.png', import.meta.url).href },
   { id: 'han', name: '汉', url: new URL('../../public/media/inkwash/timeline/scene-han.png', import.meta.url).href },
   { id: 'weijin', name: '魏晋', url: new URL('../../public/media/inkwash/timeline/scene-weijin.png', import.meta.url).href },
   { id: 'tang', name: '唐', url: new URL('../../public/media/inkwash/timeline/scene-tang.png', import.meta.url).href },
   { id: 'song', name: '宋', url: new URL('../../public/media/inkwash/timeline/scene-song.png', import.meta.url).href },
+  { id: 'jin', name: '金', url: new URL('../../public/media/inkwash/timeline/scene-song.png', import.meta.url).href },
   { id: 'yuan', name: '元', url: new URL('../../public/media/inkwash/timeline/scene-yuan.png', import.meta.url).href },
   { id: 'ming', name: '明', url: new URL('../../public/media/inkwash/timeline/scene-ming.png', import.meta.url).href },
   { id: 'qing', name: '清', url: new URL('../../public/media/inkwash/timeline/scene-qing.png', import.meta.url).href },
@@ -259,7 +260,7 @@ function onPointerMove(e) {
   const containerWidth = scrollRef.value?.offsetWidth || 1200
   const delta = dx / containerWidth
   const newProgress = Math.max(0, Math.min(1, _startProgress + delta))
-  goToDynasty(Math.floor(newProgress * 8), { duration: 0.1 })
+  goToDynasty(Math.min(Math.floor(newProgress * dynasties.length), dynasties.length - 1), { duration: 0.1 })
 }
 
 function onPointerUp() {
