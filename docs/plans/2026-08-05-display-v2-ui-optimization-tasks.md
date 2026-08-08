@@ -13,7 +13,7 @@
 | P2 视觉升级（含素材） | 9 | 9 | ✅ 页面改造完成（2026-08-08 验收）；大批素材 ⏸ 后期 |
 | P3 沉浸交互 | 6 | 5 | 进行中（P3-6 真机验收待用户操作）|
 | P4 双布局补全 | 5 | 5 | ✅ 完成（2026-08-08）|
-| P5 AI 全局化 + 接口风格化 | 5 | 4 | 进行中（仅 P5-5 SWR 缓存待做）|
+| P5 AI 全局化 + 接口风格化 | 5 | 5 | ✅ 完成（2026-08-08）|
 | 后端下期跟进（⏸ 占位） | 3 | 0 | 阻塞·等排期 |
 
 ---
@@ -95,7 +95,7 @@
 - [x] **P5-2** 上下文感知（2026-08-08）：按路由注入语境（城市/诗人/诗词/时间线），快捷问题按页面动态生成；`/chat` 请求带 context 字段；后端 ChatRequest 扩展 context，ChatService 注入到 system prompt
 - [x] **P5-3** 导航 action 兑现（2026-08-08）：解析 AI 回复导航意图（带我去/一键抵达/前往/去看看）→ 渲染"一键抵达"按钮；城市名映射到 /regions/{city} 路由
 - [x] **P5-4** SSE 健壮性（2026-08-08）：AbortController 终止旧流；路由切换自动断开；组件卸载清理；错误重试按钮
-- [ ] **P5-5** SWR 缓存：缓存键带 theme 维度（`['spots', region, theme]`）；`requestIdleCallback` 预取另一风格首屏资源；切换风格零 loading
+- [x] **P5-5** SWR 缓存（2026-08-08）：新建 api/cache.js（stale-while-revalidate + requestIdleCallback 预取）；api.swrGet / api.prefetch 方法；MapView/Timeline/PoetList 使用 SWR 缓存；首页预取 timeline/poet-relations
 
 ## 后端下期跟进（⏸ 阻塞，不在本轮）
 
