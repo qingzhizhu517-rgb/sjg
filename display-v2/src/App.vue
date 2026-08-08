@@ -1,5 +1,8 @@
 <template>
   <div :class="themeClass" class="app-root">
+    <!-- 路由切换顶部进度条 -->
+    <RouteProgress :progress="progressValue" :visible="progressVisible" />
+
     <!-- Main Top Header -->
     <header class="main-header" :class="{ scrolled: isScrolled, 'mobile-menu-open': isMobileMenuOpen }">
       <div class="header-inner">
@@ -138,7 +141,7 @@
     <!-- Main View Component Router -->
     <main class="main-content">
       <router-view v-slot="{ Component }">
-        <transition name="page-slide" mode="out-in">
+        <transition :name="navTransition" mode="out-in">
           <component :is="Component" :key="$route.fullPath" />
         </transition>
       </router-view>
@@ -157,14 +160,30 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useTheme } from './composables/useTheme'
 import ThemeSwitcher from './components/ThemeSwitcher.vue'
+import RouteProgress from './components/RouteProgress.vue'
+import { resolveNavDirection, createProgress } from './utils/routeFeedback'
 import './styles/real.css'
 import './styles/inkwash.css'
 
 const route = useRoute()
+const router = useRouter()
 const { theme, themeClass } = useTheme()
+
+// ===== 路由反馈：顶部进度条 + 方向感过渡 =====
+const progress = createProgress()
+const progressValue = ref(0)
+const progressVisible = ref(false)
+const navDirection = ref('fade')
+let progressTimer = null
+let lastPos = null
+let routerHookCleanups = []
+
+const navTransition = computed(
+  () => ({ forward: 'page-slide', back: 'page-pop', fade: 'page-fade' })[navDirection.value],
+)
 
 const isScrolled = ref(false)
 const isMobileMenuOpen = ref(false)
@@ -214,15 +233,44 @@ const getCityPinyin = (city) => {
 
 onMounted(() => {
   window.addEventListener('scroll', handleScroll, { passive: true })
+
+  // 路由进度条：beforeEach 起步细流，afterEach 收满淡出
+  const removeBefore = router.beforeEach((to, from, next) => {
+    navDirection.value = resolveNavDirection(lastPos, window.history.state?.position ?? null)
+    lastPos = window.history.state?.position ?? lastPos
+    progress.start()
+    progressValue.value = progress.value()
+    progressVisible.value = true
+    clearInterval(progressTimer)
+    progressTimer = setInterval(() => {
+      progress.tick()
+      progressValue.value = progress.value()
+    }, 200)
+    next()
+  })
+  const removeAfter = router.afterEach(() => {
+    clearInterval(progressTimer)
+    progressTimer = null
+    progress.finish()
+    progressValue.value = 1
+    setTimeout(() => {
+      progressVisible.value = false
+      progress.reset()
+      progressValue.value = 0
+    }, 350)
+  })
+  routerHookCleanups = [removeBefore, removeAfter]
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
+  routerHookCleanups.forEach((remove) => remove())
+  clearInterval(progressTimer)
 })
 </script>
 
 <style>
-/* Global page transition */
+/* Global page transition: 前进=推入 */
 .page-slide-enter-active, .page-slide-leave-active {
   transition: opacity 0.35s ease, transform 0.35s ease;
 }
@@ -233,6 +281,39 @@ onUnmounted(() => {
 .page-slide-leave-to {
   opacity: 0;
   transform: translateY(-8px);
+}
+
+/* 返回=浮出（逆向轻量位移 + 缩放） */
+.page-pop-enter-active, .page-pop-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.page-pop-enter-from {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.995);
+}
+.page-pop-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+/* 同级/replace=纯淡入 */
+.page-fade-enter-active, .page-fade-leave-active {
+  transition: opacity 0.28s ease;
+}
+.page-fade-enter-from, .page-fade-leave-to {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-slide-enter-active, .page-slide-leave-active,
+  .page-pop-enter-active, .page-pop-leave-active,
+  .page-fade-enter-active, .page-fade-leave-active {
+    transition: opacity 0.15s ease;
+  }
+  .page-slide-enter-from, .page-slide-leave-to,
+  .page-pop-enter-from, .page-pop-leave-to {
+    transform: none;
+  }
 }
 </style>
 
