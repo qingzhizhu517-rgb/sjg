@@ -62,6 +62,12 @@
             <div class="msg-bubble">
               <div v-if="msg.role === 'assistant'" class="bubble-txt md-body" v-html="renderMd(msg.content)"></div>
               <p v-else class="bubble-txt">{{ msg.content }}</p>
+              <!-- 导航 action 按钮 -->
+              <div v-if="msg.role === 'assistant' && msg.navAction" class="nav-action-row">
+                <button class="nav-action-btn" @click="navigateTo(msg.navAction)">
+                  🗺️ {{ msg.navAction.label }}
+                </button>
+              </div>
             </div>
           </div>
           <!-- Typing indicator -->
@@ -72,6 +78,13 @@
               <span class="typing-dot"></span>
               <span class="typing-dot"></span>
             </div>
+          </div>
+
+          <!-- 错误重试 -->
+          <div v-if="errorMsg && !isTyping" class="retry-row">
+            <button class="retry-btn" @click="retryLastMessage">
+              ↻ 重新发送
+            </button>
           </div>
         </div>
 
@@ -98,8 +111,8 @@
 </template>
 
 <script setup>
-import { ref, nextTick, reactive, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, nextTick, reactive, computed, watch, onBeforeUnmount } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 
@@ -120,9 +133,50 @@ const inputMsg = ref('')
 const isTyping = ref(false)
 const chatLogRef = ref(null)
 const inputRef = ref(null)
+const errorMsg = ref(null)
+
+// SSE 健壮性：AbortController
+let abortController = null
 
 // ===== 上下文感知 =====
 const route = useRoute()
+const router = useRouter()
+
+// 导航 action 解析
+const NAV_PATTERNS = [
+  /带我去[「」《》\s]*([^「」《》。，,！!？?\s]+(?:市|城|山|湖|景|阁|楼|台|庙|祠|园|洲|亭|岛|洞|泉|峰|岭|崖|谷|洞|寺|塔|桥|关|寨|堡|港|湾|河|江|溪|泉|瀑|池|潭|井|泉|温泉|古镇|古城|风景区|景区|遗址|故居|纪念馆|博物馆|公园|广场|街道|巷|胡同|路|道|街|弄|里|坊|区|县|镇|乡|村|庄|屯|营|寨|堡|关|隘|口|渡|津|驿|站|亭|台|楼|阁|殿|堂|庙|寺|庵|观|宫|祠|坛|庙|陵|墓|冢|碑|碣|坊|表|阙|亭|台|楼|阁|殿|堂|庙|寺|庵|观|宫|祠|坛|庙|陵|墓|冢|碑|碣|坊|表|阙))[^一-龥]?/,
+  /一键抵达[「」《》\s]*([^「」《》。，,！!？?\s]+)/,
+  /前往[「」《》\s]*([^「」《》。，,！!？?\s]+)/,
+  /去看看[「」《》\s]*([^「」《》。，,！!？?\s]+)/,
+]
+
+// 城市名映射
+const CITY_NAMES = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '滨州', '淄博', '东营']
+
+function extractNavAction(text) {
+  if (!text) return null
+  for (const pattern of NAV_PATTERNS) {
+    const match = text.match(pattern)
+    if (match) {
+      const target = match[1].trim()
+      // 检查是否是城市名
+      const city = CITY_NAMES.find(c => target.includes(c))
+      if (city) {
+        return { type: 'navigate', label: `前往${city}`, route: `/regions/${city}` }
+      }
+      // 其他目标（景点等）
+      return { type: 'navigate', label: `前往${target}`, route: null }
+    }
+  }
+  return null
+}
+
+function navigateTo(action) {
+  if (action.route) {
+    router.push(action.route)
+    isOpen.value = false
+  }
+}
 
 const chatContext = computed(() => {
   const ctx = { type: 'map' }
@@ -198,6 +252,22 @@ const askQuick = (q) => {
   sendMessage()
 }
 
+// 路由切换时中断流式请求
+watch(() => route.path, () => {
+  if (abortController) {
+    abortController.abort()
+    abortController = null
+  }
+})
+
+// 组件卸载时清理
+onBeforeUnmount(() => {
+  if (abortController) {
+    abortController.abort()
+    abortController = null
+  }
+})
+
 const scrollToBottom = () => {
   nextTick(() => {
     if (chatLogRef.value) {
@@ -214,6 +284,7 @@ const sendMessage = async () => {
   const text = inputMsg.value.trim()
   if (!text || isTyping.value) return
 
+  errorMsg.value = null
   messages.value.push({ role: 'user', content: text })
   // 历史：不含当前提问，取最近 10 条作多轮上下文
   const history = messages.value.slice(0, -1).slice(-10).map(m => ({ role: m.role, content: m.content }))
@@ -225,15 +296,23 @@ const sendMessage = async () => {
   messages.value.push(assistantMsg)
   scrollToBottom()
 
+  // 终止旧流
+  if (abortController) {
+    abortController.abort()
+  }
+  abortController = new AbortController()
+
   try {
     const res = await fetch('/api/public/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-      body: JSON.stringify({ message: text, history, context: chatContext.value })
+      body: JSON.stringify({ message: text, history, context: chatContext.value }),
+      signal: abortController.signal,
     })
     if (!res.ok || !res.body) {
       isTyping.value = false
       assistantMsg.content = '（服务暂不可用，请稍后再试）'
+      errorMsg.value = '服务暂不可用'
       return
     }
 
@@ -268,6 +347,7 @@ const sendMessage = async () => {
           } else if (obj.error) {
             isTyping.value = false
             assistantMsg.content += (assistantMsg.content ? '\n' : '') + '⚠ ' + obj.error
+            errorMsg.value = obj.error
             scrollToBottom()
           }
         } catch {
@@ -277,10 +357,39 @@ const sendMessage = async () => {
     }
 
     isTyping.value = false
-    if (!assistantMsg.content) assistantMsg.content = '（未收到回复，请重试）'
+    if (!assistantMsg.content) {
+      assistantMsg.content = '（未收到回复，请重试）'
+    } else {
+      // 提取导航 action
+      const navAction = extractNavAction(assistantMsg.content)
+      if (navAction) {
+        assistantMsg.navAction = navAction
+      }
+    }
   } catch (e) {
+    // AbortError 是用户主动取消，不显示错误
+    if (e.name === 'AbortError') {
+      isTyping.value = false
+      return
+    }
     isTyping.value = false
     assistantMsg.content = '（网络异常，请稍后再试）'
+    errorMsg.value = '网络异常'
+  }
+}
+
+/**
+ * 重试：重新发送最后一条用户消息
+ */
+const retryLastMessage = () => {
+  const lastUserMsg = [...messages.value].reverse().find(m => m.role === 'user')
+  if (lastUserMsg) {
+    inputMsg.value = lastUserMsg.content
+    // 移除最后一条空的 assistant 消息
+    if (messages.value[messages.value.length - 1]?.role === 'assistant' && !messages.value[messages.value.length - 1]?.content) {
+      messages.value.pop()
+    }
+    sendMessage()
   }
 }
 </script>
@@ -628,6 +737,57 @@ const sendMessage = async () => {
 @keyframes typingBounce {
   0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
   40% { transform: scale(1.1); opacity: 1; }
+}
+
+/* Retry button */
+.retry-row {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.retry-btn {
+  padding: 6px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  letter-spacing: 1px;
+}
+
+.retry-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Navigation action button */
+.nav-action-row {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-light);
+}
+
+.nav-action-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 100px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  letter-spacing: 1px;
+}
+
+.nav-action-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  transform: translateY(-1px);
 }
 
 /* Input Form */
