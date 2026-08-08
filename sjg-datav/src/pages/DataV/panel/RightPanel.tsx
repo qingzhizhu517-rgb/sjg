@@ -105,7 +105,7 @@ export default function RightPanel() {
       }
     ],
     animationDuration: 2000,
-    animationEasing: 'cubicOut'
+    animationEasing: 'cubicOut' as const
   }
 
   return (

@@ -96,7 +96,7 @@ export default function LeftPanel() {
       }
     ],
     animationDuration: 1500,
-    animationEasing: 'cubicOut'
+    animationEasing: 'cubicOut' as const
   }
 
   return (
@@ -122,7 +122,7 @@ export default function LeftPanel() {
           {poemsLoading ? (
             <div style={{ textAlign: 'center' }}>加载中...</div>
           ) : (
-            poems.slice(0, 5).map((poem: any, index: number) => (
+            poems.slice(0, 5).map((poem: any) => (
               <div key={poem.id} style={{ marginBottom: '12px' }}>
                 <div style={{ color: '#667eea', fontWeight: 'bold' }}>
                   {poem.title}

@@ -22,7 +22,7 @@ echarts.use([
 ])
 
 interface ChartProps {
-  option: echarts.EChartsOption
+  option: echarts.EChartsCoreOption
   style?: React.CSSProperties
   className?: string
 }

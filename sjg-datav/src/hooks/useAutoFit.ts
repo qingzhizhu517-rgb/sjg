@@ -9,7 +9,7 @@ export function useAutoFit(designWidth = 1920, designHeight = 1080) {
       autofit.init({
         dw: designWidth,
         dh: designHeight,
-        el: ref.current,
+        el: ref.current as unknown as string,
         resize: true
       })
     }
