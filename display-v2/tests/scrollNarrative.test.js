@@ -2,9 +2,9 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { narrativePanels } from '../src/content/scrollNarrative.js'
 
-test('narrativePanels: real 主题有 3 段叙事', () => {
+test('narrativePanels: real 主题有 2 段叙事', () => {
   assert.ok(Array.isArray(narrativePanels.real))
-  assert.equal(narrativePanels.real.length, 3)
+  assert.equal(narrativePanels.real.length, 2)
 })
 
 test('narrativePanels: inkwash 主题有 3 段叙事', () => {
