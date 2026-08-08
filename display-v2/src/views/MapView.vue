@@ -361,15 +361,15 @@ const scrollToMap = () => {
 const loadHeroData = async () => {
   try {
     const [regionsRes, spotsRes, poetsRes, poemsRes] = await Promise.allSettled([
-      api.get('/spots/regions'),
-      api.get('/spots', { params: { page: 1, size: 1 } }),
-      api.get('/poets', { params: { page: 1, size: 1 } }),
-      api.get('/poems', { params: { page: 1, size: 1 } }),
+      api.swrGet('/spots/regions'),
+      api.swrGet('/spots', { page: 1, size: 1 }),
+      api.swrGet('/poets', { page: 1, size: 1 }),
+      api.swrGet('/poems', { page: 1, size: 1 }),
     ])
-    if (regionsRes.status === 'fulfilled') regions.value = regionsRes.value || []
-    const spots = spotsRes.status === 'fulfilled' ? spotsRes.value?.total : 0
-    const poets = poetsRes.status === 'fulfilled' ? poetsRes.value?.total : 0
-    const poems = poemsRes.status === 'fulfilled' ? poemsRes.value?.total : 0
+    if (regionsRes.status === 'fulfilled') regions.value = regionsRes.value?.data || []
+    const spots = spotsRes.status === 'fulfilled' ? spotsRes.value?.data?.total : 0
+    const poets = poetsRes.status === 'fulfilled' ? poetsRes.value?.data?.total : 0
+    const poems = poemsRes.status === 'fulfilled' ? poemsRes.value?.data?.total : 0
     heroStats.value = [
       { value: spots || 0, suffix: '处', label: '文学景观' },
       { value: poets || 0, suffix: '位', label: '文人大家' },
@@ -466,6 +466,9 @@ onMounted(() => {
     stickyInkRef: stickyInkRef.value,
     railRef: railSectionRef.value,
   })
+  // P5-5: 预取关键数据（浏览器空闲时）
+  api.prefetch('/timeline')
+  api.prefetch('/poet-relations')
 })
 
 onBeforeUnmount(() => {

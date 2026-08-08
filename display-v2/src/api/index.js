@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { cacheKey, swrGet, prefetchWhenIdle } from './cache'
 
 const api = axios.create({
   baseURL: '/api/public',
@@ -58,5 +59,32 @@ api.interceptors.response.use(
     return Promise.reject(new Error(message))
   }
 )
+
+/**
+ * SWR 缓存 GET：有缓存立即返回，后台刷新
+ * @param {string} url - API 路径
+ * @param {object} params - 请求参数
+ * @param {object} opts - { theme, ttl, force }
+ * @returns {Promise<{data, isStale}>}
+ */
+api.swrGet = (url, params = {}, opts = {}) => {
+  const { theme, ttl, force } = opts
+  const key = cacheKey(url, params, theme)
+  const fetcher = () => api.get(url, { params })
+  return swrGet(key, fetcher, { ttl, force })
+}
+
+/**
+ * 预取：浏览器空闲时缓存
+ * @param {string} url - API 路径
+ * @param {object} params - 请求参数
+ * @param {object} opts - { theme }
+ */
+api.prefetch = (url, params = {}, opts = {}) => {
+  const { theme } = opts
+  const key = cacheKey(url, params, theme)
+  const fetcher = () => api.get(url, { params })
+  prefetchWhenIdle(key, fetcher)
+}
 
 export default api

@@ -49,7 +49,8 @@ const loadTimeline = async () => {
   errorMsg.value = null
   loaded.value = false
   try {
-    timeline.value = await api.get('/timeline')
+    const { data } = await api.swrGet('/timeline')
+    timeline.value = data
   } catch (e) {
     console.error('加载朝代时间线失败:', e)
     errorMsg.value = '加载朝代数据失败，请稍后重试'

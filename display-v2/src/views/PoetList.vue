@@ -634,7 +634,7 @@ watch([activeTab, isAnime], () => {
 const loadPoets = async () => {
   errorMsg.value = null
   try {
-    const data = await api.get('/poets', { params: { size: 200 } })
+    const { data } = await api.swrGet('/poets', { size: 200 })
     poets.value = data.records || []
     poetsLoaded.value = true
   } catch (e) {
