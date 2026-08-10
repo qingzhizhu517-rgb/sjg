@@ -1,6 +1,8 @@
 # 文化板块扩展设计（诗词 → 五大板块）
 
-> 创建：2026-08-08 ｜ 状态：**待评审** ｜ 前置决策已与用户确认
+> 创建：2026-08-08 ｜ 状态：**已实施（2026-08-10，C0-C5 代码完成）** ｜ 前置决策已与用户确认
+>
+> **实施进度**：C0 ✅（V6 SQL + entity/mapper/service）｜ C1 ✅（pub/admin controller，backend 编译通过）｜ C2 ⚠️（25 条种子已生成 `scripts/output/festivals_seed.sql`，**DB 未应用**——远端 MySQL 连接中断）｜ C3 ✅（admin CulturalList + 发布流）｜ C4 ✅（FestivalList/Detail + 路由）｜ C5 ✅（CulturalGallery 首页区块）｜ C6 部分（双前端构建通过；**待 DB 应用后端到端走查**）
 > 关联：`docs/plans/2026-08-05-display-v2-ui-optimization-tasks.md`（UI 优化线并行进行）
 
 ## 1. 背景与目标
