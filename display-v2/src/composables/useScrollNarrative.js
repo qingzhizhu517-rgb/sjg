@@ -75,7 +75,7 @@ export function useScrollNarrative() {
       ScrollTrigger.create({
         trigger: el,
         start: 'top top',
-        end: '+=200%',
+        end: '+=120%',
         pin: true,
         pinSpacing: true,
         scrub: 1,
@@ -99,7 +99,7 @@ export function useScrollNarrative() {
       ScrollTrigger.create({
         trigger: el,
         start: 'top top',
-        end: '+=150%',
+        end: '+=100%',
         pin: true,
         pinSpacing: true,
         scrub: 1,

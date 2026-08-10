@@ -142,18 +142,6 @@
           </div>
         </div>
 
-        <!-- 叙事文字卡片（叠在 sticky 上滚动） -->
-        <div class="sn-narrative-panels">
-          <div v-for="(panel, i) in narrativePanels.real" :key="i" class="sn-panel">
-            <div class="sn-panel__accent"></div>
-            <div class="sn-panel__icon">{{ panel.icon }}</div>
-            <h2 class="sn-panel__title">{{ panel.title }}</h2>
-            <p class="sn-panel__body">{{ panel.body }}</p>
-            <div class="sn-panel__footer">
-              <span class="sn-panel__tag">{{ panel.tag }}</span>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
 
@@ -232,18 +220,6 @@
           </div>
         </div>
 
-        <!-- 叙事文字卡片 -->
-        <div class="sn-narrative-panels">
-          <div v-for="(panel, i) in narrativePanels.inkwash" :key="i" class="sn-panel">
-            <div class="sn-panel__accent"></div>
-            <div class="sn-panel__icon">{{ panel.icon }}</div>
-            <h2 class="sn-panel__title">{{ panel.title }}</h2>
-            <p class="sn-panel__body">{{ panel.body }}</p>
-            <div class="sn-panel__footer">
-              <span class="sn-panel__tag">{{ panel.tag }}</span>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
 
@@ -302,7 +278,6 @@ import { useThreeSandbox } from '../composables/useThreeSandbox'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import { useScrollNarrative } from '../composables/useScrollNarrative'
 import { useFlipTransition } from '../composables/useFlipTransition'
-import { narrativePanels } from '../content/scrollNarrative'
 import { cityIllustration, CITY_RIVER_ORDER } from '../config/cityIllustrations'
 
 const router = useRouter()
@@ -321,7 +296,6 @@ const heroStats = ref([])
 
 // ===== Scroll 叙事编排 (P3-1) =====
 const scrollNarrative = useScrollNarrative()
-const { stickyProgress } = scrollNarrative
 const stickyRealRef = ref(null)
 const stickyInkRef = ref(null)
 const railSectionRef = ref(null)
@@ -546,7 +520,7 @@ onBeforeUnmount(() => {
 .sn-sticky-viewport {
   position: relative;
   width: 100%;
-  min-height: 300vh; /* 提供足够 scroll 距离给 pin */
+  min-height: 100vh; /* 与 media 等高；滚动距离由 ScrollTrigger pin 时长提供 */
 }
 
 .sn-sticky-media {
@@ -563,149 +537,9 @@ onBeforeUnmount(() => {
   /* anime-ink-container 内部已有 layout */
 }
 
-/* 叙事文字面板（叠在 sticky media 上方滚动穿过） */
-.sn-narrative-panels {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 60vh;
-  padding: 120px 48px;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.sn-panel {
-  pointer-events: auto;
-  max-width: 420px;
-  background: var(--card-bg, rgba(253, 250, 245, 0.92));
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border, #e8e0d5);
-  border-radius: 8px;
-  padding: 0;
-  box-shadow: 0 12px 40px rgba(31, 26, 22, 0.08);
-  overflow: hidden;
-  position: relative;
-  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-.sn-panel:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 60px rgba(31, 26, 22, 0.12);
-  border-color: var(--accent);
-}
-
-/* 顶部装饰线 */
-.sn-panel__accent {
-  height: 3px;
-  background: linear-gradient(90deg, var(--accent), var(--accent-light, #d4a853));
-  width: 100%;
-}
-
-/* 图标印章 */
-.sn-panel__icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 900;
-  color: #fff;
-  background: var(--accent);
-  border-radius: 4px;
-  margin: 24px 32px 16px;
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 30%, transparent);
-  transform: rotate(-3deg);
-}
-
-.sn-sticky-real .sn-panel {
-  margin-left: auto;
-  margin-right: 48px;
-}
-
-.sn-sticky-ink .sn-panel {
-  margin-right: auto;
-  margin-left: 48px;
-}
-
-.sn-panel__title {
-  font-family: var(--font-heading);
-  font-size: 22px;
-  font-weight: 900;
-  letter-spacing: 3px;
-  color: var(--text-primary);
-  margin: 0 8px 10px;
-  padding: 0 24px;
-}
-
-.sn-panel__body {
-  font-size: 14px;
-  line-height: 1.9;
-  color: var(--text-secondary);
-  margin: 0;
-  padding: 0 32px 20px;
-  letter-spacing: 0.3px;
-}
-
-/* 底部标签 */
-.sn-panel__footer {
-  padding: 12px 32px 20px;
-  border-top: 1px dashed var(--border-light);
-  margin-top: 4px;
-}
-
-.sn-panel__tag {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
-  padding: 4px 12px;
-  border-radius: 100px;
-  letter-spacing: 1px;
-}
-
 @media (max-width: 768px) {
   .sn-stats {
     padding: 40px 16px;
-  }
-
-  .sn-narrative-panels {
-    padding: 80px 20px;
-    gap: 40vh;
-  }
-
-  .sn-panel {
-    max-width: none;
-    margin: 0 !important;
-  }
-
-  .sn-panel__icon {
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
-    margin: 20px 24px 12px;
-  }
-
-  .sn-panel__title {
-    font-size: 18px;
-    padding: 0 20px;
-    margin: 0 4px 8px;
-  }
-
-  .sn-panel__body {
-    padding: 0 24px 16px;
-  }
-
-  .sn-panel__footer {
-    padding: 10px 24px 16px;
   }
 
   .sn-container {
