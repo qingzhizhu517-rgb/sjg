@@ -9,6 +9,8 @@ const routes = [
   { path: '/poems/:id', name: 'PoemDetail', component: () => import('../views/PoemDetail.vue') },
   { path: '/spots/:id', name: 'SpotDetail', component: () => import('../views/SpotDetail.vue') },
   { path: '/timeline', name: 'Timeline', component: () => import('../views/Timeline.vue') },
+  { path: '/festivals', name: 'FestivalList', component: () => import('../views/FestivalList.vue') },
+  { path: '/festivals/:id', name: 'FestivalDetail', component: () => import('../views/FestivalDetail.vue') },
   { path: '/regions/:region', name: 'RegionSpots', component: () => import('../views/RegionSpots.vue') },
 ]
 

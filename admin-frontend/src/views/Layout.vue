@@ -29,6 +29,10 @@
           <el-icon><Calendar /></el-icon>
           <span>事件管理</span>
         </el-menu-item>
+        <el-menu-item index="/cultural">
+          <el-icon><Collection /></el-icon>
+          <span>文化条目</span>
+        </el-menu-item>
         <!-- 底部分隔区 -->
         <div class="sidebar-divider"></div>
         <el-menu-item v-if="isAdmin" index="/users">
@@ -69,7 +73,7 @@
 </template>
 
 <script setup>
-import { UserFilled } from '@element-plus/icons-vue'
+import { UserFilled, Collection } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -83,6 +87,7 @@ const pageTitles = {
   '/spots': '景点管理',
   '/poems': '诗词管理',
   '/events': '事件管理',
+  '/cultural': '文化条目管理',
   '/users': '用户管理',
 }
 

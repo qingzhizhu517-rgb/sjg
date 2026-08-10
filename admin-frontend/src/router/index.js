@@ -11,6 +11,7 @@ const routes = [
       { path: 'spots', name: 'SpotList', component: () => import('../views/SpotList.vue') },
       { path: 'poems', name: 'PoemList', component: () => import('../views/PoemList.vue') },
       { path: 'events', name: 'EventList', component: () => import('../views/EventList.vue') },
+      { path: 'cultural', name: 'CulturalList', component: () => import('../views/CulturalList.vue') },
       { path: 'users', name: 'UserList', component: () => import('../views/UserList.vue'), meta: { requireAdmin: true } },
     ]
   }

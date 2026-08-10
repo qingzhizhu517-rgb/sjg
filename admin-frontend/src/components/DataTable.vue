@@ -14,9 +14,10 @@
           <el-icon><Search /></el-icon>
           搜索
         </el-button>
+        <slot name="toolbar" :search="search" />
       </div>
       <div class="action-group">
-        <el-button class="btn-outline" @click="$emit('import')">
+        <el-button v-if="!hideImport" class="btn-outline" @click="$emit('import')">
           <el-icon><Upload /></el-icon>
           批量导入
         </el-button>
@@ -29,12 +30,13 @@
 
     <el-table :data="data" v-loading="loading" stripe class="traditional-table" style="width: 100%; height: 100%">
       <slot />
-      <el-table-column label="操作" width="200" fixed="right">
+      <el-table-column label="操作" :width="actionWidth" fixed="right">
         <template #default="{ row }">
           <el-button type="primary" link class="action-link edit" @click="$emit('edit', row)">
             <el-icon><Edit /></el-icon>
             编辑
           </el-button>
+          <slot name="actions" :row="row" />
           <el-popconfirm title="确定删除此条记录？" @confirm="$emit('delete', row)" confirm-button-text="确定" cancel-button-text="取消">
             <template #reference>
               <el-button type="danger" link class="action-link delete">
@@ -63,7 +65,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 
-const props = defineProps({ fetchFn: Function })
+const props = defineProps({
+  fetchFn: Function,
+  hideImport: { type: Boolean, default: false },
+  actionWidth: { type: [Number, String], default: 200 },
+})
 const emit = defineEmits(['add', 'edit', 'delete', 'import'])
 
 const data = ref([])
