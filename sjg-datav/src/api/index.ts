@@ -2,7 +2,7 @@ import useSWR from 'swr'
 
 const BASE_URL = '/api/public'
 
-// 通用 fetcher
+// 通用 fetcher - 处理分页数据
 const fetcher = async (url: string) => {
   const response = await fetch(url)
   if (!response.ok) {
@@ -11,6 +11,10 @@ const fetcher = async (url: string) => {
   const data = await response.json()
   if (data.code !== 200) {
     throw new Error(data.message || '请求失败')
+  }
+  // 处理分页数据：如果是分页格式，返回 records 数组
+  if (data.data && data.data.records) {
+    return data.data.records
   }
   return data.data
 }

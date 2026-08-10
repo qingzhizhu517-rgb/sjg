@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 import Chart from '../../../components/Chart'
 import NumberAnimation from '../../../components/NumberAnimation'
-import { usePoets, usePoems, useSpots, useDynasties } from '../../../api'
+import { usePoets, usePoems, useSpots } from '../../../api'
 
 const PanelWrapper = styled.div`
   width: 400px;
@@ -52,15 +52,26 @@ export default function RightPanel() {
   const { poets } = usePoets()
   const { poems } = usePoems()
   const { spots } = useSpots()
-  const { dynasties } = useDynasties()
 
-  // 朝代分布数据
-  const dynastyData = dynasties.map((dynasty: any) => {
-    const poetCount = poets.filter(
-      (poet: any) => poet.dynastyId === dynasty.id
-    ).length
-    return { name: dynasty.name, value: poetCount }
-  }).filter((item: any) => item.value > 0)
+  // 朝代分布数据 - 按 dynastyId 分组
+  const dynastyMap = new Map<number, number>()
+  poets.forEach((poet: any) => {
+    const count = dynastyMap.get(poet.dynastyId) || 0
+    dynastyMap.set(poet.dynastyId, count + 1)
+  })
+
+  // 朝代名称映射
+  const dynastyNames: Record<number, string> = {
+    1: '先秦', 2: '秦汉', 3: '魏晋南北朝', 4: '唐代',
+    5: '宋代', 6: '元代', 7: '明代', 8: '清代', 9: '近现代'
+  }
+
+  const dynastyData = Array.from(dynastyMap.entries())
+    .map(([id, count]) => ({
+      name: dynastyNames[id] || `朝代${id}`,
+      value: count
+    }))
+    .sort((a, b) => b.value - a.value)
 
   const dynastyPieOption = {
     tooltip: {

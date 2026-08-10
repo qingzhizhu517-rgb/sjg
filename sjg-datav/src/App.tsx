@@ -1,7 +1,7 @@
-import DataV from './pages/DataV'
+import Test8 from './pages/DataV/test8'
 
 function App() {
-  return <DataV />
+  return <Test8 />
 }
 
 export default App
