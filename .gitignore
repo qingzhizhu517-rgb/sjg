@@ -44,3 +44,10 @@ backend/target/
 # Antigravity/Superpowers Tool Metadata
 .superpowers/
 .antigravitycli/
+
+# Reference project (not part of build, 82MB)
+else/sc-datav-main/
+else/sc-datav-main.zip
+
+# TypeScript build cache
+*.tsbuildinfo
