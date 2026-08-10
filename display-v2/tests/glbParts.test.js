@@ -20,9 +20,9 @@ test('尾缀通配匹配', () => {
 })
 
 test('expandPatterns 展开通配为具体部件集合并去重', () => {
-  const all = ['gourd_raw', 'scene_base', 'scene_prop_dish', 'knife_rest']
+  const all = ['scene_base', 'gourd_raw', 'scene_prop_dish', 'knife_rest']
   const out = expandPatterns(['gourd_raw', 'scene_*'], all)
-  assert.deepEqual(out.sort(), ['gourd_raw', 'scene_base', 'scene_prop_dish'])
+  assert.deepEqual(out, ['gourd_raw', 'scene_base', 'scene_prop_dish'])
 })
 
 test('expandPatterns 对未命中模式静默跳过', () => {

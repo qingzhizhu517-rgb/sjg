@@ -1,4 +1,5 @@
 // GLB 部件命名规范（spec §5 契约）。AI 生成模型必须按此命名 node。
+// 注意：scene_prop_* 为开放族（scene_prop_dish 仅为示例），下游校验请用 matchPartName 而非 includes。
 
 export const HULU_PARTS = [
   'gourd_raw',      // 带皮生葫芦
