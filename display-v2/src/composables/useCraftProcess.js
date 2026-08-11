@@ -10,6 +10,20 @@ const prefersReduce = () =>
   typeof window !== 'undefined' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
+/** 部件基准位姿快照（target name → position/rotation/scale clone），保证 enter 幂等 */
+const baseline = new Map()
+
+/** 首次见到该 target 时记录基准位姿 */
+const _snapshot = (target, obj) => {
+  if (!baseline.has(target)) {
+    baseline.set(target, {
+      position: obj.position.clone(),
+      rotation: obj.rotation.clone(),
+      scale: obj.scale.clone(),
+    })
+  }
+}
+
 /**
  * 工序状态机：读 step config → 驱动 useGlbScene（显隐/部件动画/相机）。
  *
@@ -36,6 +50,12 @@ export function useCraftProcess(config, sceneApi) {
   const _runAnimation = (anim) => {
     const obj = sceneApi.getObject(anim.target)
     if (!obj) { console.warn('[craft] 部件缺失:', anim.target); return null }
+    _snapshot(anim.target, obj)
+    // 先恢复基准位姿再跑动画，避免重复 enter 时 += 相对量累积漂移
+    const base = baseline.get(anim.target)
+    obj.position.copy(base.position)
+    obj.rotation.copy(base.rotation)
+    obj.scale.copy(base.scale)
     const d = anim.duration ?? 1
     const props = { duration: d, ease: 'power2.inOut' }
     if (anim.delay) props.delay = anim.delay
@@ -103,7 +123,10 @@ export function useCraftProcess(config, sceneApi) {
     }
   }
 
-  const dispose = () => stopAuto()
+  const dispose = () => {
+    stopAuto()
+    baseline.clear()
+  }
 
   return { currentStep, stepMeta, isLast, playing, setPartNames, enter, next, prev, toggleAuto, stopAuto, dispose }
 }
