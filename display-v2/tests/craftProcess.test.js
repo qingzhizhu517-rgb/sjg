@@ -40,7 +40,7 @@ test('resolveStepVisible 展开通配并返回 Set', () => {
 })
 
 test('findStepConflicts 检出 fadeOut 目标仍在 visible 的冲突', () => {
-  assert.equal(findStepConflicts(STEPS[0], ALL).length, 0)
+  assert.equal(findStepConflicts(STEPS[1], ALL).length, 0)
   const bad = { visible: ['gourd_raw'], animations: [{ target: 'gourd_raw', fadeOut: true }] }
   assert.deepEqual(findStepConflicts(bad, ALL), ['gourd_raw'])
 })
