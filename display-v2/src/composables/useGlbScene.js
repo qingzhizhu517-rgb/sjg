@@ -29,6 +29,7 @@ export function useGlbScene() {
   let clickCb = null
   let hoverCb = null
   let onProgress = null
+  let downPos = null
   const originalMaterials = new Map()  // mesh.uuid -> material（toon 还原用）
 
   const init = async (canvas) => {
@@ -68,7 +69,8 @@ export function useGlbScene() {
     init._resize = resize
 
     canvas.addEventListener('pointermove', _handlePointer)
-    canvas.addEventListener('pointerdown', _handleClick)
+    canvas.addEventListener('pointerdown', _handleDown)
+    canvas.addEventListener('pointerup', _handleClick)
 
     const tick = () => {
       controls.update()
@@ -124,8 +126,8 @@ export function useGlbScene() {
   const applyCameraPose = (pose) => {
     if (!camera || !pose) return
     const d = pose.duration ?? 1.2
-    gsap.to(camera.position, { x: pose.pos[0], y: pose.pos[1], z: pose.pos[2], duration: d, ease: 'power2.inOut' })
-    gsap.to(controls.target, { x: pose.target[0], y: pose.target[1], z: pose.target[2], duration: d, ease: 'power2.inOut' })
+    gsap.to(camera.position, { x: pose.pos[0], y: pose.pos[1], z: pose.pos[2], duration: d, ease: 'power2.inOut', overwrite: 'auto' })
+    gsap.to(controls.target, { x: pose.target[0], y: pose.target[1], z: pose.target[2], duration: d, ease: 'power2.inOut', overwrite: 'auto' })
   }
 
   const _pick = (ev) => {
@@ -154,8 +156,15 @@ export function useGlbScene() {
     hoverCb(hit ? hit.name : null, ev)
   }
 
+  const _handleDown = (ev) => {
+    downPos = { x: ev.clientX, y: ev.clientY }
+  }
+
   const _handleClick = (ev) => {
-    if (!clickCb) return
+    if (!clickCb || !downPos) return
+    const dx = ev.clientX - downPos.x, dy = ev.clientY - downPos.y
+    downPos = null
+    if (dx * dx + dy * dy > 36) return
     const hit = _pick(ev)
     if (hit) clickCb(hit.name, hit.point)
   }
@@ -179,7 +188,8 @@ export function useGlbScene() {
     window.removeEventListener('resize', init._resize)
     const canvas = renderer?.domElement
     canvas?.removeEventListener('pointermove', _handlePointer)
-    canvas?.removeEventListener('pointerdown', _handleClick)
+    canvas?.removeEventListener('pointerdown', _handleDown)
+    canvas?.removeEventListener('pointerup', _handleClick)
     controls?.dispose()
     root?.traverse((m) => { if (m.isMesh) { m.geometry?.dispose(); [].concat(m.material).forEach((mt) => mt?.dispose?.()) } })
     renderer?.dispose()
