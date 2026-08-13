@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * AI 小文对话编排：拼系统提示 + RAG 上下文 + 历史 → 调 LlmClient 流式 → SseEmitter 推送。
@@ -20,6 +22,8 @@ import java.util.concurrent.Executors;
  */
 @Service
 public class ChatService {
+
+    private static final Logger log = LoggerFactory.getLogger(ChatService.class);
 
     private final LlmClient llm;
     private final RagRetrievalService rag;
@@ -63,8 +67,7 @@ public class ChatService {
         executor.submit(() -> {
             try {
                 String ragCtx = rag.retrieve(req.message());
-                String sys = systemPrompt.replace("{rag_context}",
-                        ragCtx.isEmpty() ? "（无相关资料）" : ragCtx);
+                String sys = buildSystemPrompt(ragCtx);
 
                 // 注入前端页面上下文
                 String contextHint = buildContextHint(req.context());
@@ -123,6 +126,21 @@ public class ChatService {
             times.add(now);
             return true;
         }
+    }
+
+    /**
+     * 构建最终系统提示：把检索资料填入 {@code {rag_context}} 占位符。
+     * 若配置中缺失占位符（如被人误删），兜底把资料追加到末尾并告警，
+     * 避免 RAG 上下文静默失效。
+     */
+    String buildSystemPrompt(String ragContext) {
+        String ragBlock = (ragContext == null || ragContext.isEmpty()) ? "（无相关资料）" : ragContext;
+        String sys = systemPrompt;
+        if (sys != null && sys.contains("{rag_context}")) {
+            return sys.replace("{rag_context}", ragBlock);
+        }
+        log.warn("llm.system-prompt 缺少 {rag_context} 占位符，检索资料将追加到末尾以保证 RAG 生效");
+        return (sys == null ? "" : sys) + "\n\n检索资料：\n" + ragBlock;
     }
 
     /**
