@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <rect width="400" height="300" rx="12" fill="#F5F0E8"/>
+  <text x="200" y="30" text-anchor="middle" font-family="serif" font-size="18" fill="#8B7355">第三步 · 画稿</text>
+  <!-- 葫芦本体 -->
+  <ellipse cx="200" cy="170" rx="55" ry="75" fill="#F0E6D0" stroke="#C5A55A" stroke-width="1.5"/>
+  <ellipse cx="200" cy="100" rx="25" ry="30" fill="#F0E6D0" stroke="#C5A55A" stroke-width="1.5"/>
+  <line x1="200" y1="70" x2="200" y2="55" stroke="#A0896C" stroke-width="3" stroke-linecap="round"/>
+  <!-- 墨线纹样 -->
+  <path d="M175 145 Q200 125 225 145" stroke="#2D2D2D" stroke-width="1.2" fill="none" opacity="0.7"/>
+  <path d="M170 165 Q200 148 230 165" stroke="#2D2D2D" stroke-width="1.2" fill="none" opacity="0.7"/>
+  <circle cx="200" cy="155" r="3" fill="#2D2D2D" opacity="0.5"/>
+  <text x="200" y="275" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#A0896C">描绘纹样轮廓 · 花鸟鱼虫山水人物</text>
+</svg>

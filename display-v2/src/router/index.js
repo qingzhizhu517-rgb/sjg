@@ -11,6 +11,7 @@ const routes = [
   { path: '/timeline', name: 'Timeline', component: () => import('../views/Timeline.vue') },
   { path: '/festivals', name: 'FestivalList', component: () => import('../views/FestivalList.vue') },
   { path: '/festivals/:id', name: 'FestivalDetail', component: () => import('../views/FestivalDetail.vue') },
+  { path: '/crafts', name: 'CraftWorkshop', component: () => import('../views/CraftWorkshop.vue') },
   { path: '/regions/:region', name: 'RegionSpots', component: () => import('../views/RegionSpots.vue') },
 ]
 

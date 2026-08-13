@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <rect width="400" height="300" rx="12" fill="#F5F0E8"/>
+  <text x="200" y="30" text-anchor="middle" font-family="serif" font-size="18" fill="#8B7355">第一步 · 选料</text>
+  <!-- 葫芦轮廓 -->
+  <ellipse cx="200" cy="170" rx="55" ry="75" fill="#8DB36B" opacity="0.8"/>
+  <ellipse cx="200" cy="100" rx="25" ry="30" fill="#8DB36B" opacity="0.8"/>
+  <line x1="200" y1="70" x2="200" y2="55" stroke="#6B8E4E" stroke-width="3" stroke-linecap="round"/>
+  <text x="200" y="275" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#A0896C">霜降后采摘 · 取形正皮厚者</text>
+</svg>
