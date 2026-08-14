@@ -11,11 +11,6 @@
     />
 
     <div ref="revealRoot" class="poets-content">
-      <!-- 今日名句 -->
-      <section v-if="todayPoem" class="poets-section poets-quote" data-reveal>
-        <FeaturedPoemCard :poem="todayPoem" @click="goPoem(todayPoem.id)" />
-      </section>
-
       <!-- 朝代筛选 + 视图切换 -->
       <section class="poets-toolbar" data-reveal>
         <DynastyRail
@@ -30,7 +25,7 @@
             :class="{ active: activeTab === 'gallery' }"
             role="tab"
             :aria-selected="activeTab === 'gallery'"
-            @click="activeTab = 'gallery'"
+            @click="setTab('gallery')"
           >
             书卷长廊
           </button>
@@ -39,7 +34,7 @@
             :class="{ active: activeTab === 'all' }"
             role="tab"
             :aria-selected="activeTab === 'all'"
-            @click="activeTab = 'all'"
+            @click="setTab('all')"
           >
             全名录
           </button>
@@ -48,7 +43,7 @@
             :class="{ active: activeTab === 'graph' }"
             role="tab"
             :aria-selected="activeTab === 'graph'"
-            @click="activeTab = 'graph'"
+            @click="setTab('graph')"
           >
             关系图谱
           </button>
@@ -297,24 +292,24 @@
               </div>
             </div>
 
-            <!-- 加载态 -->
-            <div v-if="graphStatus === 'loading'" class="graph-status-box graph-status-box--skel" aria-busy="true" aria-label="关系图谱加载中">
-              <SkeletonBlock height="560px" />
-            </div>
-
-            <!-- 空态 -->
-            <div v-else-if="graphStatus === 'empty'" class="graph-status-box">
-              <EmptyState icon="谱" message="暂无关系数据" hint="等待学者考证补录" />
-            </div>
-
-            <!-- 错误态 -->
-            <div v-else-if="graphStatus === 'error'" class="graph-status-box">
-              <ErrorState message="关系数据加载失败" @retry="initG6" />
-            </div>
-
-            <!-- 图谱画布 + 诗人抽屉 -->
-            <div v-show="graphStatus === 'ready'" class="graph-stage">
+            <!-- 图谱画布(常驻挂载, 保证容器可测量) + 状态浮层 + 诗人抽屉 -->
+            <div class="graph-stage">
               <div ref="g6Container" class="g6-container-canvas"></div>
+
+              <!-- 加载态 -->
+              <div v-if="graphStatus === 'loading'" class="graph-status-box graph-status-box--skel" aria-busy="true" aria-label="关系图谱加载中">
+                <SkeletonBlock height="560px" />
+              </div>
+
+              <!-- 空态 -->
+              <div v-else-if="graphStatus === 'empty'" class="graph-status-box">
+                <EmptyState icon="谱" message="暂无关系数据" hint="等待学者考证补录" />
+              </div>
+
+              <!-- 错误态 -->
+              <div v-else-if="graphStatus === 'error'" class="graph-status-box">
+                <ErrorState message="关系数据加载失败" @retry="initG6" />
+              </div>
 
               <Transition name="drawer-slide">
                 <aside v-if="drawerPoet" class="graph-drawer" role="dialog" aria-label="诗人关系卡片">
@@ -378,7 +373,6 @@ import { Graph, Tooltip } from '@antv/g6'
 import { cssVar } from '../utils/cssToken'
 import InkHero from '../components/homepage/InkHero.vue'
 import SectionHeading from '../components/homepage/SectionHeading.vue'
-import FeaturedPoemCard from '../components/homepage/FeaturedPoemCard.vue'
 import FeaturedPoetCard from '../components/homepage/FeaturedPoetCard.vue'
 import DynastyRail from '../components/homepage/DynastyRail.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
@@ -405,7 +399,23 @@ const DYNASTIES = [
   { id: 8, name: '清', start: 1644, end: 1912 },
 ]
 
-const activeTab = ref(route.query.view === 'all' ? 'all' : 'gallery')
+// tab 状态与 URL 双向同步: ?view=gallery|all|graph, 刷新/直达/前进后退均保持
+const VALID_VIEWS = ['gallery', 'all', 'graph']
+const activeTab = ref(VALID_VIEWS.includes(route.query.view) ? route.query.view : 'gallery')
+const setTab = (v) => {
+  if (!VALID_VIEWS.includes(v)) v = 'gallery'
+  activeTab.value = v
+  if (route.query.view !== v) {
+    router.replace({ query: { ...route.query, view: v } }).catch(() => {})
+  }
+}
+watch(
+  () => route.query.view,
+  (v) => {
+    const next = VALID_VIEWS.includes(v) ? v : 'gallery'
+    if (next !== activeTab.value) activeTab.value = next
+  },
+)
 const selectedDynastyId = ref(null)
 const poets = ref([])
 const poetsLoaded = ref(false)
@@ -463,24 +473,6 @@ const featuredPoets = computed(() => {
     .slice(0, 3)
 })
 
-const todayPoem = computed(() => {
-  if (!enrichmentLoaded.value || !enrichedPoets.value.length) return null
-  const candidates = enrichedPoets.value
-    .filter((p) => p.signaturePoem && p.signaturePoem.firstLine)
-    .sort((a, b) => (b.poemCount || 0) - (a.poemCount || 0))
-  if (!candidates.length) return null
-  const idx = new Date().getDate() % candidates.length
-  const p = candidates[idx]
-  return {
-    id: p.signaturePoem.id,
-    line: p.signaturePoem.firstLine,
-    title: p.signaturePoem.title,
-    poetName: p.name,
-    dynastyName: getDynastyName(p.dynastyId),
-    sentimentTags: p.signaturePoem.sentimentTags || [],
-  }
-})
-
 const statsReady = computed(() => poetsLoaded.value && enrichmentLoaded.value)
 const heroStats = computed(() => {
   if (!statsReady.value) return []
@@ -505,9 +497,6 @@ const getPoetAvatar = (poet) => {
 }
 const onAvatarError = (e) => {
   e.target.style.display = 'none'
-}
-const goPoem = (id) => {
-  if (id) router.push(`/poems/${id}`)
 }
 
 // ==========================================
@@ -1062,13 +1051,29 @@ watch([relationFilter, derivedVisible, dynastyFilter], () => {
   applyGraphFilter()
 })
 
+// 等待图谱容器挂载并完成布局获得真实尺寸(替换盲目 setTimeout;
+// tab 切换走 mode="out-in" 过渡, 新 tab 内容约 250ms 后才插入 DOM)
+const waitForGraphContainerSize = async (timeoutMs = 3000) => {
+  const deadline = Date.now() + timeoutMs
+  for (;;) {
+    const el = g6Container.value
+    if (el && el.clientWidth > 0 && el.clientHeight > 0) return true
+    if (Date.now() >= deadline) return false
+    await new Promise((r) => setTimeout(r, 50))
+  }
+}
+
+const enterGraphTab = async () => {
+  graphStatus.value = 'loading'
+  await nextTick()
+  if (!(await waitForGraphContainerSize())) return
+  if (activeTab.value !== 'graph') return
+  initG6()
+}
+
 watch([activeTab, isAnime], () => {
   if (activeTab.value === 'graph') {
-    nextTick(() => {
-      setTimeout(() => {
-        initG6()
-      }, 100)
-    })
+    enterGraphTab()
   } else {
     if (graphInstance) {
       graphInstance.destroy()
@@ -1092,6 +1097,11 @@ const loadPoets = async () => {
 
 onMounted(async () => {
   window.addEventListener('resize', handleGraphResize)
+  // 直接访问 /poets?view=graph 时 watch 不触发, 需显式初始化;
+  // 不 await: 与诗人列表加载并行, 尽早呈现 loading→图谱
+  if (activeTab.value === 'graph') {
+    enterGraphTab()
+  }
   await loadPoets()
   await build()
   enrichmentLoaded.value = true
@@ -1121,9 +1131,6 @@ onBeforeUnmount(() => {
 .poets-section {
   max-width: 1200px;
   margin: 0 auto 56px;
-}
-.poets-quote {
-  margin-top: 56px;
 }
 .poets-featured-grid {
   display: grid;
@@ -1487,6 +1494,7 @@ onBeforeUnmount(() => {
 .g6-container-canvas {
   width: 100%;
   height: 560px;
+  min-height: 520px; /* 兜底: 极端布局下避免 0 尺寸画布 */
   border: 1px solid var(--border);
   border-radius: 4px;
   background: var(--card-bg);
@@ -1677,13 +1685,15 @@ onBeforeUnmount(() => {
   border: none;
 }
 
-/* graph loading / empty status */
+/* graph loading / empty status (浮层覆盖在常驻画布之上) */
 .graph-status-box {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 560px;
   border: 1px solid var(--border);
   border-radius: 4px;
   background: var(--card-bg);
@@ -1718,8 +1728,7 @@ onBeforeUnmount(() => {
   .poet-avatar-box { width: 64px; height: 84px; }
   .poet-avatar-stamp { font-size: 28px; }
   .poet-name-tag { font-size: 18px; }
-  .g6-container-canvas { height: 440px; }
-  .graph-status-box { height: 440px; }
+  .g6-container-canvas { height: 440px; min-height: 420px; }
   .graph-legend { flex-wrap: wrap; gap: 12px 18px; }
   .legend-group + .legend-group { border-left: none; padding-left: 0; }
   .graph-instructions { flex-direction: column; align-items: flex-start; gap: 8px; }
