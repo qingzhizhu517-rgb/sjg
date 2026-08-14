@@ -512,6 +512,14 @@ const g6Container = ref(null)
 const graphStatus = ref('idle')
 let graphInstance = null
 let graphRequestSeq = 0
+// 画布 Ctrl+滚轮缩放监听的清理句柄(随 graph 生命周期挂载/卸载)
+let disposeGraphWheel = null
+const clearGraphWheel = () => {
+  if (disposeGraphWheel) {
+    disposeGraphWheel()
+    disposeGraphWheel = null
+  }
+}
 
 // ---- 关系类型视觉编码（Phase2 派生边/新类型在此扩展）----
 // 并称: 粗实线（最牢固的"齐名"关系；G6 v5 无原生双线，以线宽 4 + 主题 accent 色表达 double）
@@ -708,6 +716,7 @@ const handleGraphResize = () => {
 
 const initG6 = async () => {
   if (!g6Container.value) return
+  clearGraphWheel()
   if (graphInstance) {
     graphInstance.destroy()
     graphInstance = null
@@ -953,7 +962,9 @@ const initG6 = async () => {
     },
     behaviors: [
       'drag-canvas',
-      'zoom-canvas',
+      // 仅保留触屏双指缩放; 滚轮缩放改由下方自管监听实现(Ctrl+滚轮),
+      // 避免 zoom-canvas 的 preventDefault 拦截普通滚轮导致页面无法滚动
+      { type: 'zoom-canvas', trigger: ['pinch'] },
       'drag-element',
       // 悬停聚焦: 高亮悬停节点及其邻接节点/边, 其余淡化
       { type: 'hover-activate', degree: 1, direction: 'both', inactiveState: 'inactive' },
@@ -984,6 +995,18 @@ const initG6 = async () => {
     const keys = Object.keys(leftovers)
     if (keys.length) graphInstance.setElementState(leftovers)
   })
+
+  // Ctrl/Cmd+滚轮才缩放图谱; 普通滚轮不做拦截, 交还页面滚动(修复滚轮劫持)
+  const wheelEl = g6Container.value
+  const onGraphWheel = (e) => {
+    if (!e.ctrlKey && !e.metaKey) return
+    e.preventDefault()
+    if (!graphInstance) return
+    const zoom = graphInstance.getZoom()
+    graphInstance.zoomTo(zoom * (1 - e.deltaY * 0.0022))
+  }
+  wheelEl.addEventListener('wheel', onGraphWheel, { passive: false })
+  disposeGraphWheel = () => wheelEl.removeEventListener('wheel', onGraphWheel)
 
   // 节点 hover 生平 tooltip（纯增强: 图谱接口无 biography, 复用 /poets 列表数据）
   const tooltip = new Tooltip({
@@ -1113,6 +1136,7 @@ watch([activeTab, isAnime], () => {
   if (activeTab.value === 'graph') {
     enterGraphTab()
   } else {
+    clearGraphWheel()
     if (graphInstance) {
       graphInstance.destroy()
       graphInstance = null
@@ -1149,6 +1173,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleGraphResize)
+  clearGraphWheel()
   if (graphInstance) {
     graphInstance.destroy()
     graphInstance = null
