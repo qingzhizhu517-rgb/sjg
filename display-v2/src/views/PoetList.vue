@@ -256,8 +256,38 @@
             <div class="graph-instructions">
               <span class="instruction-tag">互动</span>
               <p class="instruction-desc">
-                滚轮缩放 · 拖拽画布 · 点击节点进入专栏。圆圈代表诗人，连线越粗关系越深。
+                滚轮缩放 · 拖拽画布 · 悬停诗人聚焦其交游脉络 · 点击诗人查看关系卡片；师承以箭头示方向（师 → 徒），虚线为推断关系。
               </p>
+            </div>
+
+            <!-- 关系/朝代 筛选 chips -->
+            <div v-if="graphStatus === 'ready'" class="graph-filters">
+              <div class="filter-group">
+                <span class="filter-label">关系</span>
+                <button
+                  v-for="rt in relationFilterOptions"
+                  :key="rt"
+                  class="filter-chip"
+                  :class="{ active: relationFilter === rt }"
+                  @click="relationFilter = rt"
+                >{{ rt }}</button>
+                <button
+                  v-if="derivedCount"
+                  class="filter-chip filter-chip--derived"
+                  :class="{ active: derivedVisible }"
+                  @click="derivedVisible = !derivedVisible"
+                >推断{{ derivedCount }}</button>
+              </div>
+              <div class="filter-group">
+                <span class="filter-label">朝代</span>
+                <button
+                  v-for="d in graphDynastyOptions"
+                  :key="d"
+                  class="filter-chip"
+                  :class="{ active: dynastyFilter === d }"
+                  @click="dynastyFilter = d"
+                >{{ d }}</button>
+              </div>
             </div>
 
             <!-- 加载态 -->
@@ -275,13 +305,50 @@
               <ErrorState message="关系数据加载失败" @retry="initG6" />
             </div>
 
-            <!-- 图谱画布 -->
-            <div v-show="graphStatus === 'ready'" ref="g6Container" class="g6-container-canvas"></div>
+            <!-- 图谱画布 + 诗人抽屉 -->
+            <div v-show="graphStatus === 'ready'" class="graph-stage">
+              <div ref="g6Container" class="g6-container-canvas"></div>
 
+              <Transition name="drawer-slide">
+                <aside v-if="drawerPoet" class="graph-drawer" role="dialog" aria-label="诗人关系卡片">
+                  <button class="drawer-close" aria-label="关闭卡片" @click="closeDrawer">✕</button>
+                  <header class="drawer-head">
+                    <h3 class="drawer-name">{{ drawerPoet.name }}</h3>
+                    <span class="drawer-dynasty" :style="drawerDynastyStyle">{{ drawerPoet.dynasty }}</span>
+                  </header>
+                  <p v-if="drawerMeta" class="drawer-meta">{{ drawerMeta }}</p>
+                  <p class="drawer-bio">{{ drawerBio }}</p>
+                  <ul v-if="drawerRelations.length" class="drawer-relations">
+                    <li v-for="(rel, i) in drawerRelations" :key="i" class="drawer-relation">
+                      <span class="dr-type" :style="{ borderColor: relationColorOf(rel.type) }">{{ rel.type }}</span>
+                      <span class="dr-body">
+                        <span class="dr-who">{{ rel.counterpartName }}</span>
+                        <span v-if="rel.description" class="dr-desc">{{ rel.description }}</span>
+                      </span>
+                    </li>
+                  </ul>
+                  <p v-else class="drawer-relations drawer-relations--empty">暂无关系收录</p>
+                  <button class="drawer-primary" @click="goPoetDetail">进入专栏 →</button>
+                </aside>
+              </Transition>
+            </div>
+
+            <!-- 双图例: 关系类型 + 朝代 -->
             <div v-if="graphStatus === 'ready'" class="graph-legend">
-              <div class="legend-item"><span class="legend-swatch swatch-poet"></span>诗人</div>
-              <div class="legend-item"><span class="legend-swatch swatch-edge"></span>并称</div>
-              <div class="legend-item"><span class="legend-swatch swatch-dash"></span>师承 / 亲属</div>
+              <div class="legend-group">
+                <span class="legend-group-title">关系</span>
+                <div v-for="lg in relationLegend" :key="lg.key" class="legend-item">
+                  <span class="legend-swatch legend-line" :style="legendLineStyle(lg)">{{ lg.arrow ? '→' : '' }}</span>
+                  {{ lg.label }}
+                </div>
+              </div>
+              <div class="legend-group">
+                <span class="legend-group-title">朝代</span>
+                <div v-for="d in legendDynasties" :key="d" class="legend-item">
+                  <span class="legend-swatch legend-dot" :style="{ background: dynastyColorByName(d) }"></span>
+                  {{ d }}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -437,13 +504,196 @@ const goPoem = (id) => {
 }
 
 // ==========================================
-// AntV G6 Graph
+// AntV G6 Graph — 关系图谱（视觉增强版）
 // ==========================================
 const g6Container = ref(null)
 // graphStatus: 'idle' | 'loading' | 'empty' | 'error' | 'ready'
 const graphStatus = ref('idle')
 let graphInstance = null
 let graphRequestSeq = 0
+
+// ---- 关系类型视觉编码（Phase2 派生边/新类型在此扩展）----
+// 并称: 粗实线（最牢固的"齐名"关系；G6 v5 无原生双线，以线宽 4 + 主题 accent 色表达 double）
+// 师承: 唯一有向关系，mentor→student 箭头；方向查 MENTOR_DIRECTION，未收录时回退 source→target
+// 交游: 细实线（日常交往）
+// 亲属: 短虚线（血缘纽带）
+const RELATION_STYLES = {
+  real: {
+    并称: { color: '#b8860b', lineWidth: 4, double: true },
+    师承: { color: '#4f8377', lineWidth: 2, arrow: true, dir: 'source→target' },
+    交游: { color: '#9a8f7d', lineWidth: 1.5 },
+    亲属: { color: '#b87f7f', lineWidth: 1.5, lineDash: [5, 4] },
+  },
+  inkwash: {
+    并称: { color: '#d9a441', lineWidth: 4, double: true },
+    师承: { color: '#7fae9f', lineWidth: 2, arrow: true, dir: 'source→target' },
+    交游: { color: '#a89e8c', lineWidth: 1.5 },
+    亲属: { color: '#c99a9a', lineWidth: 1.5, lineDash: [5, 4] },
+  },
+}
+// 并称色取主题 accent（调用时解析，随主题切换）
+const relationPalette = () => {
+  const accent = cssVar('--accent')
+  const base = RELATION_STYLES[isAnime.value ? 'inkwash' : 'real']
+  return {
+    ...base,
+    并称: { ...base['并称'], color: accent || base['并称'].color },
+  }
+}
+
+// 朝代莫兰迪色板（节点填充 + 图例共享；未知朝代回退灰）
+const DYNASTY_COLORS = {
+  1: '#b8a99a', // 先秦 砂灰
+  2: '#a9745c', // 秦汉 赭褐
+  3: '#93a58d', // 魏晋南北朝 苔绿
+  4: '#c4a265', // 隋唐 麦金
+  5: '#7c9cb3', // 宋 天青
+  6: '#9384ab', // 元 紫灰
+  7: '#b06f6f', // 明 绛红
+  8: '#6f928e', // 清 黛青
+  9: '#b0915a', // 金 鎏金褐
+}
+const DYNASTY_FALLBACK_COLOR = '#9a9388'
+
+// 师承方向表（mentor id）: key = 两端 id 升序 "a-b"
+const MENTOR_DIRECTION = {
+  '17-18': '17', // 苏轼 → 黄庭坚（苏黄）
+  '24-25': '24', // 宋濂 → 方孝孺
+  '17-52': '17', // 苏轼 → 晁补之
+  '17-108': '17', // 苏轼 → 陈师道
+  '7-109': '7', // 元好问 → 王恽
+  '31-129': '129', // 施闰章 → 蒲松龄
+}
+
+// 原始图谱数据（筛选/抽屉复用）
+const graphRawData = ref({ nodes: [], edges: [] })
+const graphNodeMap = computed(() => {
+  const m = {}
+  ;(graphRawData.value.nodes || []).forEach((n) => {
+    m[n.id] = n
+  })
+  return m
+})
+
+// ---- 轻量筛选（为 Phase2 节点爆炸铺路）----
+const relationFilter = ref('全部')
+const derivedVisible = ref(true)
+const dynastyFilter = ref('全部')
+const relationFilterOptions = ['全部', '并称', '师承', '交游', '亲属']
+const graphDynastyOptions = computed(() => {
+  const set = new Set()
+  ;(graphRawData.value.nodes || []).forEach((n) => {
+    if (n.dynasty) set.add(n.dynasty)
+  })
+  const ordered = DYNASTIES.map((d) => d.name).filter((name) => set.has(name))
+  const rest = [...set].filter((name) => !ordered.includes(name))
+  return ['全部', ...ordered, ...rest]
+})
+const derivedCount = computed(
+  () => (graphRawData.value.edges || []).filter((e) => e.origin === 'derived').length,
+)
+
+// ---- 诗人抽屉（点击节点 → 侧栏卡片，跳转详情为次要动作）----
+const drawerPoet = ref(null)
+const drawerMeta = computed(() => {
+  if (!drawerPoet.value) return ''
+  return [drawerPoet.value.dynasty, drawerPoet.value.style, drawerPoet.value.birthplace]
+    .filter(Boolean)
+    .join(' · ')
+})
+const drawerBio = computed(() => {
+  const bio = drawerPoet.value?.bio
+  if (!bio) return '生平待考，然其诗已传。'
+  return bio.length > 110 ? bio.substring(0, 110) + '…' : bio
+})
+const drawerRelations = computed(() => {
+  if (!drawerPoet.value) return []
+  const id = drawerPoet.value.id
+  const map = graphNodeMap.value
+  return (graphRawData.value.edges || [])
+    .filter((e) => e.source === id || e.target === id)
+    .map((e) => {
+      const other = e.source === id ? e.target : e.source
+      return {
+        type: e.relationType,
+        counterpartName: map[other]?.name || other,
+        description: e.description || '',
+        derived: e.origin === 'derived',
+      }
+    })
+})
+const drawerDynastyStyle = computed(() => ({
+  background: dynastyColorOf(drawerPoet.value?.dynastyId),
+  color: '#fff',
+}))
+
+function openDrawer(nodeId) {
+  const node = graphNodeMap.value[nodeId]
+  if (!node) return
+  const poet = poets.value.find((p) => String(p.id) === String(nodeId)) || {}
+  drawerPoet.value = { ...node, bio: poet.biography || '' }
+}
+const closeDrawer = () => {
+  drawerPoet.value = null
+}
+const goPoetDetail = () => {
+  if (drawerPoet.value?.id) {
+    router.push(`/poets/${drawerPoet.value.id}`)
+    closeDrawer()
+  }
+}
+
+// ---- 图例/取色工具 ----
+const dynastyColorOf = (dynastyId) =>
+  DYNASTY_COLORS[Number(dynastyId)] || DYNASTY_FALLBACK_COLOR
+const dynastyColorByName = (name) => {
+  const n = (graphRawData.value.nodes || []).find((x) => x.dynasty === name)
+  return dynastyColorOf(n?.dynastyId)
+}
+const relationColorOf = (type) => {
+  const p = relationPalette()
+  return (p[type] || {}).color || '#9a9388'
+}
+const relationLegend = computed(() => {
+  const palette = relationPalette()
+  const items = Object.entries(palette).map(([key, st]) => ({
+    key,
+    label: key,
+    color: st.color,
+    lineWidth: st.lineWidth,
+    dashed: !!st.lineDash,
+    arrow: !!st.arrow,
+  }))
+  if (derivedCount.value) {
+    items.push({
+      key: 'derived',
+      label: '推断',
+      color: (palette['交游'] || {}).color || '#9a9388',
+      lineWidth: 1,
+      dashed: true,
+      arrow: false,
+    })
+  }
+  return items
+})
+const legendDynasties = computed(() => {
+  const set = new Set()
+  ;(graphRawData.value.nodes || []).forEach((n) => {
+    if (n.dynasty) set.add(n.dynasty)
+  })
+  return DYNASTIES.map((d) => d.name).filter((name) => set.has(name))
+})
+const legendLineStyle = (lg) => {
+  if (lg.arrow) {
+    return { background: 'transparent', color: lg.color, fontSize: '13px', lineHeight: 1 }
+  }
+  return {
+    background: lg.dashed
+      ? `repeating-linear-gradient(90deg, ${lg.color} 0 5px, transparent 5px 10px)`
+      : lg.color,
+    height: `${Math.max(2, lg.lineWidth)}px`,
+  }
+}
 
 const handleGraphResize = () => {
   if (graphInstance && g6Container.value) {
@@ -459,6 +709,7 @@ const initG6 = async () => {
     graphInstance.destroy()
     graphInstance = null
   }
+  drawerPoet.value = null
 
   const currentSeq = ++graphRequestSeq
 
@@ -467,29 +718,27 @@ const initG6 = async () => {
 
   const graphTheme = isAnime.value
     ? {
-        poetFill: cssVar('--text-primary'),
-        poetStroke: cssVar('--accent'),
         edgeColor: '#7a7a7a',
         textPrimary: '#e8e4d8',
         accent: cssVar('--accent'),
         textSecondary: '#9a9484',
         cardBg: '#2a2520',
+        nodeStroke: '#c9c2b0',
         lineDash: [4, 4],
       }
     : {
-        poetFill: cssVar('--accent'),
-        poetStroke: cssVar('--text-primary'),
         edgeColor: '#c5b8a5',
         textPrimary: cssVar('--text-primary'),
         accent: cssVar('--accent'),
         textSecondary: '#8a7e6b',
         cardBg: cssVar('--bg-primary'),
+        nodeStroke: '#8a7e6b',
         lineDash: [4, 4],
       }
 
   // 从后端拉真实关系图谱(/api/public/poet-relations), 转 G6 nodes/edges
   graphStatus.value = 'loading'
-  let graphData = { nodes: [], edges: [] }
+  let raw = { nodes: [], edges: [] }
   try {
     const g = await api.get('/poet-relations')
 
@@ -505,47 +754,70 @@ const initG6 = async () => {
       return
     }
 
-    // 统计节点度数，用于大小/字号
+    // 统计节点度数（全量），用于大小/字号
     const degree = {}
-    inEdges.forEach(e => {
+    inEdges.forEach((e) => {
       degree[e.source] = (degree[e.source] || 0) + 1
       degree[e.target] = (degree[e.target] || 0) + 1
     })
 
-    graphData = {
-      nodes: inNodes.map(n => {
+    const palette = relationPalette()
+
+    raw = {
+      nodes: inNodes.map((n) => {
         const nid = String(n.poetId ?? n.id)
         return {
           id: nid,
           poetId: nid,
+          name: n.name,
           label: n.name,
-          sub: `${n.dynasty || ''}${n.style ? ' · ' + n.style : ''}${!n.style && n.birthplace ? ' · ' + n.birthplace : ''}`,
+          dynasty: n.dynasty || '未知',
+          dynastyId: n.dynastyId ?? null,
+          style: n.style || '',
+          birthplace: n.birthplace || '',
           size: Math.min(64, 36 + (degree[nid] || 0) * 7),
-          fillColor: graphTheme.poetFill,
-          strokeColor: graphTheme.poetStroke,
           labelSize: (degree[nid] || 0) >= 2 ? 13 : 12,
         }
       }),
-      edges: inEdges.map(e => {
-        const bincheng = e.relationType === '并称'
-        const dashed = e.relationType === '师承' || e.relationType === '亲属'
+      edges: inEdges.map((e) => {
+        const type = e.relationType || '交游'
+        const derived = e.origin === 'derived'
+        const st = palette[type] || palette['交游']
+        const s = String(e.source)
+        const t = String(e.target)
+        let arrowAtTarget = false
+        let arrowAtSource = false
+        if (st.arrow) {
+          const key = [Number(s), Number(t)].sort((a, b) => a - b).join('-')
+          const mentor = MENTOR_DIRECTION[key]
+          // 未收录方向时回退配置默认 source→target
+          const mentorId = mentor !== undefined ? String(mentor) : s
+          arrowAtTarget = mentorId === s
+          arrowAtSource = mentorId === t
+        }
         return {
-          source: String(e.source),
-          target: String(e.target),
-          label: e.description || e.relationType,
-          eStroke: bincheng ? graphTheme.poetStroke : graphTheme.edgeColor,
-          eLineWidth: bincheng ? 2 : 1.5,
-          eDashed: dashed,
+          source: s,
+          target: t,
+          relationType: type,
+          description: e.description || type,
+          origin: e.origin || 'seed',
+          eStroke: st.color,
+          eLineWidth: derived ? 1 : st.lineWidth,
+          eLineDash: derived ? [2, 4] : st.lineDash,
+          eOpacity: derived ? 0.55 : 1,
+          eEndArrow: arrowAtTarget,
+          eStartArrow: arrowAtSource,
         }
       }),
     }
+    graphRawData.value = raw
   } catch (err) {
     console.error('关系图谱加载失败:', err)
     graphStatus.value = 'error'
     return
   }
   graphStatus.value = 'ready'
-  const data = graphData
+  const data = raw
 
   if (currentSeq !== graphRequestSeq) {
     return
@@ -576,44 +848,118 @@ const initG6 = async () => {
     node: {
       type: 'circle',
       style: (d) => ({
-        fill: d.fillColor,
-        stroke: d.strokeColor,
-        lineWidth: 2,
+        fill: dynastyColorOf(d.dynastyId),
+        stroke: graphTheme.nodeStroke,
+        lineWidth: 1.5,
         size: d.size || 50,
       }),
       labelText: (d) => d.label,
       labelPlacement: 'bottom',
-      labelOffsetY: 8,
+      labelOffsetY: 6,
       labelFontSize: (d) => d.labelSize || 13,
-      labelFontWeight: 'bold',
+      labelFontWeight: 600,
       labelFill: graphTheme.textPrimary,
+      state: {
+        active: { lineWidth: 3, stroke: graphTheme.accent },
+        inactive: { opacity: 0.15 },
+      },
     },
     edge: {
-      style: (d) => ({
-        stroke: d.eStroke || graphTheme.edgeColor,
-        lineWidth: d.eLineWidth || 1,
-        lineDash: d.eDashed ? graphTheme.lineDash : undefined,
-      }),
-      labelText: (d) => d.label || '',
+      style: (d) => {
+        const stroke = d.eStroke || graphTheme.edgeColor
+        return {
+          stroke,
+          lineWidth: d.eLineWidth || 1.5,
+          lineDash: d.eLineDash,
+          opacity: d.eOpacity ?? 1,
+          endArrow: !!d.eEndArrow,
+          endArrowType: 'triangle',
+          endArrowSize: 9,
+          endArrowFill: stroke,
+          endArrowStroke: stroke,
+          startArrow: !!d.eStartArrow,
+          startArrowType: 'triangle',
+          startArrowSize: 9,
+          startArrowFill: stroke,
+          startArrowStroke: stroke,
+        }
+      },
+      // 边标签默认隐藏，仅悬停聚焦态显示 description（减少 clutter）
+      labelText: (d) => d.description || '',
       labelAutoRotate: true,
       labelFontSize: 10,
       labelFill: graphTheme.textSecondary,
+      labelOpacity: 0,
       labelBackgroundFill: graphTheme.cardBg,
       labelBackgroundPadding: [2, 4],
       labelBackgroundRadius: 2,
+      state: {
+        active: { opacity: 1, labelOpacity: 1 },
+        inactive: { opacity: 0.08 },
+      },
     },
-    behaviors: ['drag-canvas', 'zoom-canvas', 'drag-element'],
+    behaviors: [
+      'drag-canvas',
+      'zoom-canvas',
+      'drag-element',
+      // 悬停聚焦: 高亮悬停节点及其邻接节点/边, 其余淡化
+      { type: 'hover-activate', degree: 1, direction: 'both', inactiveState: 'inactive' },
+    ],
   })
 
   graphInstance.render()
 
   graphInstance.on('node:click', (evt) => {
     const modelId = evt.target?.id
-    if (modelId) {
-      router.push(`/poets/${modelId}`)
-    }
+    if (modelId) openDrawer(modelId)
   })
+  graphInstance.on('canvas:click', (evt) => {
+    if (evt.targetType === 'canvas') closeDrawer()
+  })
+
+  // 主题切换重建后，恢复当前筛选状态（默认全量时跳过，避免二次布局）
+  applyGraphFilter()
 }
+
+// 按当前 chip 状态裁剪图谱数据并重渲染
+const applyGraphFilter = () => {
+  if (!graphInstance || graphStatus.value !== 'ready') return
+  const { nodes, edges } = graphRawData.value
+  if (!nodes.length) return
+
+  const isDefault =
+    relationFilter.value === '全部' && derivedVisible.value && dynastyFilter.value === '全部'
+
+  const relOK = (e) => {
+    if (relationFilter.value !== '全部' && e.relationType !== relationFilter.value) return false
+    if (!derivedVisible.value && e.origin === 'derived') return false
+    return true
+  }
+  const dynOK = (n) => dynastyFilter.value === '全部' || n.dynasty === dynastyFilter.value
+  const dynOkIds = new Set(nodes.filter(dynOK).map((n) => n.id))
+  const visibleEdges = edges.filter((e) => relOK(e) && dynOkIds.has(e.source) && dynOkIds.has(e.target))
+  const touched = new Set()
+  visibleEdges.forEach((e) => {
+    touched.add(e.source)
+    touched.add(e.target)
+  })
+  const visibleNodes =
+    relationFilter.value === '全部'
+      ? nodes.filter(dynOK)
+      : nodes.filter((n) => dynOK(n) && touched.has(n.id))
+
+  if (isDefault && visibleNodes.length === nodes.length && visibleEdges.length === edges.length) {
+    return
+  }
+
+  graphInstance.setData({ nodes: visibleNodes, edges: visibleEdges })
+  graphInstance.render()
+}
+
+watch([relationFilter, derivedVisible, dynastyFilter], () => {
+  closeDrawer()
+  applyGraphFilter()
+})
 
 watch([activeTab, isAnime], () => {
   if (activeTab.value === 'graph') {
@@ -958,6 +1304,7 @@ onBeforeUnmount(() => {
   padding: 28px;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 .graph-instructions {
   display: flex;
@@ -986,6 +1333,56 @@ onBeforeUnmount(() => {
   margin: 0;
   line-height: 1.6;
 }
+
+/* 筛选 chips */
+.graph-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 32px;
+  margin-bottom: 14px;
+}
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.filter-label {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.filter-chip {
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.filter-chip:hover {
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+.filter-chip.active {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: var(--accent);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.filter-chip--derived {
+  opacity: 0.9;
+}
+
+/* 图谱画布与抽屉舞台 */
+.graph-stage {
+  position: relative;
+}
 .g6-container-canvas {
   width: 100%;
   height: 560px;
@@ -993,6 +1390,139 @@ onBeforeUnmount(() => {
   border-radius: 4px;
   background: var(--card-bg);
 }
+
+/* 诗人抽屉（点击节点弹出） */
+.graph-drawer {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 264px;
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 18px;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 6%, rgba(0, 0, 0, 0.35));
+  z-index: 2;
+}
+.drawer-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 4px;
+}
+.drawer-close:hover {
+  color: var(--accent);
+}
+.drawer-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding-right: 20px;
+}
+.drawer-name {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  letter-spacing: 2px;
+  margin: 0;
+  color: var(--text-primary);
+}
+.drawer-dynasty {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+.drawer-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0 0 10px;
+  line-height: 1.6;
+}
+.drawer-bio {
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  margin: 0 0 14px;
+}
+.drawer-relations {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.drawer-relation {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 12px;
+}
+.dr-type {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border: 1px solid;
+  border-radius: 3px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--text-primary);
+}
+.dr-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dr-who {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.dr-desc {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.drawer-relations--empty {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.drawer-primary {
+  width: 100%;
+  padding: 9px 0;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 13px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.25s;
+  font-family: inherit;
+}
+.drawer-primary:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.drawer-slide-enter-active,
+.drawer-slide-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.drawer-slide-enter-from,
+.drawer-slide-leave-to {
+  opacity: 0;
+  transform: translateX(16px);
+}
+
+/* 双图例: 关系类型 + 朝代 */
 .graph-legend {
   display: flex;
   gap: 24px;
@@ -1001,6 +1531,22 @@ onBeforeUnmount(() => {
   margin-top: 16px;
   font-size: 12px;
   color: var(--text-secondary);
+}
+.legend-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.legend-group + .legend-group {
+  border-left: 1px solid var(--border-light);
+  padding-left: 24px;
+}
+.legend-group-title {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  margin-right: 2px;
 }
 .legend-item {
   display: flex;
@@ -1015,14 +1561,19 @@ onBeforeUnmount(() => {
   border: 2px solid currentColor;
   flex-shrink: 0;
 }
-.swatch-poet { background: var(--accent); border-color: var(--accent); }
-.swatch-edge { background: transparent; border-color: var(--accent); border-radius: 0; height: 2px; width: 18px; }
-.swatch-dash {
-  background: repeating-linear-gradient(90deg, var(--text-muted) 0 4px, transparent 4px 8px);
+.legend-line {
+  width: 22px;
+  height: auto;
   border: none;
-  height: 2px;
-  width: 18px;
   border-radius: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border: none;
 }
 
 /* graph loading / empty status */
@@ -1069,6 +1620,8 @@ onBeforeUnmount(() => {
   .g6-container-canvas { height: 440px; }
   .graph-status-box { height: 440px; }
   .graph-legend { flex-wrap: wrap; gap: 12px 18px; }
+  .legend-group + .legend-group { border-left: none; padding-left: 0; }
   .graph-instructions { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .graph-drawer { width: 230px; padding: 14px; }
 }
 </style>
