@@ -256,7 +256,7 @@
             <div class="graph-instructions">
               <span class="instruction-tag">互动</span>
               <p class="instruction-desc">
-                滚轮缩放 · 拖拽画布 · 悬停诗人聚焦其交游脉络 · 点击诗人查看关系卡片；师承以箭头示方向（师 → 徒），虚线为推断关系。
+                滚轮缩放 · 拖拽画布 · 悬停诗人可见生平与其交游脉络 · 点击诗人查看关系卡片；师承以箭头示方向（师 → 徒），虚线为推断关系。
               </p>
             </div>
 
@@ -277,6 +277,13 @@
                   :class="{ active: derivedVisible }"
                   @click="derivedVisible = !derivedVisible"
                 >推断{{ derivedCount }}</button>
+                <button
+                  class="filter-chip filter-chip--desc"
+                  :class="{ active: edgeLabelsVisible }"
+                  :aria-pressed="edgeLabelsVisible"
+                  title="切换连线上的关系说明文字"
+                  @click="edgeLabelsVisible = !edgeLabelsVisible"
+                >关系说明</button>
               </div>
               <div class="filter-group">
                 <span class="filter-label">朝代</span>
@@ -367,7 +374,7 @@ import { useImage } from '../composables/useImage'
 import { usePoetEnrichment } from '../composables/usePoetEnrichment'
 import { useReveal } from '../composables/useReveal'
 import api from '../api'
-import { Graph } from '@antv/g6'
+import { Graph, Tooltip } from '@antv/g6'
 import { cssVar } from '../utils/cssToken'
 import InkHero from '../components/homepage/InkHero.vue'
 import SectionHeading from '../components/homepage/SectionHeading.vue'
@@ -580,6 +587,8 @@ const relationFilter = ref('全部')
 const derivedVisible = ref(true)
 const dynastyFilter = ref('全部')
 const relationFilterOptions = ['全部', '并称', '师承', '交游', '亲属']
+// 连线关系说明文字开关（默认常显；关闭后 labelText 置空回到全隐藏）
+const edgeLabelsVisible = ref(true)
 const graphDynastyOptions = computed(() => {
   const set = new Set()
   ;(graphRawData.value.nodes || []).forEach((n) => {
@@ -766,20 +775,23 @@ const initG6 = async () => {
     raw = {
       nodes: inNodes.map((n) => {
         const nid = String(n.poetId ?? n.id)
+        const dynasty = n.dynasty || '未知'
         return {
           id: nid,
           poetId: nid,
           name: n.name,
           label: n.name,
-          dynasty: n.dynasty || '未知',
+          dynasty,
           dynastyId: n.dynastyId ?? null,
           style: n.style || '',
           birthplace: n.birthplace || '',
+          // 副标签: dynasty·style（style 缺失则仅 dynasty）
+          sub: n.style ? `${dynasty} · ${n.style}` : dynasty,
           size: Math.min(64, 36 + (degree[nid] || 0) * 7),
           labelSize: (degree[nid] || 0) >= 2 ? 13 : 12,
         }
       }),
-      edges: inEdges.map((e) => {
+      edges: inEdges.map((e, i) => {
         const type = e.relationType || '交游'
         const derived = e.origin === 'derived'
         const st = palette[type] || palette['交游']
@@ -796,6 +808,7 @@ const initG6 = async () => {
           arrowAtSource = mentorId === t
         }
         return {
+          id: `rel-${i}`,
           source: s,
           target: t,
           relationType: type,
@@ -852,6 +865,20 @@ const initG6 = async () => {
         stroke: graphTheme.nodeStroke,
         lineWidth: 1.5,
         size: d.size || 50,
+        // 副标签 badge: dynasty·style，字号小一号+fillOpacity 降透明，避免喧宾夺主
+        badges: d.sub
+          ? [
+              {
+                text: d.sub,
+                placement: 'bottom',
+                offsetY: 26,
+                fontSize: 10.5,
+                fill: graphTheme.textSecondary,
+                fillOpacity: 0.8,
+                background: false,
+              },
+            ]
+          : [],
       }),
       labelText: (d) => d.label,
       labelPlacement: 'bottom',
@@ -884,14 +911,14 @@ const initG6 = async () => {
           startArrowStroke: stroke,
         }
       },
-      // 边标签默认隐藏，仅悬停聚焦态显示 description（减少 clutter）
-      labelText: (d) => d.description || '',
+      // 关系说明默认常显(受「关系说明」开关控制); hover 聚焦态依旧高亮邻接边
+      labelText: (d) => (edgeLabelsVisible.value ? d.description || '' : ''),
       labelAutoRotate: true,
       labelFontSize: 10,
       labelFill: graphTheme.textSecondary,
-      labelOpacity: 0,
+      labelOpacity: edgeLabelsVisible.value ? 1 : 0,
       labelBackgroundFill: graphTheme.cardBg,
-      labelBackgroundPadding: [2, 4],
+      labelBackgroundPadding: [3, 5],
       labelBackgroundRadius: 2,
       state: {
         active: { opacity: 1, labelOpacity: 1 },
@@ -916,6 +943,47 @@ const initG6 = async () => {
   graphInstance.on('canvas:click', (evt) => {
     if (evt.targetType === 'canvas') closeDrawer()
   })
+
+  // 节点 hover 生平 tooltip（纯增强: 图谱接口无 biography, 复用 /poets 列表数据）
+  const tooltip = new Tooltip({
+    offset: [14, 14],
+    // 外层 .tooltip 包装默认白底, 覆盖为透明, 视觉完全交给 getContent 的内联样式
+    style: {
+      '.tooltip': {
+        visibility: 'hidden',
+        background: 'transparent',
+        padding: '0',
+        border: 'none',
+        boxShadow: 'none',
+      },
+    },
+    enable: (evt) => evt.targetType === 'node',
+    getContent: (_evt, items) => {
+      const n = items && items[0]
+      if (!n || !n.id) return null
+      const poet = poets.value.find((p) => String(p.id) === String(n.id)) || {}
+      const bio = poet.biography || ''
+      const bioText = bio
+        ? bio.length > 60
+          ? bio.substring(0, 60) + '…'
+          : bio
+        : '生平待考，然其诗已传。'
+      const meta = [n.dynasty, n.style, n.birthplace].filter(Boolean).join(' · ')
+      const dynasty = dynastyColorOf(n.dynastyId)
+      return [
+        `<div style="min-width:200px;max-width:240px;background:${graphTheme.cardBg};border:1px solid ${dynasty};border-radius:4px;padding:10px 12px;box-shadow:0 6px 18px rgba(0,0,0,.18);font-size:12px;line-height:1.65;">`,
+        `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">`,
+        `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${dynasty};flex-shrink:0;"></span>`,
+        `<b style="font-size:14px;letter-spacing:2px;color:${graphTheme.textPrimary};">${n.name || ''}</b>`,
+        `</div>`,
+        meta ? `<div style="color:${graphTheme.textSecondary};margin-bottom:6px;">${meta}</div>` : '',
+        `<div style="color:${graphTheme.textSecondary};">${bioText}</div>`,
+        `<div style="margin-top:6px;color:${graphTheme.accent};font-size:11px;letter-spacing:1px;">点击查看关系卡片</div>`,
+        `</div>`,
+      ].join('')
+    },
+  })
+  graphInstance.setPlugins((plugins) => [...plugins, tooltip])
 
   // 主题切换重建后，恢复当前筛选状态（默认全量时跳过，避免二次布局）
   applyGraphFilter()
@@ -955,6 +1023,26 @@ const applyGraphFilter = () => {
   graphInstance.setData({ nodes: visibleNodes, edges: visibleEdges })
   graphInstance.render()
 }
+
+// 「关系说明」开关: 运行时切换当前画布上所有边的 label 显隐
+const applyEdgeLabelVisibility = () => {
+  if (!graphInstance || graphStatus.value !== 'ready') return
+  const vis = edgeLabelsVisible.value
+  const displayedIds = new Set(graphInstance.getElementData('edge').map((e) => e.id))
+  const updates = (graphRawData.value.edges || [])
+    .filter((e) => displayedIds.has(e.id))
+    .map((e) => ({
+      id: e.id,
+      style: vis
+        ? { labelText: e.description || '', labelOpacity: 1 }
+        : { labelText: '', labelOpacity: 0 },
+    }))
+  if (updates.length) graphInstance.updateEdgeData(updates)
+}
+
+watch(edgeLabelsVisible, () => {
+  applyEdgeLabelVisibility()
+})
 
 watch([relationFilter, derivedVisible, dynastyFilter], () => {
   closeDrawer()
