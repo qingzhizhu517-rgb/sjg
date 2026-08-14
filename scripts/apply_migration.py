@@ -10,17 +10,18 @@ INSERT ON DUPLICATE KEY)。
   (默认应用 V4__poet_relation.sql)
 
 DB 连接配置同 backend/src/main/resources/application.yml;
-password 走 DB_PASSWORD 环境变量, 默认 123456(与 application.yml 一致)。
+支持环境变量覆盖: DB_HOST / DB_PORT / DB_USER / DB_PASSWORD / DB_NAME
+(本地库示例: DB_HOST=127.0.0.1 DB_USER=root DB_PASSWORD=你的密码)。
 """
 import sys
 import os
 import pymysql
 
-HOST = "47.104.207.58"
-PORT = 3306
-USER = "qz-Zhu"
+HOST = os.environ.get("DB_HOST", "47.104.207.58")
+PORT = int(os.environ.get("DB_PORT", "3306"))
+USER = os.environ.get("DB_USER", "qz-Zhu")
 PWD = os.environ.get("DB_PASSWORD", "123456")
-DB = "sjg"
+DB = os.environ.get("DB_NAME", "sjg")
 DEFAULT = "/Users/a1/develop/vibecoding/sjg/backend/src/main/resources/db/migration/V4__poet_relation.sql"
 
 path = sys.argv[1] if len(sys.argv) > 1 else DEFAULT
