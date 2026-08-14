@@ -374,7 +374,7 @@ import { useImage } from '../composables/useImage'
 import { usePoetEnrichment } from '../composables/usePoetEnrichment'
 import { useReveal } from '../composables/useReveal'
 import api from '../api'
-import { Graph, Tooltip } from '@antv/g6'
+import { Graph } from '@antv/g6'
 import { cssVar } from '../utils/cssToken'
 import InkHero from '../components/homepage/InkHero.vue'
 import SectionHeading from '../components/homepage/SectionHeading.vue'
@@ -518,6 +518,17 @@ const clearGraphWheel = () => {
   if (disposeGraphWheel) {
     disposeGraphWheel()
     disposeGraphWheel = null
+  }
+}
+// 防御性销毁: 图谱卸载异常不能阻塞路由过渡(否则 out-in 过渡卡死, 新页面空白)
+const safeDestroyGraph = () => {
+  if (graphInstance) {
+    try {
+      graphInstance.destroy()
+    } catch (err) {
+      console.error('图谱销毁异常(已忽略):', err)
+    }
+    graphInstance = null
   }
 }
 
@@ -717,10 +728,7 @@ const handleGraphResize = () => {
 const initG6 = async () => {
   if (!g6Container.value) return
   clearGraphWheel()
-  if (graphInstance) {
-    graphInstance.destroy()
-    graphInstance = null
-  }
+  safeDestroyGraph()
   drawerPoet.value = null
 
   const currentSeq = ++graphRequestSeq
@@ -1009,45 +1017,51 @@ const initG6 = async () => {
   disposeGraphWheel = () => wheelEl.removeEventListener('wheel', onGraphWheel)
 
   // 节点 hover 生平 tooltip（纯增强: 图谱接口无 biography, 复用 /poets 列表数据）
-  const tooltip = new Tooltip({
-    offset: [14, 14],
-    // 外层 .tooltip 包装默认白底, 覆盖为透明, 视觉完全交给 getContent 的内联样式
-    style: {
-      '.tooltip': {
-        visibility: 'hidden',
-        background: 'transparent',
-        padding: '0',
-        border: 'none',
-        boxShadow: 'none',
+  // 注意: G6 v5 插件必须由 Graph 注入 context 构造, 以选项对象形式交给 setPlugins,
+  // 直接 new Tooltip({...}) 会导致 context.canvas 为 undefined 在构造期抛 TypeError
+  graphInstance.setPlugins((plugins) => [
+    ...plugins,
+    {
+      type: 'tooltip',
+      key: 'poet-bio-tooltip',
+      offset: [14, 14],
+      // 外层 .tooltip 包装默认白底, 覆盖为透明, 视觉完全交给 getContent 的内联样式
+      style: {
+        '.tooltip': {
+          visibility: 'hidden',
+          background: 'transparent',
+          padding: '0',
+          border: 'none',
+          boxShadow: 'none',
+        },
+      },
+      enable: (evt) => evt.targetType === 'node',
+      getContent: (_evt, items) => {
+        const n = items && items[0]
+        if (!n || !n.id) return null
+        const poet = poets.value.find((p) => String(p.id) === String(n.id)) || {}
+        const bio = poet.biography || ''
+        const bioText = bio
+          ? bio.length > 60
+            ? bio.substring(0, 60) + '…'
+            : bio
+          : '生平待考，然其诗已传。'
+        const meta = [n.dynasty, n.style, n.birthplace].filter(Boolean).join(' · ')
+        const dynasty = dynastyColorOf(n.dynastyId)
+        return [
+          `<div style="min-width:200px;max-width:240px;background:${graphTheme.cardBg};border:1px solid ${dynasty};border-radius:4px;padding:10px 12px;box-shadow:0 6px 18px rgba(0,0,0,.18);font-size:12px;line-height:1.65;">`,
+          `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">`,
+          `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${dynasty};flex-shrink:0;"></span>`,
+          `<b style="font-size:14px;letter-spacing:2px;color:${graphTheme.textPrimary};">${n.name || ''}</b>`,
+          `</div>`,
+          meta ? `<div style="color:${graphTheme.textSecondary};margin-bottom:6px;">${meta}</div>` : '',
+          `<div style="color:${graphTheme.textSecondary};">${bioText}</div>`,
+          `<div style="margin-top:6px;color:${graphTheme.accent};font-size:11px;letter-spacing:1px;">点击查看关系卡片</div>`,
+          `</div>`,
+        ].join('')
       },
     },
-    enable: (evt) => evt.targetType === 'node',
-    getContent: (_evt, items) => {
-      const n = items && items[0]
-      if (!n || !n.id) return null
-      const poet = poets.value.find((p) => String(p.id) === String(n.id)) || {}
-      const bio = poet.biography || ''
-      const bioText = bio
-        ? bio.length > 60
-          ? bio.substring(0, 60) + '…'
-          : bio
-        : '生平待考，然其诗已传。'
-      const meta = [n.dynasty, n.style, n.birthplace].filter(Boolean).join(' · ')
-      const dynasty = dynastyColorOf(n.dynastyId)
-      return [
-        `<div style="min-width:200px;max-width:240px;background:${graphTheme.cardBg};border:1px solid ${dynasty};border-radius:4px;padding:10px 12px;box-shadow:0 6px 18px rgba(0,0,0,.18);font-size:12px;line-height:1.65;">`,
-        `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">`,
-        `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${dynasty};flex-shrink:0;"></span>`,
-        `<b style="font-size:14px;letter-spacing:2px;color:${graphTheme.textPrimary};">${n.name || ''}</b>`,
-        `</div>`,
-        meta ? `<div style="color:${graphTheme.textSecondary};margin-bottom:6px;">${meta}</div>` : '',
-        `<div style="color:${graphTheme.textSecondary};">${bioText}</div>`,
-        `<div style="margin-top:6px;color:${graphTheme.accent};font-size:11px;letter-spacing:1px;">点击查看关系卡片</div>`,
-        `</div>`,
-      ].join('')
-    },
-  })
-  graphInstance.setPlugins((plugins) => [...plugins, tooltip])
+  ])
 
   // 主题切换重建后，恢复当前筛选状态（默认全量时跳过，避免二次布局）
   applyGraphFilter()
@@ -1137,10 +1151,7 @@ watch([activeTab, isAnime], () => {
     enterGraphTab()
   } else {
     clearGraphWheel()
-    if (graphInstance) {
-      graphInstance.destroy()
-      graphInstance = null
-    }
+    safeDestroyGraph()
     graphStatus.value = 'idle'
   }
 })
@@ -1174,10 +1185,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleGraphResize)
   clearGraphWheel()
-  if (graphInstance) {
-    graphInstance.destroy()
-    graphInstance = null
-  }
+  safeDestroyGraph()
 })
 </script>
 
