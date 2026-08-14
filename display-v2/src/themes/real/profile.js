@@ -5,11 +5,11 @@ export const profile = {
   id: 'real',
   name: '实景',
   label: '现代实景',
-  // 字体家族（与 index.html 预加载的家族对应）
+  // 字体家族（外部字体已移除, 系统字体栈: 隶书/楷体/宋体 Windows 与 macOS 均内置）
   fonts: {
-    heading: "'Ma Shan Zheng', 'Noto Serif SC', serif",
-    body: "'Outfit', 'Noto Serif SC', Georgia, serif",
-    display: "'Ma Shan Zheng', serif",
+    heading: "'Ma Shan Zheng', 'LiSu', 'STLiti', 'Noto Serif SC', serif",
+    body: "'Outfit', 'Noto Serif SC', 'Microsoft YaHei', 'SimSun', Georgia, serif",
+    display: "'Ma Shan Zheng', 'LiSu', 'STLiti', serif",
   },
   // 动效预设（P1-6 转场 / P3 滚动叙事消费）
   motion: {

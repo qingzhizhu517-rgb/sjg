@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;900&display=swap');
+/* 注: 原 @import Noto Serif SC(Google Fonts) 已移除 —— 外部字体请求在
+   国内网络下会间歇性挂起, 且为渲染阻塞样式表, 导致首屏白屏/卡顿。
+   改为系统字体栈: Windows 宋体(SimSun)/macOS Songti SC 直接可用, 零网络依赖。 */
 
 :root {
   /* ===== Real Theme: Digital Heritage Exhibition ===== */
