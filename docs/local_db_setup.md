@@ -59,3 +59,4 @@ cd backend; .\mvnw spring-boot:run   # 或 mvn spring-boot:run
 | 关系数量 | `SELECT COUNT(*) FROM poet_relation;` → 13-1+23 = 35 |
 | event3 有诗词 | `SELECT * FROM poem_event WHERE event_id=3;` → 3 行 |
 | region 无县级 | `SELECT DISTINCT region FROM scenic_spot;` → 无"曲阜/邹城" |
+> **状态更新（2026-08-14）**：本指南的执行已在本机完成——`sjg01` 库（生产数据完整副本）已应用 V7–V10 并通过全部验证（fallback 赏析 0 条、126 位诗人全部有简介、关系 35 条、region 无县级残留）；后端 `application.yml` 已切换为 `127.0.0.1:3306/sjg01`（root/123456，可用 SPRING_DATASOURCE_* 环境变量覆盖）。应用前备份在 `output/sjg01_backup_before_v7v10.sql`。

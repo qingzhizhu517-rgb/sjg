@@ -3,9 +3,10 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://47.104.207.58:3306/sjg?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: qz-Zhu
-    password: ${DB_PASSWORD:123456}
+    # 本地库（MySQL 8.0.46 @ 127.0.0.1:3306/sjg01，生产数据完整副本 + V7-V10 已应用）
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://127.0.0.1:3306/sjg01?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:123456}}
     driver-class-name: com.mysql.cj.jdbc.Driver
   servlet:
     multipart:

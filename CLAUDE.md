@@ -90,9 +90,11 @@ display-v2 支持双主题：`real`（现代实景风）与 `inkwash`（水墨�
 - **mock 兜底**：`src/config/mockFallbackDb.js` 等为后端不可用时的降级数据，属过渡产物。
 
 ### 数据库与 Migration
-- MySQL 远程实例：`47.104.207.58:3306/sjg`，可通过 `.mcp.json` 配置的 `mysql_query` MCP 工具只读查询（凭证已 gitignore）。
+- 本地 MySQL 8.0.46：`127.0.0.1:3306`（服务名 `MySQL80`，root/123456）。主力库 **`sjg01`**（生产数据完整副本，V7–V10 已应用）；`sjg` 为小型测试库（7 张基础表，少数据）。
+- 后端连接配置见 `backend/src/main/resources/application.yml`，支持 `SPRING_DATASOURCE_URL/USERNAME/PASSWORD` 环境变量覆盖。
+- 旧远程实例 47.104.207.58:3306/sjg 已弃用（2026-08-14 起改用本地库）。
 - Schema 定义在 `backend/src/main/resources/schema.sql`（+ `schema_utf8.sql`）。
-- Migration：`backend/src/main/resources/db/migration/` 与 `display-v2/migrations/`，文件以 `v4_`、`v5_` 版本前缀命名（如 `v4_poet_relation.sql`、`v5_poem_analysis.sql`）。
+- Migration：`backend/src/main/resources/db/migration/`（V2–V10）与 `display-v2/migrations/`（v4/v5），幂等 SQL，用 mysql 客户端或 `scripts/apply_migration.py`（支持 `DB_HOST/DB_PORT/DB_USER/DB_PASSWORD/DB_NAME` 环境变量）应用。
 - ORM 用 MyBatis-Plus，开启 `map-underscore-to-camel-case`。
 
 ### 前端代理配置
