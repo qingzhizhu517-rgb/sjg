@@ -247,111 +247,116 @@
 
         <!-- 关系图谱 (AntV G6) -->
         <div v-else key="graph" class="graph-tab-content">
-          <div class="graph-panel-inner card">
-            <div class="graph-instructions">
-              <span class="instruction-tag">互动</span>
-              <p class="instruction-desc">
-                滚轮缩放 · 拖拽画布 · 悬停诗人可见生平与关系说明 · 点击诗人查看关系卡片；师承以箭头示方向（师 → 徒），虚线为推断关系。
-              </p>
+          <div class="graph-panel-inner card graph-panel-layout">
+            <!-- 左侧: 图谱画布(常驻挂载, 保证容器可测量) + 状态浮层 + 诗人抽屉 -->
+            <div class="graph-main">
+              <div class="graph-stage">
+                <div ref="g6Container" class="g6-container-canvas"></div>
+
+                <!-- 加载态 -->
+                <div v-if="graphStatus === 'loading'" class="graph-status-box graph-status-box--skel" aria-busy="true" aria-label="关系图谱加载中">
+                  <SkeletonBlock height="560px" />
+                </div>
+
+                <!-- 空态 -->
+                <div v-else-if="graphStatus === 'empty'" class="graph-status-box">
+                  <EmptyState icon="谱" message="暂无关系数据" hint="等待学者考证补录" />
+                </div>
+
+                <!-- 错误态 -->
+                <div v-else-if="graphStatus === 'error'" class="graph-status-box">
+                  <ErrorState message="关系数据加载失败" @retry="initG6" />
+                </div>
+
+                <Transition name="drawer-slide">
+                  <aside v-if="drawerPoet" class="graph-drawer" role="dialog" aria-label="诗人关系卡片">
+                    <button class="drawer-close" aria-label="关闭卡片" @click="closeDrawer">✕</button>
+                    <header class="drawer-head">
+                      <h3 class="drawer-name">{{ drawerPoet.name }}</h3>
+                      <span class="drawer-dynasty" :style="drawerDynastyStyle">{{ drawerPoet.dynasty }}</span>
+                    </header>
+                    <p v-if="drawerMeta" class="drawer-meta">{{ drawerMeta }}</p>
+                    <p class="drawer-bio">{{ drawerBio }}</p>
+                    <ul v-if="drawerRelations.length" class="drawer-relations">
+                      <li v-for="(rel, i) in drawerRelations" :key="i" class="drawer-relation">
+                        <span class="dr-type" :style="{ borderColor: relationColorOf(rel.type) }">{{ rel.type }}</span>
+                        <span class="dr-body">
+                          <span class="dr-who">{{ rel.counterpartName }}</span>
+                          <span v-if="rel.description" class="dr-desc">{{ rel.description }}</span>
+                        </span>
+                      </li>
+                    </ul>
+                    <p v-else class="drawer-relations drawer-relations--empty">暂无关系收录</p>
+                    <button class="drawer-primary" @click="goPoetDetail">进入专栏 →</button>
+                  </aside>
+                </Transition>
+              </div>
             </div>
 
-            <!-- 关系/朝代 筛选 chips -->
-            <div v-if="graphStatus === 'ready'" class="graph-filters">
-              <div class="filter-group">
-                <span class="filter-label">关系</span>
-                <button
-                  v-for="rt in relationFilterOptions"
-                  :key="rt"
-                  class="filter-chip"
-                  :class="{ active: relationFilter === rt }"
-                  @click="relationFilter = rt"
-                >{{ rt }}</button>
-                <button
-                  v-if="derivedCount"
-                  class="filter-chip filter-chip--derived"
-                  :class="{ active: derivedVisible }"
-                  @click="derivedVisible = !derivedVisible"
-                >推断{{ derivedCount }}</button>
-                <button
-                  class="filter-chip filter-chip--desc"
-                  :class="{ active: edgeLabelsVisible }"
-                  :aria-pressed="edgeLabelsVisible"
-                  title="开启后关系说明常显；关闭时悬停聚焦仍可见"
-                  @click="edgeLabelsVisible = !edgeLabelsVisible"
-                >关系说明</button>
-              </div>
-              <div class="filter-group">
-                <span class="filter-label">朝代</span>
-                <button
-                  v-for="d in graphDynastyOptions"
-                  :key="d"
-                  class="filter-chip"
-                  :class="{ active: dynastyFilter === d }"
-                  @click="dynastyFilter = d"
-                >{{ d }}</button>
-              </div>
-            </div>
-
-            <!-- 图谱画布(常驻挂载, 保证容器可测量) + 状态浮层 + 诗人抽屉 -->
-            <div class="graph-stage">
-              <div ref="g6Container" class="g6-container-canvas"></div>
-
-              <!-- 加载态 -->
-              <div v-if="graphStatus === 'loading'" class="graph-status-box graph-status-box--skel" aria-busy="true" aria-label="关系图谱加载中">
-                <SkeletonBlock height="560px" />
+            <!-- 右侧控制面板: 说明 + 筛选 + 关系说明开关 + 双图例 -->
+            <aside class="graph-side" aria-label="图谱控制面板">
+              <div class="graph-instructions">
+                <span class="instruction-tag">互动</span>
+                <p class="instruction-desc">
+                  滚轮滚动页面 · Ctrl+滚轮缩放图谱 · 拖拽画布 · 悬停诗人可见生平与关系说明 · 点击诗人查看关系卡片；师承以箭头示方向（师 → 徒），虚线为推断关系。
+                </p>
               </div>
 
-              <!-- 空态 -->
-              <div v-else-if="graphStatus === 'empty'" class="graph-status-box">
-                <EmptyState icon="谱" message="暂无关系数据" hint="等待学者考证补录" />
-              </div>
-
-              <!-- 错误态 -->
-              <div v-else-if="graphStatus === 'error'" class="graph-status-box">
-                <ErrorState message="关系数据加载失败" @retry="initG6" />
-              </div>
-
-              <Transition name="drawer-slide">
-                <aside v-if="drawerPoet" class="graph-drawer" role="dialog" aria-label="诗人关系卡片">
-                  <button class="drawer-close" aria-label="关闭卡片" @click="closeDrawer">✕</button>
-                  <header class="drawer-head">
-                    <h3 class="drawer-name">{{ drawerPoet.name }}</h3>
-                    <span class="drawer-dynasty" :style="drawerDynastyStyle">{{ drawerPoet.dynasty }}</span>
-                  </header>
-                  <p v-if="drawerMeta" class="drawer-meta">{{ drawerMeta }}</p>
-                  <p class="drawer-bio">{{ drawerBio }}</p>
-                  <ul v-if="drawerRelations.length" class="drawer-relations">
-                    <li v-for="(rel, i) in drawerRelations" :key="i" class="drawer-relation">
-                      <span class="dr-type" :style="{ borderColor: relationColorOf(rel.type) }">{{ rel.type }}</span>
-                      <span class="dr-body">
-                        <span class="dr-who">{{ rel.counterpartName }}</span>
-                        <span v-if="rel.description" class="dr-desc">{{ rel.description }}</span>
-                      </span>
-                    </li>
-                  </ul>
-                  <p v-else class="drawer-relations drawer-relations--empty">暂无关系收录</p>
-                  <button class="drawer-primary" @click="goPoetDetail">进入专栏 →</button>
-                </aside>
-              </Transition>
-            </div>
-
-            <!-- 双图例: 关系类型 + 朝代 -->
-            <div v-if="graphStatus === 'ready'" class="graph-legend">
-              <div class="legend-group">
-                <span class="legend-group-title">关系</span>
-                <div v-for="lg in relationLegend" :key="lg.key" class="legend-item">
-                  <span class="legend-swatch legend-line" :style="legendLineStyle(lg)">{{ lg.arrow ? '→' : '' }}</span>
-                  {{ lg.label }}
+              <!-- 关系/朝代 筛选 chips -->
+              <div v-if="graphStatus === 'ready'" class="graph-filters">
+                <div class="filter-group">
+                  <span class="filter-label">关系</span>
+                  <button
+                    v-for="rt in relationFilterOptions"
+                    :key="rt"
+                    class="filter-chip"
+                    :class="{ active: relationFilter === rt }"
+                    @click="relationFilter = rt"
+                  >{{ rt }}</button>
+                  <button
+                    v-if="derivedCount"
+                    class="filter-chip filter-chip--derived"
+                    :class="{ active: derivedVisible }"
+                    @click="derivedVisible = !derivedVisible"
+                  >推断{{ derivedCount }}</button>
+                  <button
+                    class="filter-chip filter-chip--desc"
+                    :class="{ active: edgeLabelsVisible }"
+                    :aria-pressed="edgeLabelsVisible"
+                    title="开启后关系说明常显；关闭时悬停聚焦仍可见"
+                    @click="edgeLabelsVisible = !edgeLabelsVisible"
+                  >关系说明</button>
+                </div>
+                <div class="filter-group">
+                  <span class="filter-label">朝代</span>
+                  <button
+                    v-for="d in graphDynastyOptions"
+                    :key="d"
+                    class="filter-chip"
+                    :class="{ active: dynastyFilter === d }"
+                    @click="dynastyFilter = d"
+                  >{{ d }}</button>
                 </div>
               </div>
-              <div class="legend-group">
-                <span class="legend-group-title">朝代</span>
-                <div v-for="d in legendDynasties" :key="d" class="legend-item">
-                  <span class="legend-swatch legend-dot" :style="{ background: dynastyColorByName(d) }"></span>
-                  {{ d }}
+
+              <!-- 双图例: 关系类型 + 朝代 -->
+              <div v-if="graphStatus === 'ready'" class="graph-legend">
+                <div class="legend-group">
+                  <span class="legend-group-title">关系</span>
+                  <div v-for="lg in relationLegend" :key="lg.key" class="legend-item">
+                    <span class="legend-swatch legend-line" :style="legendLineStyle(lg)">{{ lg.arrow ? '→' : '' }}</span>
+                    {{ lg.label }}
+                  </div>
+                </div>
+                <div class="legend-group">
+                  <span class="legend-group-title">朝代</span>
+                  <div v-for="d in legendDynasties" :key="d" class="legend-item">
+                    <span class="legend-swatch legend-dot" :style="{ background: dynastyColorByName(d) }"></span>
+                    {{ d }}
+                  </div>
                 </div>
               </div>
-            </div>
+            </aside>
           </div>
         </div>
       </Transition>
@@ -1447,6 +1452,60 @@ onBeforeUnmount(() => {
   flex-direction: column;
   position: relative;
 }
+/* 左右布局: 左画布 + 右控制面板 */
+.graph-panel-layout {
+  flex-direction: row;
+  gap: 24px;
+  align-items: stretch;
+}
+.graph-main {
+  flex: 1;
+  min-width: 0;
+}
+.graph-side {
+  width: 264px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-height: 560px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.graph-side .graph-instructions {
+  margin-bottom: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.graph-side .graph-filters {
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 0;
+}
+.graph-side .filter-group {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.graph-side .graph-legend {
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+.graph-side .legend-group {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.graph-side .legend-group + .legend-group {
+  border-left: none;
+  border-top: 1px dashed var(--border-light);
+  padding-left: 0;
+  padding-top: 12px;
+}
 .graph-instructions {
   display: flex;
   align-items: center;
@@ -1752,6 +1811,26 @@ onBeforeUnmount(() => {
   .poets-content { padding: 40px 32px 80px; }
   .poets-featured-grid { grid-template-columns: repeat(2, 1fr); }
   .cards-grid-list { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+  /* 图谱窄屏回落为上下布局: 侧栏到画布下方 */
+  .graph-panel-layout { flex-direction: column; }
+  .graph-side {
+    width: 100%;
+    max-height: none;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  .graph-side .graph-instructions { flex: 1 1 100%; }
+  .graph-side .graph-filters { flex-direction: row; flex-wrap: wrap; gap: 12px 24px; }
+  .graph-side .filter-group { flex-direction: row; align-items: center; flex-wrap: wrap; }
+  .graph-side .graph-legend { flex-direction: row; flex-wrap: wrap; gap: 12px 24px; }
+  .graph-side .legend-group { flex-direction: row; align-items: center; flex-wrap: wrap; }
+  .graph-side .legend-group + .legend-group {
+    border-left: 1px solid var(--border-light);
+    border-top: none;
+    padding-left: 18px;
+    padding-top: 0;
+  }
 }
 @media (max-width: 640px) {
   .poets-content { padding: 32px 16px 64px; }
