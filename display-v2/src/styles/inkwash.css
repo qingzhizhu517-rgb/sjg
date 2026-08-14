@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=LXGW+WenKai&display=swap');
+/* 注: 原 @import LXGW+WenKai 已移除 —— 该字体族不在 Google Fonts 目录中,
+   请求恒返回 400(渲染阻塞的外部样式表请求不应保留)。
+   中文楷体回退链已含系统字体: KaiTi(楷体, Windows 自带) / STKaiti(macOS),
+   水墨主题显示效果不受影响, 且完全离线可用。 */
 
 /* Inkwash theme token唯一源。
    透明度派生 token (--accent-soft, --accent-faint, --shadow-color, --shadow-soft, --glass-bg)
