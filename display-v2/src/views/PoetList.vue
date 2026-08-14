@@ -993,12 +993,13 @@ const initG6 = async () => {
   // 指针回到画布空白处时清扫所有残留的 active/inactive 状态
   graphInstance.on('canvas:pointermove', () => {
     const leftovers = {}
-    ;['node', 'edge'].forEach((type) => {
-      graphInstance.getElementData(type).forEach((d) => {
-        if ((graphInstance.getElementState(d.id) || []).length) {
-          leftovers[d.id] = []
-        }
-      })
+    // 注意: getElementData(参数) 的参数是元素 ID 而非类型, 取全部元素须用
+    // getNodeData()/getEdgeData()(无参) —— 误传 'node'/'edge' 会抛
+    // "Unknown element type of id: node/edge"
+    ;[...graphInstance.getNodeData(), ...graphInstance.getEdgeData()].forEach((d) => {
+      if (d && d.id && (graphInstance.getElementState(d.id) || []).length) {
+        leftovers[d.id] = []
+      }
     })
     const keys = Object.keys(leftovers)
     if (keys.length) graphInstance.setElementState(leftovers)
@@ -1107,7 +1108,8 @@ const applyGraphFilter = () => {
 const applyEdgeLabelVisibility = () => {
   if (!graphInstance || graphStatus.value !== 'ready') return
   const vis = edgeLabelsVisible.value
-  const displayedIds = new Set(graphInstance.getElementData('edge').map((e) => e.id))
+  // getEdgeData() 无参 = 全部边; 勿用 getElementData('edge')(参数是元素 ID)
+  const displayedIds = new Set(graphInstance.getEdgeData().map((e) => e.id))
   const updates = (graphRawData.value.edges || [])
     .filter((e) => displayedIds.has(e.id))
     .map((e) => ({
