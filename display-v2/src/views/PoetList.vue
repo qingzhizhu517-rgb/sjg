@@ -251,7 +251,7 @@
             <div class="graph-instructions">
               <span class="instruction-tag">互动</span>
               <p class="instruction-desc">
-                滚轮缩放 · 拖拽画布 · 悬停诗人可见生平与其交游脉络 · 点击诗人查看关系卡片；师承以箭头示方向（师 → 徒），虚线为推断关系。
+                滚轮缩放 · 拖拽画布 · 悬停诗人可见生平与关系说明 · 点击诗人查看关系卡片；师承以箭头示方向（师 → 徒），虚线为推断关系。
               </p>
             </div>
 
@@ -276,7 +276,7 @@
                   class="filter-chip filter-chip--desc"
                   :class="{ active: edgeLabelsVisible }"
                   :aria-pressed="edgeLabelsVisible"
-                  title="切换连线上的关系说明文字"
+                  title="开启后关系说明常显；关闭时悬停聚焦仍可见"
                   @click="edgeLabelsVisible = !edgeLabelsVisible"
                 >关系说明</button>
               </div>
@@ -576,8 +576,8 @@ const relationFilter = ref('全部')
 const derivedVisible = ref(true)
 const dynastyFilter = ref('全部')
 const relationFilterOptions = ['全部', '并称', '师承', '交游', '亲属']
-// 连线关系说明文字开关（默认常显；关闭后 labelText 置空回到全隐藏）
-const edgeLabelsVisible = ref(true)
+// 连线关系说明文字开关（默认关: 悬停聚焦可见; 开启后常显）
+const edgeLabelsVisible = ref(false)
 const graphDynastyOptions = computed(() => {
   const set = new Set()
   ;(graphRawData.value.nodes || []).forEach((n) => {
@@ -780,6 +780,7 @@ const initG6 = async () => {
           // 副标签: dynasty·style（style 缺失则仅 dynasty）
           sub: n.style ? `${dynasty} · ${n.style}` : dynasty,
           size: Math.min(64, 36 + (degree[nid] || 0) * 7),
+          degree: degree[nid] || 0,
           labelSize: (degree[nid] || 0) >= 2 ? 13 : 12,
         }
       }),
@@ -841,14 +842,19 @@ const initG6 = async () => {
     data,
     layout: {
       type: 'force',
+      // G6 v5 'force' = 经典力导向(库伦斥力+胡克引力):
+      // nodeStrength 正数=斥力(默认1000, 旧值30过弱致聚团); 度数越高斥力略增
+      nodeStrength: (d) => 600 + (d.degree || 0) * 160,
+      // nodeSize 按真实节点尺寸+标签区占位(直径口径, collide 半径=size/2), 防叠真正生效
+      nodeSize: (d) => (d.size || 50) + 26,
       preventOverlap: true,
-      nodeSize: 55,
-      linkDistance: 180,
-      nodeStrength: 30,
       collideStrength: 1,
-      alpha: 0.3,
-      alphaDecay: 0.02,
-      alphaMin: 0.01,
+      // 拉开源点: 基线 220, 大节点(>50)再放宽, 落 220~248
+      linkDistance: (_d, s, t) =>
+        220 + Math.max(0, (s?.size || 50) - 50) + Math.max(0, (t?.size || 50) - 50),
+      // 向心锚定画布中心, 不漂移(经典实现原生参数; alpha* 为 d3-force 专属故移除)
+      gravity: 10,
+      center: [width / 2, height / 2],
     },
     node: {
       type: 'circle',
@@ -857,27 +863,35 @@ const initG6 = async () => {
         stroke: graphTheme.nodeStroke,
         lineWidth: 1.5,
         size: d.size || 50,
-        // 副标签 badge: dynasty·style，字号小一号+fillOpacity 降透明，避免喧宾夺主
+        // 副标签 badge: dynasty·style, 与名字拉开(offsetY 42), 小灰底保证两行不糊
         badges: d.sub
           ? [
               {
                 text: d.sub,
                 placement: 'bottom',
-                offsetY: 26,
-                fontSize: 10.5,
+                offsetY: 42,
+                fontSize: 11,
                 fill: graphTheme.textSecondary,
-                fillOpacity: 0.8,
-                background: false,
+                fillOpacity: 0.85,
+                background: true,
+                backgroundFill: graphTheme.cardBg,
+                backgroundRadius: 3,
+                padding: [2, 5],
               },
             ]
           : [],
       }),
       labelText: (d) => d.label,
       labelPlacement: 'bottom',
-      labelOffsetY: 6,
-      labelFontSize: (d) => d.labelSize || 13,
+      labelOffsetY: 8,
+      labelFontSize: (d) => (d.labelSize || 13) + 1,
       labelFontWeight: 600,
       labelFill: graphTheme.textPrimary,
+      // 名字标签加 cardBg 底, 离开节点圆且不压线
+      labelBackground: true,
+      labelBackgroundFill: graphTheme.cardBg,
+      labelBackgroundRadius: 4,
+      labelBackgroundPadding: [3, 6],
       state: {
         // 聚焦态: 光晕+粗描边提亮节点本体(不改 fill, 保留朝代色维度); 标签同时变色加粗放大
         active: {
@@ -913,8 +927,9 @@ const initG6 = async () => {
           startArrowStroke: stroke,
         }
       },
-      // 关系说明默认常显(受「关系说明」开关控制); hover 聚焦态依旧高亮邻接边
-      labelText: (d) => (edgeLabelsVisible.value ? d.description || '' : ''),
+      // 关系说明默认隐藏(受「关系说明」开关控制常显); labelText 常驻非空,
+      // 关闭时 hover 聚焦态(active labelOpacity:1)仍可临时显示
+      labelText: (d) => d.description || '',
       labelAutoRotate: true,
       labelFontSize: 10,
       labelFill: graphTheme.textSecondary,
@@ -1027,6 +1042,7 @@ const applyGraphFilter = () => {
 }
 
 // 「关系说明」开关: 运行时切换当前画布上所有边的 label 显隐
+// (关闭时仅置 labelOpacity=0, labelText 保留 → hover 聚焦态仍可见)
 const applyEdgeLabelVisibility = () => {
   if (!graphInstance || graphStatus.value !== 'ready') return
   const vis = edgeLabelsVisible.value
@@ -1035,9 +1051,7 @@ const applyEdgeLabelVisibility = () => {
     .filter((e) => displayedIds.has(e.id))
     .map((e) => ({
       id: e.id,
-      style: vis
-        ? { labelText: e.description || '', labelOpacity: 1 }
-        : { labelText: '', labelOpacity: 0 },
+      style: { labelText: e.description || '', labelOpacity: vis ? 1 : 0 },
     }))
   if (updates.length) graphInstance.updateEdgeData(updates)
 }
