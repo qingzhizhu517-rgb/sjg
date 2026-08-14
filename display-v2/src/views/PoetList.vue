@@ -31,21 +31,21 @@
           </button>
           <button
             class="toggle-btn"
-            :class="{ active: activeTab === 'all' }"
-            role="tab"
-            :aria-selected="activeTab === 'all'"
-            @click="setTab('all')"
-          >
-            全名录
-          </button>
-          <button
-            class="toggle-btn"
             :class="{ active: activeTab === 'graph' }"
             role="tab"
             :aria-selected="activeTab === 'graph'"
             @click="setTab('graph')"
           >
             关系图谱
+          </button>
+          <button
+            class="toggle-btn"
+            :class="{ active: activeTab === 'all' }"
+            role="tab"
+            :aria-selected="activeTab === 'all'"
+            @click="setTab('all')"
+          >
+            全名录
           </button>
         </div>
       </section>
@@ -182,7 +182,7 @@
         </div>
 
         <!-- 全名录 -->
-        <div v-else-if="activeTab === 'all'" key="all" class="all-tab-content">
+        <div v-else key="all" class="all-tab-content">
           <section class="poets-section" data-reveal>
             <div class="section-bar">
               <span class="section-bar-title">{{ selectedDynastyName }}</span>
@@ -246,7 +246,7 @@
         </div>
 
         <!-- 关系图谱 (AntV G6) -->
-        <div v-else key="graph" class="graph-tab-content">
+        <div v-else-if="activeTab === 'graph'" key="graph" class="graph-tab-content">
           <div class="graph-panel-inner card">
             <div class="graph-instructions">
               <span class="instruction-tag">互动</span>
