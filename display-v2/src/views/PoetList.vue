@@ -730,6 +730,8 @@ const initG6 = async () => {
         edgeColor: '#7a7a7a',
         textPrimary: '#e8e4d8',
         accent: cssVar('--accent'),
+        // 深色主题下基础 accent(#A93226) 做文字偏暗, 聚焦标签用 accent-light 保证对比度
+        accentText: cssVar('--accent-light') || cssVar('--accent'),
         textSecondary: '#9a9484',
         cardBg: '#2a2520',
         nodeStroke: '#c9c2b0',
@@ -739,6 +741,7 @@ const initG6 = async () => {
         edgeColor: '#c5b8a5',
         textPrimary: cssVar('--text-primary'),
         accent: cssVar('--accent'),
+        accentText: cssVar('--accent'),
         textSecondary: '#8a7e6b',
         cardBg: cssVar('--bg-primary'),
         nodeStroke: '#8a7e6b',
@@ -887,7 +890,17 @@ const initG6 = async () => {
       labelFontWeight: 600,
       labelFill: graphTheme.textPrimary,
       state: {
-        active: { lineWidth: 3, stroke: graphTheme.accent },
+        // 聚焦态: 光晕+粗描边提亮节点本体(不改 fill, 保留朝代色维度); 标签同时变色加粗放大
+        active: {
+          lineWidth: 4,
+          stroke: graphTheme.accent,
+          shadowColor: graphTheme.accent,
+          shadowBlur: 14,
+          labelFill: graphTheme.accentText,
+          labelFontWeight: 700,
+          labelFontSize: (d) => (d.labelSize || 13) + 2,
+        },
+        // 淡化态: 元素级 opacity 会随 Group 级联到 label/badge, 无需再叠 labelOpacity(避免双重衰减)
         inactive: { opacity: 0.15 },
       },
     },
