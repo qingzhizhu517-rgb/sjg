@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sjg.dto.ChatMessage;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +31,8 @@ import java.util.function.Consumer;
 @Service
 public class LlmClient {
 
+    private static final Logger log = LoggerFactory.getLogger(LlmClient.class);
+
     @Value("${llm.base-url}") private String baseUrl;
     @Value("${llm.api-key:}") private String apiKey;
     @Value("${llm.model}") private String model;
@@ -44,12 +48,24 @@ public class LlmClient {
         this.http = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(15))
                 .build();
+        // 启动即校验配置：缺密钥是线上「赏析/AI小文全量失败」的根因，必须显式告警
+        if (!isConfigured()) {
+            log.warn("!!! LLM 未配置：llm.api-key / llm.base-url 为空。AI小文与诗词赏析将无法工作。"
+                    + "请设置环境变量 LLM_API_KEY（可选 LLM_BASE_URL / LLM_MODEL）后重启。");
+        } else {
+            log.info("LLM 已配置: model={}, baseUrl={}", model, baseUrl);
+        }
     }
 
     /** 是否已配置可用（apiKey 非空） */
     public boolean isConfigured() {
         return apiKey != null && !apiKey.isBlank()
                 && baseUrl != null && !baseUrl.isBlank();
+    }
+
+    /** 当前使用的模型名（用于落库标记） */
+    public String getModel() {
+        return model;
     }
 
     /**

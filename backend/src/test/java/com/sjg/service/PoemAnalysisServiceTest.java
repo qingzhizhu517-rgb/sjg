@@ -102,7 +102,7 @@ class PoemAnalysisServiceTest {
         void cacheMiss_generatesAndCaches() {
             when(analysisMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
             when(poemMapper.selectById(1L)).thenReturn(samplePoem());
-            when(llm.isConfigured()).thenReturn(true);
+            when(llm.getModel()).thenReturn("deepseek-chat");
             stubStreamChat(validAnalysisJson());
 
             // 首次插入
@@ -121,7 +121,7 @@ class PoemAnalysisServiceTest {
             PoemAnalysis old = sampleAnalysis(1L, 0); // version 0 < CURRENT_VERSION
             when(analysisMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(old);
             when(poemMapper.selectById(1L)).thenReturn(samplePoem());
-            when(llm.isConfigured()).thenReturn(true);
+            when(llm.getModel()).thenReturn("deepseek-chat");
             stubStreamChat(validAnalysisJson());
 
             String result = service.getOrGenerate(1L);
@@ -130,6 +130,43 @@ class PoemAnalysisServiceTest {
             assertTrue(result.contains("思乡之情"));
             // 应该是 update 而不是 insert
             verify(analysisMapper).updateById(any(PoemAnalysis.class));
+        }
+
+        @Test
+        @DisplayName("历史 fallback 脏缓存 -> 视为未命中并重新生成覆盖")
+        void cachedFallback_treatedAsMiss_regenerates() {
+            PoemAnalysis dirty = sampleAnalysis(1L, PoemAnalysisService.CURRENT_VERSION);
+            dirty.setAnalysis(PoemAnalysisService.fallbackJson("生成失败: AI 服务未配置"));
+            dirty.setModel("fallback");
+            when(analysisMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(dirty);
+            when(poemMapper.selectById(1L)).thenReturn(samplePoem());
+            when(llm.getModel()).thenReturn("deepseek-chat");
+            stubStreamChat(validAnalysisJson());
+
+            String result = service.getOrGenerate(1L);
+
+            assertTrue(result.contains("思乡之情"));
+            verify(analysisMapper).updateById(any(PoemAnalysis.class));
+        }
+
+        @Test
+        @DisplayName("LLM 未配置生成失败 -> 返回 fallback 但不落库")
+        void generationFails_returnsFallback_butNotPersisted() {
+            when(analysisMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
+            when(poemMapper.selectById(1L)).thenReturn(samplePoem());
+            // 模拟 LlmClient 未配置: 回调 onError
+            doAnswer(inv -> {
+                Consumer<String> onError = inv.getArgument(2);
+                onError.accept("AI 服务未配置（缺少 LLM_API_KEY / LLM_BASE_URL）");
+                return null;
+            }).when(llm).streamChat(anyList(), any(Consumer.class), any(Consumer.class));
+
+            String result = service.getOrGenerate(1L);
+
+            assertTrue(result.contains("生成失败"));
+            // fallback 绝不落库, 避免污染缓存后永久命中脏数据
+            verify(analysisMapper, never()).insert(any(PoemAnalysis.class));
+            verify(analysisMapper, never()).updateById(any(PoemAnalysis.class));
         }
 
         @Test
@@ -178,6 +215,33 @@ class PoemAnalysisServiceTest {
         void garbage_returnsFallback() {
             String result = service.parseOrFallback("这不是JSON");
             assertTrue(result.contains("这不是JSON"));
+        }
+    }
+
+    // ─── isFallbackAnalysis 测试 ────────────────────────────────
+
+    @Nested
+    @DisplayName("isFallbackAnalysis")
+    class IsFallbackTests {
+
+        @Test
+        @DisplayName("fallback JSON -> true")
+        void fallbackJson_isFallback() {
+            assertTrue(service.isFallbackAnalysis(PoemAnalysisService.fallbackJson("生成失败")));
+        }
+
+        @Test
+        @DisplayName("合法赏析 JSON -> false")
+        void validAnalysis_isNotFallback() {
+            assertFalse(service.isFallbackAnalysis(validAnalysisJson()));
+        }
+
+        @Test
+        @DisplayName("非 JSON / null / 空白 -> true")
+        void invalidInputs_isFallback() {
+            assertTrue(service.isFallbackAnalysis("这不是JSON"));
+            assertTrue(service.isFallbackAnalysis(null));
+            assertTrue(service.isFallbackAnalysis("   "));
         }
     }
 

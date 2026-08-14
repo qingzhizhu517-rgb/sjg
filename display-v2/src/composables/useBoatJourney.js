@@ -18,17 +18,17 @@ export function useBoatJourney() {
   const _dynastyNodes = ref([]) // 响应式，确保 computed 能追踪
   let _onDynastyChange = null
 
-  // 9 朝代定义（与数据库一致，含金朝）
+  // 9 朝代定义（与数据库 dynasty 表一致：id 1-8 加金 9；按起始年排序，金与宋元并存故列于其间）
   const DYNASTIES = [
-    { id: 'qin', name: '秦', startYear: -221, endYear: -206 },
-    { id: 'han', name: '汉', startYear: -206, endYear: 220 },
-    { id: 'weijin', name: '魏晋', startYear: 220, endYear: 420 },
-    { id: 'tang', name: '唐', startYear: 618, endYear: 907 },
-    { id: 'song', name: '宋', startYear: 960, endYear: 1279 },
-    { id: 'jin', name: '金', startYear: 1115, endYear: 1234 },
-    { id: 'yuan', name: '元', startYear: 1271, endYear: 1368 },
-    { id: 'ming', name: '明', startYear: 1368, endYear: 1644 },
-    { id: 'qing', name: '清', startYear: 1644, endYear: 1912 },
+    { id: 1, name: '先秦', startYear: -2070, endYear: -221 },
+    { id: 2, name: '秦汉', startYear: -221, endYear: 220 },
+    { id: 3, name: '魏晋南北朝', startYear: 220, endYear: 589 },
+    { id: 4, name: '隋唐', startYear: 581, endYear: 907 },
+    { id: 5, name: '宋', startYear: 960, endYear: 1279 },
+    { id: 9, name: '金', startYear: 1115, endYear: 1234 },
+    { id: 6, name: '元', startYear: 1271, endYear: 1368 },
+    { id: 7, name: '明', startYear: 1368, endYear: 1644 },
+    { id: 8, name: '清', startYear: 1644, endYear: 1912 },
   ]
 
   /**

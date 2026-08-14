@@ -14,10 +14,14 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Queue;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 诗词 AI 赏析服务：缓存 + LLM 生成。
@@ -57,6 +61,16 @@ public class PoemAnalysisService {
     private final ObjectMapper objectMapper;
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
+    /** 批量生成线程池：2 线程，对 LLM 接口保持克制并发 */
+    private final ExecutorService batchExecutor = Executors.newFixedThreadPool(2, r -> {
+        Thread t = new Thread(r, "poem-analysis-batch");
+        t.setDaemon(true);
+        return t;
+    });
+
+    /** 当前批量任务（进程内单例；重启后丢失，属一次性运维入口） */
+    private volatile BatchJob currentJob;
+
     public PoemAnalysisService(PoemAnalysisMapper analysisMapper,
                                PoemMapper poemMapper,
                                LlmClient llm,
@@ -74,13 +88,14 @@ public class PoemAnalysisService {
      * @return 结构化赏析 JSON 字符串，失败时返回 fallback JSON
      */
     public String getOrGenerate(Long poemId) {
-        // 1. 查缓存
+        // 1. 查缓存（含防呆：历史 fallback 脏数据视为未命中，允许重新生成）
         PoemAnalysis cached = analysisMapper.selectOne(
                 new LambdaQueryWrapper<PoemAnalysis>()
                         .eq(PoemAnalysis::getPoemId, poemId)
                         .last("LIMIT 1"));
         if (cached != null && cached.getVersion() != null
-                && cached.getVersion() >= CURRENT_VERSION) {
+                && cached.getVersion() >= CURRENT_VERSION
+                && !isFallbackAnalysis(cached.getAnalysis())) {
             log.debug("赏析缓存命中: poemId={}, version={}", poemId, cached.getVersion());
             return cached.getAnalysis();
         }
@@ -95,8 +110,10 @@ public class PoemAnalysisService {
         // 3. 调 LLM 生成
         String analysisJson = generate(poem);
 
-        // 4. 存缓存（复用已查询的 cached 实体，避免重复查库）
-        saveOrUpdateCache(poemId, analysisJson, cached);
+        // 4. 仅缓存合法赏析；fallback 不落库，避免污染缓存后永久命中脏数据
+        if (!isFallbackAnalysis(analysisJson)) {
+            saveOrUpdateCache(poemId, analysisJson, cached);
+        }
 
         return analysisJson;
     }
@@ -196,7 +213,7 @@ public class PoemAnalysisService {
         try {
             if (existing != null) {
                 existing.setAnalysis(analysisJson);
-                existing.setModel(llm.isConfigured() ? "llm" : "fallback");
+                existing.setModel(llm.getModel());
                 existing.setVersion(CURRENT_VERSION);
                 existing.setGeneratedAt(LocalDateTime.now());
                 analysisMapper.updateById(existing);
@@ -204,7 +221,7 @@ public class PoemAnalysisService {
                 PoemAnalysis entity = new PoemAnalysis();
                 entity.setPoemId(poemId);
                 entity.setAnalysis(analysisJson);
-                entity.setModel(llm.isConfigured() ? "llm" : "fallback");
+                entity.setModel(llm.getModel());
                 entity.setVersion(CURRENT_VERSION);
                 entity.setGeneratedAt(LocalDateTime.now());
                 analysisMapper.insert(entity);
@@ -212,6 +229,126 @@ public class PoemAnalysisService {
             log.debug("赏析缓存已保存: poemId={}", poemId);
         } catch (Exception e) {
             log.error("保存赏析缓存失败: poemId={}", poemId, e);
+        }
+    }
+
+    /**
+     * 是否为 fallback 兜底 JSON（非法赏析）：含 {@code raw} 字段即为兜底产物。
+     * 合法赏析 JSON 只含 lines/sentiment/background/annotations。
+     */
+    boolean isFallbackAnalysis(String json) {
+        if (json == null || json.isBlank()) {
+            return true;
+        }
+        try {
+            JsonNode node = objectMapper.readTree(json);
+            return node.has("raw");
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    /**
+     * 是否存在「合法且版本最新」的缓存赏析。
+     */
+    private boolean hasValidCache(Long poemId) {
+        PoemAnalysis cached = analysisMapper.selectOne(
+                new LambdaQueryWrapper<PoemAnalysis>()
+                        .eq(PoemAnalysis::getPoemId, poemId)
+                        .last("LIMIT 1"));
+        return cached != null && cached.getVersion() != null
+                && cached.getVersion() >= CURRENT_VERSION
+                && !isFallbackAnalysis(cached.getAnalysis());
+    }
+
+    /**
+     * 启动批量赏析生成任务（异步，进程内单任务）。
+     *
+     * @param startId        起始诗 ID（含，null 表示不限制）
+     * @param endId          结束诗 ID（含，null 表示不限制）
+     * @param skipSuccessful 已有合法缓存的诗是否跳过
+     * @return 任务句柄（含 jobId 与总数）
+     */
+    public synchronized BatchJob startBatch(Long startId, Long endId, boolean skipSuccessful) {
+        if (currentJob != null && currentJob.running) {
+            throw new IllegalStateException("已有赏析批量任务运行中: jobId=" + currentJob.jobId);
+        }
+
+        LambdaQueryWrapper<Poem> qw = new LambdaQueryWrapper<>();
+        if (startId != null) {
+            qw.ge(Poem::getId, startId);
+        }
+        if (endId != null) {
+            qw.le(Poem::getId, endId);
+        }
+        qw.orderByAsc(Poem::getId);
+        List<Poem> poems = poemMapper.selectList(qw);
+        if (poems.isEmpty()) {
+            throw new IllegalArgumentException("指定范围内没有诗词");
+        }
+
+        BatchJob job = new BatchJob(UUID.randomUUID().toString().substring(0, 8), poems.size());
+        currentJob = job;
+
+        batchExecutor.submit(() -> {
+            log.info("赏析批量任务启动: jobId={}, total={}", job.jobId, job.total);
+            try {
+                for (Poem poem : poems) {
+                    Long pid = poem.getId();
+                    try {
+                        if (skipSuccessful && hasValidCache(pid)) {
+                            job.skipped.incrementAndGet();
+                            continue;
+                        }
+                        String json = getOrGenerate(pid);
+                        if (isFallbackAnalysis(json)) {
+                            job.failed.incrementAndGet();
+                            job.failedIds.add(pid);
+                            log.warn("赏析批量: 生成失败 poemId={}", pid);
+                        } else {
+                            job.success.incrementAndGet();
+                        }
+                    } catch (Exception e) {
+                        job.failed.incrementAndGet();
+                        job.failedIds.add(pid);
+                        log.error("赏析批量: 异常 poemId={}", pid, e);
+                    } finally {
+                        job.done.incrementAndGet();
+                    }
+                }
+            } finally {
+                job.running = false;
+                job.finishedAt = LocalDateTime.now();
+                log.info("赏析批量任务结束: jobId={}, success={}, skipped={}, failed={}",
+                        job.jobId, job.success.get(), job.skipped.get(), job.failed.get());
+            }
+        });
+        return job;
+    }
+
+    /** 当前批量任务状态（无任务时返回 null） */
+    public BatchJob getBatchJob() {
+        return currentJob;
+    }
+
+    /**
+     * 批量赏析任务状态对象（可直接 JSON 序列化返回前端）。
+     */
+    public static class BatchJob {
+        public final String jobId;
+        public final long total;
+        public final LocalDateTime startedAt = LocalDateTime.now();
+        public volatile boolean running = true;
+        public volatile LocalDateTime finishedAt;
+        public final AtomicInteger done = new AtomicInteger();
+        public final AtomicInteger success = new AtomicInteger();
+        public final AtomicInteger skipped = new AtomicInteger();
+        public final AtomicInteger failed = new AtomicInteger();
+        public final Queue<Long> failedIds = new ConcurrentLinkedQueue<>();
+
+        BatchJob(String jobId, long total) {
+            this.jobId = jobId;
+            this.total = total;
         }
     }
 

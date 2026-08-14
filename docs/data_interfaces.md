@@ -17,7 +17,7 @@
 | `address` | String | 详细地址 | `"山东省泰安市泰山区"` |
 | `imageUrl` | String | 真实风格图片URL | `"/images/spots/taishan_real.jpg"` |
 | `imageAnimeUrl` | String | 动漫水墨风格图片URL | `"/images/spots/taishan_anime.jpg"` |
-| `region` | String | 所属区域（城市） | `"泰安"` |
+| `region` | String | 所属区域（统一到地级市，如济宁下辖的曲阜/邹城均记为"济宁"） | `"泰安"` |
 
 ### 1.2 诗人 (Poet)
 | 属性名 | 类型 | 说明 | 示例 |
