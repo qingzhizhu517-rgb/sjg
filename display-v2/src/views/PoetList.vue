@@ -863,6 +863,10 @@ const initG6 = async () => {
         stroke: graphTheme.nodeStroke,
         lineWidth: 1.5,
         size: d.size || 50,
+        // 显式默认透明度: G6 已知问题 —— hover-activate 的 inactiveState 透明度
+        // 在状态退出后不恢复(元素保留最后应用的 opacity), 首次悬停后全图卡灰;
+        // 显式声明 opacity:1 提供明确的恢复目标值(边侧已有 d.eOpacity 故不受影响)
+        opacity: 1,
         // 副标签 badge: dynasty·style, 与名字拉开(offsetY 42), 小灰底保证两行不糊
         badges: d.sub
           ? [
@@ -959,6 +963,21 @@ const initG6 = async () => {
   })
   graphInstance.on('canvas:click', (evt) => {
     if (evt.targetType === 'canvas') closeDrawer()
+  })
+
+  // 兜底: 指针移出窗口等场景可能丢失 element pointerleave, 悬停态残留导致全图卡灰;
+  // 指针回到画布空白处时清扫所有残留的 active/inactive 状态
+  graphInstance.on('canvas:pointermove', () => {
+    const leftovers = {}
+    ;['node', 'edge'].forEach((type) => {
+      graphInstance.getElementData(type).forEach((d) => {
+        if ((graphInstance.getElementState(d.id) || []).length) {
+          leftovers[d.id] = []
+        }
+      })
+    })
+    const keys = Object.keys(leftovers)
+    if (keys.length) graphInstance.setElementState(leftovers)
   })
 
   // 节点 hover 生平 tooltip（纯增强: 图谱接口无 biography, 复用 /poets 列表数据）
