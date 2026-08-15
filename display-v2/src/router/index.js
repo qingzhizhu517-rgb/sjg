@@ -15,7 +15,9 @@ const routes = [
   { path: '/regions/:region', name: 'RegionSpots', component: () => import('../views/RegionSpots.vue') },
   { path: '/compose', name: 'PoemComposer', component: () => import('../views/PoemComposerView.vue') },
   { path: '/literature', name: 'LiteratureList', component: () => import('../views/LiteratureList.vue') },
+  { path: '/literature/:id', name: 'CulturalDetailLiterature', component: () => import('../views/CulturalDetail.vue') },
   { path: '/food-opera', name: 'FoodOperaList', component: () => import('../views/FoodOperaList.vue') },
+  { path: '/food-opera/:id', name: 'CulturalDetailFoodOpera', component: () => import('../views/CulturalDetail.vue') },
 ]
 
 const router = createRouter({

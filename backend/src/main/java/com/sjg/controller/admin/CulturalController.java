@@ -58,7 +58,7 @@ public class CulturalController {
         if (request.getItem() == null) {
             return ResponseEntity.badRequest().body(Result.error(400, "item 不能为空"));
         }
-        culturalItemService.create(request.getItem(), request.getFestivalDetail());
+        culturalItemService.create(request);
         return ResponseEntity.ok(Result.success(Map.of("message", "创建成功")));
     }
 
@@ -73,7 +73,7 @@ public class CulturalController {
         if (culturalItemService.getById(id) == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.error(404, "条目不存在"));
         }
-        culturalItemService.update(id, request.getItem(), request.getFestivalDetail());
+        culturalItemService.update(id, request);
         return ResponseEntity.ok(Result.success(Map.of("message", "更新成功")));
     }
 

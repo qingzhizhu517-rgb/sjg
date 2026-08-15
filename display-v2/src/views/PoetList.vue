@@ -521,7 +521,9 @@ const clearGraphWheel = () => {
   }
 }
 // 防御性销毁: 图谱卸载异常不能阻塞路由过渡(否则 out-in 过渡卡死, 新页面空白)
+// 销毁同时使在途的 initG6 请求作废(seq 递增), 避免请求返回后向已卸载容器建图
 const safeDestroyGraph = () => {
+  graphRequestSeq++
   if (graphInstance) {
     try {
       graphInstance.destroy()
@@ -990,8 +992,11 @@ const initG6 = async () => {
   })
 
   // 兜底: 指针移出窗口等场景可能丢失 element pointerleave, 悬停态残留导致全图卡灰;
-  // 指针回到画布空白处时清扫所有残留的 active/inactive 状态
-  graphInstance.on('canvas:pointermove', () => {
+  // 指针回到画布空白处时清扫所有残留的 active/inactive 状态。
+  // 注意必须限定 targetType==='canvas': 否则悬停节点/边上触发的 pointermove
+  // 会把 hover-activate 刚设置的 active/inactive 状态一并清掉, 悬停聚焦失效
+  graphInstance.on('canvas:pointermove', (evt) => {
+    if (evt.targetType !== 'canvas') return
     const leftovers = {}
     // 注意: getElementData(参数) 的参数是元素 ID 而非类型, 取全部元素须用
     // getNodeData()/getEdgeData()(无参) —— 误传 'node'/'edge' 会抛

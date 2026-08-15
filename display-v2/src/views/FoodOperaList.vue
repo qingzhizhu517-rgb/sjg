@@ -11,17 +11,10 @@
       </p>
     </header>
 
-    <!-- 分类标签 -->
+    <!-- 分类标签(数据层 food/opera 细分在 detail.sub_category, 列表接口不返回, 仅作展示说明) -->
     <div class="category-tabs">
-      <button
-        v-for="cat in categories"
-        :key="cat.key"
-        class="category-tab"
-        :class="{ active: activeCategory === cat.key }"
-        @click="activeCategory = cat.key"
-      >
-        {{ cat.label }}
-      </button>
+      <span class="category-tab category-tab--static">饮食文化</span>
+      <span class="category-tab category-tab--static">戏曲艺术</span>
     </div>
 
     <!-- 骨架 -->
@@ -43,18 +36,18 @@
         @keydown.enter="$router.push(`/food-opera/${item.id}`)"
       >
         <div class="fo-card__image">
-          <img :src="item.imageUrl" :alt="item.title" loading="lazy" />
-          <div class="fo-card__category-badge">{{ item.category === 'food' ? '美食' : '戏曲' }}</div>
+          <img v-if="item.imageUrl" :src="item.imageUrl" :alt="item.title" loading="lazy" />
+          <div class="fo-card__category-badge">{{ isFood(item) ? '美食' : '戏曲' }}</div>
         </div>
         <div class="fo-card__body">
           <div class="fo-card__meta">
             <span class="fo-card__region">{{ item.region || '全域' }}</span>
-            <span class="fo-card__type">{{ item.category === 'food' ? '饮食文化' : '戏曲艺术' }}</span>
+            <span class="fo-card__type">{{ isFood(item) ? '饮食文化' : '戏曲艺术' }}</span>
           </div>
           <h3 class="fo-card__title">{{ item.title }}</h3>
           <p class="fo-card__summary">{{ item.summary }}</p>
           <div class="fo-card__tags">
-            <span v-for="tag in item.tags" :key="tag" class="fo-tag">{{ tag }}</span>
+            <span v-for="tag in tagsOf(item)" :key="tag" class="fo-tag">{{ tag }}</span>
           </div>
         </div>
       </article>
@@ -68,7 +61,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useTheme } from '../composables/useTheme'
 import api from '../api'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
@@ -76,28 +69,36 @@ import EmptyState from '../components/homepage/EmptyState.vue'
 
 const { isAnime } = useTheme()
 
-const activeCategory = ref('all')
 const items = ref([])
 const loaded = ref(false)
 const errorMsg = ref('')
 
-const categories = [
-  { key: 'all', label: '全部' },
-  { key: 'food', label: '饮食文化' },
-  { key: 'opera', label: '戏曲艺术' }
-]
+// tags 为 DB json 列, 后端序列化为 JSON 字符串, 需解析成数组
+function tagsOf(item) {
+  const t = item && item.tags
+  if (Array.isArray(t)) return t
+  if (typeof t === 'string') {
+    try {
+      const p = JSON.parse(t)
+      return Array.isArray(p) ? p : []
+    } catch {
+      return []
+    }
+  }
+  return []
+}
 
-const filteredItems = computed(() => {
-  if (activeCategory.value === 'all') return items.value
-  return items.value.filter(item => item.category === activeCategory.value)
-})
+// 饮食/戏曲粗分: 详情表 sub_category 不在列表接口中, 用标题关键词做展示级区分
+function isFood(item) {
+  return !/吕剧|柳子|快书|梆子|戏曲|京剧|琴书|戏/.test(item.title || '')
+}
 
 async function load() {
   loaded.value = false
   errorMsg.value = ''
   try {
-    const data = await api.get('/cultural-items', {
-      params: { category: 'food_opera' }
+    const data = await api.get('/cultural', {
+      params: { category: 'food_opera', size: 100 }
     })
     items.value = data.records || data
   } catch (err) {
@@ -165,6 +166,13 @@ onMounted(load)
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+.category-tab--static {
+  cursor: default;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--text-primary);
 }
 
 .category-tab:hover {

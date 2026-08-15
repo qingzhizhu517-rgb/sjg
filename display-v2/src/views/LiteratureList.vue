@@ -49,7 +49,7 @@
           <h3 class="lit-card__title">{{ item.title }}</h3>
           <p class="lit-card__summary">{{ item.summary }}</p>
           <div class="lit-card__tags">
-            <span v-for="tag in item.tags" :key="tag" class="lit-tag">{{ tag }}</span>
+            <span v-for="tag in tagsOf(item)" :key="tag" class="lit-tag">{{ tag }}</span>
           </div>
         </div>
       </article>
@@ -87,9 +87,9 @@ async function load() {
   loaded.value = false
   errorMsg.value = ''
   try {
-    const params = { category: 'literature' }
+    const params = { category: 'literature', size: 100 }
     if (region.value) params.region = region.value
-    const data = await api.get('/cultural-items', { params })
+    const data = await api.get('/cultural', { params })
     items.value = data.records || data
   } catch (err) {
     console.error('加载民间文学失败:', err)
@@ -97,6 +97,21 @@ async function load() {
   } finally {
     loaded.value = true
   }
+}
+
+// tags 为 DB json 列, 后端序列化为 JSON 字符串, 需解析成数组
+function tagsOf(item) {
+  const t = item && item.tags
+  if (Array.isArray(t)) return t
+  if (typeof t === 'string') {
+    try {
+      const p = JSON.parse(t)
+      return Array.isArray(p) ? p : []
+    } catch {
+      return []
+    }
+  }
+  return []
 }
 
 function sealOf(item) {

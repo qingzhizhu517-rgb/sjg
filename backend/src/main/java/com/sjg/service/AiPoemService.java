@@ -3,18 +3,43 @@ package com.sjg.service;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sjg.entity.AiPoem;
 import com.sjg.mapper.AiPoemMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class AiPoemService extends ServiceImpl<AiPoemMapper, AiPoem> {
 
     private final LlmClient llmClient;
 
+    @Value("${llm.rate-limit.window-seconds:60}") private int windowSeconds;
+    @Value("${llm.rate-limit.max-requests:10}") private int maxRequests;
+
+    /** 与 ChatService 同样的内存滑动窗口限流，但计数互相独立 */
+    private final Map<String, List<Long>> rateMap = new ConcurrentHashMap<>();
+
     public AiPoemService(LlmClient llmClient) {
         this.llmClient = llmClient;
+    }
+
+    /** 滑动窗口限流：windowSeconds 内同一 key 不超过 maxRequests 次 */
+    public boolean checkRate(String key) {
+        if (key == null || key.isBlank()) key = "anon";
+        long now = System.currentTimeMillis();
+        long windowMs = windowSeconds * 1000L;
+        List<Long> times = rateMap.computeIfAbsent(key, k -> new ArrayList<>());
+        synchronized (times) {
+            times.removeIf(t -> now - t > windowMs);
+            if (times.size() >= maxRequests) return false;
+            times.add(now);
+            return true;
+        }
     }
 
     /**
@@ -23,23 +48,36 @@ public class AiPoemService extends ServiceImpl<AiPoemMapper, AiPoem> {
      * @param style 风格（豪放、婉约等）
      * @param wordCount 字数（五言、七言、不限）
      * @param dynasty 朝代偏好
+     * @param clientKey 限流键（调用方传客户端IP）
      * @return 生成的诗歌对象
      */
-    public AiPoem generatePoem(String theme, String style, String wordCount, String dynasty) {
+    public AiPoem generatePoem(String theme, String style, String wordCount, String dynasty, String clientKey) {
+        // 入参校验
+        if (!StringUtils.hasText(theme)) {
+            throw new IllegalArgumentException("请输入创作主题");
+        }
+        if (!checkRate(clientKey)) {
+            throw new IllegalStateException("创作过于频繁，请稍后再试");
+        }
+
         // 构建prompt
         String prompt = buildPrompt(theme, style, wordCount, dynasty);
         
         // 调用LLM生成诗歌
         String response = llmClient.chatSync(prompt);
-        
+
         // 解析响应
         Map<String, String> poemData = parsePoemResponse(response);
+        String content = poemData.getOrDefault("content", "");
+        if (!StringUtils.hasText(response) || !StringUtils.hasText(content)) {
+            throw new IllegalStateException("AI 服务暂未返回有效内容，请稍后再试");
+        }
         
         // 创建实体
         AiPoem poem = new AiPoem();
         poem.setTheme(theme);
         poem.setTitle(poemData.getOrDefault("title", "无题"));
-        poem.setContent(poemData.getOrDefault("content", ""));
+        poem.setContent(content);
         poem.setAuthorAlias("AI小文");
         poem.setModel(llmClient.getModel());
         poem.setPrompt(prompt);

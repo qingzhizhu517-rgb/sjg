@@ -66,12 +66,8 @@
       <!-- 情感分析 -->
       <div v-if="activeTab === 'sentiment'" class="analysis-tab-content">
         <div v-if="sentimentAnalysis" class="sentiment-detail">
-          <h3 class="sub-heading">情感基调</h3>
-          <p class="section-text">{{ sentimentAnalysis.tone }}</p>
-          <h3 class="sub-heading">情感变化</h3>
-          <p class="section-text">{{ sentimentAnalysis.progression }}</p>
-          <h3 class="sub-heading">情感意象</h3>
-          <p class="section-text">{{ sentimentAnalysis.imagery }}</p>
+          <h3 class="sub-heading">情感分析</h3>
+          <p class="section-text">{{ sentimentAnalysis }}</p>
         </div>
         <div v-else class="analysis-empty">
           <p>暂无情感分析数据</p>
@@ -165,8 +161,8 @@ const tabs = [
   { key: 'related', label: '相关诗词' },
 ]
 
-// 计算属性：提取各维度分析数据
-const sentimentAnalysis = computed(() => analysis.value?.sentiment_detail)
+// 计算属性：提取各维度分析数据（后端返回 {analysis:{...},model,generatedAt}）
+const sentimentAnalysis = computed(() => analysis.value?.sentiment || '')
 const imageryAnalysis = computed(() => analysis.value?.imagery)
 const techniqueAnalysis = computed(() => analysis.value?.technique)
 const translationAnalysis = computed(() => analysis.value?.translation)
@@ -179,10 +175,9 @@ async function fetchAnalysis() {
   analysis.value = null
   try {
     // 请求综合分析接口，包含所有维度
-    const data = await api.get(`/poems/${props.poemId}/analysis`, {
-      params: { dimensions: 'all' }
-    })
-    analysis.value = data
+    const data = await api.get(`/poems/${props.poemId}/analysis`)
+    // 接口返回 {analysis, model, generatedAt}: 取内层 analysis 对象
+    analysis.value = (data && data.analysis) || data
   } catch (err) {
     console.error('加载赏析失败:', err)
     error.value = err.message || '赏析加载失败'

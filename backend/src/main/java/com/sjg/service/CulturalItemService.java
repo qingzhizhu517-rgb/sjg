@@ -2,11 +2,18 @@ package com.sjg.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.sjg.dto.CulturalItemRequest;
 import com.sjg.dto.PageResult;
+import com.sjg.entity.CraftDetail;
 import com.sjg.entity.CulturalItem;
 import com.sjg.entity.FestivalDetail;
+import com.sjg.entity.FoodOperaDetail;
+import com.sjg.entity.LiteratureDetail;
+import com.sjg.mapper.CraftDetailMapper;
 import com.sjg.mapper.CulturalItemMapper;
 import com.sjg.mapper.FestivalDetailMapper;
+import com.sjg.mapper.FoodOperaDetailMapper;
+import com.sjg.mapper.LiteratureDetailMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -24,10 +31,20 @@ public class CulturalItemService {
 
     private final CulturalItemMapper itemMapper;
     private final FestivalDetailMapper festivalDetailMapper;
+    private final CraftDetailMapper craftDetailMapper;
+    private final LiteratureDetailMapper literatureDetailMapper;
+    private final FoodOperaDetailMapper foodOperaDetailMapper;
 
-    public CulturalItemService(CulturalItemMapper itemMapper, FestivalDetailMapper festivalDetailMapper) {
+    public CulturalItemService(CulturalItemMapper itemMapper,
+                               FestivalDetailMapper festivalDetailMapper,
+                               CraftDetailMapper craftDetailMapper,
+                               LiteratureDetailMapper literatureDetailMapper,
+                               FoodOperaDetailMapper foodOperaDetailMapper) {
         this.itemMapper = itemMapper;
         this.festivalDetailMapper = festivalDetailMapper;
+        this.craftDetailMapper = craftDetailMapper;
+        this.literatureDetailMapper = literatureDetailMapper;
+        this.foodOperaDetailMapper = foodOperaDetailMapper;
     }
 
     /**
@@ -70,29 +87,68 @@ public class CulturalItemService {
         view.put("item", item);
         if ("festival".equals(item.getCategory())) {
             view.put("detail", festivalDetailMapper.selectById(id));
+        } else if ("craft".equals(item.getCategory())) {
+            view.put("detail", craftDetailMapper.selectById(id));
+        } else if ("literature".equals(item.getCategory())) {
+            view.put("detail", literatureDetailMapper.selectById(id));
+        } else if ("food_opera".equals(item.getCategory())) {
+            view.put("detail", foodOperaDetailMapper.selectById(id));
         }
         return view;
     }
 
     @Transactional
-    public void create(CulturalItem item, FestivalDetail festivalDetail) {
+    public void create(CulturalItemRequest request) {
+        CulturalItem item = request.getItem();
+        // 未显式指定状态时默认草稿, 避免误公开发布(与 V12 的 DB 默认值解耦)
+        if (!StringUtils.hasText(item.getStatus())) {
+            item.setStatus(STATUS_DRAFT);
+        }
         itemMapper.insert(item);
-        saveFestivalDetail(item, festivalDetail);
+        saveDetails(item, request);
     }
 
     @Transactional
-    public void update(Long id, CulturalItem item, FestivalDetail festivalDetail) {
+    public void update(Long id, CulturalItemRequest request) {
+        CulturalItem item = request.getItem();
         item.setId(id);
         itemMapper.updateById(item);
-        if (festivalDetail != null) {
-            festivalDetailMapper.deleteById(id);
+        // 扩展表一律先删后插, 保证与请求体一致
+        festivalDetailMapper.deleteById(id);
+        craftDetailMapper.deleteById(id);
+        literatureDetailMapper.deleteById(id);
+        foodOperaDetailMapper.deleteById(id);
+        saveDetails(item, request);
+    }
+
+    /** 按 category 落对应扩展表 */
+    private void saveDetails(CulturalItem item, CulturalItemRequest request) {
+        String category = item.getCategory();
+        if ("festival".equals(category) && request.getFestivalDetail() != null) {
+            FestivalDetail d = request.getFestivalDetail();
+            d.setItemId(item.getId());
+            festivalDetailMapper.insert(d);
+        } else if ("craft".equals(category) && request.getCraftDetail() != null) {
+            CraftDetail d = request.getCraftDetail();
+            d.setItemId(item.getId());
+            craftDetailMapper.insert(d);
+        } else if ("literature".equals(category) && request.getLiteratureDetail() != null) {
+            LiteratureDetail d = request.getLiteratureDetail();
+            d.setItemId(item.getId());
+            literatureDetailMapper.insert(d);
+        } else if ("food_opera".equals(category) && request.getFoodOperaDetail() != null) {
+            FoodOperaDetail d = request.getFoodOperaDetail();
+            d.setItemId(item.getId());
+            foodOperaDetailMapper.insert(d);
         }
-        saveFestivalDetail(item, festivalDetail);
     }
 
     @Transactional
     public void delete(Long id) {
         festivalDetailMapper.deleteById(id);
+        craftDetailMapper.deleteById(id);
+        literatureDetailMapper.deleteById(id);
+        foodOperaDetailMapper.deleteById(id);
         itemMapper.deleteById(id);
     }
 
@@ -116,11 +172,5 @@ public class CulturalItemService {
             stats.add(Map.of("category", category, "count", count));
         }
         return stats;
-    }
-
-    private void saveFestivalDetail(CulturalItem item, FestivalDetail festivalDetail) {
-        if (festivalDetail == null || !"festival".equals(item.getCategory())) return;
-        festivalDetail.setItemId(item.getId());
-        festivalDetailMapper.insert(festivalDetail);
     }
 }

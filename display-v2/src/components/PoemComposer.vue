@@ -175,15 +175,29 @@ async function composePoem() {
   animationStarted.value = false
   
   try {
-    const response = await api.post('/ai/compose-poem', {
-      theme: form.value.theme,
+    // 后端契约: POST /api/public/ai-poem/generate, 参数走 query(@RequestParam),
+    // 返回 Result<AiPoem>{theme,title,content,authorAlias,model,prompt,status}
+    const response = await api.post('/ai-poem/generate', null, {
+      params: {
+        theme: form.value.theme,
+        style: form.value.style,
+        wordCount: form.value.wordCount,
+        dynasty: form.value.dynasty
+      }
+    })
+
+    // 适配展示形状: 后端无 lines/style/wordCount/explanation 字段,
+    // 由 content 拆行; 元信息沿用表单选择值
+    const content = (response && response.content) || ''
+    poem.value = {
+      title: (response && response.title) || '无题',
+      content,
+      lines: content.split('\n').map((l) => l.trim()).filter(Boolean),
       style: form.value.style,
       wordCount: form.value.wordCount,
-      dynasty: form.value.dynasty
-    })
-    
-    poem.value = response
-    
+      explanation: ''
+    }
+
     // 等待 DOM 更新后开始动画
     await nextTick()
     setTimeout(() => {

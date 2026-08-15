@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import HanziWriter from 'hanzi-writer'
 
 const props = defineProps({
@@ -13,8 +13,11 @@ const props = defineProps({
   autoPlay: { type: Boolean, default: false }
 })
 
+const emit = defineEmits(['animation-complete'])
+
 const charRef = ref(null)
 const writer = ref(null)
+let playTimer = null
 
 onMounted(async () => {
   await nextTick()
@@ -30,14 +33,29 @@ watch(() => props.char, async () => {
   }
 })
 
+// autoPlay 由 false→true 时开始播放（父组件用翻转实现"重播"）
+watch(() => props.autoPlay, (playing) => {
+  if (!playing) return
+  clearTimeout(playTimer)
+  playTimer = setTimeout(() => {
+    playAnimation()
+  }, props.delay || 0)
+})
+
+onBeforeUnmount(() => {
+  clearTimeout(playTimer)
+  playTimer = null
+  writer.value = null
+})
+
 function initWriter() {
-  if (writer.value) {
-    writer.value = null
-  }
-  
+  clearTimeout(playTimer)
+  playTimer = null
+  writer.value = null
+
   // 清空容器
   charRef.value.innerHTML = ''
-  
+
   try {
     writer.value = HanziWriter.create(charRef.value, props.char, {
       width: props.size,
@@ -54,9 +72,10 @@ function initWriter() {
         onComplete(HanziWriter.getCharacterData(char))
       }
     })
-    
+
+    // 组件挂载时 autoPlay 已为 true（如直接渲染带动画）也要能播放
     if (props.autoPlay) {
-      setTimeout(() => {
+      playTimer = setTimeout(() => {
         playAnimation()
       }, props.delay)
     }
@@ -71,7 +90,9 @@ function initWriter() {
 
 function playAnimation() {
   if (writer.value) {
-    writer.value.animateCharacter()
+    writer.value.animateCharacter({
+      onComplete: () => emit('animation-complete', props.char)
+    })
   }
 }
 
