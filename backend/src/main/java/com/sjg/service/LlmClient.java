@@ -85,11 +85,7 @@ public class LlmClient {
         try {
             ObjectNode body = buildBody(messages, true);
 
-            String url = baseUrl.replaceAll("/+$", "");
-            // 容错：若 base-url 已含完整路径则不再追加，避免 /chat/completions/chat/completions
-            if (!url.endsWith("/chat/completions")) {
-                url = url + "/chat/completions";
-            }
+            String url = chatCompletionsUrl();
             HttpRequest req = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .timeout(Duration.ofSeconds(timeoutSeconds))
@@ -167,10 +163,7 @@ public class LlmClient {
         }
         try {
             ObjectNode body = buildBody(messages, false);
-            String url = baseUrl.replaceAll("/+$", "");
-            if (!url.endsWith("/chat/completions")) {
-                url = url + "/chat/completions";
-            }
+            String url = chatCompletionsUrl();
             HttpRequest req = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .timeout(Duration.ofSeconds(timeoutSeconds))
@@ -191,6 +184,18 @@ public class LlmClient {
         } catch (Exception e) {
             throw new IllegalStateException("调用大模型失败：" + e.getMessage(), e);
         }
+    }
+
+    /**
+     * 拼接 chat/completions 完整地址。
+     * 容错：base-url 已含完整路径时不再追加，避免 /chat/completions/chat/completions。
+     */
+    private String chatCompletionsUrl() {
+        String url = baseUrl.replaceAll("/+$", "");
+        if (!url.endsWith("/chat/completions")) {
+            url = url + "/chat/completions";
+        }
+        return url;
     }
 
     private String truncate(String s, int n) {

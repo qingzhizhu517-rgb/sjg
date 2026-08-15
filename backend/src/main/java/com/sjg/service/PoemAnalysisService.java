@@ -14,9 +14,11 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -74,7 +76,16 @@ public class PoemAnalysisService {
     private final PoemMapper poemMapper;
     private final LlmClient llm;
     private final ObjectMapper objectMapper;
-    private final ExecutorService executor = Executors.newCachedThreadPool();
+
+    /** 单诗生成线程池：有界 + 守护线程，避免无界缓存线程与进程无法退出 */
+    private final ExecutorService executor = Executors.newFixedThreadPool(4, r -> {
+        Thread t = new Thread(r, "poem-analysis-gen");
+        t.setDaemon(true);
+        return t;
+    });
+
+    /** 每首诗一把锁：同一首诗并发访问只触发一次 LLM 生成，避免重复计费 */
+    private final Map<Long, Object> poemLocks = new ConcurrentHashMap<>();
 
     /** 批量生成线程池：2 线程，对 LLM 接口保持克制并发 */
     private final ExecutorService batchExecutor = Executors.newFixedThreadPool(2, r -> {
@@ -103,14 +114,9 @@ public class PoemAnalysisService {
      * @return 结构化赏析 JSON 字符串，失败时返回 fallback JSON
      */
     public String getOrGenerate(Long poemId) {
-        // 1. 查缓存（含防呆：历史 fallback 脏数据视为未命中，允许重新生成）
-        PoemAnalysis cached = analysisMapper.selectOne(
-                new LambdaQueryWrapper<PoemAnalysis>()
-                        .eq(PoemAnalysis::getPoemId, poemId)
-                        .last("LIMIT 1"));
-        if (cached != null && cached.getVersion() != null
-                && cached.getVersion() >= CURRENT_VERSION
-                && !isFallbackAnalysis(cached.getAnalysis())) {
+        // 1. 快路径查缓存（锁外；含防呆：历史 fallback 脏数据视为未命中，允许重新生成）
+        PoemAnalysis cached = queryCache(poemId);
+        if (isCacheValid(cached)) {
             log.debug("赏析缓存命中: poemId={}, version={}", poemId, cached.getVersion());
             return cached.getAnalysis();
         }
@@ -122,15 +128,24 @@ public class PoemAnalysisService {
             return fallbackJson("诗词不存在");
         }
 
-        // 3. 调 LLM 生成
-        String analysisJson = generate(poem);
+        // 3. 每诗加锁 + 锁内二次查缓存（双检），并发访问同一首诗只生成一次；
+        //    UNIQUE 兜底仅记日志，避免重复消耗 LLM 费用
+        Object lock = poemLocks.computeIfAbsent(poemId, k -> new Object());
+        synchronized (lock) {
+            PoemAnalysis recheck = queryCache(poemId);
+            if (isCacheValid(recheck)) {
+                log.debug("赏析缓存命中(锁内双检): poemId={}", poemId);
+                return recheck.getAnalysis();
+            }
 
-        // 4. 仅缓存合法赏析；fallback 不落库，避免污染缓存后永久命中脏数据
-        if (!isFallbackAnalysis(analysisJson)) {
-            saveOrUpdateCache(poemId, analysisJson, cached);
+            String analysisJson = generate(poem);
+
+            // 4. 仅缓存合法赏析；fallback 不落库，避免污染缓存后永久命中脏数据
+            if (!isFallbackAnalysis(analysisJson)) {
+                saveOrUpdateCache(poemId, analysisJson, recheck);
+            }
+            return analysisJson;
         }
-
-        return analysisJson;
     }
 
     /**
@@ -267,10 +282,19 @@ public class PoemAnalysisService {
      * 是否存在「合法且版本最新」的缓存赏析。
      */
     private boolean hasValidCache(Long poemId) {
-        PoemAnalysis cached = analysisMapper.selectOne(
+        return isCacheValid(queryCache(poemId));
+    }
+
+    /** 查缓存（poem_id 有 UNIQUE 约束，最多一条） */
+    private PoemAnalysis queryCache(Long poemId) {
+        return analysisMapper.selectOne(
                 new LambdaQueryWrapper<PoemAnalysis>()
                         .eq(PoemAnalysis::getPoemId, poemId)
                         .last("LIMIT 1"));
+    }
+
+    /** 缓存是否可命中：存在 + 版本不低于当前 + 非 fallback 脏数据 */
+    private boolean isCacheValid(PoemAnalysis cached) {
         return cached != null && cached.getVersion() != null
                 && cached.getVersion() >= CURRENT_VERSION
                 && !isFallbackAnalysis(cached.getAnalysis());

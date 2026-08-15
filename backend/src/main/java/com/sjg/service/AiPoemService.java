@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class AiPoemService extends ServiceImpl<AiPoemMapper, AiPoem> {
@@ -52,16 +54,20 @@ public class AiPoemService extends ServiceImpl<AiPoemMapper, AiPoem> {
      * @return 生成的诗歌对象
      */
     public AiPoem generatePoem(String theme, String style, String wordCount, String dynasty, String clientKey) {
-        // 入参校验
-        if (!StringUtils.hasText(theme)) {
+        // 入参校验(theme 列 VARCHAR(100), 超长会在落库时报 Data too long)
+        String t = theme == null ? "" : theme.trim();
+        if (t.isEmpty()) {
             throw new IllegalArgumentException("请输入创作主题");
+        }
+        if (t.length() > 100) {
+            throw new IllegalArgumentException("创作主题过长（最多100字）");
         }
         if (!checkRate(clientKey)) {
             throw new IllegalStateException("创作过于频繁，请稍后再试");
         }
 
         // 构建prompt
-        String prompt = buildPrompt(theme, style, wordCount, dynasty);
+        String prompt = buildPrompt(t, style, wordCount, dynasty);
         
         // 调用LLM生成诗歌
         String response = llmClient.chatSync(prompt);
@@ -75,7 +81,7 @@ public class AiPoemService extends ServiceImpl<AiPoemMapper, AiPoem> {
         
         // 创建实体
         AiPoem poem = new AiPoem();
-        poem.setTheme(theme);
+        poem.setTheme(t);
         poem.setTitle(poemData.getOrDefault("title", "无题"));
         poem.setContent(content);
         poem.setAuthorAlias("AI小文");
@@ -121,45 +127,58 @@ public class AiPoemService extends ServiceImpl<AiPoemMapper, AiPoem> {
         Map<String, String> result = new HashMap<>();
         result.put("title", "无题");
         result.put("content", "");
-        
+
+        if (response == null) return result;
+
+        // 剥掉 ```json ... ``` 围栏, 截取第一对大括号区间
+        String candidate = stripCodeFences(response.trim());
+
+        // 1. 优先整体 JSON 解析
         try {
-            // 尝试解析JSON
             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(response);
-            
-            if (root.has("title")) {
-                result.put("title", root.get("title").asText());
-            }
-            if (root.has("content")) {
-                result.put("content", root.get("content").asText());
+            com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(candidate);
+            if (root.isObject()) {
+                if (root.hasNonNull("title")) {
+                    result.put("title", root.get("title").asText().trim());
+                }
+                if (root.hasNonNull("content")) {
+                    result.put("content", root.get("content").asText());
+                }
             }
         } catch (Exception e) {
-            // JSON解析失败，尝试提取内容
-            if (response.contains("title") && response.contains("content")) {
-                // 简单提取
-                String title = extractBetween(response, "\"title\":", ",");
-                String content = extractBetween(response, "\"content\":", "}");
-                
-                if (title != null) {
-                    result.put("title", title.trim().replace("\"", ""));
-                }
-                if (content != null) {
-                    result.put("content", content.trim().replace("\"", "").replace("\\n", "\n"));
-                }
-            }
+            // 2. 兜底: 引号安全正则提取(允许 title 含逗号/转义, content 不再误删引号)
+            String title = extractJsonString(candidate, "title");
+            String content = extractJsonString(candidate, "content");
+            if (title != null) result.put("title", title);
+            if (content != null) result.put("content", content);
         }
-        
+
+        if (result.get("title") == null || result.get("title").isBlank()) {
+            result.put("title", "无题");
+        }
         return result;
     }
 
-    private String extractBetween(String text, String start, String end) {
-        int startIndex = text.indexOf(start);
-        if (startIndex == -1) return null;
-        
-        startIndex += start.length();
-        int endIndex = text.indexOf(end, startIndex);
-        if (endIndex == -1) endIndex = text.length();
-        
-        return text.substring(startIndex, endIndex);
+    /** 剥离 ```json ... ``` 代码块围栏, 截取首个 { ... } 区间 */
+    private String stripCodeFences(String s) {
+        if (s == null) return "";
+        int start = s.indexOf('{');
+        int end = s.lastIndexOf('}');
+        if (start >= 0 && end > start) {
+            return s.substring(start, end + 1);
+        }
+        return s;
+    }
+
+    /** 引号安全提取 JSON 字符串字段: 支持 \n 等转义, 不误伤值内引号/逗号 */
+    private String extractJsonString(String json, String field) {
+        Matcher m = Pattern.compile("\"" + field + "\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\"")
+                .matcher(json);
+        if (!m.find()) return null;
+        return m.group(1)
+                .replace("\\n", "\n")
+                .replace("\\t", "\t")
+                .replace("\\\"", "\"")
+                .replace("\\\\", "\\");
     }
 }

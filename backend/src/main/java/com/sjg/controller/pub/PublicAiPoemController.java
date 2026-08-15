@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
@@ -16,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/public/ai-poem")
 public class PublicAiPoemController {
+
+    private static final Logger log = LoggerFactory.getLogger(PublicAiPoemController.class);
 
     private final AiPoemService aiPoemService;
 
@@ -45,8 +49,10 @@ public class PublicAiPoemController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Result.error(400, e.getMessage()));
         } catch (Exception e) {
-            // chatSync 失败 / 内容为空等，统一 502，避免把大模型错误包装成 400
-            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Result.error(502, e.getMessage()));
+            // chatSync 失败 / 内容为空等: 细节只进服务端日志, 避免向公开接口泄露内部 URL 等异常细节
+            log.error("AI写诗生成失败: theme={}, ip={}", theme, clientIp, e);
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body(Result.error(502, "生成失败，请稍后再试"));
         }
     }
 
