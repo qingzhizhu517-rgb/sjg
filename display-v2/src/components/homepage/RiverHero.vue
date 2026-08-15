@@ -2,9 +2,10 @@
   <section ref="root" class="rh" :class="isReal ? 'rh--real' : 'rh--inkwash'">
     <!-- 黄河流水动画背景 -->
     <div class="yellow-river-animation" aria-hidden="true"></div>
-    <!-- real：全屏视频背景 + 深色蒙版 -->
+    <!-- real：全屏长片背景（161s 黄河二十四节气）+ 节气叙事层 -->
     <template v-if="isReal">
       <video
+        ref="videoRef"
         v-if="!reduce && !videoErr && heroBg?.type === 'video'"
         class="rh__video-bg"
         :src="heroBg.url"
@@ -15,9 +16,36 @@
         playsinline
         aria-hidden="true"
         @error="videoErr = true"
+        @loadedmetadata="onMeta"
+        @timeupdate="onTimeUpdate"
       />
       <img v-else class="rh__video-bg" :src="heroBg?.poster || heroImg" alt="" decoding="async" />
       <div class="rh__overlay"></div>
+
+      <!-- 右缘竖排题款 -->
+      <p class="rh__film-kuan" aria-hidden="true">黄河二十四节气</p>
+
+      <!-- 播放控制 -->
+      <div class="rh__controls">
+        <button class="rh__ctl" :aria-pressed="!muted" @click="toggleMuted">{{ muted ? '静' : '声' }}</button>
+        <button class="rh__ctl" @click="toggleFullscreen">全屏</button>
+      </div>
+
+      <!-- 当前节气印章 -->
+      <div class="rh__term-seal" aria-hidden="true">
+        <span>{{ currentTerm }}</span>
+      </div>
+
+      <!-- 底部 24 节气时间轴（点击跳转播放位） -->
+      <nav class="rh__solar-terms" aria-label="二十四节气导航">
+        <button
+          v-for="(t, i) in SOLAR_TERMS"
+          :key="t"
+          class="rh__term-chip"
+          :class="{ 'is-active': i === termIndex }"
+          @click="seekTerm(i)"
+        >{{ t }}</button>
+      </nav>
     </template>
 
     <!-- inkwash：左 art 区（开场晕染视频 -> 定格长卷） -->
@@ -109,6 +137,53 @@ watch(isReal, () => {
   videoErr.value = false
 })
 
+// ---- real 长片节气叙事（161s 黄河二十四节气）----
+const SOLAR_TERMS = [
+  '立春', '雨水', '惊蛰', '春分', '清明', '谷雨',
+  '立夏', '小满', '芒种', '夏至', '小暑', '大暑',
+  '立秋', '处暑', '白露', '秋分', '寒露', '霜降',
+  '立冬', '小雪', '大雪', '冬至', '小寒', '大寒',
+]
+const videoRef = ref(null)
+const duration = ref(0)
+const currentTime = ref(0)
+const muted = ref(true)
+// 每节气约占时长 1/24, 按当前播放位换算
+const termIndex = computed(() =>
+  duration.value ? Math.min(SOLAR_TERMS.length - 1, Math.floor((currentTime.value / duration.value) * SOLAR_TERMS.length)) : 0,
+)
+const currentTerm = computed(() => SOLAR_TERMS[termIndex.value] || '立春')
+
+const onMeta = (e) => {
+  duration.value = e.target.duration || 0
+}
+const onTimeUpdate = (e) => {
+  currentTime.value = e.target.currentTime || 0
+}
+const seekTerm = (i) => {
+  const v = videoRef.value
+  if (v && duration.value) {
+    // +0.02 偏移避开节界抖动
+    v.currentTime = ((i + 0.02) * duration.value) / SOLAR_TERMS.length
+  }
+}
+const toggleMuted = () => {
+  const v = videoRef.value
+  if (!v) return
+  v.muted = !v.muted
+  muted.value = v.muted
+}
+const toggleFullscreen = () => {
+  const v = videoRef.value
+  if (!v) return
+  try {
+    if (document.fullscreenElement) document.exitFullscreen()
+    else v.requestFullscreen?.()
+  } catch {
+    /* 不支持全屏时静默 */
+  }
+}
+
 const reduce = ref(
   typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -165,13 +240,13 @@ onBeforeUnmount(() => {
   background: var(--bg-primary);
 }
 
-/* ============ real：全屏视频背景 ============ */
+/* ============ real：全屏长片 + 节气叙事 ============ */
 .rh--real {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 72vh;
-  padding: 96px 56px;
+  align-items: flex-end;
+  justify-content: flex-start;
+  min-height: 100vh;
+  padding: 120px 56px 132px;
 }
 .rh__video-bg {
   position: absolute;
@@ -184,18 +259,18 @@ onBeforeUnmount(() => {
 .rh__overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.55) 100%);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.18) 45%, rgba(0, 0, 0, 0.62) 100%);
   z-index: 1;
 }
 .rh--real .rh__content {
-  max-width: 640px;
-  text-align: center;
+  max-width: 560px;
+  text-align: left;
 }
 .rh--real .rh__head {
-  justify-content: center;
+  justify-content: flex-start;
 }
 .rh--real .rh__title {
-  align-items: center;
+  align-items: flex-start;
 }
 .rh--real .rh__title-line {
   color: #f5efe3;
@@ -203,8 +278,7 @@ onBeforeUnmount(() => {
 }
 .rh--real .rh__subtitle {
   color: rgba(245, 239, 227, 0.85);
-  margin-left: auto;
-  margin-right: auto;
+  margin-left: 0;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
 }
 .rh--real .rh__stats {
@@ -213,6 +287,9 @@ onBeforeUnmount(() => {
 .rh--real .rh__stat-label,
 .rh--real .rh__stat-suffix {
   color: rgba(245, 239, 227, 0.7);
+}
+.rh--real .rh__stat-num {
+  color: #f5efe3;
 }
 .rh--real .rh__cta {
   background: #f5efe3;
@@ -223,6 +300,119 @@ onBeforeUnmount(() => {
   background: var(--accent);
   color: #f5efe3;
   border-color: var(--accent);
+}
+
+/* 右缘竖排题款 */
+.rh__film-kuan {
+  position: absolute;
+  right: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  writing-mode: vertical-rl;
+  font-family: var(--font-heading);
+  font-size: 15px;
+  letter-spacing: 8px;
+  color: rgba(245, 239, 227, 0.55);
+  margin: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* 播放控制 */
+.rh__controls {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  display: flex;
+  gap: 10px;
+  z-index: 3;
+}
+.rh__ctl {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(245, 239, 227, 0.35);
+  border-radius: 50%;
+  color: #f5efe3;
+  font-family: var(--font-heading);
+  font-size: 13px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: all 0.25s ease;
+}
+.rh__ctl:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* 当前节气印章 */
+.rh__term-seal {
+  position: absolute;
+  right: 44px;
+  bottom: 108px;
+  width: 58px;
+  height: 74px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(178, 58, 43, 0.88);
+  border-radius: 3px;
+  transform: rotate(-3deg);
+  z-index: 2;
+  pointer-events: none;
+}
+.rh__term-seal span {
+  writing-mode: vertical-rl;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: #f5efe3;
+}
+
+/* 底部 24 节气时间轴 */
+.rh__solar-terms {
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  max-width: calc(100% - 200px);
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 4px 2px;
+  z-index: 3;
+}
+.rh__solar-terms::-webkit-scrollbar {
+  display: none;
+}
+.rh__term-chip {
+  flex-shrink: 0;
+  padding: 5px 10px;
+  background: rgba(0, 0, 0, 0.26);
+  border: 1px solid rgba(245, 239, 227, 0.22);
+  border-radius: 2px;
+  color: rgba(245, 239, 227, 0.68);
+  font-size: 12px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.22s ease;
+}
+.rh__term-chip:hover {
+  color: #f5efe3;
+  border-color: rgba(245, 239, 227, 0.6);
+}
+.rh__term-chip.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  transform: translateY(-2px);
 }
 
 /* ============ inkwash：左右分栏 ============ */
@@ -444,13 +634,16 @@ onBeforeUnmount(() => {
     padding: 48px 32px 72px;
   }
   .rh--real {
-    padding: 72px 32px;
+    padding: 96px 32px 128px;
   }
   .rh__content {
     max-width: 640px;
   }
   .rh__title-line {
     letter-spacing: 8px;
+  }
+  .rh__solar-terms {
+    max-width: calc(100% - 32px);
   }
 }
 @media (max-width: 640px) {
@@ -459,8 +652,21 @@ onBeforeUnmount(() => {
     gap: 24px;
   }
   .rh--real {
-    padding: 56px 20px;
-    min-height: 60vh;
+    padding: 88px 20px 124px;
+    min-height: 100svh;
+  }
+  .rh__film-kuan {
+    display: none;
+  }
+  .rh__term-seal {
+    right: 20px;
+    bottom: 92px;
+    width: 44px;
+    height: 58px;
+  }
+  .rh__term-seal span {
+    font-size: 17px;
+    letter-spacing: 3px;
   }
   .rh__title-line {
     font-size: clamp(40px, 11vw, 56px);
