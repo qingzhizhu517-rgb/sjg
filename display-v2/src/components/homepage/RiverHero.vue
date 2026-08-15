@@ -2,41 +2,38 @@
   <section ref="root" class="rh" :class="isReal ? 'rh--real' : 'rh--inkwash'">
     <!-- 黄河流水动画背景 -->
     <div class="yellow-river-animation" aria-hidden="true"></div>
-    <!-- real：全屏长片背景（161s 黄河二十四节气）+ 节气叙事层 -->
+    <!-- real：全屏 24 节气画卷轮播（自三江源至入海口, 不用视频） -->
     <template v-if="isReal">
-      <video
-        ref="videoRef"
-        v-if="!reduce && !videoErr && heroBg?.type === 'video'"
-        class="rh__video-bg"
-        :src="heroBg.url"
-        :poster="heroBg.poster"
-        autoplay
-        muted
-        loop
-        playsinline
-        aria-hidden="true"
-        @error="videoErr = true"
-        @loadedmetadata="onMeta"
-        @timeupdate="onTimeUpdate"
-      />
-      <img v-else class="rh__video-bg" :src="heroBg?.poster || heroImg" alt="" decoding="async" />
+      <div class="rh__term-stack" aria-hidden="true">
+        <Transition name="term-fade">
+          <img
+            :key="termIndex"
+            class="rh__term-img"
+            :src="termImages[termIndex]"
+            :alt="currentTerm"
+            decoding="async"
+          />
+        </Transition>
+      </div>
       <div class="rh__overlay"></div>
 
       <!-- 右缘竖排题款 -->
       <p class="rh__film-kuan" aria-hidden="true">黄河二十四节气</p>
 
-      <!-- 播放控制 -->
+      <!-- 播放控制：自动轮播开关 + 上一/下一 -->
       <div class="rh__controls">
-        <button class="rh__ctl" :aria-pressed="!muted" @click="toggleMuted">{{ muted ? '静' : '声' }}</button>
-        <button class="rh__ctl" @click="toggleFullscreen">全屏</button>
+        <button class="rh__ctl" :aria-pressed="autoPlay" @click="toggleAuto">{{ autoPlay ? '停' : '轮' }}</button>
+        <button class="rh__ctl" @click="stepTerm(-1)" aria-label="上一节气">‹</button>
+        <button class="rh__ctl" @click="stepTerm(1)" aria-label="下一节气">›</button>
       </div>
 
-      <!-- 当前节气印章 -->
+      <!-- 当前节气印章 + 地点 -->
       <div class="rh__term-seal" aria-hidden="true">
         <span>{{ currentTerm }}</span>
       </div>
+      <p class="rh__term-loc" aria-hidden="true">{{ termLocation }}</p>
 
-      <!-- 底部 24 节气时间轴（点击跳转播放位） -->
+      <!-- 底部 24 节气时间轴（点击跳转对应画卷） -->
       <nav class="rh__solar-terms" aria-label="二十四节气导航">
         <button
           v-for="(t, i) in SOLAR_TERMS"
@@ -132,8 +129,8 @@ defineEmits(['cta'])
 
 const { isReal, resolveAsset } = useTheme()
 
-// 媒体解析：real -> hero-map 视频（+poster）；inkwash -> hero-scroll 长卷图 + hero-open 开场视频
-const heroBg = computed(() => (isReal.value ? resolveAsset('hero-map') : resolveAsset('hero-scroll')))
+// 媒体解析：real 首屏已改为 24 节气图片轮播(termImages)；inkwash 沿用 hero-scroll 长卷 + hero-open 开场视频
+const heroBg = computed(() => (!isReal.value ? resolveAsset('hero-scroll') : null))
 const inkOpen = computed(() => (!isReal.value ? resolveAsset('hero-open') : null))
 
 // inkwash 开场视频播完定格长卷
@@ -151,50 +148,56 @@ watch(isReal, () => {
   videoErr.value = false
 })
 
-// ---- real 长片节气叙事（161s 黄河二十四节气）----
+// ---- real 24 节气画卷轮播（图片替代视频, 更流畅更清晰）----
 const SOLAR_TERMS = [
   '立春', '雨水', '惊蛰', '春分', '清明', '谷雨',
   '立夏', '小满', '芒种', '夏至', '小暑', '大暑',
   '立秋', '处暑', '白露', '秋分', '寒露', '霜降',
   '立冬', '小雪', '大雪', '冬至', '小寒', '大寒',
 ]
-const videoRef = ref(null)
-const duration = ref(0)
-const currentTime = ref(0)
-const muted = ref(true)
-// 每节气约占时长 1/24, 按当前播放位换算
-const termIndex = computed(() =>
-  duration.value ? Math.min(SOLAR_TERMS.length - 1, Math.floor((currentTime.value / duration.value) * SOLAR_TERMS.length)) : 0,
-)
-const currentTerm = computed(() => SOLAR_TERMS[termIndex.value] || '立春')
+// 各节气对应拍摄地（与素材文件名一一对应, 从三江源到入海口）
+const TERM_LOCATIONS = {
+  立春: '青海 · 三江源', 雨水: '青海 · 扎陵湖', 惊蛰: '四川 · 红原大草原', 春分: '四川 · 若尔盖草原',
+  清明: '甘肃 · 玛曲黄河特大桥', 谷雨: '甘肃 · 阿万仓湿地', 立夏: '青海 · 龙羊峡水库', 小满: '青海 · 李家峡水库',
+  芒种: '甘肃 · 刘家峡水库', 夏至: '甘肃 · 兰州市区', 小暑: '甘肃 · 三河口天鹅滩', 大暑: '甘肃 · 永泰古城',
+  立秋: '甘肃 · 黄河石林', 处暑: '宁夏 · 沙坡头', 白露: '宁夏 · 青铜峡大峡谷', 秋分: '内蒙古 · 河套平原',
+  寒露: '山西内蒙古 · 老牛湾', 霜降: '陕西 · 香炉寺', 立冬: '陕西 · 乾坤湾', 小雪: '山西 · 壶口瀑布',
+  大雪: '河南 · 小浪底', 冬至: '河南 · 黄河滩地公园', 小寒: '河南 · 东坝头黄河湾', 大寒: '山东 · 黄河入海口',
+}
+// 构建期扫描: /public/images/solar-terms/term-01..24.jpg 按序映射
+const _termGlob = import.meta.glob('/public/images/solar-terms/term-*.jpg', { eager: true, import: 'default' })
+const termImages = SOLAR_TERMS.map((_, i) => {
+  const key = Object.keys(_termGlob).find((k) => k.endsWith(`term-${String(i + 1).padStart(2, '0')}.jpg`))
+  return key ? _termGlob[key] : ''
+})
 
-const onMeta = (e) => {
-  duration.value = e.target.duration || 0
-}
-const onTimeUpdate = (e) => {
-  currentTime.value = e.target.currentTime || 0
-}
+const termIndex = ref(0)
+const autoPlay = ref(true)
+let autoTimer = null
+const currentTerm = computed(() => SOLAR_TERMS[termIndex.value] || '立春')
+const termLocation = computed(() => TERM_LOCATIONS[currentTerm.value] || '')
+
 const seekTerm = (i) => {
-  const v = videoRef.value
-  if (v && duration.value) {
-    // +0.02 偏移避开节界抖动
-    v.currentTime = ((i + 0.02) * duration.value) / SOLAR_TERMS.length
-  }
+  termIndex.value = (i + SOLAR_TERMS.length) % SOLAR_TERMS.length
+  restartAuto()
 }
-const toggleMuted = () => {
-  const v = videoRef.value
-  if (!v) return
-  v.muted = !v.muted
-  muted.value = v.muted
+const stepTerm = (dir) => seekTerm(termIndex.value + dir)
+const toggleAuto = () => {
+  autoPlay.value = !autoPlay.value
+  if (autoPlay.value) restartAuto()
+  else stopAuto()
 }
-const toggleFullscreen = () => {
-  const v = videoRef.value
-  if (!v) return
-  try {
-    if (document.fullscreenElement) document.exitFullscreen()
-    else v.requestFullscreen?.()
-  } catch {
-    /* 不支持全屏时静默 */
+const restartAuto = () => {
+  stopAuto()
+  if (!autoPlay.value || reduce.value) return
+  autoTimer = window.setInterval(() => {
+    termIndex.value = (termIndex.value + 1) % SOLAR_TERMS.length
+  }, 8000)
+}
+const stopAuto = () => {
+  if (autoTimer) {
+    window.clearInterval(autoTimer)
+    autoTimer = null
   }
 }
 
@@ -213,6 +216,7 @@ const ctaRef = ref(null)
 let tl = null
 
 onMounted(() => {
+  restartAuto()
   if (reduce.value || !root.value) return
   tl = gsap.timeline({ delay: 0.15 })
   if (!isReal.value && artRef.value)
@@ -242,6 +246,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  stopAuto()
   if (tl) tl.kill()
   tl = null
 })
@@ -262,19 +267,45 @@ onBeforeUnmount(() => {
   min-height: 100vh;
   padding: 120px 56px 132px;
 }
-.rh__video-bg {
+/* 画卷层: 当前节气图全屏铺底, 切换时交叉淡入淡出 */
+.rh__term-stack {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: #101820;
+}
+.rh__term-img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  z-index: 0;
+}
+.term-fade-enter-active,
+.term-fade-leave-active {
+  transition: opacity 1.4s ease;
+}
+.term-fade-enter-from,
+.term-fade-leave-to {
+  opacity: 0;
 }
 .rh__overlay {
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.18) 45%, rgba(0, 0, 0, 0.62) 100%);
   z-index: 1;
+}
+/* 节气地点小注 */
+.rh__term-loc {
+  position: absolute;
+  left: 56px;
+  bottom: 92px;
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: rgba(245, 239, 227, 0.75);
+  z-index: 2;
+  pointer-events: none;
 }
 .rh--real .rh__content {
   max-width: 560px;
@@ -722,6 +753,11 @@ onBeforeUnmount(() => {
   .rh__film-kuan {
     display: none;
   }
+  .rh__term-loc {
+    left: 20px;
+    bottom: 88px;
+    letter-spacing: 2px;
+  }
   .rh__term-seal {
     right: 20px;
     bottom: 92px;
@@ -747,6 +783,10 @@ onBeforeUnmount(() => {
 @media (prefers-reduced-motion: reduce) {
   .rh__cta,
   .rh__cta-arrow {
+    transition: none;
+  }
+  .term-fade-enter-active,
+  .term-fade-leave-active {
     transition: none;
   }
 }
