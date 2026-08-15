@@ -210,7 +210,8 @@ onMounted(load)
 }
 .cd-meta { margin: 0; color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
 .cd-meta-sep { margin: 0 8px; color: var(--text-muted); }
-.cd-section { margin-bottom: 32px; }
+/* 日式留白: 区块间距 ≥80px(原 32px 偏挤) */
+.cd-section { margin-bottom: 80px; }
 .cd-section-title {
   font-family: var(--font-heading);
   font-size: 17px;
