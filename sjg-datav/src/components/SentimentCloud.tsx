@@ -15,8 +15,8 @@ interface SentimentCloudProps {
 }
 
 const CLOUD_COLORS = [
-  '#a89fd1', '#8fb0a5', '#c9a96e', '#b98a8a', '#7f9cb3',
-  '#b0915a', '#6f928e', '#9384ab', '#c4a265', '#b06f6f',
+  '#e5c96b', '#ece4d0', '#7f9aa0', '#c9a227', '#b98a6a',
+  '#a89f8f', '#c23a2b', '#8f8a7a', '#6f928e', '#b7ad92',
 ]
 
 const CloudContainer = styled.div`

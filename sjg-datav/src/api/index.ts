@@ -37,7 +37,10 @@ export const api = {
   getDynasties: () => fetcher(`${BASE_URL}/dynasties`),
 
   // 获取历史时间线(按朝代分组的诗人/诗词/事件)
-  getTimeline: () => fetcher(`${BASE_URL}/timeline`)
+  getTimeline: () => fetcher(`${BASE_URL}/timeline`),
+
+  // 文化五类统计(民俗节庆/古诗词/非遗工艺/民间文学/饮食戏曲)
+  getCulturalCategories: () => fetcher(`${BASE_URL}/cultural/categories`),
 }
 
 // SWR Hooks
@@ -81,6 +84,15 @@ export function useTimeline() {
   const { data, error, isLoading } = useSWR('timeline', api.getTimeline)
   return {
     timeline: data || [],
+    isLoading,
+    error
+  }
+}
+
+export function useCulturalCategories() {
+  const { data, error, isLoading } = useSWR('cultural-categories', api.getCulturalCategories)
+  return {
+    categories: (data || []) as Array<{ category: string; count: number }>,
     isLoading,
     error
   }
