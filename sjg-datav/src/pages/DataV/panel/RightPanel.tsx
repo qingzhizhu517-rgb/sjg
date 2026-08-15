@@ -1,6 +1,7 @@
 import styled from 'styled-components'
 import Chart from '../../../components/Chart'
 import NumberAnimation from '../../../components/NumberAnimation'
+import SentimentCloud from '../../../components/SentimentCloud'
 import { usePoets, usePoems, useSpots } from '../../../api'
 
 const PanelWrapper = styled.div`
@@ -59,6 +60,28 @@ export default function RightPanel() {
     const count = dynastyMap.get(poet.dynastyId) || 0
     dynastyMap.set(poet.dynastyId, count + 1)
   })
+
+  // 情感标签词频: 诗词 sentimentTags 为 JSON 字符串, 解析后聚合
+  const sentimentMap = new Map<string, number>()
+  poems.forEach((poem: any) => {
+    let tags: unknown = poem.sentimentTags
+    if (typeof tags === 'string') {
+      try {
+        tags = JSON.parse(tags)
+      } catch {
+        tags = []
+      }
+    }
+    ;(Array.isArray(tags) ? tags : []).forEach((tag: unknown) => {
+      if (typeof tag === 'string' && tag) {
+        sentimentMap.set(tag, (sentimentMap.get(tag) || 0) + 1)
+      }
+    })
+  })
+  const sentimentData = Array.from(sentimentMap.entries())
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 24)
 
   // 朝代名称映射
   const dynastyNames: Record<number, string> = {
@@ -139,9 +162,14 @@ export default function RightPanel() {
         </StatsGrid>
       </Card>
 
-      <Card style={{ flex: 1 }}>
+      <Card>
         <CardTitle>朝代分布</CardTitle>
-        <Chart option={dynastyPieOption} style={{ height: '300px' }} />
+        <Chart option={dynastyPieOption} style={{ height: '260px' }} />
+      </Card>
+
+      <Card>
+        <CardTitle>情感词云</CardTitle>
+        <SentimentCloud data={sentimentData} width={340} height={220} />
       </Card>
     </PanelWrapper>
   )

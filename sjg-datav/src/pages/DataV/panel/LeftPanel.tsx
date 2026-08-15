@@ -1,6 +1,7 @@
 import styled from 'styled-components'
 import Chart from '../../../components/Chart'
-import { usePoets, usePoems } from '../../../api'
+import TimelineChart from '../../../components/TimelineChart'
+import { usePoets, usePoems, useTimeline } from '../../../api'
 
 const PanelWrapper = styled.div`
   width: 400px;
@@ -32,6 +33,14 @@ const CardTitle = styled.div`
 export default function LeftPanel() {
   const { poets, isLoading: poetsLoading } = usePoets()
   const { poems, isLoading: poemsLoading } = usePoems()
+  const { timeline } = useTimeline()
+
+  // 朝代诗卷时间线: /timeline 接口按朝代分组, 取各朝诗篇数
+  const timelineData = timeline.map((t: any) => ({
+    time: t.dynasty?.name || '未知',
+    value: (t.poems || []).length,
+    label: `${(t.poets || []).length} 位诗人`,
+  }))
 
   // 诗人排行榜数据（按诗词数量排序）
   const poetRankData = poets
@@ -134,6 +143,11 @@ export default function LeftPanel() {
             ))
           )}
         </div>
+      </Card>
+
+      <Card>
+        <CardTitle>朝代诗卷</CardTitle>
+        <TimelineChart data={timelineData} title="历代诗篇数量" width={340} height={200} />
       </Card>
     </PanelWrapper>
   )
