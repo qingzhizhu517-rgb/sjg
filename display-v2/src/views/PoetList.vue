@@ -17,7 +17,7 @@
           :dynasties="dynastyItems"
           :model-value="selectedDynastyId"
           aria-label="按朝代筛选名士"
-          @update:model-value="selectedDynastyId = $event"
+          @update:model-value="selectDynasty"
         />
         <div class="layout-toggle-group" role="tablist" aria-label="文人廊视图切换">
           <button
@@ -57,7 +57,9 @@
             <SectionHeading
               eyebrow="本期名士"
               title="传世最丰"
-              subtitle="诗篇传世最多的齐鲁文人，附其代表句"
+              :subtitle="selectedDynastyId == null
+                ? '诗篇传世最多的齐鲁文人，附其代表句'
+                : `${selectedDynastyName} · 诗篇传世最多`"
             />
             <div class="poets-featured-grid">
               <FeaturedPoetCard
@@ -334,7 +336,7 @@
                     :key="d"
                     class="filter-chip"
                     :class="{ active: dynastyFilter === d }"
-                    @click="dynastyFilter = d"
+                    @click="setGraphDynasty(d)"
                   >{{ d }}</button>
                 </div>
               </div>
@@ -422,6 +424,35 @@ watch(
   },
 )
 const selectedDynastyId = ref(null)
+
+// 朝代筛选与 URL 双向同步: ?dynasty=<id>, 刷新/前进后退均保持; 非法值回退"全部"
+const initDynastyFromQuery = () => {
+  const q = Number(route.query.dynasty)
+  selectedDynastyId.value = DYNASTIES.some((d) => d.id === q) ? q : null
+}
+initDynastyFromQuery()
+
+// 顶部朝代线点击(与图谱 tab 共用这一入口)
+const selectDynasty = (id) => {
+  const next = id == null ? null : Number(id)
+  selectedDynastyId.value = next
+  const query = { ...route.query }
+  if (next == null) delete query.dynasty
+  else query.dynasty = String(next)
+  router.replace({ query }).catch(() => {})
+  // 列表视图下滚回内容区顶部, 让筛选结果立即可见(图谱 tab 原地更新不滚动)
+  if (activeTab.value !== 'graph') {
+    revealRoot.value?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+  }
+}
+watch(
+  () => route.query.dynasty,
+  () => {
+    const q = Number(route.query.dynasty)
+    const next = DYNASTIES.some((d) => d.id === q) ? q : null
+    if (next !== selectedDynastyId.value) selectedDynastyId.value = next
+  },
+)
 const poets = ref([])
 const poetsLoaded = ref(false)
 const enrichmentLoaded = ref(false)
@@ -469,11 +500,16 @@ const marginalPoets = computed(() =>
 const showMarginal = ref(false)
 
 const featuredPoets = computed(() => {
-  const premium = [...enrichedPoets.value]
+  // 尊重朝代筛选: 选中朝代时仅在改朝内取"传世最丰"(此前直接全量, 点朝代后大卡不变 → "没筛选"的错觉)
+  const pool =
+    selectedDynastyId.value == null
+      ? enrichedPoets.value
+      : enrichedPoets.value.filter((p) => p.dynastyId === selectedDynastyId.value)
+  const premium = [...pool]
     .filter((p) => (p.completeness ?? 0) >= 70)
     .sort((a, b) => (b.poemCount || 0) - (a.poemCount || 0))
   if (premium.length) return premium.slice(0, 6)
-  return [...enrichedPoets.value]
+  return [...pool]
     .sort((a, b) => (b.poemCount || 0) - (a.poemCount || 0))
     .slice(0, 3)
 })
@@ -600,7 +636,14 @@ const graphNodeMap = computed(() => {
 // ---- 轻量筛选（为 Phase2 节点爆炸铺路）----
 const relationFilter = ref('全部')
 const derivedVisible = ref(true)
-const dynastyFilter = ref('全部')
+// 图谱朝代筛选与顶部 DynastyRail 共用 selectedDynastyId 单一数据源(图谱侧按朝代名匹配)
+const dynastyFilter = computed(() =>
+  selectedDynastyId.value == null ? '全部' : getDynastyName(selectedDynastyId.value),
+)
+const setGraphDynasty = (name) => {
+  const id = name === '全部' ? null : DYNASTIES.find((x) => x.name === name)?.id ?? null
+  selectDynasty(id)
+}
 const relationFilterOptions = ['全部', '并称', '师承', '交游', '亲属']
 // 连线关系说明文字开关（默认关: 悬停聚焦可见; 开启后常显）
 const edgeLabelsVisible = ref(false)
