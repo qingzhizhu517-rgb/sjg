@@ -200,7 +200,7 @@
 
 | 任务 | 状态 | 产物 |
 |---|---|---|
-| 1 九城五类数据 | [~] 文化四类完成，诗词待 V22 | `V18__festival_seed.sql`(14条,九城全覆盖)、`V19__craft_seed.sql`(12条)、`V20__literature_seed.sql`(10条)、`V21__food_opera_seed.sql`(8条)；诗词三城(滨州0/东营5/淄博6)待补 V22；生成器 `scripts/gen_cultural_migration.mjs` |
+| 1 九城五类数据 | [x] | `V18__festival_seed.sql`(14条,九城全覆盖)、`V19__craft_seed.sql`(12条)、`V20__literature_seed.sql`(10条)、`V21__food_opera_seed.sql`(8条)、`V22__poems_binzhou_dongying_zibo.sql`(9首:滨州3/东营8/淄博9,含3新诗人+无棣碣石山新景点)；四类文化+诗词九城全覆盖；生成器 `scripts/gen_cultural_migration.mjs` |
 | 2 展示设计 | [x] | 提案 `docs/plans/2026-08-15-nine-cities-display-proposal.md`；B1 详情路由统一(`/festivals/:id`+`/crafts/:id`→CulturalDetail, ready 修正, /regions 顺序修复)；B2 `CityCulture.vue`(`/cities/:region` 五格册页)+poems/poets region 参数+印章跳城市页；B3 三列表 `?region=` URL 同步+筛选条 |
 | 3 长卷地图修复 | [x] | `633f34f`：单一 transform 来源/河流印章同层对齐/九城坐标全卷校准/九城快捷导航/主题切换重建触发器/reduced-motion 兜底 |
 | 4 朝代线筛选 | [x] | `7c37332`：featured 随朝代过滤/图谱与 rail 统一数据源/`?dynasty=` URL 双向同步 |
