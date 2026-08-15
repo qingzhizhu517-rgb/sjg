@@ -13,6 +13,9 @@ const routes = [
   { path: '/festivals/:id', name: 'FestivalDetail', component: () => import('../views/FestivalDetail.vue') },
   { path: '/crafts', name: 'CraftWorkshop', component: () => import('../views/CraftWorkshop.vue') },
   { path: '/regions/:region', name: 'RegionSpots', component: () => import('../views/RegionSpots.vue') },
+  { path: '/compose', name: 'PoemComposer', component: () => import('../views/PoemComposerView.vue') },
+  { path: '/literature', name: 'LiteratureList', component: () => import('../views/LiteratureList.vue') },
+  { path: '/food-opera', name: 'FoodOperaList', component: () => import('../views/FoodOperaList.vue') },
 ]
 
 const router = createRouter({

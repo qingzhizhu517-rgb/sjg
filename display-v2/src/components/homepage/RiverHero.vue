@@ -1,5 +1,7 @@
 <template>
   <section ref="root" class="rh" :class="isReal ? 'rh--real' : 'rh--inkwash'">
+    <!-- 黄河流水动画背景 -->
+    <div class="yellow-river-animation" aria-hidden="true"></div>
     <!-- real：全屏视频背景 + 深色蒙版 -->
     <template v-if="isReal">
       <video
@@ -478,4 +480,23 @@ onBeforeUnmount(() => {
     transition: none;
   }
 }
+/* 黄河流水动画 */
+.yellow-river-animation {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(200, 164, 92, 0.1) 20%, rgba(200, 164, 92, 0.3) 50%, rgba(200, 164, 92, 0.1) 80%, transparent 100%);
+  background-size: 200% 100%;
+  animation: riverFlow 8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes riverFlow {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 </style>

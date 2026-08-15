@@ -1,28 +1,29 @@
 {
-  "name": "display-v2",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "test": "node --test --experimental-test-coverage tests/*.test.js",
-    "test:unit": "node --test tests/*.test.js"
-  },
-  "dependencies": {
-    "@antv/g6": "^5.1.1",
-    "axios": "^1.16.1",
-    "dompurify": "^3.4.11",
-    "echarts": "^6.1.0",
-    "gsap": "^3.15.0",
-    "marked": "^18.0.5",
-    "three": "^0.184.0",
-    "vue": "^3.5.34",
-    "vue-router": "^4.6.4"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.6",
-    "vite": "^8.0.12"
-  }
+    "name":  "display-v2",
+    "private":  true,
+    "version":  "0.0.0",
+    "type":  "module",
+    "scripts":  {
+                    "dev":  "vite",
+                    "build":  "vite build",
+                    "preview":  "vite preview",
+                    "test":  "node --test --experimental-test-coverage tests/*.test.js",
+                    "test:unit":  "node --test tests/*.test.js"
+                },
+    "dependencies":  {
+                         "@antv/g6":  "^5.1.1",
+                         "axios":  "^1.16.1",
+                         "dompurify":  "^3.4.11",
+                         "echarts":  "^6.1.0",
+                         "gsap":  "^3.15.0",
+                         "hanzi-writer":  "^3.7.3",
+                         "marked":  "^18.0.5",
+                         "three":  "^0.184.0",
+                         "vue":  "^3.5.34",
+                         "vue-router":  "^4.6.4"
+                     },
+    "devDependencies":  {
+                            "@vitejs/plugin-vue":  "^6.0.6",
+                            "vite":  "^8.0.12"
+                        }
 }
