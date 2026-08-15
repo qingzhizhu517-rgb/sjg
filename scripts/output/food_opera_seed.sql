@@ -26,7 +26,7 @@ DELETE FROM food_opera_detail WHERE item_id = (SELECT id FROM cultural_item WHER
 INSERT INTO food_opera_detail (item_id, sub_category, cuisine_type, ingredients, preparation_method, representative_dishes, historical_origin, current_status, preservation_level) VALUES ((SELECT id FROM cultural_item WHERE title='煎饼卷大葱' AND category='food_opera'), 'food', '鲁菜', '小米、玉米、高粱等杂粮、大葱、酱料', '磨面、摊制、卷料、蘸酱', '煎饼卷大葱', '山东煎饼历史悠久，相传孟姜女哭长城时带的就是煎饼', '煎饼卷大葱是山东人民日常主食，深受喜爱', '市级非物质文化遗产');
 
 DELETE FROM cultural_item WHERE title='吕剧' AND category='food_opera';
-INSERT INTO cultural_item (category, title, summary, content, region, tags, status, source) VALUES ('food_opera', '吕剧', '山东省地方戏曲剧种，以优美动听的唱腔著称。', '吕剧是山东省地方戏曲剧种，起源于东营广饶地区。吕剧以优美动听的唱腔著称，唱腔以'四平腔'为基本曲调，旋律优美，节奏明快。吕剧表演朴实自然，贴近生活，深受山东人民喜爱。代表剧目有《李二嫂改嫁》《姊妹易嫁》等。', '东营', '["东营", "地方戏曲", "国家级非遗"]', 'draft', 'ai');
+INSERT INTO cultural_item (category, title, summary, content, region, tags, status, source) VALUES ('food_opera', '吕剧', '山东省地方戏曲剧种，以优美动听的唱腔著称。', '吕剧是山东省地方戏曲剧种，起源于东营广饶地区。吕剧以优美动听的唱腔著称，唱腔以''四平腔''为基本曲调，旋律优美，节奏明快。吕剧表演朴实自然，贴近生活，深受山东人民喜爱。代表剧目有《李二嫂改嫁》《姊妹易嫁》等。', '东营', '["东营", "地方戏曲", "国家级非遗"]', 'draft', 'ai');
 
 DELETE FROM food_opera_detail WHERE item_id = (SELECT id FROM cultural_item WHERE title='吕剧' AND category='food_opera');
 INSERT INTO food_opera_detail (item_id, sub_category, cuisine_type, ingredients, preparation_method, representative_dishes, historical_origin, current_status, preservation_level) VALUES ((SELECT id FROM cultural_item WHERE title='吕剧' AND category='food_opera'), 'opera', '吕剧', '演员、乐队（坠琴、扬琴、二胡等）、服装道具', '唱、念、做、打，以唱为主', '《李二嫂改嫁》《姊妹易嫁》《小姑贤》', '吕剧起源于清代末年，由山东琴书发展而来', '吕剧是国家级非物质文化遗产，在山东各地广泛流传', '国家级非物质文化遗产');
@@ -38,7 +38,7 @@ DELETE FROM food_opera_detail WHERE item_id = (SELECT id FROM cultural_item WHER
 INSERT INTO food_opera_detail (item_id, sub_category, cuisine_type, ingredients, preparation_method, representative_dishes, historical_origin, current_status, preservation_level) VALUES ((SELECT id FROM cultural_item WHERE title='山东快书' AND category='food_opera'), 'opera', '山东快书', '表演者、竹板、服装', '说、唱、表演，以说为主', '《武松传》《鲁达除霸》《马寡妇开店》', '山东快书起源于清代，由民间说唱艺术发展而来', '山东快书是国家级非物质文化遗产，在山东各地广泛流传', '国家级非物质文化遗产');
 
 DELETE FROM cultural_item WHERE title='柳子戏' AND category='food_opera';
-INSERT INTO cultural_item (category, title, summary, content, region, tags, status, source) VALUES ('food_opera', '柳子戏', '山东省地方戏曲剧种，以粗犷豪放的唱腔著称。', '柳子戏是山东省地方戏曲剧种，以粗犷豪放的唱腔著称。柳子戏起源于明代，由民间小调发展而来。唱腔以'柳子调'为主，旋律高亢激昂，表演粗犷豪放。代表剧目有《白兔记》《金锁记》等。', '菏泽', '["菏泽", "地方戏曲", "国家级非遗"]', 'draft', 'ai');
+INSERT INTO cultural_item (category, title, summary, content, region, tags, status, source) VALUES ('food_opera', '柳子戏', '山东省地方戏曲剧种，以粗犷豪放的唱腔著称。', '柳子戏是山东省地方戏曲剧种，以粗犷豪放的唱腔著称。柳子戏起源于明代，由民间小调发展而来。唱腔以''柳子调''为主，旋律高亢激昂，表演粗犷豪放。代表剧目有《白兔记》《金锁记》等。', '菏泽', '["菏泽", "地方戏曲", "国家级非遗"]', 'draft', 'ai');
 
 DELETE FROM food_opera_detail WHERE item_id = (SELECT id FROM cultural_item WHERE title='柳子戏' AND category='food_opera');
 INSERT INTO food_opera_detail (item_id, sub_category, cuisine_type, ingredients, preparation_method, representative_dishes, historical_origin, current_status, preservation_level) VALUES ((SELECT id FROM cultural_item WHERE title='柳子戏' AND category='food_opera'), 'opera', '柳子戏', '演员、乐队（柳琴、笛子、唢呐等）、服装道具', '唱、念、做、打，以唱为主', '《白兔记》《金锁记》《孙安动本》', '柳子戏起源于明代，由民间小调发展而来', '柳子戏是国家级非物质文化遗产，在菏泽等地流传', '国家级非物质文化遗产');

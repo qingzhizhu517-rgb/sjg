@@ -13,7 +13,7 @@ INSERT INTO craft_detail (item_id, craft_category, materials, tools, process, in
 6. 提线：安装提线，调整平衡', '潍坊风筝代表性传承人包括张效东、杨红卫等', '龙头蜈蚣、蝴蝶风筝、金鱼风筝、仙鹤风筝', 4, '潍坊世界风筝博物馆、潍坊风筝制作技艺传习所');
 
 DELETE FROM cultural_item WHERE title='淄博陶瓷烧制技艺' AND category='craft';
-INSERT INTO cultural_item (category, title, summary, content, region, tags, status, source) VALUES ('craft', '淄博陶瓷烧制技艺', '国家级非物质文化遗产，以雨点釉、茶叶末釉等名贵釉色著称。', '淄博陶瓷烧制技艺是国家级非物质文化遗产。淄博是中国陶瓷的重要发源地之一，有着8000多年的制陶历史。淄博陶瓷以雨点釉、茶叶末釉等名贵釉色著称，其中雨点釉被誉为'中国之奇、天下之宝'。淄博陶瓷制作工艺复杂，需要经过选料、制泥、成型、干燥、施釉、烧成等多道工序。', '淄博', '["国家级非遗", "淄博", "传统技艺"]', 'draft', 'ai');
+INSERT INTO cultural_item (category, title, summary, content, region, tags, status, source) VALUES ('craft', '淄博陶瓷烧制技艺', '国家级非物质文化遗产，以雨点釉、茶叶末釉等名贵釉色著称。', '淄博陶瓷烧制技艺是国家级非物质文化遗产。淄博是中国陶瓷的重要发源地之一，有着8000多年的制陶历史。淄博陶瓷以雨点釉、茶叶末釉等名贵釉色著称，其中雨点釉被誉为''中国之奇、天下之宝''。淄博陶瓷制作工艺复杂，需要经过选料、制泥、成型、干燥、施釉、烧成等多道工序。', '淄博', '["国家级非遗", "淄博", "传统技艺"]', 'draft', 'ai');
 
 DELETE FROM craft_detail WHERE item_id = (SELECT id FROM cultural_item WHERE title='淄博陶瓷烧制技艺' AND category='craft');
 INSERT INTO craft_detail (item_id, craft_category, materials, tools, process, inheritors, representative_works, difficulty_level, learning_resources) VALUES ((SELECT id FROM cultural_item WHERE title='淄博陶瓷烧制技艺' AND category='craft'), '传统技艺', '高岭土、长石、石英、滑石、陶土', '拉坯机、窑炉、修坯刀、施釉设备', '1. 选料：精选优质陶土和釉料

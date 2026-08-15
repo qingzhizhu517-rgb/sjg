@@ -54,7 +54,7 @@ INSERT INTO literature_detail (item_id, genre, origin_region, main_characters, p
 5. 展现乐观精神', '反映了黄河人民的勤劳勇敢，展现了劳动人民的智慧和乐观精神', '[]', '黄河民间歌谣集');
 
 DELETE FROM cultural_item WHERE title='孔融让梨' AND category='literature';
-INSERT INTO cultural_item (category, title, summary, content, region, tags, status, source) VALUES ('literature', '孔融让梨', '孔子后裔孔融幼时让梨的故事，体现礼让美德。', '孔融让梨是孔子后裔孔融幼时的故事。孔融四岁时，与兄弟们一起吃梨，他每次都拿最小的。大人问他为什么，他说：'我年纪小，应该吃小的，大的留给哥哥们。'这个故事体现了中华民族礼让的传统美德，成为教育儿童的经典故事。孔融是孔子的二十世孙，山东曲阜人。', '济宁', '["孔子", "济宁", "美德故事"]', 'draft', 'ai');
+INSERT INTO cultural_item (category, title, summary, content, region, tags, status, source) VALUES ('literature', '孔融让梨', '孔子后裔孔融幼时让梨的故事，体现礼让美德。', '孔融让梨是孔子后裔孔融幼时的故事。孔融四岁时，与兄弟们一起吃梨，他每次都拿最小的。大人问他为什么，他说：''我年纪小，应该吃小的，大的留给哥哥们。''这个故事体现了中华民族礼让的传统美德，成为教育儿童的经典故事。孔融是孔子的二十世孙，山东曲阜人。', '济宁', '["孔子", "济宁", "美德故事"]', 'draft', 'ai');
 
 DELETE FROM literature_detail WHERE item_id = (SELECT id FROM cultural_item WHERE title='孔融让梨' AND category='literature');
 INSERT INTO literature_detail (item_id, genre, origin_region, main_characters, plot_summary, cultural_significance, related_scenic_spots, collection_source) VALUES ((SELECT id FROM cultural_item WHERE title='孔融让梨' AND category='literature'), '故事', '山东济宁曲阜', '孔融、孔融兄弟', '1. 孔融四岁与兄弟吃梨
