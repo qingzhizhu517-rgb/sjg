@@ -250,7 +250,73 @@
         <!-- 关系图谱 (AntV G6) -->
         <div v-else key="graph" class="graph-tab-content">
           <div class="graph-panel-inner card graph-panel-layout">
-            <!-- 左侧: 图谱画布(常驻挂载, 保证容器可测量) + 状态浮层 + 诗人抽屉 -->
+            <!-- 顶部控制面板: 说明/关系筛选/朝代筛选/双图例 多行排布(免横向滑动) -->
+            <div class="graph-controls">
+              <div class="graph-controls__row graph-instructions">
+                <span class="instruction-tag">互动</span>
+                <p class="instruction-desc">
+                  滚轮滚动页面 · Ctrl+滚轮缩放图谱 · 拖拽画布 · 悬停诗人可见生平与关系说明 · 点击诗人查看关系卡片；师承以箭头示方向（师 → 徒），虚线为推断关系。
+                </p>
+                <button
+                  v-if="graphStatus === 'ready'"
+                  class="filter-chip filter-chip--desc"
+                  :class="{ active: edgeLabelsVisible }"
+                  :aria-pressed="edgeLabelsVisible"
+                  title="开启后关系说明常显；关闭时悬停聚焦仍可见"
+                  @click="edgeLabelsVisible = !edgeLabelsVisible"
+                >关系说明</button>
+              </div>
+
+              <!-- 筛选行: 关系 + 朝代 -->
+              <div v-if="graphStatus === 'ready'" class="graph-controls__row graph-filters">
+                <div class="filter-group">
+                  <span class="filter-label">关系</span>
+                  <button
+                    v-for="rt in relationFilterOptions"
+                    :key="rt"
+                    class="filter-chip"
+                    :class="{ active: relationFilter === rt }"
+                    @click="relationFilter = rt"
+                  >{{ rt }}</button>
+                  <button
+                    v-if="derivedCount"
+                    class="filter-chip filter-chip--derived"
+                    :class="{ active: derivedVisible }"
+                    @click="derivedVisible = !derivedVisible"
+                  >推断{{ derivedCount }}</button>
+                </div>
+                <div class="filter-group">
+                  <span class="filter-label">朝代</span>
+                  <button
+                    v-for="d in graphDynastyOptions"
+                    :key="d"
+                    class="filter-chip"
+                    :class="{ active: dynastyFilter === d }"
+                    @click="setGraphDynasty(d)"
+                  >{{ d }}</button>
+                </div>
+              </div>
+
+              <!-- 图例行: 关系类型 + 朝代 -->
+              <div v-if="graphStatus === 'ready'" class="graph-controls__row graph-legend">
+                <div class="legend-group">
+                  <span class="legend-group-title">关系</span>
+                  <div v-for="lg in relationLegend" :key="lg.key" class="legend-item">
+                    <span class="legend-swatch legend-line" :style="legendLineStyle(lg)">{{ lg.arrow ? '→' : '' }}</span>
+                    {{ lg.label }}
+                  </div>
+                </div>
+                <div class="legend-group">
+                  <span class="legend-group-title">朝代</span>
+                  <div v-for="d in legendDynasties" :key="d" class="legend-item">
+                    <span class="legend-swatch legend-dot" :style="{ background: dynastyColorByName(d) }"></span>
+                    {{ d }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 图谱画布(常驻挂载, 保证容器可测量) + 状态浮层 + 诗人抽屉 -->
             <div class="graph-main">
               <div class="graph-stage">
                 <div ref="g6Container" class="g6-container-canvas"></div>
@@ -294,71 +360,6 @@
                 </Transition>
               </div>
             </div>
-
-            <!-- 右侧控制面板: 说明 + 筛选 + 关系说明开关 + 双图例 -->
-            <aside class="graph-side" aria-label="图谱控制面板">
-              <div class="graph-instructions">
-                <span class="instruction-tag">互动</span>
-                <p class="instruction-desc">
-                  滚轮滚动页面 · Ctrl+滚轮缩放图谱 · 拖拽画布 · 悬停诗人可见生平与关系说明 · 点击诗人查看关系卡片；师承以箭头示方向（师 → 徒），虚线为推断关系。
-                </p>
-              </div>
-
-              <!-- 关系/朝代 筛选 chips -->
-              <div v-if="graphStatus === 'ready'" class="graph-filters">
-                <div class="filter-group">
-                  <span class="filter-label">关系</span>
-                  <button
-                    v-for="rt in relationFilterOptions"
-                    :key="rt"
-                    class="filter-chip"
-                    :class="{ active: relationFilter === rt }"
-                    @click="relationFilter = rt"
-                  >{{ rt }}</button>
-                  <button
-                    v-if="derivedCount"
-                    class="filter-chip filter-chip--derived"
-                    :class="{ active: derivedVisible }"
-                    @click="derivedVisible = !derivedVisible"
-                  >推断{{ derivedCount }}</button>
-                  <button
-                    class="filter-chip filter-chip--desc"
-                    :class="{ active: edgeLabelsVisible }"
-                    :aria-pressed="edgeLabelsVisible"
-                    title="开启后关系说明常显；关闭时悬停聚焦仍可见"
-                    @click="edgeLabelsVisible = !edgeLabelsVisible"
-                  >关系说明</button>
-                </div>
-                <div class="filter-group">
-                  <span class="filter-label">朝代</span>
-                  <button
-                    v-for="d in graphDynastyOptions"
-                    :key="d"
-                    class="filter-chip"
-                    :class="{ active: dynastyFilter === d }"
-                    @click="setGraphDynasty(d)"
-                  >{{ d }}</button>
-                </div>
-              </div>
-
-              <!-- 双图例: 关系类型 + 朝代 -->
-              <div v-if="graphStatus === 'ready'" class="graph-legend">
-                <div class="legend-group">
-                  <span class="legend-group-title">关系</span>
-                  <div v-for="lg in relationLegend" :key="lg.key" class="legend-item">
-                    <span class="legend-swatch legend-line" :style="legendLineStyle(lg)">{{ lg.arrow ? '→' : '' }}</span>
-                    {{ lg.label }}
-                  </div>
-                </div>
-                <div class="legend-group">
-                  <span class="legend-group-title">朝代</span>
-                  <div v-for="d in legendDynasties" :key="d" class="legend-item">
-                    <span class="legend-swatch legend-dot" :style="{ background: dynastyColorByName(d) }"></span>
-                    {{ d }}
-                  </div>
-                </div>
-              </div>
-            </aside>
           </div>
         </div>
       </Transition>
@@ -1553,59 +1554,63 @@ onBeforeUnmount(() => {
   flex-direction: column;
   position: relative;
 }
-/* 左右布局: 左画布 + 右控制面板 */
+/* 上下布局: 顶部控制面板(多行) + 下方画布, 免横向滑动找筛选 */
 .graph-panel-layout {
-  flex-direction: row;
-  gap: 24px;
+  flex-direction: column;
+  gap: 18px;
   align-items: stretch;
 }
 .graph-main {
   flex: 1;
   min-width: 0;
 }
-.graph-side {
-  width: 264px;
-  flex-shrink: 0;
+/* 控制面板: 说明/筛选/图例 每行独立, 行内自动换行 */
+.graph-controls {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  max-height: 560px;
-  overflow-y: auto;
-  padding-right: 4px;
+  gap: 10px;
 }
-.graph-side .graph-instructions {
+.graph-controls__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+}
+.graph-controls .graph-instructions {
   margin-bottom: 0;
-  flex-direction: column;
-  align-items: flex-start;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+.graph-controls .graph-filters {
+  margin-bottom: 0;
+}
+.graph-controls .filter-group {
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
-.graph-side .graph-filters {
-  flex-direction: column;
-  gap: 14px;
-  margin-bottom: 0;
-}
-.graph-side .filter-group {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-}
-.graph-side .graph-legend {
-  flex-direction: column;
-  gap: 14px;
+.graph-controls .graph-legend {
   margin-top: 0;
   padding-top: 0;
   border-top: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 28px;
 }
-.graph-side .legend-group {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
+.graph-controls .legend-group {
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
 }
-.graph-side .legend-group + .legend-group {
-  border-left: none;
-  border-top: 1px dashed var(--border-light);
-  padding-left: 0;
-  padding-top: 12px;
+.graph-controls .legend-group + .legend-group {
+  border-left: 1px dashed var(--border-light);
+  border-top: none;
+  padding-left: 28px;
+  padding-top: 0;
 }
 .graph-instructions {
   display: flex;
@@ -1912,25 +1917,15 @@ onBeforeUnmount(() => {
   .poets-content { padding: 40px 32px 80px; }
   .poets-featured-grid { grid-template-columns: repeat(2, 1fr); }
   .cards-grid-list { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-  /* 图谱窄屏回落为上下布局: 侧栏到画布下方 */
+  /* 图谱控制面板窄屏: 行内更紧凑 */
   .graph-panel-layout { flex-direction: column; }
-  .graph-side {
+  .graph-controls__row { gap: 8px 14px; }
+  .graph-controls .legend-group + .legend-group {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px dashed var(--border-light);
+    padding-top: 10px;
     width: 100%;
-    max-height: none;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 20px;
-  }
-  .graph-side .graph-instructions { flex: 1 1 100%; }
-  .graph-side .graph-filters { flex-direction: row; flex-wrap: wrap; gap: 12px 24px; }
-  .graph-side .filter-group { flex-direction: row; align-items: center; flex-wrap: wrap; }
-  .graph-side .graph-legend { flex-direction: row; flex-wrap: wrap; gap: 12px 24px; }
-  .graph-side .legend-group { flex-direction: row; align-items: center; flex-wrap: wrap; }
-  .graph-side .legend-group + .legend-group {
-    border-left: 1px solid var(--border-light);
-    border-top: none;
-    padding-left: 18px;
-    padding-top: 0;
   }
 }
 @media (max-width: 640px) {
