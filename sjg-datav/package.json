@@ -14,6 +14,7 @@
     "autofit.js": "^3.2.8",
     "echarts": "^6.0.0",
     "gsap": "^3.13.0",
+    "ogl": "^1.0.11",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "styled-components": "^6.1.19",
