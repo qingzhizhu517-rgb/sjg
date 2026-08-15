@@ -226,7 +226,17 @@ onMounted(load)
 
 .lit-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+/* inkwash: 细线+留白, 去阴影 */
+.anime-layout .lit-card {
+  box-shadow: none;
+  border-radius: 2px;
+  border: 1px solid var(--line, var(--border));
+}
+.anime-layout .lit-card:hover {
+  box-shadow: none;
+  transform: translateY(-2px);
 }
 
 .lit-card__seal {

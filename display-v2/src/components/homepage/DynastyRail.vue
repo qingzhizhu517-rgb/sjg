@@ -99,6 +99,24 @@ const formatYear = (y) => (y == null ? '' : y < 0 ? '前' + Math.abs(y) : String
 .rail__chip.is-active .rail__year {
   color: rgba(255, 255, 255, 0.7);
 }
+/* inkwash: 细线+朱红描边, 去阴影与实底(日式极简) */
+.anime-layout .rail__chip {
+  box-shadow: none;
+  border-radius: 2px;
+  background: transparent;
+}
+.anime-layout .rail__chip.is-active {
+  background: transparent;
+  border-color: var(--accent);
+  box-shadow: none;
+}
+.anime-layout .rail__chip.is-active .rail__name {
+  color: var(--accent);
+}
+.anime-layout .rail__chip.is-active .rail__count,
+.anime-layout .rail__chip.is-active .rail__year {
+  color: var(--text-secondary);
+}
 @media (max-width: 640px) {
   .rail__chip { min-width: 76px; padding: 8px 10px; }
   .rail__name { font-size: 13px; }

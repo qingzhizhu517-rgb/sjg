@@ -1350,6 +1350,17 @@ onBeforeUnmount(() => {
 .poet-card-wrap:hover {
   border-color: var(--accent);
 }
+/* inkwash: 日式细线+留白, 去全局 card/hover-lift 的阴影与大幅上浮 */
+.anime-layout .poet-card-wrap {
+  box-shadow: none;
+  border: 1px solid var(--line, var(--border));
+  border-radius: 2px;
+}
+.anime-layout .poet-card-wrap:hover {
+  transform: translateY(-2px);
+  box-shadow: none;
+  border-color: var(--accent);
+}
 .poet-avatar-box {
   position: relative;
   width: 80px;
