@@ -235,11 +235,6 @@
       </div>
     </section>
 
-    <!-- ===== S4: 沿黄九城 · RiverCityRail 视差 ===== -->
-    <section ref="railSectionRef" class="sn-section sn-rail">
-      <RiverCityRail :regions="regions" @go="(name) => $router.push(`/regions/${name}`)" />
-    </section>
-
     <!-- ===== S4.5: 文化长廊 · 五大板块聚合入口 ===== -->
     <section class="sn-section sn-gallery">
       <CulturalGallery />
@@ -279,7 +274,6 @@ import { cssVarAlpha } from '../utils/cssToken'
 import { resolveContent } from '../content'
 import api from '../api'
 import RiverHero from '../components/homepage/RiverHero.vue'
-import RiverCityRail from '../components/homepage/RiverCityRail.vue'
 import CityDetailCard from '../components/homepage/CityDetailCard.vue'
 import StatTicker from '../components/homepage/StatTicker.vue'
 import FamousCities from '../components/homepage/FamousCities.vue'
@@ -311,7 +305,6 @@ const scrollNarrative = useScrollNarrative()
 const { stickyProgress } = scrollNarrative
 const stickyRealRef = ref(null)
 const stickyInkRef = ref(null)
-const railSectionRef = ref(null)
 
 const featuredCityData = computed(() =>
   CITY_RIVER_ORDER.map((name) => {
@@ -489,7 +482,6 @@ onMounted(() => {
     sandboxApi: three,
     stickyRealRef: stickyRealRef.value,
     stickyInkRef: stickyInkRef.value,
-    railRef: railSectionRef.value,
   })
   // P5-5: 预取关键数据（浏览器空闲时）
   api.prefetch('/timeline')
