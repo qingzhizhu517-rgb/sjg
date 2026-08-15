@@ -235,11 +235,6 @@
       </div>
     </section>
 
-    <!-- ===== S4.5: 文化长廊 · 五大板块聚合入口 ===== -->
-    <section class="sn-section sn-gallery">
-      <CulturalGallery />
-    </section>
-
     <!-- ===== S5: 名城精选 ===== -->
     <section class="sn-section sn-featured">
       <FamousCities :cities="featuredCityData" @go="(route) => $router.push(route)" />
@@ -277,7 +272,6 @@ import RiverHero from '../components/homepage/RiverHero.vue'
 import CityDetailCard from '../components/homepage/CityDetailCard.vue'
 import StatTicker from '../components/homepage/StatTicker.vue'
 import FamousCities from '../components/homepage/FamousCities.vue'
-import CulturalGallery from '../components/homepage/CulturalGallery.vue'
 import FooterCTA from '../components/homepage/FooterCTA.vue'
 import { useCityEnrichment } from '../composables/useCityEnrichment'
 import { useThreeSandbox } from '../composables/useThreeSandbox'
