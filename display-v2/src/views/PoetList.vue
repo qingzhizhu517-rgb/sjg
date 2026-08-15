@@ -936,6 +936,9 @@ const initG6 = async () => {
       },
     },
     edge: {
+      // 注意: G6 v5 只读取 edge 配置的 style/state/palette 等键,
+      // 顶层平铺的 label* 键不会进入样式合并链(死配置), 标签样式必须写在 style 回调里。
+      // 运行时切换仍由 applyEdgeLabelVisibility 走 updateEdgeData(数据层样式)实现。
       style: (d) => {
         const stroke = d.eStroke || graphTheme.edgeColor
         return {
@@ -953,18 +956,18 @@ const initG6 = async () => {
           startArrowSize: 9,
           startArrowFill: stroke,
           startArrowStroke: stroke,
+          // 关系说明默认隐藏(受「关系说明」开关控制常显); labelText 常驻非空,
+          // 关闭时 hover 聚焦态(active labelOpacity:1)仍可临时显示
+          labelText: d.description || '',
+          labelAutoRotate: true,
+          labelFontSize: 10,
+          labelFill: graphTheme.textSecondary,
+          labelOpacity: edgeLabelsVisible.value ? 1 : 0,
+          labelBackgroundFill: graphTheme.cardBg,
+          labelBackgroundPadding: [3, 5],
+          labelBackgroundRadius: 2,
         }
       },
-      // 关系说明默认隐藏(受「关系说明」开关控制常显); labelText 常驻非空,
-      // 关闭时 hover 聚焦态(active labelOpacity:1)仍可临时显示
-      labelText: (d) => d.description || '',
-      labelAutoRotate: true,
-      labelFontSize: 10,
-      labelFill: graphTheme.textSecondary,
-      labelOpacity: edgeLabelsVisible.value ? 1 : 0,
-      labelBackgroundFill: graphTheme.cardBg,
-      labelBackgroundPadding: [3, 5],
-      labelBackgroundRadius: 2,
       state: {
         active: { opacity: 1, labelOpacity: 1 },
         inactive: { opacity: 0.08 },
@@ -1148,7 +1151,11 @@ const waitForGraphContainerSize = async (timeoutMs = 3000) => {
 const enterGraphTab = async () => {
   graphStatus.value = 'loading'
   await nextTick()
-  if (!(await waitForGraphContainerSize())) return
+  if (!(await waitForGraphContainerSize())) {
+    // 超时未取到容器尺寸: 置错误态(可重试), 避免永久转圈
+    graphStatus.value = 'error'
+    return
+  }
   if (activeTab.value !== 'graph') return
   initG6()
 }

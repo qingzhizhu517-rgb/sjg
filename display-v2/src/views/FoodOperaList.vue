@@ -53,6 +53,11 @@
       </article>
     </div>
 
+    <!-- 错误态(此前被吞掉, 失败时误显示"暂无相关内容") -->
+    <div v-else-if="errorMsg" class="fo-empty">
+      <ErrorState :message="errorMsg" @retry="load" />
+    </div>
+
     <!-- 空状态 -->
     <div v-else class="fo-empty">
       <EmptyState message="暂无相关内容" />
@@ -66,6 +71,7 @@ import { useTheme } from '../composables/useTheme'
 import api from '../api'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
+import ErrorState from '../components/homepage/ErrorState.vue'
 
 const { isAnime } = useTheme()
 

@@ -237,13 +237,19 @@ function sharePoem() {
       title: poem.value.title,
       text: `${poem.value.title}\n\n${poem.value.lines.join('\n')}`,
       url: window.location.href
+    }).catch(() => {
+      // 用户取消分享等: 静默处理, 避免 unhandled rejection
     })
-  } else {
-    // 复制到剪贴板
+  } else if (navigator.clipboard && navigator.clipboard.writeText) {
+    // 复制到剪贴板(仅 HTTPS/localhost 下可用)
     const text = `${poem.value.title}\n\n${poem.value.lines.join('\n')}`
     navigator.clipboard.writeText(text).then(() => {
       alert('已复制到剪贴板')
+    }).catch(() => {
+      alert('复制失败，请手动复制')
     })
+  } else {
+    alert('当前浏览器不支持分享，请手动复制')
   }
 }
 </script>

@@ -29,7 +29,7 @@
     </div>
 
     <!-- 内容 -->
-    <div v-else class="analysis-content">
+    <div v-else-if="analysis" class="analysis-content">
       <!-- 综合赏析（默认） -->
       <div v-if="activeTab === 'comprehensive'" class="analysis-comprehensive">
         <!-- 逐句解读 -->
@@ -134,6 +134,11 @@
           <p>暂无相关诗词推荐</p>
         </div>
       </div>
+    </div>
+
+    <!-- 接口成功但 analysis 为空: 守卫此前会因 analysis.lines 抛 TypeError -->
+    <div v-else class="analysis-empty">
+      <p>暂无赏析数据</p>
     </div>
   </div>
 </template>
