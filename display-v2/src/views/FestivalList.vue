@@ -66,6 +66,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
 import api from '../api'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
@@ -73,14 +74,18 @@ import ErrorState from '../components/homepage/ErrorState.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
 
 const { isAnime } = useTheme()
+const route = useRoute()
+const router = useRouter()
 
-const REGIONS = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '滨州', '淄博', '东营']
+// 九城顺序与全局一致(黄河上游→下游)
+const REGIONS = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '淄博', '滨州', '东营']
 const regionOptions = ['全部', ...REGIONS]
 
 const items = ref([])
 const loaded = ref(false)
 const errorMsg = ref(null)
-const region = ref('全部')
+// ?region= 初始值(非法回退全部), 与筛选条双向同步
+const region = ref(REGIONS.includes(route.query.region) ? route.query.region : '全部')
 // 节庆时间缓存：列表接口不含扩展字段，占位即可（详情页展示完整四区块）
 const dateCache = ref({})
 
@@ -89,6 +94,10 @@ const festivalDateOf = (id) => dateCache.value[id] || ''
 
 const setRegion = (r) => {
   region.value = r
+  const query = { ...route.query }
+  if (r === '全部') delete query.region
+  else query.region = r
+  router.replace({ query }).catch(() => {})
   load()
 }
 

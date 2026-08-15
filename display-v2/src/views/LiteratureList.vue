@@ -69,6 +69,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
 import api from '../api'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
@@ -76,16 +77,24 @@ import EmptyState from '../components/homepage/EmptyState.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 
 const { isAnime } = useTheme()
+const route = useRoute()
+const router = useRouter()
 
-const region = ref('')
+// 九城顺序与全局一致(黄河上游→下游)
+const NINE = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '淄博', '滨州', '东营']
+const region = ref(NINE.includes(route.query.region) ? route.query.region : '')
 const items = ref([])
 const loaded = ref(false)
 const errorMsg = ref('')
 
-const regionOptions = ['全部', '济南', '青岛', '淄博', '枣庄', '东营', '烟台', '潍坊', '济宁', '泰安', '威海', '日照', '临沂', '德州', '聊城', '滨州', '菏泽']
+const regionOptions = ['全部', ...NINE]
 
 function setRegion(r) {
   region.value = r === '全部' ? '' : r
+  const query = { ...route.query }
+  if (!region.value) delete query.region
+  else query.region = region.value
+  router.replace({ query }).catch(() => {})
   load()
 }
 

@@ -17,6 +17,17 @@
       <span class="category-tab category-tab--static">戏曲艺术</span>
     </div>
 
+    <!-- 区域筛选条 -->
+    <nav class="fo-region-filter" aria-label="按区域筛选">
+      <button
+        v-for="r in regionOptions"
+        :key="r"
+        class="fo-region-chip"
+        :class="{ active: region === r }"
+        @click="setRegion(r)"
+      >{{ r }}</button>
+    </nav>
+
     <!-- 骨架 -->
     <div v-if="!loaded" class="fo-grid" aria-busy="true" aria-label="内容加载中">
       <SkeletonBlock v-for="i in 6" :key="i" height="220px" />
@@ -67,6 +78,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
 import api from '../api'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
@@ -74,10 +86,26 @@ import EmptyState from '../components/homepage/EmptyState.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 
 const { isAnime } = useTheme()
+const route = useRoute()
+const router = useRouter()
+
+// 九城顺序与全局一致(黄河上游→下游)
+const NINE = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '淄博', '滨州', '东营']
+const regionOptions = ['全部', ...NINE]
 
 const items = ref([])
 const loaded = ref(false)
 const errorMsg = ref('')
+const region = ref(NINE.includes(route.query.region) ? route.query.region : '全部')
+
+function setRegion(r) {
+  region.value = r
+  const query = { ...route.query }
+  if (r === '全部') delete query.region
+  else query.region = r
+  router.replace({ query }).catch(() => {})
+  load()
+}
 
 // tags 为 DB json 列, 后端序列化为 JSON 字符串, 需解析成数组
 function tagsOf(item) {
@@ -103,9 +131,9 @@ async function load() {
   loaded.value = false
   errorMsg.value = ''
   try {
-    const data = await api.get('/cultural', {
-      params: { category: 'food_opera', size: 100 }
-    })
+    const params = { category: 'food_opera', size: 100 }
+    if (region.value !== '全部') params.region = region.value
+    const data = await api.get('/cultural', { params })
     items.value = data.records || data
   } catch (err) {
     console.error('加载饮食戏曲失败:', err)
@@ -186,6 +214,38 @@ onMounted(load)
 }
 
 .category-tab.active {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-color: var(--accent);
+}
+
+.fo-region-filter {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 40px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.fo-region-chip {
+  padding: 8px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fo-region-chip:hover {
+  background: var(--bg-hover);
+}
+
+.fo-region-chip.active {
   background: var(--accent);
   color: var(--text-on-accent);
   border-color: var(--accent);
