@@ -57,6 +57,12 @@
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* 日式极简: inkwash 下卡片 hover 仅轻移 2px、不显阴影 */
+.theme-inkwash .hover-lift:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: none !important;
+}
+
 .theme-inkwash .card::before {
   content: '';
   position: absolute;

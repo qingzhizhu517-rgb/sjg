@@ -176,11 +176,11 @@ button {
   animation: ink-bleed 0.6s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
 }
 
-/* Card hover animation scale & lift */
+/* Card hover animation scale & lift（动效克制: 轻移 3px, 不再放大缩放） */
 .hover-lift {
   transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease !important;
 }
 .hover-lift:hover {
-  transform: translateY(-6px) scale(1.02) !important;
+  transform: translateY(-3px) !important;
   box-shadow: var(--card-shadow-hover) !important;
 }
