@@ -35,6 +35,15 @@
             </span>
             <span class="nav-label">齐鲁名士</span>
           </router-link>
+          <router-link to="/culture" class="nav-link" :class="{ active: isCultureActive }">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+              </svg>
+            </span>
+            <span class="nav-label">文化长廊</span>
+          </router-link>
           <router-link to="/timeline" class="nav-link" :class="{ active: isTimelineActive }">
             <span class="nav-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -110,6 +119,15 @@
               </svg>
             </span>
             <span class="drawer-nav-label">齐鲁名士</span>
+          </router-link>
+          <router-link to="/culture" class="drawer-nav-link" :class="{ active: isCultureActive }" @click="closeMobileMenu">
+            <span class="drawer-nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+              </svg>
+            </span>
+            <span class="drawer-nav-label">文化长廊</span>
           </router-link>
           <router-link to="/timeline" class="drawer-nav-link" :class="{ active: isTimelineActive }" @click="closeMobileMenu">
             <span class="drawer-nav-icon">
@@ -242,6 +260,18 @@ const isPoetsActive = computed(() => {
 
 const isTimelineActive = computed(() => {
   return route.path === '/timeline'
+})
+
+// 文化长廊: 聚合页 + 五类列表/详情 + 每城文化页均高亮
+const isCultureActive = computed(() => {
+  return (
+    route.path === '/culture' ||
+    route.path.startsWith('/festivals') ||
+    route.path.startsWith('/crafts') ||
+    route.path.startsWith('/literature') ||
+    route.path.startsWith('/food-opera') ||
+    route.path.startsWith('/cities')
+  )
 })
 
 // Cities mapping list
@@ -557,6 +587,16 @@ onUnmounted(() => {
 
 .nav-link:hover:nth-child(3) .nav-icon {
   animation: flip 0.8s ease-in-out;
+}
+
+.nav-link:hover:nth-child(4) .nav-icon {
+  animation: bookBreathe 0.9s ease-in-out;
+}
+
+@keyframes bookBreathe {
+  0% { transform: scaleX(1); }
+  50% { transform: scaleX(0.92); }
+  100% { transform: scaleX(1); }
 }
 
 @keyframes spin {
