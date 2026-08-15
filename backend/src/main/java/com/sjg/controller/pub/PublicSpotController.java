@@ -90,7 +90,8 @@ public class PublicSpotController {
     @Operation(summary = "获取区域列表", description = "返回所有预设区域及其景点数量统计")
     @GetMapping("/regions")
     public ResponseEntity<Result<List<Map<String, Object>>>> regions() {
-        String[] regions = {"菏泽", "济宁", "泰安", "聊城", "济南", "德州", "滨州", "淄博", "东营"};
+        // 黄河上游→下游顺序(与 MapView 九城一致): 菏泽入境 → 东营归海
+        String[] regions = {"菏泽", "济宁", "泰安", "聊城", "济南", "德州", "淄博", "滨州", "东营"};
         List<Map<String, Object>> regionList = new ArrayList<>();
         for (String region : regions) {
             Long count = spotService.list(1, 1, null, region).getTotal();

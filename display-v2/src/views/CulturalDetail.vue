@@ -67,13 +67,26 @@ const detail = ref(null)
 const loaded = ref(false)
 const errorMsg = ref('')
 
-const backTo = computed(() => (route.path.startsWith('/food-opera') ? '/food-opera' : '/literature'))
+// 详情路由统一: /festivals/:id /crafts/:id /literature/:id /food-opera/:id 共用本组件
+const CATEGORY_BACK = {
+  '/festivals': '/festivals',
+  '/crafts': '/crafts',
+  '/literature': '/literature',
+  '/food-opera': '/food-opera',
+}
+const backTo = computed(() => {
+  const prefix = Object.keys(CATEGORY_BACK).find((p) => route.path.startsWith(p))
+  return prefix ? CATEGORY_BACK[prefix] : '/literature'
+})
 
 const CATEGORY_LABELS = { craft: '非遗工艺', literature: '民间文学', food_opera: '饮食戏曲', festival: '民俗节庆' }
 const categoryLabel = (c) => CATEGORY_LABELS[c] || c
 
 // 各 detail 表的字段中文标签(与后端实体字段对应)
 const DETAIL_LABELS = {
+  festival: [
+    ['festivalDate', '举办时间'], ['origin', '起源渊源'], ['customs', '习俗活动'], ['food', '节庆饮食'],
+  ],
   craft: [
     ['craftCategory', '工艺类别'], ['materials', '所需材料'], ['tools', '所需工具'],
     ['process', '工艺流程'], ['inheritors', '传承人介绍'],
