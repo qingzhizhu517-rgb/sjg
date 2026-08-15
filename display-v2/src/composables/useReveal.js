@@ -26,19 +26,45 @@ export function useReveal() {
       const els = container.querySelectorAll('[data-reveal]')
       if (!els.length) return
       gsap.set(els, { opacity: 0, y })
-      ScrollTrigger.batch(els, {
-        start,
-        once: true,
-        onEnter: (batch) =>
-          gsap.to(batch, {
-            opacity: 1,
-            y: 0,
-            duration,
-            stagger,
-            ease: 'power2.out',
-            overwrite: true,
-          }),
+
+      // 兜底: 调用时已在视口内的元素立即揭示。
+      // 修复: 路由过渡/布局测量时机导致 ScrollTrigger.batch 不触发时,
+      // 内容永久停在 opacity:0 —— DOM 存在但页面"空白/像被遮住"。
+      const vh = window.innerHeight || 800
+      const inView = []
+      const below = []
+      els.forEach((el) => {
+        const r = el.getBoundingClientRect()
+        if (r.top < vh * 0.95 && r.bottom > 0) inView.push(el)
+        else below.push(el)
       })
+      if (inView.length) {
+        gsap.to(inView, {
+          opacity: 1,
+          y: 0,
+          duration,
+          stagger,
+          ease: 'power2.out',
+          overwrite: true,
+        })
+      }
+
+      // 视口外的元素走滚动揭示
+      if (below.length) {
+        ScrollTrigger.batch(below, {
+          start,
+          once: true,
+          onEnter: (batch) =>
+            gsap.to(batch, {
+              opacity: 1,
+              y: 0,
+              duration,
+              stagger,
+              ease: 'power2.out',
+              overwrite: true,
+            }),
+        })
+      }
       ScrollTrigger.refresh()
     }, container)
   }
