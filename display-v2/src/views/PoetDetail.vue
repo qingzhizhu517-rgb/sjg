@@ -190,7 +190,8 @@ const revealRoot = ref(null)
 
 // 从哪来回哪去：从 /poets/all 进来则回全量列表，否则回 showcase。
 // 用 query.from 标记（SPA pushState 不更新 document.referrer，原先的 referrer 判断永不成立）。
-const backTo = computed(() => (route.query.from === 'all' ? '/poets/all' : '/poets'))
+// 注意直接给 /poets?view=all, 不走 /poets/all 重定向(过渡期间二次导航会加剧路由过渡卡死)。
+const backTo = computed(() => (route.query.from === 'all' ? '/poets?view=all' : '/poets'))
 
 const avatar = computed(() => {
   if (!poet.value) return ''

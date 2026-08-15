@@ -139,9 +139,12 @@
     </transition>
 
     <!-- Main View Component Router -->
+    <!-- 注意: 不用 mode="out-in"。out-in 需等待旧页 leave 过渡完成才挂载新页,
+         详情页返回时若 leave 的 transitionend 丢失, 新页永不挂载 → 整页空白。
+         默认 mode 下新旧页并发过渡, 即使 leave 卡住新页也已挂载。 -->
     <main class="main-content">
       <router-view v-slot="{ Component }">
-        <transition :name="navTransition" mode="out-in">
+        <transition :name="navTransition">
           <component :is="Component" :key="$route.fullPath" />
         </transition>
       </router-view>
@@ -309,6 +312,15 @@ onUnmounted(() => {
 /* Global page transition: 前进=推入 */
 .page-slide-enter-active, .page-slide-leave-active {
   transition: opacity 0.35s ease, transform 0.35s ease;
+}
+/* 默认 mode(非 out-in): 离开中的旧页绝对定位叠在底层, 避免占位导致新页下跳 */
+.page-slide-leave-active,
+.page-pop-leave-active,
+.page-fade-leave-active {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
 }
 .page-slide-enter-from {
   opacity: 0;
@@ -875,6 +887,7 @@ onUnmounted(() => {
 .main-content {
   flex: 1;
   padding-top: var(--nav-height);
+  position: relative;
 }
 
 /* ===== Footer ===== */
