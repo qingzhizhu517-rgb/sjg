@@ -190,6 +190,25 @@ let progressHideTimer = null
 let lastPos = null
 let routerHookCleanups = []
 
+// ===== 路由过渡残留类清扫 =====
+// 已知问题: 动态组件 + out-in 过渡下, 若子组件根节点在过渡期间被替换
+// (如详情页数据到达后由骨架/注释切换为真实根节点), enter-from 类可能残留,
+// 使页面永远停在 opacity:0 —— DOM 存在但整页"空白/像被遮挡"。
+// 过渡时长 ≤350ms, 在 800ms/1600ms 两个时点清扫任何残留类, 保证内容必然可见。
+const STUCK_TRANSITION_CLASSES = [
+  'page-slide-enter-from', 'page-slide-enter-active', 'page-slide-leave-to', 'page-slide-leave-active',
+  'page-pop-enter-from', 'page-pop-enter-active', 'page-pop-leave-to', 'page-pop-leave-active',
+  'page-fade-enter-from', 'page-fade-enter-active', 'page-fade-leave-to', 'page-fade-leave-active',
+]
+let stuckSweepTimers = []
+const sweepStuckTransition = () => {
+  document
+    .querySelectorAll('.main-content [class*="page-slide"], .main-content [class*="page-pop"], .main-content [class*="page-fade"]')
+    .forEach((el) => {
+      el.classList.remove(...STUCK_TRANSITION_CLASSES)
+    })
+}
+
 const navTransition = computed(
   () => ({ forward: 'page-slide', back: 'page-pop', fade: 'page-fade' })[navDirection.value],
 )
@@ -269,6 +288,9 @@ onMounted(() => {
       progress.reset()
       progressValue.value = 0
     }, 350)
+    // 过渡残留类清扫(800ms 与 1600ms 双保险)
+    stuckSweepTimers.forEach(clearTimeout)
+    stuckSweepTimers = [800, 1600].map((ms) => setTimeout(sweepStuckTransition, ms))
   })
   routerHookCleanups = [removeBefore, removeAfter]
 })
@@ -278,6 +300,8 @@ onUnmounted(() => {
   routerHookCleanups.forEach((remove) => remove())
   clearInterval(progressTimer)
   clearTimeout(progressHideTimer)
+  stuckSweepTimers.forEach(clearTimeout)
+  stuckSweepTimers = []
 })
 </script>
 

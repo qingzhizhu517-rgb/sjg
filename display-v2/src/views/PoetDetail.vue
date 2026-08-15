@@ -1,6 +1,9 @@
 <template>
-  <!-- REAL 主题：展馆档案卡 -->
-  <div class="pd pd--real" v-if="poet && isReal">
+  <!-- 诗人详情: 单一根节点(路由过渡期间根不被替换, 防止 enter 类残留导致整页透明) -->
+  <div class="pd" :class="poet ? (isReal ? 'pd--real' : 'pd--inkwash') : ''">
+    <!-- REAL 主题：展馆档案卡 -->
+    <template v-if="poet">
+    <template v-if="isReal">
     <!-- 返回 -->
     <div class="pd-back">
       <router-link :to="backTo" class="pd-back-link">← 返回名士</router-link>
@@ -66,10 +69,10 @@
         </div>
       </section>
     </div>
-  </div>
+    </template>
 
-  <!-- INKWASH 主题：人物小传卷 -->
-  <div class="pd pd--inkwash" v-else-if="poet">
+    <!-- INKWASH 主题：人物小传卷 -->
+    <template v-else>
     <!-- 返回 -->
     <div class="pd-back">
       <router-link :to="backTo" class="pd-back-link">← 返回名士</router-link>
@@ -77,8 +80,7 @@
 
     <div ref="revealRoot" class="pd-content">
       <!-- 小传卷主体 -->
-      <div class="ink-scroll-layout">
-        <!-- 左侧：竖排信息栏 -->
+      <div class="ink-scroll-layout">        <!-- 左侧：竖排信息栏 -->
         <aside class="ink-scroll-sidebar">
           <!-- 印章头像 -->
           <div class="ink-portrait-frame">
@@ -143,7 +145,8 @@
         </main>
       </div>
     </div>
-  </div>
+    </template>
+    </template>
 
   <div v-else-if="errorMsg" class="pd-state">
     <ErrorState :message="errorMsg" @retry="loadDetail" />
@@ -152,6 +155,7 @@
 
   <div v-else class="pd-state">
     <SkeletonBlock height="220px" />
+  </div>
   </div>
 </template>
 
