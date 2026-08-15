@@ -78,11 +78,17 @@ function buildSql(entries, category, version) {
 
     // detail 行（若该类别的字段全为空则跳过）
     const detailVals = schema.cols.map((c) => pick(e, c))
+    // JSON 列(如 related_scenic_spots)必须输出合法 JSON 文本; 数字列输出数值; 其余转义字符串
+    const detailColVal = (c) => {
+      if (c === 'related_scenic_spots') return jsonArr(pick(e, c))
+      if (c === 'difficulty_level' && pick(e, c) != null) return Number(pick(e, c))
+      return q(pick(e, c))
+    }
     if (detailVals.some((v) => v !== null && v !== undefined && v !== '')) {
       const where = `(SELECT id FROM cultural_item WHERE title=${q(title)} AND category=${q(category)})`
       out.push(
         `INSERT INTO ${schema.table} (item_id, ${schema.cols.join(', ')}) VALUES (` +
-        `${where}, ${schema.cols.map((c) => (c === 'difficulty_level' && pick(e, c) != null ? Number(pick(e, c)) : q(pick(e, c)))).join(', ')});`
+        `${where}, ${schema.cols.map(detailColVal).join(', ')});`
       )
     }
     out.push('')
