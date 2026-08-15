@@ -45,6 +45,12 @@ const jsonArr = (v) => {
   return q('[]')
 }
 
+/** snake_case → camelCase（研究 JSON 用 camelCase，schema 用 snake_case，两侧都取） */
+const snakeToCamel = (s) => s.replace(/_([a-z])/g, (_, c) => c.toUpperCase())
+
+/** 按 snake_case 列名取值，兼容研究 JSON 的 camelCase 字段 */
+const pick = (e, col) => (e[col] !== undefined ? e[col] : e[snakeToCamel(col)])
+
 function buildSql(entries, category, version) {
   const schema = CATEGORY_SCHEMAS[category]
   if (!schema) throw new Error(`未知类别: ${category}`)
@@ -71,12 +77,12 @@ function buildSql(entries, category, version) {
     )
 
     // detail 行（若该类别的字段全为空则跳过）
-    const detailVals = schema.cols.map((c) => e[c])
+    const detailVals = schema.cols.map((c) => pick(e, c))
     if (detailVals.some((v) => v !== null && v !== undefined && v !== '')) {
       const where = `(SELECT id FROM cultural_item WHERE title=${q(title)} AND category=${q(category)})`
       out.push(
         `INSERT INTO ${schema.table} (item_id, ${schema.cols.join(', ')}) VALUES (` +
-        `${where}, ${schema.cols.map((c) => (c === 'difficulty_level' && e[c] != null ? Number(e[c]) : q(e[c]))).join(', ')});`
+        `${where}, ${schema.cols.map((c) => (c === 'difficulty_level' && pick(e, c) != null ? Number(pick(e, c)) : q(pick(e, c)))).join(', ')});`
       )
     }
     out.push('')
