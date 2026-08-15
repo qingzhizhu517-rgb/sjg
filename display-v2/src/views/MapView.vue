@@ -1,5 +1,5 @@
 <template>
-  <div class="map-view scroll-narrative" :class="{ 'anime-layout': isAnime }" @mousemove="handleMouseMove" @mouseleave="resetParallax">
+  <div class="map-view scroll-narrative" :class="{ 'anime-layout': isAnime }">
 
     <!-- ===== S1: 黄河意境 Hero ===== -->
     <section class="sn-section sn-hero">
@@ -180,14 +180,14 @@
               <div class="scroll-outer-frame">
                 <div class="scroll-wooden-rod left-rod"></div>
                 <div class="scroll-middle-paper" ref="scrollPaper">
-                  <!-- Background Layer: Ink mountains -->
-                  <div class="parallax-layer bg-mountains" :style="getParallaxStyle(0.2)"></div>
+                  <!-- Background Layer: Ink mountains（远景，慢速视差） -->
+                  <div class="parallax-layer bg-mountains" data-depth="0.35"></div>
 
-                  <!-- Midground Layer: Yellow River -->
-                  <div class="parallax-layer river-flow-layer" :style="getParallaxStyle(0.5)">
+                  <!-- Content Layer: 黄河 + 九城印章同层同速平移，保证印章与河流始终对齐 -->
+                  <div class="parallax-layer map-content-layer" data-depth="1">
                     <svg class="ink-river-svg" viewBox="0 0 2000 600" preserveAspectRatio="xMidYMid meet">
                       <path
-                        d="M100,520 Q300,420 500,480 T900,320 T1300,260 T1700,100"
+                        d="M40,520 C200,480 260,440 320,450 S460,520 520,520 S640,430 720,410 S840,360 920,350 S1040,280 1120,260 S1240,330 1320,320 S1460,240 1560,220 S1740,120 1840,90 C1900,78 1940,74 1970,70"
                         fill="none"
                         :stroke="svgAccent40"
                         stroke-width="8"
@@ -195,10 +195,8 @@
                         class="svg-river-dash"
                       />
                     </svg>
-                  </div>
 
-                  <!-- Foreground Layer: City Stamps -->
-                  <div class="parallax-layer stamps-layer" :style="getParallaxStyle(1.0)">
+                    <!-- 九城印章：坐标以层内百分比（0-100% = 卷轴全程），随河流行进排列 -->
                     <div
                       v-for="city in cities"
                       :key="city"
@@ -217,6 +215,20 @@
                 <div class="scroll-wooden-rod right-rod"></div>
               </div>
             </div>
+
+            <!-- 九城快捷导航：点击平滑推进长卷至对应城市 -->
+            <nav class="ink-scroll-nav" aria-label="九城快捷导航">
+              <button
+                v-for="(city, i) in cities"
+                :key="city"
+                class="ink-scroll-nav__item"
+                :class="{ 'is-active': activeInkCity === city }"
+                @click="seekCity(i)"
+              >
+                <span class="ink-scroll-nav__dot" aria-hidden="true"></span>
+                <span class="ink-scroll-nav__name">{{ city }}</span>
+              </button>
+            </nav>
           </div>
         </div>
 
@@ -260,7 +272,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
 import { cssVarAlpha } from '../utils/cssToken'
@@ -296,6 +308,7 @@ const heroStats = ref([])
 
 // ===== Scroll 叙事编排 (P3-1) =====
 const scrollNarrative = useScrollNarrative()
+const { stickyProgress } = scrollNarrative
 const stickyRealRef = ref(null)
 const stickyInkRef = ref(null)
 const railSectionRef = ref(null)
@@ -390,31 +403,9 @@ const clickLabel = (cityName) => {
   three.flyToCity(cityName)
 }
 
-// Mouse parallax coordinate tracking
-const mouseX = ref(0)
-const mouseY = ref(0)
-
-const handleMouseMove = (e) => {
-  const rect = e.currentTarget.getBoundingClientRect()
-  mouseX.value = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2)
-  mouseY.value = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2)
-}
-
-const resetParallax = () => {
-  mouseX.value = 0
-  mouseY.value = 0
-}
-
-const getParallaxStyle = (factor) => {
-  const x = mouseX.value * 25 * factor
-  const y = mouseY.value * 20 * factor
-  return {
-    transform: `translate3d(${x}px, ${y}px, 0)`
-  }
-}
-
 // Cities list and coords for water-ink custom placement
-const cities = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '滨州', '淄博', '东营']
+// 顺序与黄河实际流向一致: 菏泽入境 → ... → 东营归海
+const cities = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '淄博', '滨州', '东营']
 
 const getCityData = (cityName) => {
   return resolveContent('cities', cityName, theme.value) || {
@@ -429,24 +420,54 @@ const getCityData = (cityName) => {
 }
 
 const getCityStampPos = (city) => {
-  // 横向滚动长卷：x 坐标按 200% 宽度分布，保留 y 坐标
+  // 横向滚动长卷: 层宽 200%, 内容区为层坐标 0-100%(scroll 全程可见窗口 [50p, 50p+50])。
+  // left 为层内百分比, top 为纸面高度百分比; 与 .ink-river-svg 的河道路径逐城对齐
+  // (菏泽左下 → 东营右上河口)。
   const coords = {
-    '菏泽': { left: '6%', top: '78%' },
-    '济宁': { left: '13%', top: '72%' },
-    '泰安': { left: '21%', top: '60%' },
-    '聊城': { left: '12%', top: '48%' },
-    '济南': { left: '23%', top: '46%' },
-    '德州': { left: '16%', top: '24%' },
-    '淄博': { left: '31%', top: '48%' },
-    '滨州': { left: '32%', top: '26%' },
-    '东营': { left: '40%', top: '22%' }
+    '菏泽': { left: '6%',  top: '82%' },
+    '济宁': { left: '16%', top: '74%' },
+    '泰安': { left: '26%', top: '88%' },
+    '聊城': { left: '36%', top: '66%' },
+    '济南': { left: '46%', top: '56%' },
+    '德州': { left: '56%', top: '40%' },
+    '淄博': { left: '66%', top: '52%' },
+    '滨州': { left: '78%', top: '34%' },
+    '东营': { left: '92%', top: '14%' },
   }
   return coords[city] || { left: '25%', top: '50%' }
 }
 
+// 九城快捷导航: 城市居中时对应的 scroll 进度 p=(L-25)/50, 首尾钳制
+const CITY_NAV_PROGRESS = [0, 0, 0.02, 0.22, 0.42, 0.62, 0.82, 1, 1]
 
-// 主题切换 -> 引擎重建(real)/销毁(inkwash)
-watch(isReal, (newVal) => three.setTheme(newVal))
+const activeInkCity = computed(() => {
+  if (!stickyProgress.value) return '菏泽'
+  // 进度反查: 当前可见窗口中心 L = 50p+25, 取最近的城市
+  const centerL = 50 * stickyProgress.value + 25
+  let nearest = cities[0]
+  let best = Infinity
+  cities.forEach((c) => {
+    const l = parseFloat(getCityStampPos(c).left)
+    const d = Math.abs(l - centerL)
+    if (d < best) {
+      best = d
+      nearest = c
+    }
+  })
+  return nearest
+})
+
+const seekCity = (index) => {
+  const p = CITY_NAV_PROGRESS[index] ?? 0
+  scrollNarrative.seekInkProgress(p)
+}
+
+
+// 主题切换 -> 引擎重建(real)/销毁(inkwash) + 目标段落重新渲染后重建 scroll 叙事触发器
+watch(isReal, (newVal) => {
+  three.setTheme(newVal)
+  nextTick(() => scrollNarrative.reinit())
+})
 
 // 失败重试入口（template 错误态按钮）
 const retryLoadMap = () => {
@@ -1086,15 +1107,8 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
   box-shadow: inset 0 0 40px rgba(115, 69, 29, 0.06), 0 10px 30px rgba(0,0,0,0.15);
   position: relative;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; /* Firefox */
-}
-
-.scroll-middle-paper::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+  /* 横向平移由 GSAP scrub 单一驱动; 移除原生溢出滚动, 消除与页面滚动的双重来源 */
+  overflow: hidden;
 }
 
 /* Parallax Layer core */
@@ -1102,13 +1116,13 @@ onBeforeUnmount(() => {
   position: absolute;
   top: 0;
   left: 0;
-  width: 200%; /* 横向滚动长卷 */
+  width: 200%; /* 横向滚动长卷; 内容区在层坐标 0-100%, 右侧 100-200% 供平移后铺满 */
   height: 100%;
   pointer-events: none;
-  transition: transform 0.1s ease-out;
+  /* 勿加 transition: transform —— 会与 GSAP scrub 的逐帧写入打架导致拖影 */
 }
 
-/* Background water-ink mountains */
+/* Background water-ink mountains（远景慢速层, data-depth=0.35） */
 .bg-mountains {
   background-image: url('/images/inkwash-map.png');
   background-size: cover;
@@ -1118,8 +1132,8 @@ onBeforeUnmount(() => {
   z-index: 1;
 }
 
-/* Yellow River flowing SVG */
-.river-flow-layer {
+/* 黄河 + 九城印章同层（data-depth=1）: 保证印章与河道在任何 scroll 进度下对齐 */
+.map-content-layer {
   z-index: 2;
 }
 
@@ -1139,10 +1153,79 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Foreground city stamps */
-.stamps-layer {
-  z-index: 3;
+/* Foreground city stamps（在 map-content-layer 内, 恢复点击） */
+.city-ink-stamp-box {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
   pointer-events: auto;
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* 九城快捷导航 */
+.ink-scroll-nav {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin: 14px auto 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+
+.ink-scroll-nav__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  min-width: 44px;
+  font-family: inherit;
+}
+
+.ink-scroll-nav__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  opacity: 0.45;
+  transition: all 0.25s ease;
+}
+
+.ink-scroll-nav__name {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  transition: color 0.25s ease;
+}
+
+.ink-scroll-nav__item:hover .ink-scroll-nav__dot {
+  opacity: 0.9;
+  transform: scale(1.3);
+}
+
+.ink-scroll-nav__item.is-active .ink-scroll-nav__dot {
+  background: var(--accent);
+  opacity: 1;
+  transform: scale(1.35);
+}
+
+.ink-scroll-nav__item.is-active .ink-scroll-nav__name {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* reduced-motion: 无 GSAP 时回退为原生横向滚动(长卷内容仍可达) */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-middle-paper {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
 }
 
 .city-ink-stamp-box {
