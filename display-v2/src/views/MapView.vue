@@ -202,7 +202,7 @@
                       :key="city"
                       class="city-ink-stamp-box"
                       :style="getCityStampPos(city)"
-                      @click="$router.push(`/regions/${city}`)"
+                      @click="$router.push(`/cities/${city}`)"
                     >
                       <div class="stamp-seal-red">
                         <span class="seal-char">{{ city[0] }}</span>

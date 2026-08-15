@@ -38,10 +38,22 @@ public class PoetService {
     }
 
     public PageResult<Poet> list(int page, int size, String keyword) {
+        return list(page, size, keyword, null);
+    }
+
+    /**
+     * 分页查询（可选按区域：籍贯或生平提及该城）。
+     * 用于「每城文化页」的本城名士聚合。
+     */
+    public PageResult<Poet> list(int page, int size, String keyword, String region) {
         LambdaQueryWrapper<Poet> wrapper = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
             wrapper.and(w -> w.like(Poet::getName, keyword)
                    .or().like(Poet::getBirthplace, keyword));
+        }
+        if (StringUtils.hasText(region)) {
+            wrapper.and(w -> w.like(Poet::getBirthplace, region)
+                   .or().like(Poet::getBiography, region));
         }
         wrapper.orderByDesc(Poet::getId);
         Page<Poet> result = poetMapper.selectPage(new Page<>(page, size), wrapper);

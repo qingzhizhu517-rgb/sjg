@@ -38,13 +38,14 @@ public class PublicPoemController {
     /**
      * 分页搜索诗词列表
      */
-    @Operation(summary = "分页搜索诗词列表", description = "支持按诗词标题关键字模糊搜索，公开接口无需认证")
+    @Operation(summary = "分页搜索诗词列表", description = "支持标题/内容关键字模糊搜索与按区域(景点归属或作者籍贯)筛选，公开接口无需认证")
     @GetMapping
     public ResponseEntity<Result<PageResult<Poem>>> search(
             @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页数量", example = "20") @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "搜索关键字（按诗词标题模糊匹配）") @RequestParam(required = false) String keyword) {
-        return ResponseEntity.ok(Result.success(poemService.list(page, size, keyword)));
+            @Parameter(description = "搜索关键字（按诗词标题/内容模糊匹配）") @RequestParam(required = false) String keyword,
+            @Parameter(description = "区域筛选（如 济南）") @RequestParam(required = false) String region) {
+        return ResponseEntity.ok(Result.success(poemService.list(page, size, keyword, region)));
     }
 
     /**

@@ -39,13 +39,14 @@ public class PublicPoetController {
     /**
      * 分页查询诗人列表
      */
-    @Operation(summary = "分页查询诗人列表", description = "支持按诗人名称关键字模糊搜索，公开接口无需认证")
+    @Operation(summary = "分页查询诗人列表", description = "支持按诗人名称关键字模糊搜索与按区域(籍贯/生平提及)筛选，公开接口无需认证")
     @GetMapping
     public ResponseEntity<Result<PageResult<Poet>>> list(
             @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页数量", example = "20") @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "搜索关键字（按诗人名称模糊匹配）") @RequestParam(required = false) String keyword) {
-        return ResponseEntity.ok(Result.success(poetService.list(page, size, keyword)));
+            @Parameter(description = "搜索关键字（按诗人名称模糊匹配）") @RequestParam(required = false) String keyword,
+            @Parameter(description = "区域筛选（如 济南）") @RequestParam(required = false) String region) {
+        return ResponseEntity.ok(Result.success(poetService.list(page, size, keyword, region)));
     }
 
     /**

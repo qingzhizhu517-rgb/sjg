@@ -7,6 +7,10 @@ import com.sjg.entity.Poem;
 import com.sjg.entity.PoemEvent;
 import com.sjg.mapper.PoemMapper;
 import com.sjg.mapper.PoemEventMapper;
+import com.sjg.mapper.PoetMapper;
+import com.sjg.mapper.ScenicSpotMapper;
+import com.sjg.entity.Poet;
+import com.sjg.entity.ScenicSpot;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
@@ -23,17 +27,54 @@ public class PoemService {
 
     private final PoemMapper poemMapper;
     private final PoemEventMapper poemEventMapper;
+    private final PoetMapper poetMapper;
+    private final ScenicSpotMapper spotMapper;
 
-    public PoemService(PoemMapper poemMapper, PoemEventMapper poemEventMapper) {
+    public PoemService(PoemMapper poemMapper, PoemEventMapper poemEventMapper,
+                       PoetMapper poetMapper, ScenicSpotMapper spotMapper) {
         this.poemMapper = poemMapper;
         this.poemEventMapper = poemEventMapper;
+        this.poetMapper = poetMapper;
+        this.spotMapper = spotMapper;
     }
 
     public PageResult<Poem> list(int page, int size, String keyword) {
+        return list(page, size, keyword, null);
+    }
+
+    /**
+     * 分页查询（可选按区域）。
+     * 归属规则: spot_id 指向该城景点; 无 spot 的诗按作者籍贯匹配该城(兜底);
+     * 两条链路都无匹配时返回空(该城暂无诗词归属)。
+     * 用于「每城文化页」的本城诗词聚合。
+     */
+    public PageResult<Poem> list(int page, int size, String keyword, String region) {
         LambdaQueryWrapper<Poem> wrapper = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
             wrapper.and(w -> w.like(Poem::getTitle, keyword)
                    .or().like(Poem::getContent, keyword));
+        }
+        if (StringUtils.hasText(region)) {
+            List<Long> spotIds = spotMapper.selectList(
+                    new LambdaQueryWrapper<ScenicSpot>()
+                            .eq(ScenicSpot::getRegion, region))
+                    .stream().map(ScenicSpot::getId).toList();
+            List<Long> poetIds = poetMapper.selectList(
+                    new LambdaQueryWrapper<Poet>()
+                            .like(Poet::getBirthplace, region))
+                    .stream().map(Poet::getId).toList();
+            wrapper.and(w -> {
+                if (!spotIds.isEmpty()) {
+                    w.in(Poem::getSpotId, spotIds);
+                }
+                if (!poetIds.isEmpty()) {
+                    if (!spotIds.isEmpty()) w.or();
+                    w.nested(n -> n.isNull(Poem::getSpotId).in(Poem::getPoetId, poetIds));
+                }
+                if (spotIds.isEmpty() && poetIds.isEmpty()) {
+                    w.eq(Poem::getId, -1L); // 无任何归属 → 空结果
+                }
+            });
         }
         wrapper.orderByDesc(Poem::getId);
         Page<Poem> result = poemMapper.selectPage(new Page<>(page, size), wrapper);

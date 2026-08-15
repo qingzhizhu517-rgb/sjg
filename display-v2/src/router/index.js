@@ -14,6 +14,7 @@ const routes = [
   { path: '/crafts', name: 'CraftWorkshop', component: () => import('../views/CraftWorkshop.vue') },
   { path: '/crafts/:id', name: 'CulturalDetailCraft', component: () => import('../views/CulturalDetail.vue') },
   { path: '/regions/:region', name: 'RegionSpots', component: () => import('../views/RegionSpots.vue') },
+  { path: '/cities/:region', name: 'CityCulture', component: () => import('../views/CityCulture.vue') },
   { path: '/compose', name: 'PoemComposer', component: () => import('../views/PoemComposerView.vue') },
   { path: '/literature', name: 'LiteratureList', component: () => import('../views/LiteratureList.vue') },
   { path: '/literature/:id', name: 'CulturalDetailLiterature', component: () => import('../views/CulturalDetail.vue') },
