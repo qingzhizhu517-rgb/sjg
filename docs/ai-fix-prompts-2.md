@@ -200,8 +200,8 @@
 
 | 任务 | 状态 | 产物 |
 |---|---|---|
-| 1 九城五类数据 | [ ] | 待 V18+ migration |
-| 2 展示设计 | [ ] | 待设计提案 |
-| 3 长卷地图修复 | [ ] | 待 MapView/useScrollNarrative 改造 |
-| 4 朝代线筛选 | [ ] | 待 PoetList 修复 |
-| 5 美化+创新 | [ ] | 待方案对照表 |
+| 1 九城五类数据 | [~] 文化四类完成，诗词待 V22 | `V18__festival_seed.sql`(14条,九城全覆盖)、`V19__craft_seed.sql`(12条)、`V20__literature_seed.sql`(10条)、`V21__food_opera_seed.sql`(8条)；诗词三城(滨州0/东营5/淄博6)待补 V22；生成器 `scripts/gen_cultural_migration.mjs` |
+| 2 展示设计 | [x] | 提案 `docs/plans/2026-08-15-nine-cities-display-proposal.md`；B1 详情路由统一(`/festivals/:id`+`/crafts/:id`→CulturalDetail, ready 修正, /regions 顺序修复)；B2 `CityCulture.vue`(`/cities/:region` 五格册页)+poems/poets region 参数+印章跳城市页；B3 三列表 `?region=` URL 同步+筛选条 |
+| 3 长卷地图修复 | [x] | `633f34f`：单一 transform 来源/河流印章同层对齐/九城坐标全卷校准/九城快捷导航/主题切换重建触发器/reduced-motion 兜底 |
+| 4 朝代线筛选 | [x] | `7c37332`：featured 随朝代过滤/图谱与 rail 统一数据源/`?dynasty=` URL 双向同步 |
+| 5 美化+创新 | [~] A1-A4 完成 | `docs/plans/2026-08-15-beautify-plan.md`；A1 卡片细线化(inkwash 去阴影+朱红描边, real 阴影减半)；A2 空态水墨远山 SVG+详情页留白 80px；A3 竖排已由 inkwash 主题满足(免实现)；A4 hover-lift 动效克制(3px 去缩放, inkwash 2px 无阴影) |
