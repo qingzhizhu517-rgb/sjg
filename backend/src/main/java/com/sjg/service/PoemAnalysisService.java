@@ -34,16 +34,31 @@ public class PoemAnalysisService {
 
     private static final Logger log = LoggerFactory.getLogger(PoemAnalysisService.class);
 
-    /** 赏析版本号；修改 prompt 或输出格式时递增以使旧缓存失效 */
-    static final int CURRENT_VERSION = 1;
+    /** 赏析版本号；修改 prompt 或输出格式时递增以使旧缓存失效（v2: 深度赏析结构） */
+    static final int CURRENT_VERSION = 2;
 
     private static final String ANALYSIS_PROMPT = """
-            请对以下诗词进行结构化赏析，以JSON格式返回（不要输出其他内容，只输出纯JSON）：
+            请对以下诗词进行深度结构化赏析，以JSON格式返回（不要输出其他内容，只输出纯JSON）：
             {
               "lines": [{"line": "诗句", "解读": "解读内容"}],
               "sentiment": "情感分析",
               "background": "创作背景",
-              "annotations": [{"word": "字词", "meaning": "释义"}]
+              "annotations": [{"word": "字词", "meaning": "释义"}],
+              "imagery": {
+                "core": [{"image": "意象", "meaning": "象征意义"}],
+                "composition": "意象组合与意境营造"
+              },
+              "technique": {
+                "rhetoric": [{"technique": "修辞手法", "example": "具体例子"}],
+                "expression": "表现手法分析"
+              },
+              "translation": {
+                "modern": "白话文翻译",
+                "english": "英文翻译",
+                "appreciation": "翻译赏析"
+              },
+              "related_poems": [{"id": 1, "title": "相关诗词标题", "poet": "诗人", "dynasty": "朝代", "reason": "关联原因"}],
+              "cultural_context": "与黄河/齐鲁地缘的文化关联"
             }
 
             诗词：
@@ -53,7 +68,7 @@ public class PoemAnalysisService {
 
     /** JSON 解析兜底：当 LLM 返回非法 JSON 时使用 */
     private static final String FALLBACK_TEMPLATE = """
-            {"lines":[],"sentiment":"暂无分析","background":"暂无背景","annotations":[],"raw":"%s"}""";
+            {"lines":[],"sentiment":"暂无分析","background":"暂无背景","annotations":[],"imagery":{"core":[],"composition":""},"technique":{"rhetoric":[],"expression":""},"translation":{"modern":"","english":"","appreciation":""},"related_poems":[],"cultural_context":"","raw":"%s"}""";
 
     private final PoemAnalysisMapper analysisMapper;
     private final PoemMapper poemMapper;

@@ -83,18 +83,7 @@ public class LlmClient {
             return;
         }
         try {
-            ObjectNode body = mapper.createObjectNode();
-            body.put("model", model);
-            body.put("stream", true);
-            body.put("temperature", temperature);
-            body.put("max_tokens", maxTokens);
-            ArrayNode arr = body.putArray("messages");
-            for (ChatMessage m : messages) {
-                if (m == null || m.role() == null || m.content() == null) continue;
-                ObjectNode mo = arr.addObject();
-                mo.put("role", m.role());
-                mo.put("content", m.content());
-            }
+            ObjectNode body = buildBody(messages, true);
 
             String url = baseUrl.replaceAll("/+$", "");
             // 容错：若 base-url 已含完整路径则不再追加，避免 /chat/completions/chat/completions
@@ -143,6 +132,64 @@ public class LlmClient {
             }
         } catch (Exception e) {
             onError.accept("调用大模型失败：" + e.getMessage());
+        }
+    }
+
+    /** 组装 OpenAI 兼容请求体 */
+    private ObjectNode buildBody(List<ChatMessage> messages, boolean stream) {
+        ObjectNode body = mapper.createObjectNode();
+        body.put("model", model);
+        body.put("stream", stream);
+        body.put("temperature", temperature);
+        body.put("max_tokens", maxTokens);
+        ArrayNode arr = body.putArray("messages");
+        for (ChatMessage m : messages) {
+            if (m == null || m.role() == null || m.content() == null) continue;
+            ObjectNode mo = arr.addObject();
+            mo.put("role", m.role());
+            mo.put("content", m.content());
+        }
+        return body;
+    }
+
+    /**
+     * 非流式对话（同步）：发送完整消息并返回完整回复文本。
+     * 供 AI 写诗、赏析等一次性生成场景使用；失败抛异常由调用方兜底。
+     */
+    public String chatSync(String userPrompt) {
+        return chatSync(List.of(new ChatMessage("user", userPrompt)));
+    }
+
+    /** 非流式对话（同步），消息序列可含 system 提示 */
+    public String chatSync(List<ChatMessage> messages) {
+        if (!isConfigured()) {
+            throw new IllegalStateException("AI 服务未配置（缺少 LLM_API_KEY / LLM_BASE_URL）");
+        }
+        try {
+            ObjectNode body = buildBody(messages, false);
+            String url = baseUrl.replaceAll("/+$", "");
+            if (!url.endsWith("/chat/completions")) {
+                url = url + "/chat/completions";
+            }
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .timeout(Duration.ofSeconds(timeoutSeconds))
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", "Bearer " + apiKey)
+                    .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body)))
+                    .build();
+            HttpResponse<String> resp = http.send(req, HttpResponse.BodyHandlers.ofString());
+            if (resp.statusCode() != 200) {
+                throw new IllegalStateException("大模型接口返回 " + resp.statusCode()
+                        + " [URL=" + url + "]：" + truncate(resp.body(), 300));
+            }
+            JsonNode node = mapper.readTree(resp.body());
+            JsonNode content = node.path("choices").path(0).path("message").path("content");
+            return content.isMissingNode() || content.isNull() ? "" : content.asText();
+        } catch (IllegalStateException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalStateException("调用大模型失败：" + e.getMessage(), e);
         }
     }
 
