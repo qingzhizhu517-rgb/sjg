@@ -48,26 +48,34 @@
       </nav>
     </template>
 
-    <!-- inkwash：左 art 区（开场晕染视频 -> 定格长卷） -->
+    <!-- inkwash：左卷轴（开场晕染视频 -> 淡入定格长卷, 可重播） -->
     <div v-else ref="artRef" class="rh__art" aria-hidden="true">
-      <video
-        v-if="!reduce && !showScroll && inkOpen?.type === 'video'"
-        class="rh__img"
-        :src="inkOpen.url"
-        :poster="inkOpen.poster"
-        autoplay
-        muted
-        playsinline
-        aria-hidden="true"
-        @ended="showScroll = true"
-        @error="showScroll = true"
-      />
-      <img v-else :src="heroBg?.url || heroImg" alt="" class="rh__img" decoding="async" />
+      <Transition name="ink-freeze" mode="out-in">
+        <video
+          v-if="!reduce && !showScroll && inkOpen?.type === 'video'"
+          :key="openKey"
+          class="rh__img"
+          :src="inkOpen.url"
+          :poster="inkOpen.poster"
+          autoplay
+          muted
+          playsinline
+          aria-hidden="true"
+          @ended="showScroll = true"
+          @error="showScroll = true"
+        />
+        <img v-else :src="heroBg?.url || heroImg" alt="" class="rh__img rh__img--frozen" decoding="async" />
+      </Transition>
+      <!-- 卷轴挂轴 -->
+      <span class="rh__art-rod rh__art-rod--l" aria-hidden="true"></span>
+      <span class="rh__art-rod rh__art-rod--r" aria-hidden="true"></span>
       <div class="rh__art-frame"></div>
       <!-- 画轴左侧题款 -->
       <p class="rh__art-kuan">黄河之水天上来</p>
       <p class="rh__art-kuan rh__art-kuan--2">奔流到海不复回</p>
       <span class="rh__art-seal"></span>
+      <!-- 播毕重播 -->
+      <button v-if="showScroll && !reduce" class="rh__replay" @click="replayOpening">重播</button>
     </div>
 
     <!-- 右：分行大标题 + 数据 + CTA（双布局共用） -->
@@ -130,6 +138,12 @@ const inkOpen = computed(() => (!isReal.value ? resolveAsset('hero-open') : null
 
 // inkwash 开场视频播完定格长卷
 const showScroll = ref(false)
+// 重播键：自增强制重挂 video 元素
+const openKey = ref(0)
+const replayOpening = () => {
+  openKey.value += 1
+  showScroll.value = false
+}
 // real 视频加载失败降级 poster/插画
 const videoErr = ref(false)
 watch(isReal, () => {
@@ -440,6 +454,56 @@ onBeforeUnmount(() => {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+/* 开场视频 → 长卷的墨化淡入 */
+.ink-freeze-enter-active {
+  transition: opacity 1.4s ease;
+}
+.ink-freeze-leave-active {
+  transition: opacity 0.5s ease;
+}
+.ink-freeze-enter-from {
+  opacity: 0;
+}
+.ink-freeze-leave-to {
+  opacity: 0;
+}
+
+/* 卷轴挂轴（左右木轴） */
+.rh__art-rod {
+  position: absolute;
+  top: -8px;
+  bottom: -8px;
+  width: 14px;
+  background: linear-gradient(90deg, #8a6a3f, #c9a568 45%, #8a6a3f);
+  border-radius: 7px;
+  z-index: 3;
+  pointer-events: none;
+}
+.rh__art-rod--l { left: -4px; }
+.rh__art-rod--r { right: -4px; }
+
+/* 播毕重播钮 */
+.rh__replay {
+  position: absolute;
+  right: 22px;
+  bottom: 18px;
+  padding: 6px 14px;
+  background: rgba(245, 239, 227, 0.9);
+  border: 1px solid rgba(158, 43, 37, 0.35);
+  border-radius: 2px;
+  color: #9e2b25;
+  font-family: var(--font-heading);
+  font-size: 12px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  z-index: 4;
+  transition: all 0.25s ease;
+}
+.rh__replay:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
 .rh__art-frame {
   position: absolute;
