@@ -1,10 +1,6 @@
 <template>
   <section class="rcr">
-    <SectionHeading
-      eyebrow="Yellow River · Shandong"
-      title="沿黄九城"
-      subtitle="自菏泽入境，至东营归海，九城如珠缀于河上"
-    />
+    <!-- 标题区已按需求移除, 直接进入九城卡片 -->
 
     <div ref="railRef" class="rcr__rail">
       <!-- 背景黄河曲线 -->
@@ -80,7 +76,6 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import SectionHeading from './SectionHeading.vue'
 import imgHeze from '../../assets/illustrations/01-city-heze.png'
 import imgJining from '../../assets/illustrations/02-city-jining.png'
 import imgTaian from '../../assets/illustrations/03-city-taian.png'
