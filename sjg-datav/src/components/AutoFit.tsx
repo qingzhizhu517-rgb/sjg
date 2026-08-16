@@ -1,12 +1,5 @@
 import { ReactNode } from 'react'
-import styled from 'styled-components'
 import { useAutoFit } from '../hooks/useAutoFit'
-
-const Wrapper = styled.div`
-  width: 1920px;
-  height: 1080px;
-  transform-origin: left top;
-`
 
 interface AutoFitProps {
   children: ReactNode
@@ -14,25 +7,40 @@ interface AutoFitProps {
   designHeight?: number
 }
 
+/**
+ * 大屏等比适配容器:
+ * 外层 100% 占满 → 内层 1920×1080 设计舞台, 按容器实测尺寸 contain 居中缩放,
+ * 任何窗口比例(含 1699×828 等非常规)下整屏完整可见, 无裁切。
+ */
 export default function AutoFit({
   children,
   designWidth = 1920,
-  designHeight = 1080
+  designHeight = 1080,
 }: AutoFitProps) {
-  const ref = useAutoFit(designWidth, designHeight)
+  const { outerRef, stageRef } = useAutoFit(designWidth, designHeight)
 
   return (
     <div
-      ref={ref}
+      ref={outerRef}
       style={{
-        width: '100vw',
-        height: '100vh',
-        overflow: 'hidden'
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
+        position: 'relative',
       }}
     >
-      <Wrapper>
+      <div
+        ref={stageRef}
+        style={{
+          position: 'absolute',
+          left: '50%',
+          top: '50%',
+          width: designWidth,
+          height: designHeight,
+        }}
+      >
         {children}
-      </Wrapper>
+      </div>
     </div>
   )
 }
