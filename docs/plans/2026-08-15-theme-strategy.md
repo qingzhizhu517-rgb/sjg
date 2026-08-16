@@ -18,14 +18,18 @@
 | 文化长廊 / 每城文化页 / CulturalGallery | anime-layout 条件样式 + 双标题文案 | **纸面风貌(统一)** | 同上 |
 | 详情 CulturalDetail / RegionSpots / CraftWorkshop / FestivalDetail(退役文件) | anime-layout 条件样式 | **纸面风貌(统一)** | 删条件分支 |
 
-## 实施批次
+## 实施批次（执行状态）
 
-| 批 | 内容 | 风险 |
+| 批 | 内容 | 状态 |
 |---|---|---|
-| A | 列表/文化/城市/图谱页: 删除 `anime-layout` 条件分支与双文案, 统一纸面风貌(细线+印章+留白样式直接并入基类) | 低, 纯删减 |
-| B | PoemDetail 恒水墨竖排(删 real 分支) | 中, 需验双主题下排版 |
-| C | PoetDetail 合并为单一小传卷(删双模板) | 中, 需验信息不丢 |
-| D | Timeline 固定水墨; ThemeSwitcher 文案改为「实景叙事/水墨叙事」仅首页生效提示; 全局 token 明暗切换保留 | 低 |
+| A | 列表/文化/城市/图谱页: 删除 `anime-layout` 条件分支与双文案, 统一纸面风貌 | [x] `8da0af8`(11 文件, -123 行) |
+| B | PoemDetail 恒水墨竖排(删 real 分支) | [x] `a53dbc17`(-331 行) |
+| C | PoetDetail 合并为单一小传卷(删双模板) | [x] `d3b9d9cc`(-312 行) |
+| D | Timeline 固定水墨; ThemeSwitcher 文案「实景叙事/水墨叙事」 | [x] `d81a7dad` |
+
+遗留（可选后续）：
+- `RealTimeline.vue`、`FestivalDetail.vue` 已成无引用死文件（保留待删确认）
+- `RegionSpots.vue` 仍有 real/水墨整页双布局（比条件样式更重的重复），可并入一次深度清理
 
 ## 效果预期
 
