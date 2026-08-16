@@ -1,13 +1,11 @@
 <template>
-  <div class="culture-view" :class="{ 'anime-layout': isAnime }">
+  <div class="culture-view">
     <!-- 页头 -->
     <header class="cv-hero">
       <span class="cv-hero__tag">数字人文 · 文化长廊</span>
-      <h1 class="cv-hero__title">{{ isAnime ? '五脉流芳 · 齐鲁大观' : '沿黄文化的五种打开方式' }}</h1>
+      <h1 class="cv-hero__title">五脉流芳 · 齐鲁大观</h1>
       <p class="cv-hero__desc">
-        {{ isAnime
-          ? '节令风物、诗词歌赋、百工之艺、闾巷传说、食味梨园，汇成齐鲁文化的五条脉络。'
-          : '民俗节庆、古诗词、非遗工艺、民间文学、饮食戏曲——沿黄九城的文化全景，在此徐徐展开。' }}
+        节令风物、诗词歌赋、百工之艺、闾巷传说、食味梨园——沿黄九城的文化全景，在此徐徐展开。
       </p>
     </header>
 
@@ -18,7 +16,7 @@
     <section class="cv-cities">
       <SectionHeading
         eyebrow="沿黄文化"
-        :title="isAnime ? '九城文脉' : '九城 · 一城一册'"
+        title="九城文脉 · 一城一册"
         subtitle="黄河自菏泽入境、至东营归海，点击城市进入五格文化册页"
       />
       <div class="cv-cities__grid">
@@ -41,12 +39,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useTheme } from '../composables/useTheme'
 import { useReveal } from '../composables/useReveal'
 import CulturalGallery from '../components/homepage/CulturalGallery.vue'
 import SectionHeading from '../components/homepage/SectionHeading.vue'
 
-const { isAnime } = useTheme()
 const { reveal } = useReveal()
 
 // 黄河上游→下游九城(与全局一致)

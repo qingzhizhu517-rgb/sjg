@@ -46,9 +46,10 @@ const formatYear = (y) => (y == null ? '' : y < 0 ? '前' + Math.abs(y) : String
   gap: 2px;
   min-width: 88px;
   padding: 10px 14px;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  background: transparent;
+  border: 1px solid var(--line, var(--border));
+  border-radius: 2px;
+  box-shadow: none;
   cursor: pointer;
   font-family: inherit;
   transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -59,14 +60,9 @@ const formatYear = (y) => (y == null ? '' : y < 0 ? '前' + Math.abs(y) : String
   transform: translateY(-2px);
 }
 .rail__chip.is-active {
-  background: var(--accent);
+  background: transparent;
   border-color: var(--accent);
-  box-shadow: 0 4px 14px rgba(158, 43, 37, 0.28);
-}
-.theme-real .rail__chip.is-active {
-  background: var(--accent-dark);
-  border-color: var(--accent-dark);
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 28%, transparent);
+  box-shadow: none;
 }
 .rail__chip.is-faded {
   opacity: 0.5;
@@ -79,7 +75,7 @@ const formatYear = (y) => (y == null ? '' : y < 0 ? '前' + Math.abs(y) : String
   letter-spacing: 2px;
 }
 .rail__chip.is-active .rail__name {
-  color: #fff;
+  color: var(--accent);
 }
 .rail__count {
   font-size: 11px;
@@ -88,7 +84,7 @@ const formatYear = (y) => (y == null ? '' : y < 0 ? '前' + Math.abs(y) : String
   letter-spacing: 0;
 }
 .rail__chip.is-active .rail__count {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-secondary);
 }
 .rail__year {
   font-size: 9.5px;
@@ -97,24 +93,6 @@ const formatYear = (y) => (y == null ? '' : y < 0 ? '前' + Math.abs(y) : String
   white-space: nowrap;
 }
 .rail__chip.is-active .rail__year {
-  color: rgba(255, 255, 255, 0.7);
-}
-/* inkwash: 细线+朱红描边, 去阴影与实底(日式极简) */
-.anime-layout .rail__chip {
-  box-shadow: none;
-  border-radius: 2px;
-  background: transparent;
-}
-.anime-layout .rail__chip.is-active {
-  background: transparent;
-  border-color: var(--accent);
-  box-shadow: none;
-}
-.anime-layout .rail__chip.is-active .rail__name {
-  color: var(--accent);
-}
-.anime-layout .rail__chip.is-active .rail__count,
-.anime-layout .rail__chip.is-active .rail__year {
   color: var(--text-secondary);
 }
 @media (max-width: 640px) {

@@ -1,13 +1,11 @@
 <template>
-  <div class="literature-list" :class="{ 'anime-layout': isAnime }">
+  <div class="literature-list">
     <!-- 页头 -->
     <header class="lit-hero">
       <span class="lit-hero__tag">文化长廊 · 民间文学</span>
-      <h1 class="lit-hero__title">{{ isAnime ? '口耳相传 · 民间记忆' : '黄河岸边的民间故事' }}</h1>
+      <h1 class="lit-hero__title">口耳相传 · 民间记忆</h1>
       <p class="lit-hero__desc">
-        {{ isAnime
-          ? '传说故事，口耳相传；民间智慧，代代相承。'
-          : '从孟姜女到梁祝，从泰山传说到运河故事，聆听黄河岸边的民间文学。' }}
+        传说故事，口耳相传；民间智慧，代代相承。从孟姜女到梁祝，从泰山传说到运河故事，聆听黄河岸边的民间文学。
       </p>
     </header>
 
@@ -70,13 +68,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useTheme } from '../composables/useTheme'
 import api from '../api'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 
-const { isAnime } = useTheme()
 const route = useRoute()
 const router = useRouter()
 
@@ -225,18 +221,8 @@ onMounted(load)
 }
 
 .lit-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-/* inkwash: 细线+留白, 去阴影 */
-.anime-layout .lit-card {
-  box-shadow: none;
-  border-radius: 2px;
-  border: 1px solid var(--line, var(--border));
-}
-.anime-layout .lit-card:hover {
-  box-shadow: none;
   transform: translateY(-2px);
+  box-shadow: none;
 }
 
 .lit-card__seal {

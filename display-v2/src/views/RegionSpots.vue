@@ -1,7 +1,7 @@
 <template>
   <ErrorState v-if="errorMsg" :message="errorMsg" @retry="loadSpots" />
 
-<div v-else class="region-spots" :class="{ 'anime-layout': isAnime }">
+<div v-else class="region-spots">
     <!-- Real Layout: 城市宣传专题页 -->
     <div class="real-container" v-if="isReal">
       <CityHero
@@ -691,13 +691,6 @@ onMounted(async () => {
   gap: 32px;
 }
 
-.anime-layout .spots-split-layout {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 40px;
-  align-items: start;
-}
-
 /* Left column city details */
 .city-left-col {
   display: flex;
@@ -1014,10 +1007,6 @@ onMounted(async () => {
   .section-title {
     font-size: 22px;
     letter-spacing: 3px;
-  }
-
-  .anime-layout .spots-split-layout {
-    grid-template-columns: 1fr;
   }
 
   .region-spots {

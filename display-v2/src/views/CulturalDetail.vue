@@ -1,5 +1,5 @@
 <template>
-  <div class="cd" :class="{ 'anime-layout': isAnime }">
+  <div class="cd">
     <div class="cd-back">
       <router-link :to="backTo" class="cd-back-link">← 返回文化长廊</router-link>
     </div>
@@ -54,13 +54,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { useTheme } from '../composables/useTheme'
 import api from '../api'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 
 const route = useRoute()
-const { isAnime } = useTheme()
 
 const item = ref(null)
 const detail = ref(null)

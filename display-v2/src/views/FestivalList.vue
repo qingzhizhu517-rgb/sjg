@@ -1,15 +1,13 @@
 <template>
   <ErrorState v-if="errorMsg" :message="errorMsg" @retry="load" />
 
-  <div v-else class="festival-list" :class="{ 'anime-layout': isAnime }">
+  <div v-else class="festival-list">
     <!-- 页头 -->
     <header class="fest-hero">
       <span class="fest-hero__tag">文化长廊 · 民俗节庆</span>
-      <h1 class="fest-hero__title">{{ isAnime ? '岁时节令 · 齐鲁风物' : '黄河岸边的岁时节庆' }}</h1>
+      <h1 class="fest-hero__title">岁时节令 · 齐鲁风物</h1>
       <p class="fest-hero__desc">
-        {{ isAnime
-          ? '爆竹声里，灯影桨声；一方节俗，一方人情。'
-          : '从春节元宵到牡丹盛会，沿黄九市的节庆记忆在此汇聚。' }}
+        爆竹声里，灯影桨声；一方节俗，一方人情。从春节元宵到牡丹盛会，沿黄九市的节庆记忆在此汇聚。
       </p>
     </header>
 
@@ -67,13 +65,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useTheme } from '../composables/useTheme'
 import api from '../api'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
 
-const { isAnime } = useTheme()
 const route = useRoute()
 const router = useRouter()
 
@@ -277,18 +273,6 @@ onMounted(load)
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-/* inkwash：卷轴式调整 */
-.anime-layout .fest-card {
-  background: var(--card-bg);
-  border-radius: 2px;
-  box-shadow: inset 0 0 0 1px var(--border-light, transparent);
-}
-
-.anime-layout .fest-card__seal {
-  border-radius: 3px;
-  box-shadow: 2px 2px 0 rgba(169, 50, 38, 0.25);
 }
 
 @media (max-width: 768px) {

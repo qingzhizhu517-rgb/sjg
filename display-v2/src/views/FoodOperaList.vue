@@ -1,13 +1,11 @@
 <template>
-  <div class="food-opera-list" :class="{ 'anime-layout': isAnime }">
+  <div class="food-opera-list">
     <!-- 页头 -->
     <header class="fo-hero">
       <span class="fo-hero__tag">文化长廊 · 饮食戏曲</span>
-      <h1 class="fo-hero__title">{{ isAnime ? '舌尖记忆 · 梨园春秋' : '黄河岸边的饮食戏曲' }}</h1>
+      <h1 class="fo-hero__title">舌尖记忆 · 梨园春秋</h1>
       <p class="fo-hero__desc">
-        {{ isAnime
-          ? '一方水土，一方风味；一腔一调，皆是乡音。'
-          : '从鲁菜经典到地方小吃，从山东快书到吕剧柳子，品味黄河岸边的生活艺术。' }}
+        一方水土，一方风味；一腔一调，皆是乡音。从鲁菜经典到地方小吃，从山东快书到吕剧柳子，品味黄河岸边的生活艺术。
       </p>
     </header>
 
@@ -79,13 +77,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useTheme } from '../composables/useTheme'
 import api from '../api'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 
-const { isAnime } = useTheme()
 const route = useRoute()
 const router = useRouter()
 
@@ -268,18 +264,8 @@ onMounted(load)
 }
 
 .fo-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-/* inkwash: 细线+留白, 去阴影 */
-.anime-layout .fo-card {
-  box-shadow: none;
-  border-radius: 2px;
-  border: 1px solid var(--line, var(--border));
-}
-.anime-layout .fo-card:hover {
-  box-shadow: none;
   transform: translateY(-2px);
+  box-shadow: none;
 }
 
 .fo-card__image {

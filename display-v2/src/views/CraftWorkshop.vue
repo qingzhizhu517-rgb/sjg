@@ -1,15 +1,13 @@
 <!-- display-v2/src/views/CraftWorkshop.vue -->
 <!-- 路由页 /crafts：编排 useGlbScene + useCraftProcess + 三组件 -->
 <template>
-  <div ref="rootRef" class="craft-workshop" :class="{ 'anime-layout': isAnime }">
+  <div ref="rootRef" class="craft-workshop">
     <!-- 页头 -->
     <header class="cw-hero" data-reveal>
       <span class="cw-hero__tag">文化长廊 · 非遗工艺</span>
-      <h1 class="cw-hero__title">{{ isAnime ? '匠心传承 · 器物之美' : '指尖上的非遗记忆' }}</h1>
+      <h1 class="cw-hero__title">匠心传承 · 器物之美</h1>
       <p class="cw-hero__desc">
-        {{ isAnime
-          ? '一把刻刀，一方葫芦；千刀万凿，方成器物。'
-          : '从选料到成品，跟随匠人之手，体验东昌葫芦雕刻的五道工序。' }}
+        一把刻刀，一方葫芦；千刀万凿，方成器物。从选料到成品，跟随匠人之手，体验东昌葫芦雕刻的五道工序。
       </p>
     </header>
 
@@ -29,7 +27,7 @@
         <!-- 自由把玩提示 -->
         <Transition name="fade">
           <div v-if="isLast && !loading" class="cw-free-roam-hint">
-            <span>{{ isAnime ? '自由赏玩' : '解锁自由旋转' }}</span>
+            <span>自由赏玩</span>
             <span class="cw-free-roam-hint__icon">↕</span>
           </div>
         </Transition>
@@ -84,7 +82,6 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import { useTheme } from '../composables/useTheme'
 import { useReveal } from '../composables/useReveal'
 import { useCraftProcess } from '../composables/useCraftProcess'
 import CraftStage from '../components/craft/CraftStage.vue'
@@ -92,7 +89,6 @@ import StepRail from '../components/craft/StepRail.vue'
 import KnowledgeCard from '../components/craft/KnowledgeCard.vue'
 import { HULU_PROCESS } from '../content/crafts/dongchang-hulu'
 
-const { isAnime } = useTheme()
 const { reveal } = useReveal()
 
 const config = HULU_PROCESS

@@ -1,5 +1,5 @@
 <template>
-  <div class="poets-view" :class="{ 'anime-layout': isAnime }">
+  <div class="poets-view">
     <InkHero
       variant="roster"
       seal-char="名"
@@ -1337,8 +1337,9 @@ onBeforeUnmount(() => {
 }
 .poet-card-wrap {
   background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  border: 1px solid var(--line, var(--border));
+  border-radius: 2px;
+  box-shadow: none;
   padding: 22px;
   cursor: pointer;
   display: flex;
@@ -1350,17 +1351,7 @@ onBeforeUnmount(() => {
 }
 .poet-card-wrap:hover {
   border-color: var(--accent);
-}
-/* inkwash: 日式细线+留白, 去全局 card/hover-lift 的阴影与大幅上浮 */
-.anime-layout .poet-card-wrap {
-  box-shadow: none;
-  border: 1px solid var(--line, var(--border));
-  border-radius: 2px;
-}
-.anime-layout .poet-card-wrap:hover {
   transform: translateY(-2px);
-  box-shadow: none;
-  border-color: var(--accent);
 }
 .poet-avatar-box {
   position: relative;

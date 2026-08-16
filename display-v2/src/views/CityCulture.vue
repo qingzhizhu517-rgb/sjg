@@ -1,5 +1,5 @@
 <template>
-  <div class="city-culture" :class="{ 'anime-layout': isAnime }">
+  <div class="city-culture">
     <!-- 页头 -->
     <header class="cc-hero">
       <div class="cc-hero__main">
@@ -25,7 +25,7 @@
 
     <!-- 五格册页 -->
     <section v-else class="cc-bento">
-      <article class="cc-tile cc-tile--big" :class="tileTone('festival')">
+      <article class="cc-tile cc-tile--big">
         <header class="cc-tile__head">
           <span class="cc-tile__seal">节</span>
           <h2 class="cc-tile__title">民俗节庆</h2>
@@ -42,7 +42,7 @@
         <p v-else class="cc-tile__empty">暂无收录</p>
       </article>
 
-      <article class="cc-tile" :class="tileTone('poem')">
+      <article class="cc-tile">
         <header class="cc-tile__head">
           <span class="cc-tile__seal">诗</span>
           <h2 class="cc-tile__title">古诗词</h2>
@@ -59,7 +59,7 @@
         <p v-else class="cc-tile__empty">暂无收录</p>
       </article>
 
-      <article class="cc-tile" :class="tileTone('food_opera')">
+      <article class="cc-tile">
         <header class="cc-tile__head">
           <span class="cc-tile__seal">味</span>
           <h2 class="cc-tile__title">饮食戏曲</h2>
@@ -76,7 +76,7 @@
         <p v-else class="cc-tile__empty">暂无收录</p>
       </article>
 
-      <article class="cc-tile" :class="tileTone('craft')">
+      <article class="cc-tile">
         <header class="cc-tile__head">
           <span class="cc-tile__seal">艺</span>
           <h2 class="cc-tile__title">非遗工艺</h2>
@@ -93,7 +93,7 @@
         <p v-else class="cc-tile__empty">暂无收录</p>
       </article>
 
-      <article class="cc-tile" :class="tileTone('literature')">
+      <article class="cc-tile">
         <header class="cc-tile__head">
           <span class="cc-tile__seal">文</span>
           <h2 class="cc-tile__title">民间文学</h2>
@@ -127,14 +127,12 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useTheme } from '../composables/useTheme'
 import api from '../api'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import SectionHeading from '../components/homepage/SectionHeading.vue'
 
 const route = useRoute()
-const { isAnime } = useTheme()
 
 // 黄河上游→下游九城(与 MapView/后端 /spots/regions 一致)
 const NINE_CITIES = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '淄博', '滨州', '东营']
@@ -161,16 +159,6 @@ const errorMsg = ref('')
 const groups = ref({ festival: [], craft: [], literature: [], food_opera: [], poems: [] })
 const spots = ref([])
 const poets = ref([])
-
-// bento 卡片底色: inkwash 走日式留白(仅细线), real 走柔和 tile 底色
-const TONES = {
-  festival: 'cc-tile--tone1',
-  poem: 'cc-tile--tone2',
-  food_opera: 'cc-tile--tone3',
-  craft: 'cc-tile--tone4',
-  literature: 'cc-tile--tone5',
-}
-const tileTone = (key) => (isAnime.value ? '' : TONES[key])
 
 const poetNameOf = (poetId) => poets.value.find((p) => p.id === poetId)?.name || ''
 
@@ -376,15 +364,6 @@ onMounted(load)
   overflow: hidden;
 }
 .cc-tile__empty { color: var(--text-muted); font-size: 13px; letter-spacing: 1px; }
-
-/* real 主题: bento tile 柔和底色 + 圆角 + 轻微悬浮 */
-.theme-real .cc-tile { border-radius: 18px; border-color: transparent; transition: transform 0.25s ease, box-shadow 0.25s ease; }
-.theme-real .cc-tile:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); }
-.theme-real .cc-tile--tone1 { background: #eef2ff; }
-.theme-real .cc-tile--tone2 { background: #f5f0ff; }
-.theme-real .cc-tile--tone3 { background: #e8f5ee; }
-.theme-real .cc-tile--tone4 { background: #fff7e6; }
-.theme-real .cc-tile--tone5 { background: #fdf0ef; }
 
 /* 景点速览 */
 .cc-spots { margin-top: 72px; }

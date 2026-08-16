@@ -1,10 +1,10 @@
 <template>
-  <section ref="rootRef" class="cultural-gallery" :class="{ 'anime-layout': isAnime }">
+  <section ref="rootRef" class="cultural-gallery">
     <div class="section-header">
       <span class="section-tag">文化长廊</span>
-      <h2 class="section-title">{{ isAnime ? '五脉流芳 · 齐鲁大观' : '不止诗词 · 五大文化板块' }}</h2>
+      <h2 class="section-title">五脉流芳 · 齐鲁大观</h2>
       <p class="section-desc">
-        {{ isAnime ? '节令风物、诗词歌赋、百工之艺、闾巷传说、食味梨园。' : '民俗节庆、古诗词、非遗工艺、民间文学、饮食戏曲，沿黄文化全景在此徐徐展开。' }}
+        节令风物、诗词歌赋、百工之艺、闾巷传说、食味梨园，沿黄文化全景在此徐徐展开。
       </p>
     </div>
 
@@ -34,12 +34,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useTheme } from '../../composables/useTheme'
 import { useReveal } from '../../composables/useReveal'
 import { CULTURAL_CATEGORIES } from '../../config/culturalCategories'
 import api from '../../api'
 
-const { isAnime } = useTheme()
 const { reveal } = useReveal()
 
 const rootRef = ref(null)
@@ -156,10 +154,6 @@ onMounted(async () => {
   font-weight: 900;
   color: #fff;
   background: var(--accent, #9e2b25);
-  border-radius: 8px;
-}
-
-.anime-layout .gallery-card__seal {
   border-radius: 4px;
   box-shadow: 3px 3px 0 rgba(169, 50, 38, 0.25);
 }
