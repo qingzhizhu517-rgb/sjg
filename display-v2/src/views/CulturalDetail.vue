@@ -68,9 +68,11 @@ const loaded = ref(false)
 const errorMsg = ref('')
 
 // 详情路由统一: /festivals/:id /crafts/:id /literature/:id /food-opera/:id 共用本组件
+// 注意: /crafts 路由是「东昌葫芦雕刻」3D 专题页而非工艺列表,
+// 工艺详情返回指回文化长廊聚合页 /culture, 与链接文案「返回文化长廊」一致。
 const CATEGORY_BACK = {
   '/festivals': '/festivals',
-  '/crafts': '/crafts',
+  '/crafts': '/culture',
   '/literature': '/literature',
   '/food-opera': '/food-opera',
 }
