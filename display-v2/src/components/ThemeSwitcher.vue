@@ -2,8 +2,8 @@
   <button
     class="theme-switcher"
     @click="toggle"
-    :title="isReal ? '切换到水墨模式' : '切换到写实模式'"
-    :aria-label="isReal ? '切换到水墨模式' : '切换到写实模式'"
+    :title="isReal ? '切换至水墨叙事(首页长卷与全局纸面质感)' : '切换至实景叙事(首页节气画卷)'"
+    :aria-label="isReal ? '切换至水墨叙事' : '切换至实景叙事'"
   >
     <transition name="icon-flip" mode="out-in">
       <svg v-if="isReal" key="real" class="switcher-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -19,7 +19,7 @@
         <circle cx="7" cy="17" r="1.5" fill="currentColor" opacity="0.15" stroke="none" />
       </svg>
     </transition>
-    <span class="switcher-label">{{ isReal ? '写实' : '水墨' }}</span>
+    <span class="switcher-label">{{ isReal ? '实景' : '水墨' }}</span>
   </button>
 </template>
 

@@ -1,11 +1,10 @@
 <template>
-  <div class="timeline-page" :class="themeClass">
+  <div class="timeline-page">
     <TimelineHero :stats="heroStats" />
 
     <div ref="revealRoot" class="timeline-content">
-      <!-- 双布局分支 -->
-      <InkTimeline v-if="isAnime" :data="timeline" @select-dynasty="onSelectDynasty" />
-      <RealTimeline v-else :data="timeline" :loaded="loaded" :error-msg="errorMsg" @load="loadTimeline" />
+      <!-- 恒水墨长卷(一页一貌) -->
+      <InkTimeline :data="timeline" @select-dynasty="onSelectDynasty" />
 
       <ErrorState v-if="errorMsg" :message="errorMsg" @retry="loadTimeline" />
     </div>
@@ -18,11 +17,8 @@ import api from '../api'
 import TimelineHero from '../components/homepage/TimelineHero.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import InkTimeline from '../components/timeline/InkTimeline.vue'
-import RealTimeline from '../components/timeline/RealTimeline.vue'
-import { useTheme } from '../composables/useTheme'
 import { useReveal } from '../composables/useReveal'
 
-const { isAnime, themeClass } = useTheme()
 const { reveal } = useReveal()
 
 const timeline = ref([])
