@@ -1,151 +1,140 @@
 <template>
-  <!-- 加载骨架：双栏结构占位 -->
+  <!-- 加载骨架 -->
   <div v-if="loading" class="spot-skeleton" aria-busy="true" aria-label="景观加载中">
-    <SkeletonBlock height="320px" />
+    <SkeletonBlock height="420px" />
     <div class="spot-skeleton__rows">
-      <SkeletonBlock height="30px" width="38%" />
-      <SkeletonBlock v-for="i in 4" :key="i" height="16px" :width="`${92 - i * 8}%`" />
+      <SkeletonBlock height="34px" width="40%" />
+      <SkeletonBlock v-for="i in 4" :key="i" height="18px" :width="`${92 - i * 8}%`" />
     </div>
   </div>
   <ErrorState v-else-if="loadError" :message="loadError" @retry="loadSpot" />
-  <!-- 接口 200 但数据为空的兜底（loading=false、无 error、无 spot） -->
   <EmptyState v-else-if="!spot" icon="景" message="此景观暂未收录" hint="返回地图看看别处" />
+
+  <!-- 景观详情: 全屏宽版式 -->
   <div class="spot-detail" :class="themeClass" v-else>
     <div v-if="moodBg" class="mood-bg" :style="{ backgroundImage: `url(${moodBg})` }" aria-hidden="true"></div>
-    <!-- BACK BUTTON -->
-    <div class="detail-top">
-      <router-link to="/map" class="back-link">← 返回地图</router-link>
-    </div>
 
-    <!-- UNIFIED SPLIT LAYOUT -->
-    <div class="spot-split-layout">
-      <!-- LEFT COLUMN: Spot Info & Imagery Scroll/Frame -->
-      <aside class="spot-left-col">
-        <div class="spot-title-box">
-          <h1 class="spot-name-title">{{ spot.name }}</h1>
-          <span class="spot-seal" v-if="getSpotData(spot.name).tag && isAnime">{{ getSpotData(spot.name).tag }}</span>
-          <span class="hero-region" v-if="spot.region && isReal">{{ spot.region }}</span>
+    <!-- ===== 全宽 Hero: 景观主图 + 大标题 ===== -->
+    <header class="sd-hero">
+      <div class="sd-hero__media" v-if="imageUrl">
+        <img :src="imageUrl" :alt="spot.name" class="sd-hero__img" decoding="async" />
+        <div class="sd-hero__veil"></div>
+      </div>
+      <div class="sd-hero__media sd-hero__media--fallback" v-else aria-hidden="true">
+        <span class="sd-hero__fallback-seal">{{ spot.name ? spot.name.charAt(0) : '景' }}</span>
+      </div>
+
+      <div class="sd-hero__content">
+        <router-link to="/map" class="back-link">← 返回地图</router-link>
+        <div class="sd-hero__titlebox">
+          <h1 class="sd-name">{{ spot.name }}</h1>
+          <span class="sd-seal">{{ isAnime ? (getSpotData(spot.name).tag || '胜迹') : (spot.region || '齐鲁') }}</span>
         </div>
+        <p class="sd-tagline">{{ heroLine }}</p>
+        <div class="sd-facts">
+          <div class="sd-fact">
+            <span class="sd-fact__label">地理位置</span>
+            <span class="sd-fact__value">{{ spot.address || '山东省 ' + spot.region }}</span>
+          </div>
+          <div class="sd-fact">
+            <span class="sd-fact__label">所属区域</span>
+            <span class="sd-fact__value">{{ spot.region }} 市</span>
+          </div>
+          <div class="sd-fact">
+            <span class="sd-fact__label">历代吟咏</span>
+            <span class="sd-fact__value">{{ poems.length }} 首</span>
+          </div>
+        </div>
+      </div>
+    </header>
 
-        <!-- Showcase image frame (Calligraphy scroll vs Exhibit Showcase) -->
-        <div class="image-frame-container">
-          <div class="scroll-wrapper" v-if="isAnime">
-            <div class="scroll-rod top-rod"></div>
-            <div class="scroll-body card">
-              <img :src="imageUrl" :alt="spot.name" class="scroll-img" decoding="async" />
+    <main class="sd-main">
+      <!-- ===== 历代诗词情感波澜曲线(真实数据, 重点) ===== -->
+      <section class="sd-chart card">
+        <div class="sd-sec-head">
+          <span class="title-seal">图</span>
+          <div class="sd-sec-head__text">
+            <h2 class="sd-sec-title">历代诗词情感波澜曲线</h2>
+            <p class="sd-sec-sub">以历代吟咏此景之作的情感标签实测绘制：金柱为各代吟咏篇数，朱线为情感波澜（豪放居上、悲凉居下）</p>
+          </div>
+        </div>
+        <div v-if="chartRows.length" ref="chartRef" class="sd-chart__canvas"></div>
+        <div v-else class="sd-chart__empty">
+          <EmptyState icon="图" message="此处暂无关联诗篇" hint="情感波澜随吟咏篇目呈现" />
+        </div>
+      </section>
+
+      <div class="sd-cols">
+        <!-- ===== 左列: 名片/沿革/玩法/情感维度 ===== -->
+        <aside class="sd-left">
+          <section class="card sd-block">
+            <h2 class="sd-block__title">景点名片</h2>
+            <p class="sd-block__text">{{ spot.description }}</p>
+          </section>
+
+          <section class="card sd-block" v-if="getSpotData(spot.name).history">
+            <h2 class="sd-block__title">历史沿革</h2>
+            <p class="sd-block__text">{{ getSpotData(spot.name).history }}</p>
+          </section>
+
+          <section class="card sd-block" v-if="getSpotData(spot.name).play">
+            <h2 class="sd-block__title">推荐玩法</h2>
+            <p class="sd-block__text">{{ getSpotData(spot.name).play }}</p>
+          </section>
+
+          <section class="card sd-block">
+            <h2 class="sd-block__title">情感维度分布</h2>
+            <p class="sd-block__sub">源于本景历代吟咏的情感标签统计</p>
+            <div class="sd-rings">
+              <div v-for="ring in sentimentRings" :key="ring.name" class="ring-item">
+                <div class="ring-circle" :style="getRingStyle(ring.percent, ring.color)">
+                  <div class="ring-inner"><span class="ring-value">{{ ring.percent }}%</span></div>
+                </div>
+                <span class="ring-name">{{ ring.name }}</span>
+              </div>
+              <p v-if="!sentimentRings.length" class="sd-block__text">暂无情感标签数据</p>
             </div>
-            <div class="scroll-rod bottom-rod"></div>
-          </div>
-          <div class="portrait-frame card" v-else>
-            <img :src="imageUrl" :alt="spot.name" class="portrait-img" decoding="async" />
-            <div class="frame-border-decor"></div>
-          </div>
-        </div>
+          </section>
+        </aside>
 
-        <div class="spot-meta-details card">
-          <p class="meta-item">
-            <span class="meta-lbl">地理位置</span>
-            <span class="meta-val">{{ spot.address || '山东省' + spot.region }}</span>
-          </p>
-          <p class="meta-item">
-            <span class="meta-lbl">所属区域</span>
-            <span class="meta-val">{{ spot.region }}市</span>
-          </p>
-        </div>
-
-        <div class="spot-intro-box card">
-          <h3 class="intro-title-bordered">景点名片</h3>
-          <p class="intro-desc-indent">{{ spot.description }}</p>
-        </div>
-
-        <div class="spot-extra-box card" v-if="getSpotData(spot.name).history">
-          <h3 class="intro-title-bordered">历史沿革</h3>
-          <p class="intro-desc-indent">{{ getSpotData(spot.name).history }}</p>
-        </div>
-
-        <div class="spot-extra-box card" v-if="getSpotData(spot.name).play">
-          <h3 class="intro-title-bordered">推荐玩法</h3>
-          <p class="intro-desc-indent">{{ getSpotData(spot.name).play }}</p>
-        </div>
-      </aside>
-
-      <!-- RIGHT COLUMN: Chart, Poems, and Progress Rings -->
-      <section class="spot-right-col">
-        <!-- ECHARTS sentiment curve -->
-        <div class="chart-section card animate-slide-in">
-          <h3 class="section-title-ink">
-            <span class="title-seal">图</span>
-            历代诗词情感波澜曲线
-          </h3>
-          <p class="chart-subtitle">展现该景观在各个朝代吟咏作品中的情感基调与文人风骨演变</p>
-          <div ref="chartRef" class="echarts-container"></div>
-        </div>
-
-        <!-- Representative poems -->
-        <div class="spot-poems-section card">
-          <h3 class="section-title-ink">
+        <!-- ===== 右列: 经典吟咏名篇 ===== -->
+        <section class="sd-right">
+          <div class="sd-sec-head">
             <span class="title-seal">诗</span>
-            经典吟咏名篇
-          </h3>
-          <div class="anime-poems-list">
-            <div
-              v-for="poem in enrichedPoems"
+            <div class="sd-sec-head__text">
+              <h2 class="sd-sec-title">经典吟咏名篇</h2>
+              <p class="sd-sec-sub">点击卡片品读全文</p>
+            </div>
+          </div>
+          <div class="sd-poems">
+            <article
+              v-for="poem in enrichedPoems.slice(0, 12)"
               :key="poem.id"
-              class="anime-poem-card hover-lift"
+              class="sd-poem hover-lift"
               tabindex="0"
               role="link"
               @click="$router.push(`/poems/${poem.id}`)"
               @keydown.enter="$router.push(`/poems/${poem.id}`)"
             >
-              <div class="poem-card-header">
-                <div class="poet-avatar-wrap" v-if="poem.poet">
-                  <img :src="getPoetAvatar(poem.poet)" :alt="poem.poet.name" class="poet-avatar-img" loading="lazy" decoding="async" />
-                </div>
-                <div class="poem-meta-info">
-                  <h4 class="poem-card-title">{{ poem.title }}</h4>
-                  <span class="poem-card-author" v-if="poem.poet">
-                    [{{ poem.poet.dynastyName || '朝代' }}] {{ poem.poet.name }}
-                  </span>
-                </div>
-                <!-- Sentiment tags -->
-                <div class="poem-tags-wrap" v-if="poem.sentimentList.length">
-                  <span v-for="tag in poem.sentimentList" :key="tag" class="sentiment-seal-tag">
-                    {{ tag }}
-                  </span>
-                </div>
+              <div class="sd-poem__head">
+                <h3 class="sd-poem__title">《{{ poem.title }}》</h3>
+                <span class="sd-poem__author" v-if="poem.poet">〔{{ poem.poet.dynastyName || '朝代' }}〕{{ poem.poet.name }}</span>
               </div>
-              <div class="poem-card-excerpt">
-                <p class="excerpt-text">{{ poem.excerpt }}</p>
+              <p class="sd-poem__excerpt">{{ poem.excerpt }}</p>
+              <div class="sd-poem__foot">
+                <div class="sd-poem__tags" v-if="poem.sentimentList.length">
+                  <span v-for="tag in poem.sentimentList.slice(0, 4)" :key="tag" class="sentiment-seal-tag">{{ tag }}</span>
+                </div>
+                <span class="read-more-txt">品读全文 →</span>
               </div>
-              <div class="poem-card-footer">
-                <span class="read-more-txt">品读全文 & 聆听吟诵 →</span>
-              </div>
-            </div>
+            </article>
             <div v-if="!enrichedPoems.length" class="empty-poems">
               <EmptyState icon="诗" message="此处暂无关联诗篇" hint="待学者考证录入" />
             </div>
           </div>
-        </div>
-
-        <!-- Sentiment distribution overview -->
-        <div class="sentiment-overview-section card">
-          <h3 class="section-title-ink">
-            <span class="title-seal">析</span>
-            情感维度分布
-          </h3>
-          <div class="sentiment-rings-grid">
-            <div v-for="ring in sentimentRings" :key="ring.name" class="ring-item">
-              <div class="ring-circle" :style="getRingStyle(ring.percent, ring.color)">
-                <div class="ring-inner">
-                  <span class="ring-value">{{ ring.percent }}%</span>
-                </div>
-              </div>
-              <span class="ring-name">{{ ring.name }}</span>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
+        </section>
+      </div>
+    </main>
   </div>
 </template>
 
@@ -182,27 +171,41 @@ const imageUrl = computed(() => {
 
 const moodBg = computed(() => pickMoodBackdrop(imageUrl.value))
 
+const heroLine = computed(() => {
+  const desc = spot.value?.description || ''
+  return desc.length > 60 ? desc.slice(0, 60) + '…' : desc
+})
+
 const getSpotData = (name) => {
-  return mockSpots[name] || {
-    verticalText: '黄河九曲，齐鲁揽胜；文脉千载，源远流长。',
-    tag: '经典景区',
-    history: '',
-    play: ''
-  }
+  return mockSpots[name] || { verticalText: '', tag: '经典景区', history: '', play: '' }
 }
 
 const getDynastyName = (dynastyId) => {
-  const mapping = {
-    1: '先秦',
-    2: '秦汉',
-    3: '魏晋南北朝',
-    4: '唐代',
-    5: '宋代',
-    6: '元代',
-    7: '明代',
-    8: '清代'
-  }
+  const mapping = { 1: '先秦', 2: '秦汉', 3: '魏晋南北朝', 4: '隋唐', 5: '宋', 9: '金', 6: '元', 7: '明', 8: '清' }
   return mapping[dynastyId] || '古代'
+}
+
+// ---- 情感标签 → 情感强度分值(0-100, 豪放居上/悲凉居下) ----
+const EMOTION_SCORES = {
+  豪放: 92, 壮阔: 88, 激昂: 86, 边塞: 84, 豁达: 80, 悠远: 72, 清新: 66, 闲适: 56,
+  怀古: 58, 写景: 55, 哲理: 50, 淡泊: 48, 婉约: 40, 惜别: 32, 幽思: 26, 思乡: 24, 悲凉: 16, 孤寂: 14,
+}
+const EMOTION_DEFAULT = 55
+
+const poemEmotionScore = (poem) => {
+  const tags = parseTagsOf(poem)
+  if (!tags.length) return EMOTION_DEFAULT
+  const scores = tags.map((t) => EMOTION_SCORES[t] ?? EMOTION_DEFAULT)
+  return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+}
+
+const parseTagsOf = (poem) => {
+  let tags = poem.sentimentTags
+  if (!tags) return []
+  if (typeof tags === 'string') {
+    try { tags = JSON.parse(tags) } catch { return tags.split(',').map((s) => s.trim()).filter(Boolean) }
+  }
+  return Array.isArray(tags) ? tags.filter((t) => typeof t === 'string') : []
 }
 
 const getPoetAvatar = (poetObj) => {
@@ -212,283 +215,222 @@ const getPoetAvatar = (poetObj) => {
 }
 
 const enrichedPoems = computed(() => {
-  return poems.value.map(poem => {
+  return poems.value.map((poem) => {
     const poetObj = poetsMap.value[poem.poetId] || null
-    let poetWithDynasty = null
-    if (poetObj) {
-      poetWithDynasty = {
-        ...poetObj,
-        dynastyName: getDynastyName(poetObj.dynastyId)
-      }
-    }
-    
+    const poetWithDynasty = poetObj ? { ...poetObj, dynastyName: getDynastyName(poetObj.dynastyId) } : null
     let excerpt = ''
     if (poem.content) {
-      const lines = poem.content.split('\n').filter(l => l.trim())
+      const lines = poem.content.split('\n').filter((l) => l.trim())
       excerpt = lines.slice(0, 2).join(' / ')
-      if (lines.length > 2) excerpt += ' ...'
+      if (lines.length > 2) excerpt += ' …'
     }
+    return { ...poem, poet: poetWithDynasty, excerpt, sentimentList: parseTagsOf(poem) }
+  })
+})
 
-    let sentimentList = []
-    if (poem.sentimentTags) {
-      try {
-        sentimentList = JSON.parse(poem.sentimentTags)
-      } catch (e) {
-        sentimentList = poem.sentimentTags.split(',').map(s => s.trim())
-      }
+// ---- 朝代顺序(与全站一致) ----
+const DYNASTY_ORDER = [
+  { id: 1, name: '先秦' }, { id: 2, name: '秦汉' }, { id: 3, name: '魏晋南北朝' },
+  { id: 4, name: '隋唐' }, { id: 5, name: '宋' }, { id: 9, name: '金' },
+  { id: 6, name: '元' }, { id: 7, name: '明' }, { id: 8, name: '清' },
+]
+
+// ---- 情感波澜曲线: 真实数据(按朝代聚合吟咏篇目与情感均值) ----
+const chartRows = computed(() => {
+  const byDynasty = {}
+  poems.value.forEach((p) => {
+    const did = p.dynastyId ?? poetsMap.value[p.poetId]?.dynastyId
+    const name = getDynastyName(did)
+    if (!byDynasty[name]) byDynasty[name] = { sum: 0, n: 0, best: null, bestScore: -1 }
+    const score = poemEmotionScore(p)
+    byDynasty[name].sum += score
+    byDynasty[name].n += 1
+    if (score > byDynasty[name].bestScore) {
+      byDynasty[name].bestScore = score
+      byDynasty[name].best = p
     }
-
+  })
+  return DYNASTY_ORDER.filter((d) => byDynasty[d.name]).map((d) => {
+    const g = byDynasty[d.name]
+    const poetName = poetsMap.value[g.best?.poetId]?.name || ''
     return {
-      ...poem,
-      poet: poetWithDynasty,
-      excerpt,
-      sentimentList
+      name: d.name,
+      count: g.n,
+      value: Math.round(g.sum / g.n),
+      bestTitle: g.best?.title || '',
+      bestPoet: poetName,
     }
   })
 })
 
+// ---- 情感维度分布: 真实数据(全部标签计数 Top5) ----
 const sentimentRings = computed(() => {
-  if (!spot.value) return []
-  const name = spot.value.name
-  if (name === '泰山' || name === '泰山风景区') {
-    return [
-      { name: '豪放', percent: 45, color: '#8e352e' },
-      { name: '悠远', percent: 20, color: '#c27b38' },
-      { name: '婉约', percent: 10, color: '#5b8c85' },
-      { name: '幽思', percent: 15, color: '#7a5a8f' },
-      { name: '淡泊', percent: 10, color: '#688c5b' }
-    ]
-  } else if (name === '趵突泉') {
-    return [
-      { name: '豪放', percent: 20, color: '#8e352e' },
-      { name: '悠远', percent: 35, color: '#c27b38' },
-      { name: '婉约', percent: 15, color: '#5b8c85' },
-      { name: '幽思', percent: 10, color: '#7a5a8f' },
-      { name: '淡泊', percent: 20, color: '#688c5b' }
-    ]
-  } else if (name === '大明湖') {
-    return [
-      { name: '豪放', percent: 15, color: '#8e352e' },
-      { name: '悠远', percent: 25, color: '#c27b38' },
-      { name: '婉约', percent: 30, color: '#5b8c85' },
-      { name: '幽思', percent: 18, color: '#7a5a8f' },
-      { name: '淡泊', percent: 12, color: '#688c5b' }
-    ]
-  } else {
-    return [
-      { name: '豪放', percent: 25, color: '#8e352e' },
-      { name: '悠远', percent: 25, color: '#c27b38' },
-      { name: '婉约', percent: 15, color: '#5b8c85' },
-      { name: '幽思', percent: 20, color: '#7a5a8f' },
-      { name: '淡泊', percent: 15, color: '#688c5b' }
-    ]
-  }
+  const counts = new Map()
+  poems.value.forEach((p) => {
+    parseTagsOf(p).forEach((t) => counts.set(t, (counts.get(t) || 0) + 1))
+  })
+  const total = Array.from(counts.values()).reduce((a, b) => a + b, 0)
+  if (!total) return []
+  const palette = { 豪放: '#8e352e', 悠远: '#c27b38', 婉约: '#5b8c85', 幽思: '#7a5a8f', 淡泊: '#688c5b', 思乡: '#4f7a94', 惜别: '#8f6f8f', 壮阔: '#b3542f', 清新: '#5f9e7e' }
+  return Array.from(counts.entries())
+    .map(([name, c]) => ({ name, count: c, percent: Math.round((c / total) * 100), color: palette[name] || '#8f8a7a' }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5)
 })
 
 const getRingStyle = (percent, color) => {
   const degrees = (percent / 100) * 360
-  return {
-    background: `conic-gradient(${color} 0deg, ${color} ${degrees}deg, var(--border-light) ${degrees}deg, var(--border-light) 360deg)`
-  }
+  return { background: `conic-gradient(${color} 0deg, ${color} ${degrees}deg, var(--border-light) ${degrees}deg, var(--border-light) 360deg)` }
 }
 
-const getChartData = (name) => {
-  if (name === '泰山' || name === '泰山风景区') {
-    return {
-      values: [85, 75, 60, 65, 70, 80],
-      markPoint: [
-        { name: '唐代杜甫《望岳》', value: 85, xAxis: 0, yAxis: 85, label: '盛唐气象 壮怀豪情' },
-        { name: '清代乾隆题刻', value: 70, xAxis: 4, yAxis: 70, label: '帝王封禅 雄浑庄重' }
-      ]
-    }
-  } else if (name === '趵突泉') {
-    return {
-      values: [50, 70, 85, 55, 65, 75],
-      markPoint: [
-        { name: '元代赵孟頫《趵突泉》', value: 85, xAxis: 2, yAxis: 85, label: '白玉千壶 波澜声震' },
-        { name: '宋代曾巩品茗', value: 70, xAxis: 1, yAxis: 70, label: '清洌涤尘 濯缨洗耳' }
-      ]
-    }
-  } else if (name === '大明湖') {
-    return {
-      values: [70, 55, 75, 60, 65, 70],
-      markPoint: [
-        { name: '唐代杜甫历下亭宴', value: 70, xAxis: 0, yAxis: 70, label: '济南名士 宴乐历下' },
-        { name: '宋代李清照溪亭', value: 55, xAxis: 1, yAxis: 55, label: '常记溪亭 藕花争渡' }
-      ]
-    }
-  } else {
-    return {
-      values: [60, 65, 70, 55, 60, 65],
-      markPoint: [
-        { name: '历代文人吟咏', value: 70, xAxis: 2, yAxis: 70, label: '齐鲁风雅 诗意延绵' }
-      ]
-    }
-  }
+// 情感分值 → 颜色(悲凉青灰 → 豪放朱红)
+const emotionColor = (v) => {
+  if (v >= 85) return '#c23a2b'
+  if (v >= 70) return '#c27b38'
+  if (v >= 55) return '#c9a227'
+  if (v >= 40) return '#5b8c85'
+  return '#5a6b74'
 }
 
 const initChart = () => {
-  if (!chartRef.value || !spot.value) return
+  if (!chartRef.value || !spot.value || !chartRows.value.length) return
   if (chartInstance) {
     chartInstance.dispose()
     chartInstance = null
   }
-  
   chartInstance = echarts.init(chartRef.value)
-  const chartData = getChartData(spot.value.name)
-  
-  // Theme color adaptation – read tokens at call-time so theme switches are reflected
-  const chartTheme = isAnime.value ? {
-    lineColor: cssVar('--accent'),
-    itemColor: '#c27b38',
-    areaStart: cssVarAlpha('--accent', 0.15),
-    areaEnd: cssVarAlpha('--accent', 0.01),
-    fontFamily: 'var(--font-heading)'
-  } : {
-    lineColor: cssVar('--accent'),
-    itemColor: cssVar('--accent-dark'),
-    areaStart: cssVarAlpha('--accent', 0.15),
-    areaEnd: cssVarAlpha('--accent', 0.01),
-    fontFamily: 'var(--font-body)'
-  }
-  
+
+  const rows = chartRows.value
+  const lineColor = cssVar('--accent') || '#c23a2b'
+  const areaStart = cssVarAlpha('--accent', 0.18)
+  const areaEnd = cssVarAlpha('--accent', 0.01)
+
   const option = {
     tooltip: {
-      trigger: 'item',
+      trigger: 'axis',
+      axisPointer: { type: 'line', lineStyle: { color: 'var(--border)' } },
       backgroundColor: 'var(--card-bg)',
       borderColor: 'var(--border)',
-      textStyle: {
-        color: 'var(--text-primary)',
-        fontFamily: 'var(--font-body)',
-        fontSize: 12
+      textStyle: { color: 'var(--text-primary)', fontSize: 13 },
+      formatter: (params) => {
+        const row = rows[params[0]?.dataIndex]
+        if (!row) return ''
+        const emotion = row.value <= 20 ? '悲凉' : row.value <= 40 ? '幽思' : row.value <= 60 ? '婉约' : row.value <= 80 ? '悠远' : '豪放'
+        return `<strong>${row.name} · 吟咏 ${row.count} 首</strong><br/>情感均值：${row.value}（${emotion}）<br/>代表篇：《${row.bestTitle}》 ${row.bestPoet}`
       },
-      formatter: function(params) {
-        const era = params.name
-        const val = params.value
-        let sentiment = '清雅'
-        if (val <= 20) sentiment = '淡泊'
-        else if (val <= 40) sentiment = '幽思'
-        else if (val <= 60) sentiment = '婉约'
-        else if (val <= 80) sentiment = '悠远'
-        else sentiment = '豪放'
-        return `<strong>${era} 吟咏情感</strong><br/>情感维度：${sentiment} (${val}%)`
-      }
     },
-    grid: {
-      top: '18%',
-      left: '12%',
-      right: '10%',
-      bottom: '15%'
+    grid: { top: 30, left: 60, right: 30, bottom: 46 },
+    legend: {
+      data: ['吟咏篇数', '情感波澜'],
+      top: 0,
+      right: 0,
+      textStyle: { color: 'var(--text-secondary)', fontSize: 12 },
+      itemWidth: 16,
+      itemHeight: 8,
     },
     xAxis: {
       type: 'category',
-      data: ['唐代', '宋代', '元代', '明代', '清代', '近现代'],
-      axisLabel: {
-        color: 'var(--text-secondary)',
-        fontFamily: chartTheme.fontFamily,
-        fontSize: 12,
-        fontWeight: 'bold'
-      },
-      axisLine: {
-        lineStyle: {
-          color: 'var(--border)'
-        }
-      }
+      data: rows.map((r) => r.name),
+      axisLabel: { color: 'var(--text-secondary)', fontSize: 14, fontWeight: 700 },
+      axisLine: { lineStyle: { color: 'var(--border)' } },
+      axisTick: { show: false },
     },
-    yAxis: {
-      type: 'value',
-      min: 10,
-      max: 95,
-      splitNumber: 4,
-      axisLabel: {
-        color: 'var(--text-secondary)',
-        fontFamily: chartTheme.fontFamily,
-        fontSize: 11,
-        formatter: function(value) {
-          if (value <= 20) return '淡泊'
-          if (value <= 40) return '幽思'
-          if (value <= 60) return '婉约'
-          if (value <= 80) return '悠远'
-          return '豪放'
-        }
-      },
-      splitLine: {
-        lineStyle: {
-          type: 'dashed',
-          color: 'var(--border-light)'
-        }
-      }
-    },
-    series: [{
-      data: chartData.values,
-      type: 'line',
-      smooth: true,
-      symbol: 'circle',
-      symbolSize: 8,
-      itemStyle: {
-        color: chartTheme.itemColor
-      },
-      lineStyle: {
-        color: chartTheme.lineColor,
-        width: 3
-      },
-      areaStyle: {
-        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: chartTheme.areaStart },
-          { offset: 1, color: chartTheme.areaEnd }
-        ])
-      },
-      markPoint: {
-        symbol: 'pin',
-        symbolSize: 10,
-        itemStyle: {
-          color: chartTheme.itemColor
+    yAxis: [
+      {
+        type: 'value',
+        name: '情感',
+        min: 0,
+        max: 100,
+        interval: 20,
+        axisLabel: {
+          color: 'var(--text-muted)',
+          fontSize: 12,
+          formatter: (v) => (v <= 20 ? '悲凉' : v <= 40 ? '幽思' : v <= 60 ? '婉约' : v <= 80 ? '悠远' : '豪放'),
         },
-        data: chartData.markPoint.map(pt => ({
-          coord: [pt.xAxis, pt.yAxis],
-          value: pt.label,
-          label: {
-            show: true,
-            position: 'top',
-            color: 'var(--text-primary)',
-            backgroundColor: 'var(--card-bg)',
-            borderColor: 'var(--border)',
-            borderWidth: 1,
-            borderRadius: 3,
-            padding: [4, 8],
-            fontSize: 10,
-            fontFamily: chartTheme.fontFamily,
-            formatter: pt.label
-          }
-        }))
-      }
-    }]
+        splitLine: { lineStyle: { type: 'dashed', color: 'var(--border-light)' } },
+      },
+      {
+        type: 'value',
+        name: '篇数',
+        min: 0,
+        axisLabel: { color: 'var(--text-muted)', fontSize: 12 },
+        splitLine: { show: false },
+      },
+    ],
+    series: [
+      // 金柱: 各代吟咏篇数(右轴)
+      {
+        name: '吟咏篇数',
+        type: 'bar',
+        yAxisIndex: 1,
+        data: rows.map((r) => r.count),
+        barWidth: 14,
+        barGap: '-100%',
+        itemStyle: {
+          color: {
+            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(201,162,39,0.5)' },
+              { offset: 1, color: 'rgba(201,162,39,0.08)' },
+            ],
+          },
+          borderRadius: [3, 3, 0, 0],
+        },
+        animationDuration: 1100,
+        animationEasing: 'cubicOut',
+      },
+      // 朱线: 情感波澜(左轴), 节点随情感值着色
+      {
+        name: '情感波澜',
+        type: 'line',
+        data: rows.map((r, i) => ({
+          value: r.value,
+          symbolSize: Math.min(22, 10 + r.count * 1.6),
+          itemStyle: { color: emotionColor(r.value), borderColor: 'var(--card-bg)', borderWidth: 2 },
+        })),
+        smooth: 0.35,
+        lineStyle: { color: lineColor, width: 3, shadowColor: areaStart, shadowBlur: 10 },
+        areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: areaStart }, { offset: 1, color: areaEnd }]) },
+        label: {
+          show: true,
+          position: 'top',
+          distance: 12,
+          color: 'var(--text-primary)',
+          fontSize: 13,
+          fontWeight: 700,
+          formatter: (p) => `《${rows[p.dataIndex].bestTitle}》`,
+        },
+        markPoint: {
+          symbol: 'pin',
+          symbolSize: 44,
+          itemStyle: { color: lineColor },
+          label: { show: false },
+          data: rows
+            .map((r, i) => ({ coord: [i, r.value], name: r.bestTitle }))
+            .filter((_, i) => rows[i].value >= 80), // 仅豪放/悠远高点立 pin
+        },
+        animationDuration: 1400,
+        animationEasing: 'cubicOut',
+      },
+    ],
   }
-  
+
   chartInstance.setOption(option)
 }
 
 const handleResize = () => {
-  if (chartInstance) {
-    chartInstance.resize()
-  }
+  if (chartInstance) chartInstance.resize()
 }
 
-watch([isAnime, spot], () => {
-  if (spot.value) {
-    nextTick(() => {
-      setTimeout(() => {
-        initChart()
-      }, 150)
-    })
-  }
+watch([isAnime, chartRows], () => {
+  nextTick(() => {
+    setTimeout(() => initChart(), 120)
+  })
 })
 
 const loadSpot = async () => {
   loading.value = true
   loadError.value = ''
-
-  // Load main details
   try {
     const data = await api.get(`/spots/${route.params.id}`)
     spot.value = data.spot || data
@@ -501,23 +443,17 @@ const loadSpot = async () => {
   }
   loading.value = false
 
-  // Load poets lookup dictionary (non-fatal)
   try {
-    const poetsData = await api.get('/poets', { params: { size: 100 } })
+    const poetsData = await api.get('/poets', { params: { size: 200 } })
     const map = {}
-    poetsData.records.forEach(p => {
-      map[p.id] = p
-    })
+    ;(poetsData.records || poetsData || []).forEach((p) => { map[p.id] = p })
     poetsMap.value = map
   } catch (e) {
     console.error('Error loading poets map:', e)
   }
 
-  // Init chart
   nextTick(() => {
-    setTimeout(() => {
-      initChart()
-    }, 150)
+    setTimeout(() => initChart(), 120)
   })
 }
 
@@ -536,402 +472,379 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* ===== 全屏宽版式 ===== */
 .spot-detail {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 32px 80px;
-}
-
-.detail-top {
-  padding: 24px 0 16px;
-  text-align: left;
-}
-
-.back-link {
-  font-size: 13px;
-  color: var(--text-muted);
-  text-decoration: none;
-  transition: color 0.2s;
-  letter-spacing: 1px;
-}
-
-.back-link:hover {
-  color: var(--accent);
-}
-
-/* UNIFIED THEME-ADAPTIVE IMAGE FRAMES & TITLES */
-.image-frame-container {
   width: 100%;
-  display: flex;
-  justify-content: center;
+  padding-bottom: 96px;
 }
 
-/* Exhibit Showcase frame for Real Theme */
-.portrait-frame {
+/* 意境背景 */
+.mood-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  filter: blur(60px) saturate(0.85);
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+/* ===== Hero ===== */
+.sd-hero {
   position: relative;
-  padding: 12px;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  box-shadow: var(--card-shadow);
-  border-radius: var(--radius-md);
+  min-height: 460px;
+  display: flex;
+  align-items: flex-end;
   overflow: hidden;
-  width: 100%;
 }
-
-.theme-real .portrait-frame {
-  border: 6px solid #2b1d12; /* Rich mahogany frame */
-  outline: 1px solid var(--accent-light);
-  outline-offset: -4px;
+.sd-hero__media {
+  position: absolute;
+  inset: 0;
 }
-
-.portrait-img {
+.sd-hero__img {
   width: 100%;
-  height: 220px;
+  height: 100%;
   object-fit: cover;
   display: block;
-  border-radius: 4px;
 }
-
-/* Spot Name Title adaptation */
-.spot-name-title {
-  margin: 0;
-  transition: all 0.3s ease;
+.sd-hero__veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55) 100%);
 }
-
-.theme-inkwash .spot-name-title {
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-  font-family: var(--font-display);
-  font-size: 42px;
-  font-weight: 900;
-  color: var(--text-primary);
-  letter-spacing: 8px;
-  line-height: 1.15;
-}
-
-.theme-real .spot-name-title {
-  font-family: var(--font-display);
-  font-size: 32px;
-  font-weight: 900;
-  color: var(--text-primary);
-  letter-spacing: 4px;
-  text-align: left;
-}
-
-.hero-region {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  padding: 2px 8px;
-  border-radius: 2px;
-  margin-top: 6px;
-  letter-spacing: 1.5px;
-}
-
-/* ANIME/INK WASH MODE STYLING */
-.spot-split-layout {
-  display: grid;
-  grid-template-columns: 340px 1fr;
-  gap: 48px;
-  align-items: start;
-}
-
-/* Left Column */
-.spot-left-col {
+.sd-hero__media--fallback {
   display: flex;
-  flex-direction: column;
-  gap: 28px;
-  text-align: left;
-}
-
-.spot-title-box {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  border-bottom: 2px solid var(--accent);
-  padding-bottom: 16px;
-}
-
-.spot-name-vertical {
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-  font-family: var(--font-display);
-  font-size: 42px;
-  font-weight: 900;
-  color: var(--text-primary);
-  letter-spacing: 8px;
-  line-height: 1.15;
-}
-
-.spot-seal {
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  padding: 6px 4px;
-  border-radius: 2px;
-  letter-spacing: 2px;
-  background: color-mix(in srgb, var(--accent) 5%, transparent);
-  box-shadow: 1px 1px 3px color-mix(in srgb, var(--accent) 10%, transparent);
-  margin-top: 6px;
-}
-
-/* Hanging picture scroll wrapper */
-.scroll-wrapper {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  margin: 8px 0;
+  justify-content: center;
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-primary));
 }
-
-.scroll-rod {
-  width: 96%;
-  height: 10px;
-  background: linear-gradient(to right, #4b3621, #8b5a2b, #4b3621);
-  border-radius: 5px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+.sd-hero__fallback-seal {
+  font-family: var(--font-display);
+  font-size: 120px;
+  font-weight: 900;
+  color: color-mix(in srgb, var(--accent) 30%, transparent);
 }
-
-.scroll-body {
-  width: 88%;
-  border: 6px solid #fcf9f2;
-  border-top: none;
-  border-bottom: none;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-  background: #fcf9f2;
-  padding: 6px;
-}
-
-.scroll-img {
+.sd-hero__content {
+  position: relative;
   width: 100%;
-  height: 220px;
-  object-fit: cover;
-  display: block;
-  border: 1px solid var(--shadow-a8);
-  border-radius: 2px;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 48px 48px 44px;
+  text-align: left;
+  color: #f5efe3;
 }
-
-.spot-meta-details {
+.sd-hero__content .back-link {
+  color: rgba(245, 239, 227, 0.85);
+}
+.sd-hero__content .back-link:hover {
+  color: var(--accent-light, #e5c96b);
+}
+.sd-hero__titlebox {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: var(--shadow-a1);
-  border-left: 2px solid var(--border);
-  padding: 8px 0 8px 16px;
+  align-items: flex-end;
+  gap: 22px;
+  margin-top: 16px;
 }
-
-.meta-item {
+.sd-name {
   margin: 0;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.meta-lbl {
+  font-family: var(--font-heading);
+  font-size: clamp(40px, 5.5vw, 72px);
   font-weight: 700;
-  color: var(--text-muted);
-  margin-right: 8px;
+  letter-spacing: 8px;
+  color: #f5efe3;
+  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.45);
 }
-
-.meta-val {
-  color: var(--text-primary);
-  font-weight: 600;
+.sd-seal {
+  writing-mode: vertical-rl;
+  font-family: var(--font-heading);
+  font-size: 15px;
+  letter-spacing: 4px;
+  padding: 8px 6px;
+  border: 1px solid rgba(245, 239, 227, 0.7);
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 2px;
+  margin-bottom: 8px;
 }
-
-.spot-intro-box, .spot-extra-box {
+.sd-tagline {
+  margin: 14px 0 0;
+  max-width: 640px;
+  font-size: 16px;
+  line-height: 1.9;
+  letter-spacing: 1px;
+  color: rgba(245, 239, 227, 0.9);
+}
+.sd-facts {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 14px 36px;
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(245, 239, 227, 0.25);
+}
+.sd-fact {
+  display: flex;
+  align-items: baseline;
   gap: 10px;
 }
-
-.intro-title-bordered {
-  font-family: var(--font-heading);
+.sd-fact__label {
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: rgba(245, 239, 227, 0.65);
+}
+.sd-fact__value {
   font-size: 16px;
   font-weight: 700;
-  color: var(--text-primary);
-  border-left: 3px solid var(--accent);
-  padding-left: 10px;
-  margin: 0;
   letter-spacing: 1px;
+  color: #f5efe3;
 }
 
-.intro-desc-indent {
-  font-size: 13px;
-  line-height: 1.8;
-  color: var(--text-secondary);
-  text-indent: 2em;
-  text-align: justify;
-  margin: 0;
-}
-
-/* Right Column */
-.spot-right-col {
+/* ===== 正文 ===== */
+.sd-main {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 40px 48px 0;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 36px;
 }
 
+/* 情感波澜曲线(重点) */
+.sd-chart {
+  padding: 28px 32px 20px;
+}
+.sd-chart__canvas {
+  width: 100%;
+  height: 400px;
+}
+.sd-chart__empty {
+  padding: 20px 0 8px;
+}
+
+.sd-sec-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+.sd-sec-head__text {
+  text-align: left;
+}
+.sd-sec-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--text-primary);
+}
+.sd-sec-sub {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
 .title-seal {
   display: inline-block;
-  width: 22px;
-  height: 22px;
-  line-height: 22px;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
   text-align: center;
   background: var(--accent);
   color: #fff;
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: 16px;
+  font-weight: 900;
   border-radius: 2px;
-  margin-right: 10px;
-  vertical-align: middle;
-  box-shadow: 1px 1px 2px rgba(0,0,0,0.15);
+  flex-shrink: 0;
+  transform: rotate(-3deg);
+  margin-top: 2px;
 }
 
-.section-title-ink {
+/* 双栏 */
+.sd-cols {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 36px;
+  align-items: start;
+}
+
+.sd-left {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.sd-block {
+  padding: 26px 28px;
+}
+.sd-block__title {
+  margin: 0 0 12px;
   font-family: var(--font-heading);
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 700;
+  letter-spacing: 2px;
   color: var(--text-primary);
-  border-bottom: 1px solid var(--border-light);
-  padding-bottom: 10px;
-  margin: 0 0 16px 0;
-  letter-spacing: 1.5px;
+  border-left: 3px solid var(--accent);
+  padding-left: 12px;
+}
+.sd-block__sub {
+  margin: -6px 0 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+.sd-block__text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 2;
+  color: var(--text-secondary);
+  text-align: justify;
+  text-indent: 2em;
+}
+
+/* 情感维度分布环 */
+.sd-rings {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  gap: 18px 10px;
+  padding-top: 6px;
+}
+.ring-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.ring-circle {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  text-align: left;
+  justify-content: center;
+  transition: transform 0.3s;
+}
+.ring-circle:hover {
+  transform: scale(1.06);
+}
+.ring-inner {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--card-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ring-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.ring-name {
+  font-size: 13px;
+  font-family: var(--font-heading);
+  color: var(--text-secondary);
+  font-weight: 700;
+  letter-spacing: 1px;
 }
 
-/* ECharts card */
-.chart-section {
-  padding: 24px;
+/* 名篇卡片 */
+.sd-right .sd-sec-head {
+  margin-bottom: 18px;
 }
-
-.chart-subtitle {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin: -10px 0 20px 32px;
-  text-align: left;
-  letter-spacing: 0.5px;
-}
-
-.echarts-container {
-  width: 100%;
-  height: 280px;
-}
-
-/* Representative Poems */
-.spot-poems-section {
-  padding: 24px;
-}
-
-.anime-poems-list {
+.sd-poems {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
-
-.anime-poem-card {
+.sd-poem {
   background: var(--card-bg);
-  border: 1px dashed var(--border);
+  border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 20px;
+  padding: 24px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   text-align: left;
-  transition: all 0.3s;
+  transition: all 0.25s ease;
 }
-
-.anime-poem-card:hover {
-  border-style: solid;
+.sd-poem:hover {
   border-color: var(--accent);
+  transform: translateY(-2px);
 }
-
-.poem-card-header {
+.sd-poem__head {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 12px;
-  margin-bottom: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
   border-bottom: 1px dashed var(--border-light);
-  padding-bottom: 10px;
 }
-
-.poet-avatar-wrap {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 1.5px solid var(--accent);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  background: #fff;
-}
-
-.poet-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.poem-meta-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.poem-card-title {
+.sd-poem__title {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 700;
+  letter-spacing: 1px;
   color: var(--text-primary);
+}
+.sd-poem__author {
+  font-size: 13px;
+  color: var(--text-muted);
   letter-spacing: 1px;
 }
-
-.poem-card-author {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-top: 2px;
-  font-weight: 600;
-}
-
-.poem-tags-wrap {
-  display: flex;
-  gap: 4px;
-  margin-left: auto;
-}
-
-.sentiment-seal-tag {
-  font-size: 10px;
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  padding: 1px 4px;
-  border-radius: 2px;
-  font-weight: 700;
-  background: color-mix(in srgb, var(--accent) 2%, transparent);
-}
-
-.poem-card-excerpt {
+.sd-poem__excerpt {
   flex: 1;
-  font-size: 13px;
-  line-height: 1.7;
+  margin: 14px 0;
+  font-size: 15px;
+  line-height: 1.9;
   color: var(--text-secondary);
-  font-style: italic;
   font-family: var(--font-heading);
-  margin: 4px 0 12px 0;
   text-align: justify;
 }
-
-.poem-card-footer {
-  font-size: 11px;
+.sd-poem__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-light);
+}
+.sd-poem__tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.sentiment-seal-tag {
+  font-size: 12px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+.read-more-txt {
+  font-size: 13px;
   color: var(--accent);
   font-weight: 700;
-  border-top: 1px dashed var(--border-light);
-  padding-top: 8px;
-  display: flex;
-  justify-content: flex-end;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.back-link {
+  display: inline-block;
+  font-size: 14px;
+  color: var(--text-muted);
+  text-decoration: none;
+  letter-spacing: 1px;
+  transition: color 0.2s;
+}
+.back-link:hover {
+  color: var(--accent);
 }
 
 .empty-poems {
@@ -940,144 +853,29 @@ onBeforeUnmount(() => {
 
 /* 加载骨架 */
 .spot-skeleton {
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 24px 32px 80px;
+  padding: 24px 48px 80px;
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
-
 .spot-skeleton__rows {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-/* Sentiment distribution rings */
-.sentiment-overview-section {
-  padding: 24px;
-}
-
-.sentiment-rings-grid {
-  display: flex;
-  justify-content: space-around;
-  flex-wrap: wrap;
-  gap: 16px;
-  padding-top: 8px;
-}
-
-.ring-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.ring-circle {
-  position: relative;
-  width: 76px;
-  height: 76px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 3px 8px var(--shadow-a6);
-  transition: transform 0.3s;
-}
-
-.ring-circle:hover {
-  transform: scale(1.06);
-}
-
-.ring-inner {
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  background: var(--card-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.ring-value {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.ring-name {
-  margin-top: 10px;
-  font-size: 12px;
-  font-family: var(--font-heading);
-  color: var(--text-secondary);
-  font-weight: bold;
-  letter-spacing: 0.5px;
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(15px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.6s ease both;
-}
-
-.animate-slide-in {
-  animation: slideIn 0.5s ease both;
-}
-
-/* Responsive design */
+/* 响应式 */
 @media (max-width: 1024px) {
-  .spot-split-layout {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
-  .scroll-img {
-    height: 300px;
-  }
+  .sd-cols { grid-template-columns: 1fr; }
+  .sd-hero__content, .sd-main { padding-left: 28px; padding-right: 28px; }
 }
-
 @media (max-width: 768px) {
-  .anime-poems-list {
-    grid-template-columns: 1fr;
-  }
-  .spot-detail {
-    padding: 0 16px 60px;
-  }
-  .hero-image-wrap {
-    height: 240px;
-  }
-  .hero-title {
-    font-size: 28px;
-    letter-spacing: 3px;
-  }
-  .scroll-body {
-    width: 95%;
-  }
-}
-
-/* 意境背景：关联图模糊铺底，内容层之上无交互 */
-.mood-bg {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background-size: cover;
-  background-position: center;
-  filter: blur(60px) saturate(0.85);
-  opacity: 0.16;
-  pointer-events: none;
-}
-
-:global(.theme-inkwash) .mood-bg {
-  filter: blur(70px) grayscale(0.4);
-  opacity: 0.12;
+  .sd-hero { min-height: 340px; }
+  .sd-poems { grid-template-columns: 1fr; }
+  .sd-hero__content { padding: 28px 20px 32px; }
+  .sd-main { padding: 24px 20px 0; }
+  .sd-chart__canvas { height: 320px; }
 }
 </style>
-
