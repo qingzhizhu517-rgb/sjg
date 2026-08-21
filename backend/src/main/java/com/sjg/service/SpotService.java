@@ -1,10 +1,13 @@
 package com.sjg.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sjg.dto.PageResult;
+import com.sjg.entity.Poem;
 import com.sjg.entity.ScenicSpot;
 import com.sjg.mapper.ScenicSpotMapper;
+import com.sjg.mapper.PoemMapper;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
@@ -21,9 +24,11 @@ import java.util.List;
 public class SpotService {
 
     private final ScenicSpotMapper spotMapper;
+    private final PoemMapper poemMapper;
 
-    public SpotService(ScenicSpotMapper spotMapper) {
+    public SpotService(ScenicSpotMapper spotMapper, PoemMapper poemMapper) {
         this.spotMapper = spotMapper;
+        this.poemMapper = poemMapper;
     }
 
     public PageResult<ScenicSpot> list(int page, int size, String keyword, String region) {
@@ -43,7 +48,22 @@ public class SpotService {
     public ScenicSpot getById(Long id) { return spotMapper.selectById(id); }
     public void create(ScenicSpot spot) { spotMapper.insert(spot); }
     public void update(Long id, ScenicSpot spot) { spot.setId(id); spotMapper.updateById(spot); }
-    public void delete(Long id) { spotMapper.deleteById(id); }
+
+    /**
+     * 删除景点：级联清理关联数据
+     * 1. 将引用该景点的诗词的 spot_id 置为 null（保留诗词不删除）
+     * 2. 删除景点本身
+     */
+    @Transactional
+    public void delete(Long id) {
+        // 1. 将引用该景点的诗词的 spot_id 置空
+        UpdateWrapper<Poem> clearSpot = new UpdateWrapper<Poem>()
+            .eq("spot_id", id)
+            .set("spot_id", null);
+        poemMapper.update(null, clearSpot);
+        // 2. 删除景点本身
+        spotMapper.deleteById(id);
+    }
 
     @Transactional
     public int importFromExcel(MultipartFile file) throws IOException {

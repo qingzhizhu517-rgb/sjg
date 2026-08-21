@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sjg.dto.PageResult;
 import com.sjg.entity.Poet;
 import com.sjg.entity.Poem;
+import com.sjg.entity.PoetRelation;
 import com.sjg.mapper.PoetMapper;
 import com.sjg.mapper.PoemMapper;
+import com.sjg.mapper.PoetRelationMapper;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
@@ -30,11 +32,14 @@ public class PoetService {
     private final PoetMapper poetMapper;
     private final OssService ossService;
     private final PoemMapper poemMapper;
+    private final PoetRelationMapper poetRelationMapper;
 
-    public PoetService(PoetMapper poetMapper, OssService ossService, PoemMapper poemMapper) {
+    public PoetService(PoetMapper poetMapper, OssService ossService, PoemMapper poemMapper,
+                       PoetRelationMapper poetRelationMapper) {
         this.poetMapper = poetMapper;
         this.ossService = ossService;
         this.poemMapper = poemMapper;
+        this.poetRelationMapper = poetRelationMapper;
     }
 
     public PageResult<Poet> list(int page, int size, String keyword) {
@@ -89,11 +94,22 @@ public class PoetService {
         poetMapper.updateById(poet);
     }
 
+    /**
+     * 删除诗人：级联清理关联数据
+     * 1. 删除该诗人关联的所有诗词
+     * 2. 删除该诗人在 poet_relation 表中的所有关系（作为 poetA 或 poetB）
+     * 3. 删除诗人本身
+     */
     @Transactional
     public void delete(Long id) {
         // 1. 先删除该诗人关联的所有诗词，以避免外键约束错误
         poemMapper.delete(new LambdaQueryWrapper<Poem>().eq(Poem::getPoetId, id));
-        // 2. 再删除诗人本身
+        // 2. 删除该诗人在关系图谱中的所有关联（作为 poetA 或 poetB）
+        poetRelationMapper.delete(new LambdaQueryWrapper<PoetRelation>()
+            .eq(PoetRelation::getPoetAId, id)
+            .or()
+            .eq(PoetRelation::getPoetBId, id));
+        // 3. 再删除诗人本身
         poetMapper.deleteById(id);
     }
 

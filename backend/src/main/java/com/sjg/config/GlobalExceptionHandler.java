@@ -1,6 +1,8 @@
 package com.sjg.config;
 
 import com.sjg.dto.Result;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -8,6 +10,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
     public ResponseEntity<Result<Void>> handleDataIntegrityViolationException(org.springframework.dao.DataIntegrityViolationException e) {
@@ -30,6 +34,8 @@ public class GlobalExceptionHandler {
                 message = "操作失败：数据已重复（违反唯一性约束）。";
             }
         }
+        // 记录详细错误到日志，但不暴露给客户端
+        log.warn("数据完整性约束违反: {}", rootMsg);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Result.error(400, message));
     }
@@ -55,19 +61,24 @@ public class GlobalExceptionHandler {
                 message = "操作失败：数据已重复（违反唯一性约束）。";
             }
         }
+        // 记录详细错误到日志
+        log.warn("SQL完整性约束违反: {}", rootMsg);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Result.error(400, message));
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Result<Void>> handleRuntimeException(RuntimeException e) {
+        // RuntimeException 通常是业务逻辑异常，消息是安全的
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Result.error(400, e.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Result<Void>> handleException(Exception e) {
+        // 记录完整异常到日志，但不暴露给客户端
+        log.error("服务器内部错误", e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Result.error(500, "服务器内部错误: " + e.getMessage()));
+                .body(Result.error(500, "服务器内部错误，请稍后重试"));
     }
 }

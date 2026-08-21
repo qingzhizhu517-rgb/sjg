@@ -6,7 +6,8 @@ spring:
     # 本地库（MySQL 8.0.46 @ 127.0.0.1:3306/sjg01，生产数据完整副本 + V7-V10 已应用）
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://127.0.0.1:3306/sjg01?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
     username: ${SPRING_DATASOURCE_USERNAME:root}
-    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:123456}}
+    # 凭证必须通过环境变量提供，不在仓库保留默认口令。
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:}}
     driver-class-name: com.mysql.cj.jdbc.Driver
   servlet:
     multipart:
@@ -19,13 +20,14 @@ mybatis-plus:
     map-underscore-to-camel-case: true
 
 jwt:
-  secret: ${JWT_SECRET:sjg-secret-key-must-be-at-least-256-bits-long-for-hs256}
+  # 至少 32 字节的随机值，由部署环境通过 JWT_SECRET 提供。
+  secret: ${JWT_SECRET:}
   expiration: 86400000
 
 oss:
   endpoint: oss-cn-beijing.aliyuncs.com
-  access-key-id: ${OSS_ACCESS_KEY_ID:mock_id}
-  access-key-secret: ${OSS_ACCESS_KEY_SECRET:mock_secret}
+  access-key-id: ${OSS_ACCESS_KEY_ID:}
+  access-key-secret: ${OSS_ACCESS_KEY_SECRET:}
   bucket-name: shandong-lit-landscape
 
 # AI 小文（OpenAI 兼容大模型，后端代理调用，SSE 流式）

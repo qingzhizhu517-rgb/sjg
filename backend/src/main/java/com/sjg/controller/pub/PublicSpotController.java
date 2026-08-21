@@ -37,6 +37,7 @@ public class PublicSpotController {
 
     /**
      * 分页查询景点列表（含关联诗词数量）
+     * 优化：使用批量查询替代 N+1 查询
      */
     @Operation(summary = "分页查询景点列表", description = "查询景点列表并附带每个景点的关联诗词数量，支持区域筛选")
     @GetMapping
@@ -45,6 +46,23 @@ public class PublicSpotController {
             @Parameter(description = "每页数量", example = "20") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "区域筛选", example = "济南") @RequestParam(required = false) String region) {
         var result = spotService.list(page, size, null, region);
+
+        // 批量查询所有景点的诗词数量，避免 N+1 查询
+        List<Long> spotIds = result.getRecords().stream()
+            .map(ScenicSpot::getId)
+            .collect(Collectors.toList());
+
+        Map<Long, Long> poemCountMap = new HashMap<>();
+        if (!spotIds.isEmpty()) {
+            // 一次性查询所有相关诗词的 spot_id，然后按 spot_id 分组计数
+            List<Poem> allPoems = poemMapper.selectList(
+                new LambdaQueryWrapper<Poem>().in(Poem::getSpotId, spotIds));
+            poemCountMap = allPoems.stream()
+                .filter(p -> p.getSpotId() != null)
+                .collect(Collectors.groupingBy(Poem::getSpotId, Collectors.counting()));
+        }
+
+        final Map<Long, Long> finalPoemCountMap = poemCountMap;
         var enriched = result.getRecords().stream().map(spot -> {
             Map<String, Object> map = new HashMap<>();
             map.put("id", spot.getId());
@@ -55,9 +73,7 @@ public class PublicSpotController {
             map.put("region", spot.getRegion());
             map.put("longitude", spot.getLongitude());
             map.put("latitude", spot.getLatitude());
-            Long poemCount = poemMapper.selectCount(
-                new LambdaQueryWrapper<Poem>().eq(Poem::getSpotId, spot.getId()));
-            map.put("poemCount", poemCount);
+            map.put("poemCount", finalPoemCountMap.getOrDefault(spot.getId(), 0L));
             return map;
         }).collect(Collectors.toList());
         return ResponseEntity.ok(Result.success(Map.of("records", enriched, "total", result.getTotal())));
