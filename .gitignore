@@ -17,9 +17,11 @@ dist/
 .env.test.local
 .env.production.local
 
-# IDE
+# IDE and local agent settings
 .idea/
 .vscode/
+.claude/
+.mcp.json
 *.swp
 *.swo
 
@@ -31,10 +33,7 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# Claude Code
-.claude/
-.mcp.json
+*.log
 
 # Maven local
 backend/.m2/
@@ -45,9 +44,18 @@ backend/target/
 .superpowers/
 .antigravitycli/
 
-# Reference project (not part of build, 82MB)
-else/sc-datav-main/
-else/sc-datav-main.zip
+# Generated or local-only media and intermediate output
+output/
+display-v2/output/
+scripts/imagegen/
+
+# Local database dumps and generated backups
+_localhost-*.sql
+sjg_*_backup*.sql
+sjg_*.sql
+
+# External archives are intentionally outside the repository
+sjg-new-archive-*/
 
 # TypeScript build cache
 *.tsbuildinfo

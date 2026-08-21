@@ -1,0 +1,24 @@
+# Keep repository text deterministic across Windows, WSL, and Linux.
+* text=auto eol=lf
+
+# Binary assets must never be rewritten as text.
+*.7z binary
+*.7z.001 binary
+*.7z.002 binary
+*.avi binary
+*.bmp binary
+*.gif binary
+*.glb binary
+*.ico binary
+*.jpeg binary
+*.jpg binary
+*.mp3 binary
+*.mp4 binary
+*.pdf binary
+*.png binary
+*.svg text eol=lf
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.xlsx binary
+*.zip binary
