@@ -17,12 +17,15 @@ import sys
 import os
 import pymysql
 
-HOST = os.environ.get("DB_HOST", "47.104.207.58")
+HOST = os.environ.get("DB_HOST", "127.0.0.1")
 PORT = int(os.environ.get("DB_PORT", "3306"))
-USER = os.environ.get("DB_USER", "qz-Zhu")
-PWD = os.environ.get("DB_PASSWORD", "123456")
-DB = os.environ.get("DB_NAME", "sjg")
-DEFAULT = "/Users/a1/develop/vibecoding/sjg/backend/src/main/resources/db/migration/V4__poet_relation.sql"
+USER = os.environ.get("DB_USER", "root")
+PWD = os.environ.get("DB_PASSWORD", "")
+DB = os.environ.get("DB_NAME", "sjg01")
+DEFAULT = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "backend", "src", "main", "resources", "db", "migration", "V4__poet_relation.sql"
+)
 
 path = sys.argv[1] if len(sys.argv) > 1 else DEFAULT
 

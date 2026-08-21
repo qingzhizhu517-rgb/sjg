@@ -4,7 +4,7 @@
  *
  * 用法（Node 24, 无依赖）:
  *   node scripts/gen_cultural_migration.mjs <输入json> <类别> <V编号>
- *   例: node scripts/gen_cultural_migration.mjs scripts/output/_research_festival.json festival V18
+ *   例: node scripts/gen_cultural_migration.mjs <input.json> festival V18
  *
  * 输入 JSON: 数组, 元素字段见 CATEGORY_SCHEMAS; 中文原样, 单引号由本脚本转义。
  * 输出: scripts/output/<编号小写>__<类别>_seed.sql（沿用既有 seed 的「DELETE+INSERT」幂等风格,
