@@ -1,6 +1,6 @@
 # 水墨(anime)素材缺失盘点
 
-数据源: 数据库备份 `sjg_20260813214743xlghi.sql`（2026-08-13 服务器导出）。
+数据源: 工作区外归档中的数据库备份 `/mnt/e/Aohs/vibecoding/sjg-new-archive-20260821/root-archives/sjg_20260813214743xlghi.sql`（2026-08-13 服务器导出）。
 判定规则: `image_anime_url` / `avatar_anime_url` 含 `_anime` 后缀 = 真水墨素材；不含后缀（内容与实景图相同）= 占位数据；NULL = 缺失。
 
 ## scenic_spot 景点（70 个）

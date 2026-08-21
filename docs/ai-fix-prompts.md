@@ -1,10 +1,10 @@
 # SJG 数据库问题修复 —— AI 任务提示词
 
-> 本文件由数据库备份 `sjg_20260813214743xlghi.sql`（MySQL 8.4.9，`sjg` 库全量 dump，UTF-8）分析整理而来。
+> 本文件由工作区外归档中的数据库备份 `/mnt/e/Aohs/vibecoding/sjg-new-archive-20260821/root-archives/sjg_20260813214743xlghi.sql`（MySQL 8.4.9，`sjg` 库全量 dump，UTF-8）分析整理而来。
 > 共 9 张表：`dynasty`(9) / `event`(3) / `poem`(195) / `poem_analysis`(2) / `poem_event`(9) / `poet`(126) / `poet_relation`(13) / `scenic_spot`(70) / `user`(1)。
 >
 > 项目背景（SJG 齐鲁文化数字人文平台）：
-> - 后端 `backend/`：Spring Boot 3.2.5 + Java 17 + MyBatis-Plus + MySQL（远程 47.104.207.58:3306/sjg）
+> - 后端 `backend/`：Spring Boot 3.2.5 + Java 17 + MyBatis-Plus + MySQL（本机开发库，连接信息由环境变量提供）
 > - 前端 `display-v2/`（Vue3 + Vite，主力展示）、`admin-frontend/`（管理端）、`sjg-datav/`（数据大屏）
 > - 统一返回 `Result<T>`；公开 API 走 `/api/public/**`，管理写操作需 `admin` 角色
 > - AI 对话「AI小文」由 `LlmClient` + `ChatService`（RAG + 限流）实现，配置在 `application.yml` 的 `llm.*`

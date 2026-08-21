@@ -1,17 +1,17 @@
 # 本地数据库搭建与应用指南
 
-> 适用场景：不依赖云服务器 MySQL（47.104.207.58），在本机 MySQL 8.x 上搭建 sjg 库用于开发/测试。
+> 适用场景：在本机 MySQL 8.x 上搭建 sjg 库用于开发/测试。旧云端实例已停用。
 
 ## 方案 A（推荐）：直接导入生产备份 + 应用新 migration
 
-生产全量备份已在仓库根目录：`sjg_20260813214743xlghi.sql`（MySQL 8.4 dump，含全部 9 张表与数据）。
+生产全量备份位于工作区外归档：`/mnt/e/Aohs/vibecoding/sjg-new-archive-20260821/`（MySQL 8.4 dump，含全部 9 张表与数据）。需要恢复时先从归档取出副本，再按下方命令导入。
 
 ```bash
 # 1. 建库（字符集 utf8mb4）
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS sjg DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;"
 
 # 2. 导入生产备份
-mysql -u root -p sjg < sjg_20260813214743xlghi.sql
+mysql -u root -p sjg < /mnt/e/Aohs/vibecoding/sjg-new-archive-20260821/root-archives/sjg_20260813214743xlghi.sql
 
 # 3. 按顺序应用新 migration（备份之后的新增修复）
 DB_HOST=127.0.0.1 DB_USER=root DB_PASSWORD=你的密码 python3 scripts/apply_migration.py backend/src/main/resources/db/migration/V7__poem_analysis_fallback_cleanup.sql
@@ -59,4 +59,4 @@ cd backend; .\mvnw spring-boot:run   # 或 mvn spring-boot:run
 | 关系数量 | `SELECT COUNT(*) FROM poet_relation;` → 13-1+23 = 35 |
 | event3 有诗词 | `SELECT * FROM poem_event WHERE event_id=3;` → 3 行 |
 | region 无县级 | `SELECT DISTINCT region FROM scenic_spot;` → 无"曲阜/邹城" |
-> **状态更新（2026-08-14）**：本指南的执行已在本机完成——`sjg01` 库（生产数据完整副本）已应用 V7–V10 并通过全部验证（fallback 赏析 0 条、126 位诗人全部有简介、关系 35 条、region 无县级残留）；后端 `application.yml` 已切换为 `127.0.0.1:3306/sjg01`（root/123456，可用 SPRING_DATASOURCE_* 环境变量覆盖）。应用前备份在 `output/sjg01_backup_before_v7v10.sql`。
+> **状态更新（2026-08-14）**：本指南的执行已在本机完成——`sjg01` 库（生产数据完整副本）已应用 V7–V10 并通过全部验证（fallback 赏析 0 条、126 位诗人全部有简介、关系 35 条、region 无县级残留）；后端 `application.yml` 已切换为 `127.0.0.1:3306/sjg01`（请通过 `SPRING_DATASOURCE_*` 环境变量提供凭证）。应用前备份已移至工作区外归档：`/mnt/e/Aohs/vibecoding/sjg-new-archive-20260821/`。
