@@ -66,7 +66,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../api'
 import DataTable from '../components/DataTable.vue'
 import FormDialog from '../components/FormDialog.vue'
@@ -163,7 +163,25 @@ const handleSubmit = async (form) => {
   ElMessage.success(isEdit.value ? '更新成功' : '创建成功')
 }
 
-const handleDelete = async (row) => { await api.delete(`/admin/spots/${row.id}`); ElMessage.success('删除成功'); table.value.fetch() }
+const handleDelete = async (row) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除景点「${row.name}」吗？关联诗词的景点引用将被清除，此操作不可恢复。`,
+      '确认删除',
+      {
+        confirmButtonText: '确认删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    await api.delete(`/admin/spots/${row.id}`)
+    ElMessage.success('删除成功')
+    table.value.fetch()
+  } catch {
+    // 用户取消删除
+  }
+}
+
 const importSpots = async (formData) => {
   return await api.post('/admin/spots/import', formData)
 }

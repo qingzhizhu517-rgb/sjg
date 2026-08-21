@@ -48,11 +48,8 @@
         <el-form-item label="生平简介">
           <el-input v-model="form.biography" type="textarea" :rows="4" placeholder="请输入诗人生平简介" />
         </el-form-item>
-        <el-form-item label="头像(真实)">
+        <el-form-item label="头像">
           <MultiImageUpload v-model="form.avatarUrlArray" directory="poets" />
-        </el-form-item>
-        <el-form-item label="头像(动漫)">
-          <MultiImageUpload v-model="form.avatarAnimeUrlArray" directory="poets/anime" />
         </el-form-item>
       </template>
     </FormDialog>
@@ -63,7 +60,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../api'
 import DataTable from '../components/DataTable.vue'
 import FormDialog from '../components/FormDialog.vue'
@@ -125,7 +122,7 @@ const fetchPoets = (page, size, keyword) =>
 
 const openAdd = () => {
   isEdit.value = false
-  currentPoet.value = { avatarUrlArray: [], avatarAnimeUrlArray: [] }
+  currentPoet.value = { avatarUrlArray: [] }
   dialogVisible.value = true
 }
 
@@ -133,8 +130,7 @@ const openEdit = (row) => {
   isEdit.value = true
   currentPoet.value = {
     ...row,
-    avatarUrlArray: parseImageUrls(row.avatarUrl),
-    avatarAnimeUrlArray: parseImageUrls(row.avatarAnimeUrl)
+    avatarUrlArray: parseImageUrls(row.avatarUrl)
   }
   dialogVisible.value = true
 }
@@ -142,11 +138,9 @@ const openEdit = (row) => {
 const handleSubmit = async (form) => {
   const payload = {
     ...form,
-    avatarUrl: JSON.stringify(form.avatarUrlArray || []),
-    avatarAnimeUrl: JSON.stringify(form.avatarAnimeUrlArray || [])
+    avatarUrl: JSON.stringify(form.avatarUrlArray || [])
   }
   delete payload.avatarUrlArray
-  delete payload.avatarAnimeUrlArray
   if (isEdit.value) {
     await api.put(`/admin/poets/${form.id}`, payload)
   } else {
@@ -156,9 +150,22 @@ const handleSubmit = async (form) => {
 }
 
 const handleDelete = async (row) => {
-  await api.delete(`/admin/poets/${row.id}`)
-  ElMessage.success('删除成功')
-  table.value.fetch()
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除诗人「${row.name}」吗？该诗人关联的所有诗词和诗人关系也将被一并删除，此操作不可恢复。`,
+      '确认删除',
+      {
+        confirmButtonText: '确认删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    await api.delete(`/admin/poets/${row.id}`)
+    ElMessage.success('删除成功')
+    table.value.fetch()
+  } catch {
+    // 用户取消删除
+  }
 }
 
 const importPoets = async (formData) => {
