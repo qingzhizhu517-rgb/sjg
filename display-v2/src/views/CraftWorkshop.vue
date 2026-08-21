@@ -81,7 +81,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useReveal } from '../composables/useReveal'
 import { useCraftProcess } from '../composables/useCraftProcess'
 import CraftStage from '../components/craft/CraftStage.vue'
@@ -123,15 +123,16 @@ const onStageReady = async (sceneApi) => {
 
   processApi.setPartNames(config.allParts)
 
-  // 同步状态到模板
+  // 同步状态到模板（用 watch 替代旧版 setInterval 轮询）
   const syncState = () => {
     currentStep.value = processApi.currentStep.value
     stepMeta.value = processApi.stepMeta.value
     playing.value = processApi.playing.value
   }
 
-  // watch currentStep 变化
-  const watchInterval = setInterval(syncState, 100)
+  const stopWatch1 = watch(() => processApi.currentStep.value, syncState)
+  const stopWatch2 = watch(() => processApi.stepMeta.value, syncState)
+  const stopWatch3 = watch(() => processApi.playing.value, syncState)
 
   // 部件交互：hover 高亮 + click 弹知识点
   sceneApi.onPartHover((name) => {
@@ -159,7 +160,9 @@ const onStageReady = async (sceneApi) => {
 
   // 清理
   onBeforeUnmount(() => {
-    clearInterval(watchInterval)
+    stopWatch1()
+    stopWatch2()
+    stopWatch3()
     processApi?.dispose()
   })
 }

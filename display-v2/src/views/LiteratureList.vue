@@ -42,7 +42,7 @@
         <div class="lit-card__body">
           <div class="lit-card__meta">
             <span class="lit-card__region">{{ item.region || '全域' }}</span>
-            <span class="lit-card__category">{{ item.category }}</span>
+            <span class="lit-card__category">{{ categoryLabel(item.category) }}</span>
           </div>
           <h3 class="lit-card__title">{{ item.title }}</h3>
           <p class="lit-card__summary">{{ item.summary }}</p>
@@ -69,6 +69,8 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '../api'
+import { NINE_CITIES } from '../config/nineCities'
+import { CATEGORY_LABELS } from '../config/culturalCategories'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
@@ -76,14 +78,12 @@ import ErrorState from '../components/homepage/ErrorState.vue'
 const route = useRoute()
 const router = useRouter()
 
-// 九城顺序与全局一致(黄河上游→下游)
-const NINE = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '淄博', '滨州', '东营']
-const region = ref(NINE.includes(route.query.region) ? route.query.region : '')
+const region = ref(NINE_CITIES.includes(route.query.region) ? route.query.region : '')
 const items = ref([])
 const loaded = ref(false)
 const errorMsg = ref('')
 
-const regionOptions = ['全部', ...NINE]
+const regionOptions = ['全部', ...NINE_CITIES]
 
 function setRegion(r) {
   region.value = r === '全部' ? '' : r
@@ -125,9 +125,11 @@ function tagsOf(item) {
   return []
 }
 
+const categoryLabel = (c) => CATEGORY_LABELS[c] || c
+
+// 印章字取条目标题首字（此前用 id % 6 取无关字，与内容零关联）
 function sealOf(item) {
-  const seals = ['传', '说', '故', '事', '民', '间']
-  return seals[item.id % seals.length]
+  return (item.title && item.title.charAt(0)) || '文'
 }
 
 onMounted(load)
@@ -160,7 +162,7 @@ onMounted(load)
 .lit-hero__title {
   font-family: var(--font-heading);
   font-size: 36px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 16px;
 }
@@ -207,7 +209,7 @@ onMounted(load)
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 24px;
-  max-width: 1200px;
+  max-width: var(--container-max);
   margin: 0 auto;
 }
 
@@ -221,8 +223,8 @@ onMounted(load)
 }
 
 .lit-card:hover {
-  transform: translateY(-2px);
-  box-shadow: none;
+  transform: translateY(-4px);
+  box-shadow: var(--card-shadow-hover);
 }
 
 .lit-card__seal {
@@ -239,7 +241,7 @@ onMounted(load)
   justify-content: center;
   font-family: var(--font-heading);
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
   transform: rotate(-15deg);
 }
 
@@ -265,7 +267,7 @@ onMounted(load)
 .lit-card__title {
   font-family: var(--font-heading);
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 12px;
 }

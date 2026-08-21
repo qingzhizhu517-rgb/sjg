@@ -1,154 +1,102 @@
 <template>
-  <section ref="root" class="rh" :class="isReal ? 'rh--real' : 'rh--inkwash'">
-    <!-- 黄河流水动画背景 -->
-    <div class="yellow-river-animation" aria-hidden="true"></div>
-    <!-- real：全屏 24 节气画卷轮播（自三江源至入海口, 不用视频） -->
-    <template v-if="isReal">
-      <div class="rh__term-stack" aria-hidden="true">
-        <Transition name="term-fade">
-          <img
-            :key="termIndex"
-            class="rh__term-img"
-            :src="termImages[termIndex]"
-            :alt="currentTerm"
-            decoding="async"
-          />
-        </Transition>
-      </div>
-      <div class="rh__overlay"></div>
-
-      <!-- 右缘竖排题款 -->
-      <p class="rh__film-kuan" aria-hidden="true">黄河二十四节气</p>
-
-      <!-- 播放控制：自动轮播开关 + 上一/下一 -->
-      <div class="rh__controls">
-        <button class="rh__ctl" :aria-pressed="autoPlay" @click="toggleAuto">{{ autoPlay ? '停' : '轮' }}</button>
-        <button class="rh__ctl" @click="stepTerm(-1)" aria-label="上一节气">‹</button>
-        <button class="rh__ctl" @click="stepTerm(1)" aria-label="下一节气">›</button>
-      </div>
-
-      <!-- 当前节气印章 + 地点 -->
-      <div class="rh__term-seal" aria-hidden="true">
-        <span>{{ currentTerm }}</span>
-      </div>
-      <p class="rh__term-loc" aria-hidden="true">{{ termLocation }}</p>
-
-      <!-- 底部 24 节气时间轴（点击跳转对应画卷） -->
-      <nav class="rh__solar-terms" aria-label="二十四节气导航">
-        <button
-          v-for="(t, i) in SOLAR_TERMS"
-          :key="t"
-          class="rh__term-chip"
-          :class="{ 'is-active': i === termIndex }"
-          @click="seekTerm(i)"
-        >{{ t }}</button>
-      </nav>
-    </template>
-
-    <!-- inkwash：左卷轴（开场晕染视频 -> 淡入定格长卷, 可重播） -->
-    <div v-else ref="artRef" class="rh__art" aria-hidden="true">
-      <Transition name="ink-freeze" mode="out-in">
-        <video
-          v-if="!reduce && !showScroll && inkOpen?.type === 'video'"
-          :key="openKey"
+  <section ref="root" class="rh">
+    <!-- 画卷层：当前节气图全屏铺底，交叉淡入 -->
+    <div class="rh__stack" aria-hidden="true">
+      <Transition name="term-fade" mode="out-in">
+        <img
+          :key="termIndex"
           class="rh__img"
-          :src="inkOpen.url"
-          :poster="inkOpen.poster"
-          autoplay
-          muted
-          playsinline
-          aria-hidden="true"
-          @ended="showScroll = true"
-          @error="showScroll = true"
+          :src="termImages[termIndex]"
+          :alt="currentTerm"
+          decoding="async"
         />
-        <img v-else :src="heroBg?.url || heroImg" alt="" class="rh__img rh__img--frozen" decoding="async" />
       </Transition>
-      <!-- 卷轴挂轴 -->
-      <span class="rh__art-rod rh__art-rod--l" aria-hidden="true"></span>
-      <span class="rh__art-rod rh__art-rod--r" aria-hidden="true"></span>
-      <div class="rh__art-frame"></div>
-      <!-- 画轴左侧题款 -->
-      <p class="rh__art-kuan">黄河之水天上来</p>
-      <p class="rh__art-kuan rh__art-kuan--2">奔流到海不复回</p>
-      <span class="rh__art-seal"></span>
-      <!-- 播毕重播 -->
-      <button v-if="showScroll && !reduce" class="rh__replay" @click="replayOpening">重播</button>
     </div>
+    <div class="rh__veil" aria-hidden="true"></div>
 
-    <!-- 右：分行大标题 + 数据 + CTA（双布局共用） -->
-    <div class="rh__content">
-      <div ref="headRef" class="rh__head">
-        <span class="rh__seal">{{ sealChar }}</span>
-        <span class="rh__eyebrow">{{ eyebrow }}</span>
+    <!-- 内容：与全站栅格同一左基线（--container-max 居中） -->
+    <div class="rh__inner">
+      <div class="rh__content">
+        <div ref="headRef" class="rh__head">
+          <span class="rh__seal">{{ sealChar }}</span>
+          <span class="rh__eyebrow">{{ eyebrow }}</span>
+        </div>
+
+        <h1 ref="titleRef" class="rh__title">
+          <span class="rh__title-line">{{ titleLine1 }}</span>
+          <span class="rh__title-line">{{ titleLine2 }}</span>
+        </h1>
+
+        <p ref="subRef" class="rh__subtitle">{{ subtitle }}</p>
+
+        <ul ref="statsRef" class="rh__stats" v-if="stats && stats.length">
+          <li v-for="(s, i) in stats" :key="i" class="rh__stat">
+            <span class="rh__stat-num">
+              {{ s.value }}<i class="rh__stat-suffix">{{ s.suffix || '' }}</i>
+            </span>
+            <span class="rh__stat-label">{{ s.label }}</span>
+          </li>
+        </ul>
+
+        <button v-if="ctaLabel" ref="ctaRef" class="rh__cta" @click="$emit('cta')">
+          <span>{{ ctaLabel }}</span>
+          <span class="rh__cta-arrow">↓</span>
+        </button>
+
+        <!-- 当前节气题识（流内，不再绝对定位到首屏之外） -->
+        <p class="rh__kuan">
+          <span class="rh__kuan-seal">{{ currentTerm }}</span>
+          <span class="rh__kuan-loc">{{ termLocation }}</span>
+        </p>
       </div>
-
-      <h1 ref="titleRef" class="rh__title">
-        <span class="rh__title-line">{{ titleLine1 }}</span>
-        <span class="rh__title-line">{{ titleLine2 }}</span>
-      </h1>
-
-      <p ref="subRef" class="rh__subtitle">{{ subtitle }}</p>
-
-      <ul ref="statsRef" class="rh__stats" v-if="stats && stats.length">
-        <li v-for="(s, i) in stats" :key="i" class="rh__stat">
-          <span class="rh__stat-num">
-            {{ s.value }}<i class="rh__stat-suffix">{{ s.suffix || '' }}</i>
-          </span>
-          <span class="rh__stat-label">{{ s.label }}</span>
-        </li>
-      </ul>
-
-      <button v-if="ctaLabel" ref="ctaRef" class="rh__cta" @click="$emit('cta')">
-        <span>{{ ctaLabel }}</span>
-        <span class="rh__cta-arrow">↓</span>
-      </button>
     </div>
+
+    <!-- 右缘竖排节气轨：24 项全部以刻度呈现，激活/悬停时显名。
+         改自原底部横向 chip 条 —— 那版 24 个 chip 共约 1290px 却只有 1080px 容器，
+         且隐藏了滚动条，导致 4-5 个节气无法发现；且整条位于首屏之下。 -->
+    <nav class="rh__terms" aria-label="二十四节气导航">
+      <span class="rh__terms-title" aria-hidden="true">黄河二十四节气</span>
+      <button
+        v-for="(t, i) in SOLAR_TERMS"
+        :key="t"
+        class="rh__term"
+        :class="{ 'is-active': i === termIndex }"
+        :aria-current="i === termIndex ? 'true' : undefined"
+        @click="seekTerm(i)"
+      >
+        <span class="rh__term-name">{{ t }}</span>
+        <span class="rh__term-tick" aria-hidden="true"></span>
+      </button>
+      <span class="rh__terms-ctl">
+        <button class="rh__ctl" :aria-pressed="autoPlay" :aria-label="autoPlay ? '暂停轮播' : '开始轮播'" @click="toggleAuto">{{ autoPlay ? '停' : '轮' }}</button>
+        <button class="rh__ctl" aria-label="上一节气" @click="stepTerm(-1)">‹</button>
+        <button class="rh__ctl" aria-label="下一节气" @click="stepTerm(1)">›</button>
+      </span>
+    </nav>
   </section>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import gsap from 'gsap'
-import heroImg from '../../assets/illustrations/00-hero-yellow-river.png'
-import { useTheme } from '../../composables/useTheme'
 
 defineProps({
   eyebrow: { type: String, default: '山东 · 黄河入海' },
   sealChar: { type: String, default: '河' },
   titleLine1: { type: String, default: '山东揽胜' },
   titleLine2: { type: String, default: '黄河入海' },
+  // 不含具体数量词：数量由下方 stats 从 API 实时给出。
+  // 旧默认值写死「三百余处、近百位」，与正下方的实时数字自相矛盾。
   subtitle: {
     type: String,
-    default:
-      '黄河自菏泽入境，经九城，至东营归海。沿途孕育文学景观三百余处，文人大家近百位，传世名篇千载流芳。',
+    default: '黄河自菏泽入境，经九城，至东营归海。沿途文脉绵延，名士辈出，名篇千载流芳。',
   },
   stats: { type: Array, default: () => [] },
   ctaLabel: { type: String, default: '沿河而下' },
 })
 defineEmits(['cta'])
 
-const { isReal, resolveAsset } = useTheme()
-
-// 媒体解析：real 首屏已改为 24 节气图片轮播(termImages)；inkwash 沿用 hero-scroll 长卷 + hero-open 开场视频
-const heroBg = computed(() => (!isReal.value ? resolveAsset('hero-scroll') : null))
-const inkOpen = computed(() => (!isReal.value ? resolveAsset('hero-open') : null))
-
-// inkwash 开场视频播完定格长卷
-const showScroll = ref(false)
-// 重播键：自增强制重挂 video 元素
-const openKey = ref(0)
-const replayOpening = () => {
-  openKey.value += 1
-  showScroll.value = false
-}
-// real 视频加载失败降级 poster/插画
-const videoErr = ref(false)
-watch(isReal, () => {
-  showScroll.value = false
-  videoErr.value = false
-})
-
-// ---- real 24 节气画卷轮播（图片替代视频, 更流畅更清晰）----
+// ---- 24 节气画卷轮播 ----
 const SOLAR_TERMS = [
   '立春', '雨水', '惊蛰', '春分', '清明', '谷雨',
   '立夏', '小满', '芒种', '夏至', '小暑', '大暑',
@@ -176,6 +124,12 @@ const autoPlay = ref(true)
 let autoTimer = null
 const currentTerm = computed(() => SOLAR_TERMS[termIndex.value] || '立春')
 const termLocation = computed(() => TERM_LOCATIONS[currentTerm.value] || '')
+
+// 预取下一张：单图 170-355KB，冷加载时若不预取，淡入前期会露出底色
+watch(termIndex, (i) => {
+  const next = termImages[(i + 1) % SOLAR_TERMS.length]
+  if (next) new Image().src = next
+}, { immediate: true })
 
 const seekTerm = (i) => {
   termIndex.value = (i + SOLAR_TERMS.length) % SOLAR_TERMS.length
@@ -207,7 +161,6 @@ const reduce = ref(
 )
 
 const root = ref(null)
-const artRef = ref(null)
 const headRef = ref(null)
 const titleRef = ref(null)
 const subRef = ref(null)
@@ -219,14 +172,8 @@ onMounted(() => {
   restartAuto()
   if (reduce.value || !root.value) return
   tl = gsap.timeline({ delay: 0.15 })
-  if (!isReal.value && artRef.value)
-    tl.from(artRef.value, { opacity: 0, x: -28, duration: 0.9, ease: 'power3.out' })
   if (headRef.value)
-    tl.from(
-      headRef.value.children,
-      { opacity: 0, y: 14, duration: 0.5, stagger: 0.08, ease: 'power2.out' },
-      '-=0.55',
-    )
+    tl.from(headRef.value.children, { opacity: 0, y: 14, duration: 0.5, stagger: 0.08, ease: 'power2.out' })
   if (titleRef.value)
     tl.from(
       titleRef.value.querySelectorAll('.rh__title-line'),
@@ -236,11 +183,7 @@ onMounted(() => {
   if (subRef.value)
     tl.from(subRef.value, { opacity: 0, y: 14, duration: 0.5, ease: 'power3.out' }, '-=0.45')
   if (statsRef.value)
-    tl.from(
-      statsRef.value.children,
-      { opacity: 0, y: 12, duration: 0.45, stagger: 0.06, ease: 'power3.out' },
-      '-=0.3',
-    )
+    tl.from(statsRef.value.children, { opacity: 0, y: 12, duration: 0.45, stagger: 0.06, ease: 'power3.out' }, '-=0.3')
   if (ctaRef.value)
     tl.from(ctaRef.value, { opacity: 0, y: 10, duration: 0.4, ease: 'power3.out' }, '-=0.25')
 })
@@ -253,355 +196,74 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* 首屏：全铺节气画卷 + 左下题识。
+   高度扣掉 header（旧版是裸 100vh，而 .main-content 有 padding-top:64px，
+   导致 hero 底边落在 100vh+64px，底部控件整条在首屏之外）。
+   用 dvh 避免移动端地址栏收缩时跳变。 */
 .rh {
   position: relative;
   overflow: hidden;
-  background: var(--bg-primary);
-}
-
-/* ============ real：全屏长片 + 节气叙事 ============ */
-.rh--real {
+  background: var(--bg-tertiary);
+  min-height: calc(100dvh - var(--nav-height));
   display: flex;
   align-items: flex-end;
-  justify-content: flex-start;
-  min-height: 100vh;
-  padding: 120px 56px 132px;
 }
-/* 画卷层: 当前节气图全屏铺底, 切换时交叉淡入淡出 */
-.rh__term-stack {
+
+.rh__stack {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: #101820;
 }
-.rh__term-img {
+.rh__img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.term-fade-enter-active,
+/* mode="out-in"：旧版进出场并发，两张半透明图叠在深色底上，
+   中点合成 alpha≈0.75 → 每 8 秒整屏向近黑下沉再回来 */
+.term-fade-enter-active {
+  transition: opacity 1.2s ease;
+}
 .term-fade-leave-active {
-  transition: opacity 1.4s ease;
+  transition: opacity 0.4s ease;
 }
 .term-fade-enter-from,
 .term-fade-leave-to {
   opacity: 0;
 }
-.rh__overlay {
+
+.rh__veil {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.18) 45%, rgba(0, 0, 0, 0.62) 100%);
   z-index: 1;
-}
-/* 节气地点小注 */
-.rh__term-loc {
-  position: absolute;
-  left: 56px;
-  bottom: 92px;
-  margin: 0;
-  font-size: 13px;
-  letter-spacing: 3px;
-  color: rgba(245, 239, 227, 0.75);
-  z-index: 2;
-  pointer-events: none;
-}
-.rh--real .rh__content {
-  max-width: 560px;
-  text-align: left;
-}
-.rh--real .rh__head {
-  justify-content: flex-start;
-}
-.rh--real .rh__title {
-  align-items: flex-start;
-}
-.rh--real .rh__title-line {
-  color: #f5efe3;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
-}
-.rh--real .rh__subtitle {
-  color: rgba(245, 239, 227, 0.85);
-  margin-left: 0;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
-}
-.rh--real .rh__stats {
-  border-color: rgba(245, 239, 227, 0.25);
-}
-.rh--real .rh__stat-label,
-.rh--real .rh__stat-suffix {
-  color: rgba(245, 239, 227, 0.7);
-}
-.rh--real .rh__stat-num {
-  color: #f5efe3;
-}
-.rh--real .rh__cta {
-  background: #f5efe3;
-  color: #1a1206;
-  border-color: #f5efe3;
-}
-.rh--real .rh__cta:hover {
-  background: var(--accent);
-  color: #f5efe3;
-  border-color: var(--accent);
+  background: linear-gradient(
+    100deg,
+    var(--overlay-strong) 0%,
+    color-mix(in srgb, var(--text-primary) 30%, transparent) 46%,
+    transparent 72%
+  );
 }
 
-/* 右缘竖排题款 */
-.rh__film-kuan {
-  position: absolute;
-  right: 40px;
-  top: 50%;
-  transform: translateY(-50%);
-  writing-mode: vertical-rl;
-  font-family: var(--font-heading);
-  font-size: 15px;
-  letter-spacing: 8px;
-  color: rgba(245, 239, 227, 0.55);
-  margin: 0;
-  z-index: 2;
-  pointer-events: none;
-}
-
-/* 播放控制 */
-.rh__controls {
-  position: absolute;
-  top: 22px;
-  right: 22px;
-  display: flex;
-  gap: 10px;
-  z-index: 3;
-}
-.rh__ctl {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.28);
-  border: 1px solid rgba(245, 239, 227, 0.35);
-  border-radius: 50%;
-  color: #f5efe3;
-  font-family: var(--font-heading);
-  font-size: 13px;
-  letter-spacing: 1px;
-  cursor: pointer;
-  backdrop-filter: blur(4px);
-  transition: all 0.25s ease;
-}
-.rh__ctl:hover {
-  background: var(--accent);
-  border-color: var(--accent);
-}
-
-/* 当前节气印章 */
-.rh__term-seal {
-  position: absolute;
-  right: 44px;
-  bottom: 108px;
-  width: 58px;
-  height: 74px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(178, 58, 43, 0.88);
-  border-radius: 3px;
-  transform: rotate(-3deg);
-  z-index: 2;
-  pointer-events: none;
-}
-.rh__term-seal span {
-  writing-mode: vertical-rl;
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 900;
-  letter-spacing: 4px;
-  color: #f5efe3;
-}
-
-/* 底部 24 节气时间轴 */
-.rh__solar-terms {
-  position: absolute;
-  left: 50%;
-  bottom: 30px;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 6px;
-  max-width: calc(100% - 200px);
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 4px 2px;
-  z-index: 3;
-}
-.rh__solar-terms::-webkit-scrollbar {
-  display: none;
-}
-.rh__term-chip {
-  flex-shrink: 0;
-  padding: 5px 10px;
-  background: rgba(0, 0, 0, 0.26);
-  border: 1px solid rgba(245, 239, 227, 0.22);
-  border-radius: 2px;
-  color: rgba(245, 239, 227, 0.68);
-  font-size: 12px;
-  letter-spacing: 1px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.22s ease;
-}
-.rh__term-chip:hover {
-  color: #f5efe3;
-  border-color: rgba(245, 239, 227, 0.6);
-}
-.rh__term-chip.is-active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-  transform: translateY(-2px);
-}
-
-/* ============ inkwash：左右分栏 ============ */
-.rh--inkwash {
-  display: grid;
-  grid-template-columns: 55% 45%;
-  gap: 48px;
-  align-items: center;
-  padding: 64px 56px 96px;
-}
-
-/* ============ 左：国画/媒体 ============ */
-.rh__art {
+.rh__inner {
   position: relative;
-  aspect-ratio: 4 / 3;
-  border-radius: 4px;
-  overflow: hidden;
-  background: var(--bg-secondary);
-  box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.04),
-    0 24px 64px rgba(158, 43, 37, 0.08);
-}
-.rh__img {
+  z-index: 2;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-/* 开场视频 → 长卷的墨化淡入 */
-.ink-freeze-enter-active {
-  transition: opacity 1.4s ease;
-}
-.ink-freeze-leave-active {
-  transition: opacity 0.5s ease;
-}
-.ink-freeze-enter-from {
-  opacity: 0;
-}
-.ink-freeze-leave-to {
-  opacity: 0;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--sp-9) var(--sp-5) var(--sp-8);
 }
 
-/* 卷轴挂轴（左右木轴） */
-.rh__art-rod {
-  position: absolute;
-  top: -8px;
-  bottom: -8px;
-  width: 14px;
-  background: linear-gradient(90deg, #8a6a3f, #c9a568 45%, #8a6a3f);
-  border-radius: 7px;
-  z-index: 3;
-  pointer-events: none;
-}
-.rh__art-rod--l { left: -4px; }
-.rh__art-rod--r { right: -4px; }
-
-/* 播毕重播钮 */
-.rh__replay {
-  position: absolute;
-  right: 22px;
-  bottom: 18px;
-  padding: 6px 14px;
-  background: rgba(245, 239, 227, 0.9);
-  border: 1px solid rgba(158, 43, 37, 0.35);
-  border-radius: 2px;
-  color: #9e2b25;
-  font-family: var(--font-heading);
-  font-size: 12px;
-  letter-spacing: 2px;
-  cursor: pointer;
-  z-index: 4;
-  transition: all 0.25s ease;
-}
-.rh__replay:hover {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-.rh__art-frame {
-  position: absolute;
-  inset: 14px;
-  border: 1px solid rgba(158, 43, 37, 0.18);
-  pointer-events: none;
-}
-.rh__art-frame::before,
-.rh__art-frame::after {
-  content: '';
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  border-color: rgba(158, 43, 37, 0.5);
-  border-style: solid;
-}
-.rh__art-frame::before {
-  top: -1px;
-  left: -1px;
-  border-width: 1.5px 0 0 1.5px;
-}
-.rh__art-frame::after {
-  bottom: -1px;
-  right: -1px;
-  border-width: 0 1.5px 1.5px 0;
-}
-
-.rh__art-kuan {
-  position: absolute;
-  top: 32px;
-  left: 32px;
-  writing-mode: vertical-rl;
-  font-family: var(--font-heading);
-  font-size: 14px;
-  letter-spacing: 6px;
-  color: rgba(61, 43, 31, 0.7);
-  margin: 0;
-  text-shadow: 0 1px 0 rgba(245, 239, 227, 0.6);
-}
-.rh__art-kuan--2 {
-  left: 60px;
-  top: 48px;
-}
-.rh__art-seal {
-  position: absolute;
-  left: 30px;
-  top: calc(32px + 9em);
-  width: 22px;
-  height: 22px;
-  background: #9e2b25;
-  border-radius: 2px;
-  opacity: 0.9;
-  transform: rotate(-2deg);
-}
-
-/* ============ 右：文字 ============ */
 .rh__content {
-  position: relative;
-  z-index: 2;
-  max-width: 460px;
+  max-width: var(--measure-wide);
 }
 
 .rh__head {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 28px;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
 }
 .rh__seal {
   width: 42px;
@@ -609,110 +271,108 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #9e2b25;
-  color: #f5efe3;
+  background: var(--accent);
+  color: var(--text-on-accent);
   font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 900;
-  border-radius: 3px;
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
   transform: rotate(-3deg);
-  box-shadow: 0 3px 10px rgba(158, 43, 37, 0.28);
   flex-shrink: 0;
-}
-.theme-real .rh__seal {
-  background: #b23a2b;
 }
 .rh__eyebrow {
   font-family: var(--font-heading);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--fs-caption);
+  font-weight: 600;
   letter-spacing: 5px;
-  color: var(--accent);
+  color: var(--bg-primary);
 }
 
 .rh__title {
-  margin: 0 0 22px 0;
+  margin: 0 0 var(--sp-5) 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 .rh__title-line {
   font-family: var(--font-display);
-  font-size: clamp(56px, 6.2vw, 92px);
-  font-weight: 900;
-  letter-spacing: 12px;
-  line-height: 1.05;
-  color: var(--text-primary);
+  font-size: var(--fs-display);
+  font-weight: 600;
+  /* 6px 而非 12px：letter-spacing 会加在末字之后，
+     4 字标题右侧多出的空白会破坏与副标题的左对齐感知 */
+  letter-spacing: 6px;
+  line-height: var(--lh-tight);
+  color: var(--bg-primary);
   display: block;
 }
 
 .rh__subtitle {
-  font-size: 14px;
-  line-height: 2;
-  letter-spacing: 0.5px;
-  color: var(--text-secondary);
-  margin: 0 0 28px 0;
-  max-width: 420px;
+  font-size: var(--fs-body);
+  line-height: var(--lh-loose);
+  color: color-mix(in srgb, var(--bg-primary) 85%, transparent);
+  margin: 0 0 var(--sp-5) 0;
+  max-width: var(--measure);
 }
 
-/* 数据条 */
+/* 数据条：全站唯一一处四联统计（原先首页出现 3 次） */
 .rh__stats {
   list-style: none;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  padding: 18px 0;
-  margin: 0 0 26px 0;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  gap: var(--sp-4);
+  padding: var(--sp-4) 0;
+  margin: 0 0 var(--sp-5) 0;
+  border-top: 1px solid color-mix(in srgb, var(--bg-primary) 25%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--bg-primary) 25%, transparent);
+  max-width: var(--measure-wide);
 }
 .rh__stat {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
   text-align: left;
 }
 .rh__stat-num {
   font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 900;
-  color: var(--accent);
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  color: var(--bg-primary);
   line-height: 1;
 }
 .rh__stat-suffix {
   font-style: normal;
-  font-size: 13px;
+  font-size: var(--fs-body-sm);
   margin-left: 2px;
-  color: var(--text-muted);
+  color: color-mix(in srgb, var(--bg-primary) 70%, transparent);
 }
 .rh__stat-label {
-  font-size: 11px;
+  font-size: var(--fs-caption);
   letter-spacing: 2px;
-  color: var(--text-muted);
+  color: color-mix(in srgb, var(--bg-primary) 70%, transparent);
 }
 
 /* CTA */
 .rh__cta {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 13px 30px;
-  background: var(--text-primary);
-  color: var(--bg-primary);
-  border: 1px solid var(--text-primary);
-  border-radius: 2px;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-6);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--bg-primary);
+  border-radius: var(--radius-sm);
   font-family: var(--font-heading);
-  font-size: 14px;
-  font-weight: 700;
+  font-size: var(--fs-body-sm);
+  font-weight: 600;
   letter-spacing: 3px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background 0.3s, color 0.3s, transform 0.3s;
 }
 .rh__cta:hover {
   background: var(--accent);
   border-color: var(--accent);
+  color: var(--text-on-accent);
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(158, 43, 37, 0.25);
 }
 .rh__cta-arrow {
   transition: transform 0.3s;
@@ -721,92 +381,179 @@ onBeforeUnmount(() => {
   transform: translateY(3px);
 }
 
-/* ============ 响应式 ============ */
+/* 节气题识（流内，跟随内容） */
+.rh__kuan {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: var(--sp-6) 0 0;
+}
+.rh__kuan-seal {
+  padding: 3px var(--sp-2);
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font-family: var(--font-display);
+  font-size: var(--fs-body-sm);
+  letter-spacing: 2px;
+  border-radius: var(--radius-sm);
+  transform: rotate(-2deg);
+}
+.rh__kuan-loc {
+  font-size: var(--fs-caption);
+  letter-spacing: 2px;
+  color: color-mix(in srgb, var(--bg-primary) 70%, transparent);
+}
+
+/* ===== 右缘竖排节气轨 =====
+   24 项以刻度形式常驻，激活/悬停显名。旧版是底部横向 chip 条：
+   总宽约 1290px 却只有 1080px 容器且隐藏滚动条，末尾数项无法发现。 */
+.rh__terms {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  padding: var(--sp-8) var(--sp-5);
+}
+.rh__terms-title {
+  writing-mode: vertical-rl;
+  font-family: var(--font-heading);
+  font-size: var(--fs-caption);
+  letter-spacing: 6px;
+  color: color-mix(in srgb, var(--bg-primary) 55%, transparent);
+  margin-bottom: var(--sp-4);
+}
+.rh__term {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  padding: 1px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: color-mix(in srgb, var(--bg-primary) 55%, transparent);
+  transition: color 0.22s;
+}
+.rh__term-name {
+  font-family: var(--font-heading);
+  font-size: var(--fs-caption);
+  letter-spacing: 2px;
+  opacity: 0;
+  transform: translateX(6px);
+  transition: opacity 0.22s, transform 0.22s;
+}
+.rh__term-tick {
+  width: 14px;
+  height: 1px;
+  background: currentColor;
+  transition: width 0.22s, background 0.22s;
+  flex-shrink: 0;
+}
+.rh__term:hover,
+.rh__term:focus-visible {
+  color: var(--bg-primary);
+}
+.rh__term:hover .rh__term-name,
+.rh__term:focus-visible .rh__term-name {
+  opacity: 1;
+  transform: none;
+}
+.rh__term:hover .rh__term-tick {
+  width: 22px;
+}
+.rh__term.is-active {
+  color: var(--accent-light);
+}
+.rh__term.is-active .rh__term-name {
+  opacity: 1;
+  transform: none;
+}
+.rh__term.is-active .rh__term-tick {
+  width: 28px;
+  background: var(--accent-light);
+}
+
+.rh__terms-ctl {
+  display: flex;
+  gap: var(--sp-1);
+  margin-top: var(--sp-4);
+}
+.rh__ctl {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--text-primary) 30%, transparent);
+  border: 1px solid color-mix(in srgb, var(--bg-primary) 35%, transparent);
+  border-radius: 50%;
+  color: var(--bg-primary);
+  font-family: var(--font-heading);
+  font-size: var(--fs-caption);
+  cursor: pointer;
+  transition: background 0.25s, border-color 0.25s;
+}
+.rh__ctl:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ===== 响应式 ===== */
 @media (max-width: 1024px) {
-  .rh--inkwash {
-    grid-template-columns: 1fr;
-    gap: 32px;
-    padding: 48px 32px 72px;
+  .rh__inner {
+    padding: var(--sp-8) var(--sp-5) var(--sp-7);
   }
-  .rh--real {
-    padding: 96px 32px 128px;
-  }
-  .rh__content {
-    max-width: 640px;
+  .rh__terms {
+    padding: var(--sp-7) var(--sp-4);
   }
   .rh__title-line {
-    letter-spacing: 8px;
-  }
-  .rh__solar-terms {
-    max-width: calc(100% - 32px);
+    letter-spacing: 4px;
   }
 }
 @media (max-width: 640px) {
-  .rh--inkwash {
-    padding: 32px 20px 56px;
-    gap: 24px;
+  .rh {
+    align-items: flex-end;
   }
-  .rh--real {
-    padding: 88px 20px 124px;
-    min-height: 100svh;
+  .rh__inner {
+    padding: var(--sp-8) var(--sp-4) var(--sp-6);
   }
-  .rh__film-kuan {
+  /* 窄屏收为纯刻度条，不占文字宽度 */
+  .rh__terms {
+    padding: var(--sp-6) var(--sp-2);
+    gap: 1px;
+  }
+  .rh__terms-title,
+  .rh__term-name {
     display: none;
   }
-  .rh__term-loc {
-    left: 20px;
-    bottom: 88px;
-    letter-spacing: 2px;
-  }
-  .rh__term-seal {
-    right: 20px;
-    bottom: 92px;
-    width: 44px;
-    height: 58px;
-  }
-  .rh__term-seal span {
-    font-size: 17px;
-    letter-spacing: 3px;
-  }
-  .rh__title-line {
-    font-size: clamp(40px, 11vw, 56px);
-    letter-spacing: 6px;
+  .rh__term-tick {
+    width: 10px;
   }
   .rh__stats {
     grid-template-columns: repeat(2, 1fr);
   }
-  .rh__art-kuan {
-    font-size: 12px;
-    letter-spacing: 4px;
+  .rh__kuan {
+    flex-wrap: wrap;
+    gap: var(--sp-2);
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
-  .rh__cta,
-  .rh__cta-arrow {
-    transition: none;
-  }
   .term-fade-enter-active,
-  .term-fade-leave-active {
+  .term-fade-leave-active,
+  .rh__cta,
+  .rh__cta-arrow,
+  .rh__term,
+  .rh__term-name,
+  .rh__term-tick,
+  .rh__ctl {
     transition: none;
   }
 }
-/* 黄河流水动画 */
-.yellow-river-animation {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent 0%, rgba(200, 164, 92, 0.1) 20%, rgba(200, 164, 92, 0.3) 50%, rgba(200, 164, 92, 0.1) 80%, transparent 100%);
-  background-size: 200% 100%;
-  animation: riverFlow 8s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 0;
-}
-
-@keyframes riverFlow {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
 </style>

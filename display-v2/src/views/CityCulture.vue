@@ -128,14 +128,12 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '../api'
+import { NINE_CITIES } from '../config/nineCities'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import SectionHeading from '../components/homepage/SectionHeading.vue'
 
 const route = useRoute()
-
-// 黄河上游→下游九城(与 MapView/后端 /spots/regions 一致)
-const NINE_CITIES = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '淄博', '滨州', '东营']
 const CITY_DESCRIPTORS = {
   菏泽: '黄河入鲁首站，牡丹之都，曹州古韵。',
   济宁: '运河之都，孔孟故里，太白遗风。',
@@ -250,10 +248,10 @@ onMounted(load)
   align-items: center;
   justify-content: center;
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   font-family: var(--font-display);
   font-size: 52px;
-  font-weight: 900;
+  font-weight: 600;
   border-radius: 4px;
   transform: rotate(-3deg);
   flex-shrink: 0;
@@ -300,9 +298,9 @@ onMounted(load)
   align-items: center;
   justify-content: center;
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   font-family: var(--font-display);
-  font-weight: 900;
+  font-weight: 600;
   border-radius: 2px;
   flex-shrink: 0;
 }

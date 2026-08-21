@@ -63,9 +63,6 @@ const otherTitles = computed(() => {
   text-align: left;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
-.theme-real .sc {
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--text-primary) 4%, transparent);
-}
 .sc:hover {
   transform: translateY(-4px);
   border-color: var(--accent);
@@ -91,9 +88,6 @@ const otherTitles = computed(() => {
   border-radius: 3px;
   transform: rotate(-3deg);
   flex-shrink: 0;
-}
-.theme-real .sc__seal {
-  background: var(--accent-light);
 }
 .sc__meta {
   font-size: 12px;

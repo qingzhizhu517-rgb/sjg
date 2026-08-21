@@ -147,7 +147,7 @@ onBeforeUnmount(() => {
   aspect-ratio: 4 / 3;
   border-radius: 12px;
   overflow: hidden;
-  background: var(--craft-stage-bg, #1a1a1a);
+  background: var(--surface-sunken);
 }
 
 .craft-stage__canvas {

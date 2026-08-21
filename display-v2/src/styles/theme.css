@@ -1,0 +1,94 @@
+/* 全局装饰层（2026-08-20 主题收敛：原 .theme-inkwash 作用域提为无前缀全局）。
+   token 定义在 variables.css :root，本文件只放装饰性规则，不定义任何 token。
+   原 styles/real.css 已删除（它只含 .theme-real 装饰）。 */
+
+/* 宣纸纹理：固定全屏叠加层 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--z-mask);
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* 卡片：细墨线 + 内圈淡朱砂 */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--card-shadow);
+  position: relative;
+  transition: border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: 1px solid var(--accent-soft);
+  border-radius: inherit;
+  pointer-events: none;
+  transition: border-color 0.4s;
+}
+
+.card:hover::before {
+  border-color: var(--accent-hover);
+}
+
+/* 朱砂分隔线（中缀「印」字） */
+.divider {
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  margin: var(--sp-5) auto;
+  position: relative;
+}
+
+.divider::before {
+  content: '印';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.7);
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--bg-primary);
+  padding: 0 6px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+}
+
+/* 区块标题：笔锋下划线 */
+.section-heading {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  color: var(--text-primary);
+  position: relative;
+  padding-bottom: var(--sp-3);
+  letter-spacing: 3px;
+}
+
+.section-heading::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 48px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
+
+.section-heading.center::after {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .card::before {
+    transition: none;
+  }
+}

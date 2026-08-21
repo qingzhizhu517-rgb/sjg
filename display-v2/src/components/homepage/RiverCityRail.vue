@@ -272,7 +272,7 @@ const citiesWithMeta = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #f5efe3;
+  color: var(--bg-primary);
   font-family: var(--font-display);
   font-size: 14px;
   font-weight: 900;

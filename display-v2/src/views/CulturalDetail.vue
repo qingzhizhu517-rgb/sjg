@@ -14,7 +14,10 @@
 
     <div v-else-if="item" class="cd-content">
       <header class="cd-head">
-        <span class="cd-seal" aria-hidden="true">{{ sealOf(item) }}</span>
+        <div class="cd-head-media">
+          <img v-if="heroImage" :src="heroImage" :alt="item.title" class="cd-hero-img" />
+          <InkPlaceholder v-else :seed="item.id || item.title" :kind="item.category || '文'" />
+        </div>
         <div class="cd-head-main">
           <span class="cd-category">{{ categoryLabel(item.category) }}</span>
           <h1 class="cd-title">{{ item.title }}</h1>
@@ -48,6 +51,11 @@
         </div>
       </section>
     </div>
+
+    <!-- 加载完成但无数据（item===null）: 此前整页空白只剩返回链接 -->
+    <div v-else class="cd-state">
+      <EmptyState message="未找到该文化条目" hint="它可能已被移除，返回文化长廊看看其他内容" />
+    </div>
   </div>
 </template>
 
@@ -55,8 +63,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '../api'
+import { parseFirstUrl } from '../composables/useImage'
+import { CATEGORY_LABELS } from '../config/culturalCategories'
+import InkPlaceholder from '../components/InkPlaceholder.vue'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
+import EmptyState from '../components/homepage/EmptyState.vue'
 
 const route = useRoute()
 
@@ -79,8 +91,13 @@ const backTo = computed(() => {
   return prefix ? CATEGORY_BACK[prefix] : '/literature'
 })
 
-const CATEGORY_LABELS = { craft: '非遗工艺', literature: '民间文学', food_opera: '饮食戏曲', festival: '民俗节庆' }
-const categoryLabel = (c) => CATEGORY_LABELS[c] || c
+const CATEGORY_LABELS_LOCAL = CATEGORY_LABELS
+const categoryLabel = (c) => CATEGORY_LABELS_LOCAL[c] || c
+
+// 主表配图：imageAnimeUrl 优先（库里现有数据在 anime 字段），imageUrl 兜底
+const heroImage = computed(() =>
+  parseFirstUrl(item.value?.imageAnimeUrl) || parseFirstUrl(item.value?.imageUrl) || null,
+)
 
 // 各 detail 表的字段中文标签(与后端实体字段对应)
 const DETAIL_LABELS = {
@@ -113,11 +130,6 @@ const detailFields = computed(() => {
     .map(([key, label]) => ({ label, value: d[key] }))
     .filter((f) => f.value !== null && f.value !== undefined && f.value !== '')
 })
-
-function sealOf(it) {
-  const seals = ['文', '艺', '食', '戏', '传', '俗']
-  return seals[it.id % seals.length]
-}
 
 function tagsOf(it) {
   const t = it && it.tags
@@ -175,19 +187,18 @@ onMounted(load)
   margin-bottom: 32px;
   border-bottom: 1px solid var(--border);
 }
-.cd-seal {
-  width: 76px;
-  height: 76px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  font-size: 40px;
-  font-weight: 900;
-  color: #fff;
-  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+.cd-head-media {
+  width: 120px;
+  height: 120px;
   border-radius: 6px;
+  overflow: hidden;
   flex-shrink: 0;
+}
+.cd-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .cd-head-main { text-align: left; }
 .cd-category {
@@ -203,7 +214,7 @@ onMounted(load)
 .cd-title {
   font-family: var(--font-heading);
   font-size: 30px;
-  font-weight: 700;
+  font-weight: 600;
   margin: 0 0 8px;
   color: var(--text-primary);
   letter-spacing: 2px;
@@ -215,7 +226,7 @@ onMounted(load)
 .cd-section-title {
   font-family: var(--font-heading);
   font-size: 17px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
   letter-spacing: 2px;
   border-left: 3px solid var(--accent);

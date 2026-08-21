@@ -1,32 +1,37 @@
 <template>
   <section ref="rootRef" class="cultural-gallery">
-    <div class="section-header">
-      <span class="section-tag">文化长廊</span>
-      <h2 class="section-title">五脉流芳 · 齐鲁大观</h2>
-      <p class="section-desc">
-        节令风物、诗词歌赋、百工之艺、闾巷传说、食味梨园，沿黄文化全景在此徐徐展开。
-      </p>
-    </div>
-
-    <div class="gallery-grid">
+    <!-- 五大板块 -->
+    <div class="cg-grid">
       <component
         :is="c.ready ? 'router-link' : 'div'"
         v-for="(c, i) in cards"
         :key="c.key"
         :to="c.ready ? c.route : undefined"
-        class="gallery-card"
+        class="cg-card"
         :class="{ disabled: !c.ready }"
-        :style="{ animationDelay: `${i * 0.07}s` }"
+        :style="{ animationDelay: `${i * 0.1}s` }"
         :aria-disabled="!c.ready"
         data-reveal
       >
-        <div class="gallery-card__seal">{{ c.seal }}</div>
-        <h3 class="gallery-card__name">{{ c.name }}</h3>
-        <p class="gallery-card__count">
-          <template v-if="c.ready">{{ countOf(c.key) }} 条收录</template>
-          <template v-else>筹备中</template>
-        </p>
-        <span v-if="!c.ready" class="gallery-card__badge">敬请期待</span>
+        <!-- 卡片图片区域：水墨风格（印章字 + 淡朱砂底） -->
+        <div class="cg-card__image">
+          <span class="cg-card__seal-char">{{ c.seal }}</span>
+          <div class="cg-card__count">
+            <template v-if="c.ready">{{ countOf(c.key) }} 条收录</template>
+            <template v-else>筹备中</template>
+          </div>
+        </div>
+
+        <!-- 卡片内容 -->
+        <div class="cg-card__content">
+          <h3 class="cg-card__name">{{ c.name }}</h3>
+          <p class="cg-card__desc">{{ c.desc }}</p>
+          <div class="cg-card__tags">
+            <span v-for="tag in c.tags" :key="tag" class="cg-card__tag">{{ tag }}</span>
+          </div>
+          <span v-if="c.ready" class="cg-card__arrow">探索更多 →</span>
+          <span v-else class="cg-card__badge">敬请期待</span>
+        </div>
       </component>
     </div>
   </section>
@@ -53,7 +58,6 @@ const loadCounts = async () => {
     for (const s of stats) map[s.category] = s.count
     counts.value = map
   } catch (err) {
-    // 计数失败不阻塞入口渲染
     console.warn('文化类别计数加载失败:', err)
   }
 }
@@ -66,148 +70,178 @@ onMounted(async () => {
 
 <style scoped>
 .cultural-gallery {
-  max-width: 1280px;
+  max-width: var(--container-max);
   margin: 0 auto;
-  padding: 96px 40px;
+  padding: 0 var(--sp-5) var(--sp-10);
 }
 
-.section-header {
-  text-align: center;
-  margin-bottom: 48px;
-}
-
-.section-tag {
-  display: inline-block;
-  font-family: var(--font-heading);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 3px;
-  color: #fff;
-  background: var(--accent, #9e2b25);
-  padding: 5px 12px;
-  border-radius: 2px;
-  margin-bottom: 16px;
-}
-
-.section-title {
-  font-family: var(--font-heading);
-  font-size: clamp(24px, 3vw, 34px);
-  font-weight: 900;
-  letter-spacing: 6px;
-  color: var(--text-primary);
-  margin: 0 0 12px;
-}
-
-.section-desc {
-  font-size: 14px;
-  color: var(--text-muted);
-  letter-spacing: 1px;
-  margin: 0;
-}
-
-.gallery-grid {
+/* 卡片网格 */
+.cg-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 20px;
+  gap: var(--sp-5);
 }
 
-.gallery-card {
+.cg-card {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 36px 20px 28px;
-  background: var(--card-bg, #fdfaf5);
-  border: 1px solid var(--border, #e8e0d5);
-  border-radius: 6px;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border);
   text-decoration: none;
+  color: inherit;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
-  transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
-  animation: fadeSlideUp 0.5s ease both;
+  animation: fadeSlideUp 0.6s ease both;
 }
 
-.gallery-card:hover:not(.disabled) {
-  transform: translateY(-6px);
-  border-color: var(--accent, #9e2b25);
-  box-shadow: 0 16px 44px rgba(31, 26, 22, 0.1);
+.cg-card:hover:not(.disabled) {
+  transform: translateY(-4px);
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--accent);
 }
 
-.gallery-card.disabled {
+.cg-card.disabled {
+  opacity: 0.6;
   cursor: default;
-  opacity: 0.62;
 }
 
 @keyframes fadeSlideUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.gallery-card__seal {
-  width: 56px;
-  height: 56px;
+/* 卡片图片区域：水墨风格（淡朱砂底 + 印章字） */
+.cg-card__image {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-heading);
-  font-size: 28px;
-  font-weight: 900;
-  color: #fff;
-  background: var(--accent, #9e2b25);
-  border-radius: 4px;
-  box-shadow: 3px 3px 0 rgba(169, 50, 38, 0.25);
+  background: var(--accent-faint);
 }
 
-.gallery-card.disabled .gallery-card__seal {
-  background: var(--text-muted, #6e5d52);
+.cg-card__seal-char {
+  font-family: var(--font-display);
+  font-size: 80px;
+  font-weight: 600;
+  color: var(--accent);
+  opacity: 0.2;
+  transition: transform 0.5s ease, opacity 0.5s ease;
 }
 
-.gallery-card__name {
-  font-family: var(--font-heading);
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  color: var(--text-primary);
-  margin: 0;
+.cg-card:hover .cg-card__seal-char {
+  transform: scale(1.1);
+  opacity: 0.3;
 }
 
-.gallery-card__count {
-  font-size: 12px;
-  letter-spacing: 1px;
-  color: var(--text-muted);
-  margin: 0;
-}
-
-.gallery-card__badge {
+.cg-card__count {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  font-size: 10px;
+  bottom: var(--sp-4);
+  right: var(--sp-4);
+  padding: var(--sp-1) var(--sp-3);
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-lg);
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--text-primary);
   letter-spacing: 1px;
-  padding: 2px 8px;
-  border-radius: 10px;
-  border: 1px dashed var(--border, #e8e0d5);
-  color: var(--text-muted);
 }
 
-@media (max-width: 1024px) {
-  .gallery-grid {
+/* 卡片内容 */
+.cg-card__content {
+  padding: var(--sp-5);
+}
+
+.cg-card__name {
+  font-family: var(--font-heading);
+  font-size: var(--fs-lead);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  letter-spacing: 3px;
+}
+
+.cg-card__desc {
+  font-size: var(--fs-caption);
+  line-height: 1.6;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  margin-bottom: var(--sp-4);
+}
+
+.cg-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: var(--sp-4);
+}
+
+.cg-card__tag {
+  padding: 4px 10px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  font-size: 11px;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+}
+
+.cg-card__arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 1px;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: all 0.3s ease;
+}
+
+.cg-card:hover .cg-card__arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.cg-card__badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+/* 响应式 */
+@media (max-width: 1200px) {
+  .cg-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .cultural-gallery {
-    padding: 64px 20px;
+    padding: 0 var(--sp-4) var(--sp-9);
   }
 
-  .gallery-grid {
+  .cg-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
+    gap: var(--sp-4);
   }
 
-  .section-title {
-    letter-spacing: 3px;
+  .cg-card__image {
+    height: 160px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cg-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

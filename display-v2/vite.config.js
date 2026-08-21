@@ -7,6 +7,8 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5175,
+    // 隧道/局域网域名访问(与 admin-frontend 保持一致), 否则 Vite host 校验回 "Blocked request"
+    allowedHosts: ['.cpolar.top', '.cpolar.cn'],
     proxy: {
       '/api': {
         target: 'http://localhost:8080',

@@ -523,18 +523,19 @@ const heroStats = computed(() => {
     0,
   )
   const dynastiesWithPoets = DYNASTIES.filter((d) => countByDynasty(d.id) > 0).length
+  const withBio = poets.value.filter((p) => p.biography && p.biography.trim()).length
   return [
     { value: poets.value.length, suffix: '位', label: '齐鲁名士' },
     { value: dynastiesWithPoets, suffix: '朝', label: '跨越朝代' },
     { value: totalPoems, suffix: '篇', label: '传世诗卷' },
-    { value: dynastiesWithPoets, suffix: '朝', label: '有录可考' },
+    { value: withBio, suffix: '位', label: '有传可考' },
   ]
 })
 
 // ---- 头像 ----
 const getPoetAvatar = (poet) => {
   if (!poet) return ''
-  const url = isAnime.value ? poet.avatarAnimeUrl || poet.avatarUrl : poet.avatarUrl
+  const url = poet.avatarUrl
   return url ? getImageUrl(url, isAnime.value) : ''
 }
 const onAvatarError = (e) => {
@@ -1388,9 +1389,6 @@ onBeforeUnmount(() => {
   font-size: 34px;
   font-weight: 900;
   color: #fff;
-  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-}
-.theme-real .poet-avatar-stamp {
   background: linear-gradient(135deg, var(--accent), var(--accent-dark));
 }
 .poet-stamp {

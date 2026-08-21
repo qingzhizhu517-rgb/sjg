@@ -1,5 +1,5 @@
 <template>
-  <div class="culture-view">
+  <div ref="rootRef" class="culture-view">
     <!-- 页头 -->
     <header class="cv-hero">
       <span class="cv-hero__tag">数字人文 · 文化长廊</span>
@@ -42,11 +42,9 @@ import { ref, onMounted } from 'vue'
 import { useReveal } from '../composables/useReveal'
 import CulturalGallery from '../components/homepage/CulturalGallery.vue'
 import SectionHeading from '../components/homepage/SectionHeading.vue'
+import { NINE_CITIES } from '../config/nineCities'
 
 const { reveal } = useReveal()
-
-// 黄河上游→下游九城(与全局一致)
-const NINE_CITIES = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '淄博', '滨州', '东营']
 
 const rootRef = ref(null)
 
@@ -70,9 +68,9 @@ onMounted(() => {
 .cv-hero__tag {
   display: inline-block;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 3px;
-  color: #fff;
+  color: var(--text-on-accent);
   background: var(--accent);
   padding: 5px 14px;
   border-radius: 2px;
@@ -128,10 +126,10 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   font-family: var(--font-display);
   font-size: 24px;
-  font-weight: 900;
+  font-weight: 600;
   border-radius: 3px;
   transform: rotate(-3deg);
   flex-shrink: 0;
@@ -139,7 +137,7 @@ onMounted(() => {
 .cv-city__name {
   font-family: var(--font-heading);
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 4px;
   color: var(--text-primary);
 }

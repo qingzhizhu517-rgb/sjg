@@ -184,9 +184,6 @@ onBeforeUnmount(() => {
   box-shadow: 0 3px 10px rgba(158, 43, 37, 0.28);
   flex-shrink: 0;
 }
-.theme-real .ph__seal {
-  background: var(--accent-light);
-}
 .ph__eyebrow {
   font-family: var(--font-heading);
   font-size: 13px;
@@ -312,11 +309,6 @@ onBeforeUnmount(() => {
   font-size: 26px;
   font-weight: 900;
   border-radius: 3px;
-}
-.theme-real .ph-roster__seal {
-  background: color-mix(in srgb, var(--accent) 0.1%, transparent);
-  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-  color: var(--accent-dark);
 }
 .theme-inkwash .ph-roster__seal {
   background: color-mix(in srgb, var(--accent) 0.1%, transparent);

@@ -1,7 +1,5 @@
 <template>
-  <!-- 诗人详情: 单一根节点(路由过渡期间根不被替换, 防止 enter 类残留导致整页透明) -->
   <div class="pd pd--inkwash">
-    <!-- 人物小传卷(唯一版式, 一页一貌) -->
     <template v-if="poet">
     <!-- 返回 -->
     <div class="pd-back">
@@ -9,71 +7,98 @@
     </div>
 
     <div ref="revealRoot" class="pd-content">
-      <!-- 小传卷主体 -->
-      <div class="ink-scroll-layout">        <!-- 左侧：竖排信息栏 -->
-        <aside class="ink-scroll-sidebar">
-          <!-- 印章头像 -->
-          <div class="ink-portrait-frame">
-            <span class="ink-portrait-stamp">{{ poet.name ? poet.name.charAt(0) : '文' }}</span>
-            <img v-if="avatar" :src="avatar" :alt="poet.name" class="ink-portrait-img" decoding="async" @error="onAvatarError" />
+      <!-- 英雄区域 -->
+      <div class="pd-hero">
+        <div class="pd-hero__bg"></div>
+        <div class="pd-hero__content">
+          <!-- 左侧头像 -->
+          <div class="pd-portrait">
+            <div class="pd-portrait__frame">
+              <img v-if="avatar" :src="avatar" :alt="poet.name" class="pd-portrait__img" decoding="async" @error="onAvatarError" />
+              <InkPlaceholder v-else :seed="poet.id || poet.name" kind="文" />
+            </div>
+            <div class="pd-portrait__seal" v-if="dynasty">{{ dynasty.name }}</div>
           </div>
 
-          <!-- 竖排基本信息 -->
-          <div class="ink-info-vertical">
-            <span class="ink-dynasty-seal" v-if="dynasty">{{ dynasty.name }}</span>
-            <span class="ink-poet-name">{{ poet.name }}</span>
-            <span class="ink-poem-count">{{ poems.length }} 篇</span>
-          </div>
-
-          <!-- 代表作印章 -->
-          <div v-if="signature" class="ink-signature-seal">
-            <span class="ink-sig-char">诗</span>
-          </div>
-        </aside>
-
-        <!-- 中央：小传内容 -->
-        <main class="ink-scroll-main">
-          <!-- 标题区 -->
-          <header class="ink-scroll-header">
-            <h1 class="ink-scroll-title">{{ poet.name }}</h1>
-            <div class="ink-scroll-meta" v-if="poet.birthYear || poet.birthplace">
+          <!-- 右侧信息 -->
+          <div class="pd-info">
+            <span class="pd-dynasty" v-if="dynasty">{{ dynasty.name }}</span>
+            <h1 class="pd-name">{{ poet.name }}</h1>
+            <p class="pd-style" v-if="poet.style">{{ poet.style }}</p>
+            <div class="pd-meta" v-if="poet.birthYear || poet.birthplace">
               <span v-if="poet.birthYear">{{ poet.birthYear }}-{{ poet.deathYear || '？' }}</span>
-              <span v-if="poet.birthYear && poet.birthplace" class="ink-meta-sep">·</span>
+              <span v-if="poet.birthYear && poet.birthplace" class="pd-meta__sep">·</span>
               <span v-if="poet.birthplace">{{ poet.birthplace }}</span>
             </div>
-          </header>
 
-          <!-- 代表作（竖排） -->
-          <div v-if="signature" class="ink-signature-block">
-            <div class="ink-sig-text-vertical">
-              <p class="ink-sig-line">「{{ signature.firstLine }}」</p>
+            <div class="pd-stats">
+              <div class="pd-stat">
+                <span class="pd-stat__num">{{ poems.length }}</span>
+                <span class="pd-stat__label">传世诗篇</span>
+              </div>
+              <div class="pd-stat" v-if="lifespan">
+                <span class="pd-stat__num">{{ lifespan }}</span>
+                <span class="pd-stat__label">春秋享年</span>
+              </div>
+              <div class="pd-stat" v-if="dynastySpan">
+                <span class="pd-stat__num">{{ dynastySpan }}</span>
+                <span class="pd-stat__label">{{ dynasty.name }}国祚(年)</span>
+              </div>
             </div>
-            <cite class="ink-sig-cite">《{{ signature.title }}》</cite>
+          </div>
+        </div>
+      </div>
+
+      <!-- 主内容 -->
+      <main class="pd-main">
+        <!-- 代表作 -->
+        <section v-if="signature" class="pd-signature">
+          <div class="pd-signature__label">
+            <span>✦</span>
+            代表作
+          </div>
+          <p class="pd-signature__poem">「{{ signature.firstLine }}」</p>
+          <cite class="pd-signature__title">——《{{ signature.title }}》</cite>
+        </section>
+
+        <!-- 生平 -->
+        <section class="pd-section" data-reveal>
+          <div class="pd-section__header">
+            <div class="pd-section__icon">传</div>
+            <div class="pd-section__title-group">
+              <h2 class="pd-section__title">生平</h2>
+              <p class="pd-section__subtitle">{{ dynasty ? `${dynasty.name} · ${poet.name}` : poet.name }}</p>
+            </div>
+          </div>
+          <div class="pd-bio">{{ poet.biography || '生平待考，然其诗已传。' }}</div>
+        </section>
+
+        <!-- 传世诗篇 -->
+        <section class="pd-section" data-reveal>
+          <div class="pd-section__header">
+            <div class="pd-section__icon">诗</div>
+            <div class="pd-section__title-group">
+              <h2 class="pd-section__title">传世诗篇</h2>
+              <p class="pd-section__subtitle">共收录 {{ poems.length }} 首经典作品</p>
+            </div>
           </div>
 
-          <!-- 生平（横排） -->
-          <section v-if="poet.biography" class="ink-section" data-reveal>
-            <h2 class="ink-section-title">生平</h2>
-            <div class="ink-bio">{{ poet.biography }}</div>
-          </section>
-
-          <!-- 传世诗篇 -->
-          <section v-if="poems.length" class="ink-section" data-reveal>
-            <h2 class="ink-section-title">传世诗篇 · {{ poems.length }} 首</h2>
-            <div class="ink-poems-grid">
-              <router-link
-                v-for="pm in poems"
-                :key="pm.id"
-                :to="`/poems/${pm.id}`"
-                class="ink-poem-card hover-lift"
-              >
-                <span class="ink-poem-title">《{{ pm.title }}》</span>
-                <p class="ink-poem-line">{{ firstLine(pm.content) }}</p>
-              </router-link>
-            </div>
-          </section>
-        </main>
-      </div>
+          <div v-if="poems.length" class="pd-poems-grid">
+            <router-link
+              v-for="(pm, idx) in poems"
+              :key="pm.id"
+              :to="`/poems/${pm.id}`"
+              class="pd-poem-card hover-lift"
+            >
+              <span class="pd-poem-card__num">{{ String(idx + 1).padStart(2, '0') }}</span>
+              <h3 class="pd-poem-card__title">《{{ pm.title }}》</h3>
+              <p class="pd-poem-card__excerpt">{{ firstLine(pm.content) }}</p>
+              <span class="pd-poem-card__arrow">阅读全文 →</span>
+            </router-link>
+          </div>
+          <p v-else class="pd-empty-poems">暂无诗篇录入，敬请期待。</p>
+        </section>
+      </main>
     </div>
     </template>
 
@@ -91,23 +116,16 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
-import { useTheme } from '../composables/useTheme'
 import { useImage } from '../composables/useImage'
 import { useReveal } from '../composables/useReveal'
 import api from '../api'
-import { parseTags, firstLine, pickSignaturePoem } from '../utils/poem'
+import { firstLine, pickSignaturePoem } from '../utils/poem'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
-import dufuPortrait from '../assets/illustrations/10-poet-dufu.png'
-
-// 核心诗人国画立像（无 API 头像时的本地 fallback）
-const LOCAL_PORTRAITS = {
-  杜甫: dufuPortrait,
-}
+import InkPlaceholder from '../components/InkPlaceholder.vue'
 
 const route = useRoute()
-const { isAnime } = useTheme()
-const { getImageUrl } = useImage()
+const { resolveImage } = useImage()
 const { reveal } = useReveal()
 
 const poet = ref(null)
@@ -116,23 +134,36 @@ const dynasty = ref(null)
 const errorMsg = ref(null)
 const revealRoot = ref(null)
 
-// 从哪来回哪去：从 /poets/all 进来则回全量列表，否则回 showcase。
-// 用 query.from 标记（SPA pushState 不更新 document.referrer，原先的 referrer 判断永不成立）。
-// 注意直接给 /poets?view=all, 不走 /poets/all 重定向(过渡期间二次导航会加剧路由过渡卡死)。
 const backTo = computed(() => (route.query.from === 'all' ? '/poets?view=all' : '/poets'))
 
+// 头像：单主题下 avatarAnimeUrl 优先（现有配图入库在 anime 字段），avatarUrl 兜底；
+// 无图返回 null，模板改用程序化水墨占位 InkPlaceholder（不再是纯色首字方块）
 const avatar = computed(() => {
   if (!poet.value) return ''
-  const url = isAnime.value ? poet.value.avatarAnimeUrl || poet.value.avatarUrl : poet.value.avatarUrl
-  if (url) return getImageUrl(url, isAnime.value)
-  // 无 API 头像：查本地国画立像（如杜甫），仍无则空 → 露出印章
-  return LOCAL_PORTRAITS[poet.value.name] || ''
+  const raw = poet.value.avatarAnimeUrl || poet.value.avatarUrl
+  if (!raw) return ''
+  const resolved = resolveImage(raw, '文')
+  // resolveImage 无图时会回占位 SVG data-uri；此处只想要真实图，占位交给 InkPlaceholder
+  return resolved && !resolved.startsWith('data:') ? resolved : ''
 })
 const onAvatarError = (e) => {
   e.target.style.display = 'none'
 }
 
-// 代表作：统一用 pickSignaturePoem，与 ShowcasePoetCard / PoetAllList 一致
+// 派生统计：填充空荡的 hero 右栏（此前只有"传世诗篇"一项）
+const lifespan = computed(() => {
+  const b = poet.value?.birthYear
+  const d = poet.value?.deathYear
+  if (b && d && d > b) return d - b
+  return null
+})
+const dynastySpan = computed(() => {
+  const s = dynasty.value?.startYear
+  const e = dynasty.value?.endYear
+  if (s != null && e != null && e > s) return e - s
+  return null
+})
+
 const signature = computed(() => pickSignaturePoem(poems.value))
 
 const loadDetail = async () => {
@@ -150,351 +181,496 @@ const loadDetail = async () => {
   }
 }
 
-onMounted(() => {
-  loadDetail()
-})
+onMounted(loadDetail)
 </script>
 
 <style scoped>
 .pd {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 32px 48px 96px;
+  min-height: 100vh;
+  background: var(--bg-primary);
 }
+
+/* 返回链接：文档流内，不再 fixed（旧版与导航栏 z-index:100 完全重叠） */
 .pd-back {
-  margin-bottom: 24px;
-  text-align: left;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--sp-4) var(--sp-5);
 }
+
 .pd-back-link {
-  font-size: 13px;
-  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
   text-decoration: none;
+  font-size: var(--fs-body-sm);
   font-weight: 600;
   letter-spacing: 1px;
-  transition: color 0.25s;
+  transition: all 0.3s ease;
 }
+
 .pd-back-link:hover {
-  color: var(--accent);
-}
-.pd-content {
-  max-width: 960px;
-}
-.pd-state {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 64px 48px;
-  text-align: center;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-color: var(--accent);
+  transform: translateX(-4px);
 }
 
-@media (max-width: 900px) {
-  .pd { padding: 24px 32px 80px; }
-}
-@media (max-width: 600px) {
-  .pd { padding: 20px 16px 64px; }
-}
-
-/* ========== INKWASH 人物小传卷布局 ========== */
-
-.pd--inkwash {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 32px 48px 96px;
-}
-
-/* 小传卷主体：左侧竖排信息 + 中央内容 */
-.ink-scroll-layout {
-  display: flex;
-  gap: 40px;
-  align-items: flex-start;
-}
-
-/* 左侧：竖排信息栏 */
-.ink-scroll-sidebar {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-  width: 120px;
-  flex-shrink: 0;
-  position: sticky;
-  top: 100px;
-}
-
-/* 印章头像框 */
-.ink-portrait-frame {
-  width: 100px;
-  height: 130px;
-  border: 2px solid var(--accent);
-  border-radius: 4px;
-  overflow: hidden;
+/* 英雄区域：宣纸底 + 朱砂细线框（旧版深棕渐变与宣纸主题脱节） */
+.pd-hero {
   position: relative;
-  background: #2a2520;
-}
-
-.ink-portrait-stamp {
-  position: absolute;
-  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-display);
-  font-size: 64px;
-  font-weight: 900;
-  color: #fff;
-  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+  overflow: hidden;
+  background: var(--bg-secondary);
+  border-bottom: 2px solid var(--accent);
 }
 
-.ink-portrait-img {
+.pd-hero__bg {
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.pd-hero__content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-8);
+  max-width: var(--container-max);
+  padding: var(--sp-8) var(--sp-5);
+  width: 100%;
+}
+
+/* 头像区域 */
+.pd-portrait {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.pd-portrait__frame {
+  position: relative;
+  width: 240px;
+  height: 320px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--card-shadow-hover);
+  border: 2px solid var(--border);
+}
+
+.pd-portrait__img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  position: relative;
   z-index: 2;
 }
 
-/* 竖排基本信息 */
-.ink-info-vertical {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  writing-mode: vertical-rl;
-}
-
-.ink-dynasty-seal {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  padding: 3px 8px;
-  letter-spacing: 3px;
-}
-
-.ink-poet-name {
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 900;
-  color: var(--text-primary);
-  letter-spacing: 6px;
-}
-
-.ink-poem-count {
-  font-size: 12px;
-  color: var(--text-muted);
-  letter-spacing: 2px;
-}
-
-/* 代表作印章 */
-.ink-signature-seal {
-  width: 40px;
-  height: 40px;
+.pd-portrait__seal {
+  position: absolute;
+  bottom: -16px;
+  right: -16px;
+  width: 72px;
+  height: 72px;
+  background: var(--accent);
+  color: var(--text-on-accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--accent);
-  border-radius: 4px;
-  transform: rotate(-5deg);
-}
-
-.ink-sig-char {
   font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 900;
-  color: var(--accent);
-}
-
-/* 中央：小传内容 */
-.ink-scroll-main {
-  flex: 1;
-  min-width: 0;
-}
-
-/* 标题区 */
-.ink-scroll-header {
-  margin-bottom: 32px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border);
-}
-
-.ink-scroll-title {
-  font-family: var(--font-display);
-  font-size: clamp(44px, 6vw, 68px);
-  font-weight: 900;
-  color: var(--text-primary);
-  letter-spacing: 8px;
-  line-height: 1.05;
-  margin: 0 0 12px 0;
-}
-
-.ink-scroll-meta {
-  font-size: 13px;
-  color: var(--text-secondary);
-  letter-spacing: 1px;
-}
-
-.ink-meta-sep {
-  margin: 0 8px;
-  color: var(--border);
-}
-
-/* 代表作（竖排） */
-.ink-signature-block {
-  display: flex;
-  gap: 24px;
-  align-items: flex-start;
-  margin-bottom: 40px;
-  padding: 24px;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-}
-
-.ink-sig-text-vertical {
-  writing-mode: vertical-rl;
-}
-
-.ink-sig-line {
-  font-family: var(--font-heading);
   font-size: 20px;
   font-weight: 600;
-  color: var(--text-primary);
-  line-height: 2;
-  letter-spacing: 4px;
-  margin: 0;
-}
-
-.ink-sig-cite {
-  font-size: 12px;
-  font-style: italic;
-  color: var(--text-muted);
-  letter-spacing: 1px;
-  writing-mode: vertical-rl;
-}
-
-/* 小传内容区块 */
-.ink-section {
-  margin-bottom: 40px;
-}
-
-.ink-section-title {
-  font-family: var(--font-heading);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 20px 0;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  transform: rotate(-5deg);
+  box-shadow: var(--card-shadow);
+  border: 2px solid var(--accent-light);
   letter-spacing: 2px;
 }
 
-.ink-section-title::after {
-  content: '';
-  display: block;
-  width: 40px;
-  height: 2px;
-  background: var(--accent);
-  margin-top: -2px;
+/* 诗人信息 */
+.pd-info {
+  flex: 1;
+  color: var(--text-primary);
 }
 
-.ink-bio {
-  font-size: 15px;
+.pd-dynasty {
+  display: inline-block;
+  padding: var(--sp-1) var(--sp-4);
+  background: var(--accent-faint);
+  border: 1px solid var(--accent-a35);
+  border-radius: var(--radius-lg);
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  letter-spacing: 3px;
+  margin-bottom: var(--sp-4);
+  color: var(--accent-dark);
+}
+
+.pd-name {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 600;
+  letter-spacing: 8px;
+  line-height: var(--lh-tight);
+  margin-bottom: var(--sp-2);
+}
+
+.pd-style {
+  font-size: var(--fs-body);
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  margin-bottom: var(--sp-4);
+  font-style: italic;
+}
+
+.pd-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  font-size: var(--fs-body-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--sp-5);
+  letter-spacing: 1px;
+}
+
+.pd-meta__sep {
+  width: 4px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 50%;
+}
+
+.pd-stats {
+  display: flex;
+  gap: var(--sp-5);
+  margin-top: var(--sp-5);
+}
+
+.pd-stat {
+  text-align: center;
+  padding: var(--sp-3) var(--sp-5);
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.pd-stat__num {
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  display: block;
+  line-height: 1;
+  margin-bottom: var(--sp-1);
+  color: var(--accent);
+}
+
+.pd-stat__label {
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
+  letter-spacing: 2px;
+}
+
+/* 主内容 */
+.pd-main {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--sp-9) var(--sp-5) var(--sp-10);
+}
+
+/* 代表作区块 */
+.pd-signature {
+  position: relative;
+  margin-bottom: var(--sp-9);
+  padding: var(--sp-7);
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.pd-signature::before {
+  content: '诗';
+  position: absolute;
+  top: -20px;
+  right: 20px;
+  font-family: var(--font-display);
+  font-size: 200px;
+  font-weight: 600;
+  color: var(--accent);
+  opacity: 0.05;
+  line-height: 1;
+}
+
+.pd-signature__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 3px;
+  margin-bottom: var(--sp-5);
+  padding: var(--sp-1) var(--sp-3);
+  background: var(--accent-faint);
+  border-radius: var(--radius-lg);
+}
+
+.pd-signature__poem {
+  font-family: var(--font-heading);
+  font-size: clamp(24px, 3vw, 36px);
+  font-weight: 600;
   line-height: 2;
   color: var(--text-primary);
+  letter-spacing: 4px;
+  margin-bottom: var(--sp-5);
+  position: relative;
+  z-index: 1;
+}
+
+.pd-signature__title {
+  font-style: italic;
+  color: var(--text-muted);
+  font-size: var(--fs-body-sm);
+  letter-spacing: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+/* 区块样式 */
+.pd-section {
+  margin-bottom: var(--sp-9);
+}
+
+.pd-section__header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-6);
+}
+
+.pd-section__icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: 600;
+}
+
+.pd-section__title-group {
+  flex: 1;
+}
+
+.pd-section__title {
+  font-family: var(--font-heading);
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 4px;
+  margin-bottom: var(--sp-1);
+}
+
+.pd-section__subtitle {
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+/* 生平区块 */
+.pd-bio {
+  position: relative;
+  padding: var(--sp-6) var(--sp-7);
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  font-size: var(--fs-body);
+  line-height: var(--lh-loose);
+  color: var(--text-secondary);
   text-indent: 2em;
   letter-spacing: 0.5px;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
-  border-radius: 0 4px 4px 0;
-  padding: 28px 32px;
+  max-width: var(--measure);
 }
 
 /* 诗篇网格 */
-.ink-poems-grid {
+.pd-poems-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--sp-5);
+  margin-top: var(--sp-6);
 }
 
-.ink-poem-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 16px 18px;
+.pd-empty-poems {
+  margin-top: var(--sp-6);
+  padding: var(--sp-7);
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  letter-spacing: 2px;
   background: var(--card-bg);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.pd-poem-card {
+  position: relative;
+  padding: var(--sp-5);
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--card-shadow);
   border: 1px solid var(--border);
-  border-radius: 4px;
   text-decoration: none;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  color: inherit;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
 
-.ink-poem-card:hover {
+.pd-poem-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.pd-poem-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--card-shadow-hover);
   border-color: var(--accent);
-  transform: translateY(-3px);
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--text-primary) 0.1%, transparent);
 }
 
-.ink-poem-title {
+.pd-poem-card:hover::before {
+  transform: scaleX(1);
+}
+
+.pd-poem-card__num {
+  position: absolute;
+  top: var(--sp-4);
+  right: var(--sp-4);
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 600;
+  color: var(--accent);
+  opacity: 0.08;
+  line-height: 1;
+}
+
+.pd-poem-card__title {
   font-family: var(--font-heading);
-  font-size: 15px;
-  font-weight: 700;
+  font-size: var(--fs-body);
+  font-weight: 600;
   color: var(--text-primary);
-  letter-spacing: 1px;
+  margin-bottom: var(--sp-3);
+  letter-spacing: 2px;
+  position: relative;
+  z-index: 1;
 }
 
-.ink-poem-line {
-  font-family: var(--font-heading);
-  font-size: 13px;
+.pd-poem-card__excerpt {
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
   color: var(--text-secondary);
-  line-height: 1.7;
+  letter-spacing: 0.5px;
+  position: relative;
+  z-index: 1;
+}
+
+.pd-poem-card__arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--accent);
   letter-spacing: 1px;
-  margin: 0;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.pd-poem-card:hover .pd-poem-card__arrow {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 /* 响应式 */
-@media (max-width: 900px) {
-  .pd--inkwash { padding: 24px 32px 80px; }
-
-  .ink-scroll-layout {
+@media (max-width: 1024px) {
+  .pd-hero__content {
     flex-direction: column;
-    gap: 24px;
+    text-align: center;
+    gap: var(--sp-6);
+    padding: var(--sp-7) var(--sp-5);
   }
 
-  .ink-scroll-sidebar {
-    flex-direction: row;
-    width: 100%;
-    position: static;
-    flex-wrap: wrap;
+  .pd-portrait__frame {
+    width: 200px;
+    height: 270px;
+  }
+
+  .pd-meta {
     justify-content: center;
   }
 
-  .ink-info-vertical {
-    writing-mode: horizontal-tb;
-    flex-direction: row;
-    gap: 16px;
-  }
-
-  .ink-signature-block {
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .ink-sig-text-vertical {
-    writing-mode: horizontal-tb;
-  }
-
-  .ink-sig-cite {
-    writing-mode: horizontal-tb;
-  }
-
-  .ink-poems-grid {
-    grid-template-columns: 1fr;
+  .pd-stats {
+    justify-content: center;
   }
 }
 
-@media (max-width: 600px) {
-  .pd--inkwash { padding: 20px 16px 64px; }
-  .ink-scroll-title { letter-spacing: 4px; }
-  .ink-bio { padding: 20px; }
+@media (max-width: 768px) {
+  .pd-hero__content {
+    padding: var(--sp-6) var(--sp-4);
+  }
+
+  .pd-portrait__frame {
+    width: 160px;
+    height: 220px;
+  }
+
+  .pd-stats {
+    flex-wrap: wrap;
+    gap: var(--sp-4);
+  }
+
+  .pd-stat {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .pd-main {
+    padding: var(--sp-6) var(--sp-4) var(--sp-9);
+  }
+
+  .pd-signature,
+  .pd-bio {
+    padding: var(--sp-5);
+  }
+
+  .pd-poems-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

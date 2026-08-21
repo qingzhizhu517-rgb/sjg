@@ -164,8 +164,8 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #9e2b25;
-  color: #f5efe3;
+  background: var(--accent);
+  color: var(--bg-primary);
   font-family: var(--font-display);
   font-size: 24px;
   font-weight: 900;
@@ -173,9 +173,6 @@ onBeforeUnmount(() => {
   transform: rotate(-3deg);
   box-shadow: 0 3px 10px rgba(158, 43, 37, 0.28);
   flex-shrink: 0;
-}
-.theme-real .th__seal {
-  background: #b23a2b;
 }
 .th__eyebrow {
   font-family: var(--font-heading);

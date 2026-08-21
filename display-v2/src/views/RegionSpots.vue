@@ -1,9 +1,9 @@
 <template>
   <ErrorState v-if="errorMsg" :message="errorMsg" @retry="loadSpots" />
 
-<div v-else class="region-spots">
-    <!-- Real Layout: 城市宣传专题页 -->
-    <div class="real-container" v-if="isReal">
+  <div v-else class="region-spots">
+    <!-- 城市宣传专题页（单一版式：2026-08-20 删除 anime-container 双布局） -->
+    <div class="real-container">
       <CityHero
         :city="region"
         :media="heroMedia"
@@ -107,113 +107,6 @@
       </nav>
     </div>
 
-    <!-- Anime Layout (景点详情页.png replica) -->
-    <div class="anime-container" v-else>
-      <div class="spots-split-layout">
-        <!-- Left Column: City Info -->
-        <aside class="city-left-col animate-slide-in">
-          <div class="city-header-box">
-            <h1 class="city-name-vertical">{{ region }}市</h1>
-            <span class="city-name-eng">{{ getCityData(region).english }}</span>
-            <div class="city-subtitle-tag">{{ getCityData(region).subtitle }}</div>
-          </div>
-
-          <div ref="cityImageBoxRef" class="city-image-box card">
-            <img :src="illustrationData.img" :alt="region" class="city-landscape-img" decoding="async" />
-          </div>
-
-          <div class="city-intro-section">
-            <h3 class="intro-title">城市简介</h3>
-            <p class="intro-text">{{ getCityData(region).desc }}</p>
-          </div>
-
-          <div class="city-meta-badge-list">
-            <div class="meta-badge-row">
-              <div class="badge-txt">
-                <span class="badge-label">地理位置</span>
-                <span class="badge-val">{{ getCityData(region).geo }}</span>
-              </div>
-            </div>
-            <div class="meta-badge-row">
-              <div class="badge-txt">
-                <span class="badge-label">历史文化</span>
-                <span class="badge-val">{{ getCityData(region).history }}</span>
-              </div>
-            </div>
-            <div class="meta-badge-row">
-              <div class="badge-txt">
-                <span class="badge-label">气候特点</span>
-                <span class="badge-val">{{ getCityData(region).climate }}</span>
-              </div>
-            </div>
-            <div class="meta-badge-row">
-              <div class="badge-txt">
-                <span class="badge-label">最佳旅游季节</span>
-                <span class="badge-val">{{ getCityData(region).season }}</span>
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        <!-- Right Column: Spots Grid -->
-        <section class="spots-right-col">
-          <div class="right-col-header">
-            <h2 class="right-title">经典景点</h2>
-            <button class="back-map-btn" @click="$router.push('/map')">
-              点击其他区域 <strong>返回地图</strong>
-            </button>
-          </div>
-
-          <div class="spots-list-grid">
-            <template v-if="!loaded">
-              <SkeletonBlock v-for="i in 4" :key="`skel-${i}`" height="280px" />
-            </template>
-            <div
-              v-for="(spot, index) in spots"
-              :key="spot.id"
-              class="anime-spot-card card hover-lift"
-              tabindex="0"
-              role="link"
-              @click="$router.push(`/spots/${spot.id}`)"
-              @keydown.enter="$router.push(`/spots/${spot.id}`)"
-            >
-              <div class="spot-card-header">
-                <span class="spot-num">{{ padZero(index + 1) }}</span>
-                <h3 class="spot-name">{{ spot.name }}</h3>
-                <span class="spot-seal-tag" v-if="getSpotData(spot.name).tag">{{ getSpotData(spot.name).tag }}</span>
-              </div>
-
-              <div class="spot-card-body-section">
-                <div class="spot-image-box">
-                  <img :src="getImage(spot)" :alt="spot.name" class="spot-list-img" loading="lazy" decoding="async" />
-                </div>
-                <div class="spot-vertical-poetry">
-                  {{ getSpotData(spot.name).verticalText }}
-                </div>
-              </div>
-
-              <div class="spot-text-details">
-                <p class="txt-row">
-                  <strong>简介：</strong>{{ spot.description?.substring(0, 100) }}
-                </p>
-                <p class="txt-row" v-if="getSpotData(spot.name).history">
-                  <strong>历史文化：</strong>{{ getSpotData(spot.name).history?.substring(0, 100) }}
-                </p>
-                <p class="txt-row" v-if="getSpotData(spot.name).play">
-                  <strong>推荐玩法：</strong>{{ getSpotData(spot.name).play }}
-                </p>
-              </div>
-            </div>
-          </div>
-          <EmptyState
-            v-if="loaded && !spots.length"
-            icon="景"
-            message="此城景观收录中"
-            hint="先去别的城市逛逛"
-          />
-        </section>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -239,7 +132,7 @@ import { useFlipTransition } from '../composables/useFlipTransition'
 gsap.registerPlugin(ScrollTrigger)
 
 const route = useRoute()
-const { isReal, isAnime, theme, resolveAsset } = useTheme()
+const { theme, resolveAsset } = useTheme()
 const { getImageUrl } = useImage()
 const region = ref(route.params.region)
 const spots = ref([])
@@ -255,7 +148,6 @@ const reduce = ref(
 const illustrationData = computed(() => cityIllustration(region.value))
 const heroMedia = computed(() =>
   resolveCityHeroMedia({
-    isReal: isReal.value,
     slug: CITY_SLUGS[region.value],
     resolveAsset,
     illustration: illustrationData.value?.img,
@@ -317,8 +209,9 @@ const padZero = (num) => num < 10 ? `0${num}` : num
 
 const getImage = (spot) => {
   if (!spot) return ''
-  const url = isReal.value ? spot.imageUrl : (spot.imageAnimeUrl || spot.imageUrl)
-  return getImageUrl(url, isAnime.value)
+  // 单主题后不再按主题挑字段：优先水墨图，缺失回退实景图
+  const url = spot.imageAnimeUrl || spot.imageUrl
+  return getImageUrl(url, true)
 }
 
 const loadSpots = async () => {
@@ -336,23 +229,12 @@ const loadSpots = async () => {
 }
 
 onMounted(async () => {
-  // inkwash 城市插画卷轴横展开场；reduced-motion 跳过
-  if (isAnime.value && !reduce.value && cityImageBoxRef.value) {
-    gsap.fromTo(
-      cityImageBoxRef.value,
-      { clipPath: 'inset(0 100% 0 0)' },
-      { clipPath: 'inset(0 0% 0 0)', duration: 1.4, ease: 'power2.inOut' },
-    )
-  }
-
   await loadSpots()
   await nextTick()
 
   // P3-2 FLIP: 城市预览卡 → 城市页 Hero 共享元素过渡
   const { animate: animateFlip } = useFlipTransition()
-  const flipTarget = document.querySelector(
-    isReal.value ? '.city-hero__bg-media--img' : '.city-landscape-img'
-  )
+  const flipTarget = document.querySelector('.city-hero__bg-media--img')
   if (flipTarget) {
     animateFlip(flipTarget, region.value, { duration: 0.6 })
   }

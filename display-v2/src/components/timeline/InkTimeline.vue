@@ -6,19 +6,20 @@
       <img
         :src="scrollBase"
         class="ink-timeline__bg"
-        alt="水墨长卷"
-        loading="eager"
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
       />
 
-      <!-- 朝代场景层（crossfade） -->
-      <div class="ink-timeline__scenes">
+      <!-- 朝代场景层（crossfade）—— 仅挂载当前 + 相邻两张，避免 9 张 15MB 全量拉取 -->
+      <div class="ink-timeline__scenes" aria-hidden="true">
         <img
-          v-for="scene in scenes"
-          :key="scene.id"
-          :src="scene.url"
+          v-for="d in visibleScenes"
+          :key="d.dynasty.id"
+          :src="sceneUrl(d.dynasty.id)"
           class="ink-timeline__scene"
-          :class="{ 'ink-timeline__scene--active': activeScene === scene.id }"
-          :alt="scene.name + '场景'"
+          :class="{ 'ink-timeline__scene--active': activeSceneId === d.dynasty.id }"
+          :alt="d.dynasty.name + '场景'"
           loading="lazy"
         />
       </div>
@@ -27,13 +28,14 @@
       <svg
         class="ink-timeline__path-layer"
         viewBox="0 0 1200 400"
-        preserveAspectRatio="xMidYMid meet"
+        preserveAspectRatio="none"
+        aria-hidden="true"
       >
         <path
           ref="pathRef"
           :d="riverPath"
           fill="none"
-          stroke="var(--ink-river, #8B7355)"
+          stroke="var(--ink-wash)"
           stroke-width="3"
           stroke-dasharray="8 4"
           opacity="0.6"
@@ -45,45 +47,66 @@
         ref="boatRef"
         :src="boatRower"
         class="ink-timeline__boat"
-        alt="小舟"
+        alt="拖拽小舟沿河探寻"
         @pointerdown="onPointerDown"
         @pointermove="onPointerMove"
         @pointerup="onPointerUp"
       />
 
-      <!-- 朝代节点（印章） -->
+      <!-- 朝代节点（印章）—— tablist 语义，方向键可切换 -->
       <div
-        v-for="node in dynastyNodeList"
-        :key="node.id"
-        class="ink-timeline__node"
-        :class="{
-          'ink-timeline__node--active': activeDynastyIndex === node.index,
-          'ink-timeline__node--visited': node.index < activeDynastyIndex
-        }"
-        :style="{ left: node.x + 'px', top: node.y + 'px' }"
-        @click="selectDynasty(node.index)"
+        class="ink-timeline__nodes"
+        role="tablist"
+        aria-label="朝代选择"
       >
-        <span class="ink-timeline__seal">{{ node.name }}</span>
-        <span class="ink-timeline__years">{{ formatYears(node) }}</span>
+        <button
+          v-for="node in dynastyNodeList"
+          :key="node.index"
+          type="button"
+          class="ink-timeline__node"
+          :class="{
+            'ink-timeline__node--active': activeDynastyIndex === node.index,
+            'ink-timeline__node--visited': node.index < activeDynastyIndex
+          }"
+          :style="{ left: node.xPct + '%', top: node.yPct + '%' }"
+          role="tab"
+          :aria-selected="activeDynastyIndex === node.index ? 'true' : 'false'"
+          :tabindex="activeDynastyIndex === node.index ? 0 : -1"
+          :aria-label="dynastyList[node.index]?.name || '朝代'"
+          @click="selectDynasty(node.index)"
+          @keydown="onNodeKeydown($event, node.index)"
+        >
+          <span class="ink-timeline__seal">{{ dynastyList[node.index]?.name || '' }}</span>
+          <span class="ink-timeline__years">{{ formatYears(dynastyList[node.index]) }}</span>
+        </button>
       </div>
+    </div>
+
+    <!-- 播放/暂停巡航 -->
+    <div class="ink-timeline__controls">
+      <button type="button" class="ink-timeline__cruise-btn" @click="toggleCruise"
+              :aria-label="isCruising ? '暂停自动巡航' : '开始自动巡航'">
+        {{ isCruising ? '⏸ 暂停巡航' : '▶ 自动巡航' }}
+      </button>
     </div>
 
     <!-- 信息面板 -->
     <transition name="panel-slide">
-      <div v-if="selectedDynasty" class="ink-timeline__panel" :key="selectedDynasty.id">
+      <div v-if="selectedDynasty" class="ink-timeline__panel" :key="selectedDynasty.id" role="tabpanel" aria-live="polite" :aria-label="selectedDynasty.name + '朝代详情'">
         <header class="ink-timeline__panel-head">
           <h3 class="ink-timeline__panel-name">{{ selectedDynasty.name }}</h3>
           <span class="ink-timeline__panel-years">
             {{ formatYear(selectedDynasty.startYear) }} 至 {{ formatYear(selectedDynasty.endYear) }}
           </span>
+          <p v-if="selectedDynasty.description" class="ink-timeline__panel-desc">{{ selectedDynasty.description }}</p>
         </header>
 
         <div class="ink-timeline__panel-stats">
-          <span><b>{{ selectedPoets.length }}</b> 位名士</span>
+          <span><strong>{{ selectedPoets.length }}</strong> 位名士</span>
           <span class="ink-timeline__panel-sep">·</span>
-          <span><b>{{ selectedPoems.length }}</b> 篇诗卷</span>
+          <span><strong>{{ selectedPoems.length }}</strong> 篇诗卷</span>
           <span class="ink-timeline__panel-sep">·</span>
-          <span><b>{{ selectedEvents.length }}</b> 件史事</span>
+          <span><strong>{{ selectedEvents.length }}</strong> 件史事</span>
         </div>
 
         <div class="ink-timeline__panel-cols">
@@ -99,6 +122,7 @@
                 :to="`/poets/${p.id}`"
                 class="ink-timeline__panel-poet-chip"
               >{{ p.name }}</router-link>
+              <span v-if="poetsOverflow > 0" class="ink-timeline__panel-overflow">共 {{ poetsOverflow + 8 }} 位</span>
             </div>
             <p v-else class="ink-timeline__panel-empty">暂无名士录入</p>
           </div>
@@ -118,6 +142,7 @@
                 <span class="ink-timeline__panel-poem-title">{{ pm.title }}</span>
                 <span class="ink-timeline__panel-poem-arrow">→</span>
               </router-link>
+              <span v-if="poemsOverflow > 0" class="ink-timeline__panel-overflow">共 {{ poemsOverflow + 5 }} 首</span>
             </div>
             <p v-else class="ink-timeline__panel-empty">暂无诗篇录入</p>
           </div>
@@ -129,9 +154,15 @@
             </h4>
             <div v-if="selectedEvents.length" class="ink-timeline__panel-events">
               <div v-for="ev in selectedEvents.slice(0, 3)" :key="ev.id" class="ink-timeline__panel-event">
-                <span class="ink-timeline__panel-event-year">{{ formatYear(ev.year) }}</span>
-                <span class="ink-timeline__panel-event-title">{{ ev.title }}</span>
+                <img v-if="parseFirstUrl(ev.imageUrl)" :src="parseFirstUrl(ev.imageUrl)" class="ink-timeline__panel-event-img" :alt="ev.title" loading="lazy" />
+                <div class="ink-timeline__panel-event-body">
+                  <span class="ink-timeline__panel-event-year">{{ formatYear(ev.year) }}</span>
+                  <span class="ink-timeline__panel-event-title">{{ ev.title }}</span>
+                  <p v-if="ev.significance" class="ink-timeline__panel-event-sig">{{ ev.significance }}</p>
+                  <p v-else-if="ev.description" class="ink-timeline__panel-event-sig">{{ ev.description }}</p>
+                </div>
               </div>
+              <span v-if="eventsOverflow > 0" class="ink-timeline__panel-overflow">共 {{ eventsOverflow + 3 }} 件</span>
             </div>
             <p v-else class="ink-timeline__panel-empty">暂无史事录入</p>
           </div>
@@ -141,40 +172,80 @@
 
     <!-- 操作提示 -->
     <div class="ink-timeline__hint">
-      <span class="ink-timeline__hint-icon">⛵</span>
+      <span class="ink-timeline__hint-icon" aria-hidden="true">⛵</span>
       <span>点击朝代印章或拖拽小舟，沿河探寻千年文脉</span>
     </div>
+
+    <!-- 诗风演变（跨朝代文脉，纯静态） -->
+    <section class="ink-timeline__evo" data-reveal>
+      <h3 class="ink-timeline__section-title">诗风演变 · 跨朝代文脉</h3>
+      <div class="ink-timeline__evo-track">
+        <div v-for="(s, i) in evolution" :key="i" class="ink-timeline__evo-stage">
+          <div class="ink-timeline__evo-inner">
+            <span class="ink-timeline__evo-name">{{ s.name }}</span>
+            <span class="ink-timeline__evo-style">{{ s.style }}</span>
+          </div>
+          <span v-if="i < evolution.length - 1" class="ink-timeline__evo-arrow" aria-hidden="true">→</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 文脉之最（从同一份 data 现算，零额外请求） -->
+    <section v-if="extremes" class="ink-timeline__most" data-reveal>
+      <h3 class="ink-timeline__section-title">文脉之最 · 数据中的齐鲁文脉</h3>
+      <div class="ink-timeline__most-grid">
+        <div class="ink-timeline__most-card">
+          <span class="ink-timeline__most-num">{{ extremes.topDynastyPoets.count }}</span>
+          <span class="ink-timeline__most-lbl">{{ extremes.topDynastyPoets.name }} 名士最盛</span>
+        </div>
+        <div class="ink-timeline__most-card">
+          <span class="ink-timeline__most-num">{{ extremes.topDynastyPoems.count }}</span>
+          <span class="ink-timeline__most-lbl">{{ extremes.topDynastyPoems.name }} 诗篇最丰</span>
+        </div>
+        <div class="ink-timeline__most-card">
+          <span class="ink-timeline__most-num">{{ extremes.longestSpan.years }}</span>
+          <span class="ink-timeline__most-lbl">{{ extremes.longestSpan.name }} 跨度最长</span>
+        </div>
+        <div class="ink-timeline__most-card">
+          <span class="ink-timeline__most-num">{{ extremes.totalPoets }}</span>
+          <span class="ink-timeline__most-lbl">齐鲁名士总数</span>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useBoatJourney } from '../../composables/useBoatJourney'
+import { parseFirstUrl } from '../../composables/useImage'
 
 const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 const props = defineProps({
   data: { type: Array, default: () => [] },
+  initialDynastyId: { type: [Number, String], default: null },
 })
 
 const emit = defineEmits(['select-dynasty'])
 
-// 素材导入
-const scrollBase = new URL('../../public/media/inkwash/timeline/scroll-map-base.png', import.meta.url).href
-const boatRower = new URL('../../public/media/inkwash/timeline/boat-rower.png', import.meta.url).href
+// 素材：使用绝对服务路径（resolveAsset 需要 manifest 注册，timeline 素材未注册）
+// 已由 PNG 转 WebP（15MB → ~0.7MB，满足单页媒体 <3MB 预算），PNG 原图保留备份
+const scrollBase = '/media/inkwash/timeline/scroll-map-base.webp'
+const boatRower = '/media/inkwash/timeline/boat-rower.webp'
 
 // 场景图（id 与数据库 dynasty.id 对齐；金朝暂无独立素材，复用宋朝场景——宋金同期）
-const scenes = [
-  { id: 1, name: '先秦', url: new URL('../../public/media/inkwash/timeline/scene-qin.png', import.meta.url).href },
-  { id: 2, name: '秦汉', url: new URL('../../public/media/inkwash/timeline/scene-han.png', import.meta.url).href },
-  { id: 3, name: '魏晋南北朝', url: new URL('../../public/media/inkwash/timeline/scene-weijin.png', import.meta.url).href },
-  { id: 4, name: '隋唐', url: new URL('../../public/media/inkwash/timeline/scene-tang.png', import.meta.url).href },
-  { id: 5, name: '宋', url: new URL('../../public/media/inkwash/timeline/scene-song.png', import.meta.url).href },
-  { id: 9, name: '金', url: new URL('../../public/media/inkwash/timeline/scene-song.png', import.meta.url).href },
-  { id: 6, name: '元', url: new URL('../../public/media/inkwash/timeline/scene-yuan.png', import.meta.url).href },
-  { id: 7, name: '明', url: new URL('../../public/media/inkwash/timeline/scene-ming.png', import.meta.url).href },
-  { id: 8, name: '清', url: new URL('../../public/media/inkwash/timeline/scene-qing.png', import.meta.url).href },
-]
+const SCENE_MAP = {
+  1: '/media/inkwash/timeline/scene-qin.webp',
+  2: '/media/inkwash/timeline/scene-han.webp',
+  3: '/media/inkwash/timeline/scene-weijin.webp',
+  4: '/media/inkwash/timeline/scene-tang.webp',
+  5: '/media/inkwash/timeline/scene-song.webp',
+  9: '/media/inkwash/timeline/scene-song.webp', // 金
+  6: '/media/inkwash/timeline/scene-yuan.webp',
+  7: '/media/inkwash/timeline/scene-ming.webp',
+  8: '/media/inkwash/timeline/scene-qing.webp',
+}
 
 // 黄河曲线 SVG path（蜿蜒东流）
 const riverPath = 'M 50,200 C 150,100 250,300 400,180 S 600,280 750,150 S 950,250 1100,180'
@@ -189,56 +260,116 @@ const boatRef = ref(null)
 const {
   progress,
   activeDynastyIndex,
-  dynasties,
+  isCruising,
   dynastyNodes,
   init: initBoat,
   goToDynasty,
   autoCruise,
+  pauseCruise,
+  toggleCruise: _toggleCruise,
   dispose: disposeBoat,
 } = useBoatJourney()
 
-// 朝代节点列表（dynastyNodes 已是 ref，直接使用）
+// 朝代节点列表
 const dynastyNodeList = dynastyNodes
+
+// 从 props.data 派生朝代列表（单源，不依赖 composable 内硬编码）
+const dynastyList = computed(() => props.data.map((d) => d.dynasty))
 
 // 当前朝代数据
 const selectedDynasty = computed(() => {
-  const dynasty = dynasties[activeDynastyIndex.value]
-  if (!dynasty || !props.data.length) return null
-  return props.data.find((d) => d.dynasty.id === dynasty.id)?.dynasty || dynasty
+  const idx = activeDynastyIndex.value
+  if (!props.data.length || idx >= props.data.length) return null
+  return props.data[idx]?.dynasty || null
 })
 
 const selectedPoets = computed(() => {
-  const dynasty = dynasties[activeDynastyIndex.value]
-  if (!dynasty || !props.data.length) return []
-  return props.data.find((d) => d.dynasty.id === dynasty.id)?.poets || []
+  if (!props.data.length || activeDynastyIndex.value >= props.data.length) return []
+  return props.data[activeDynastyIndex.value]?.poets || []
 })
 
 const selectedPoems = computed(() => {
-  const dynasty = dynasties[activeDynastyIndex.value]
-  if (!dynasty || !props.data.length) return []
-  return props.data.find((d) => d.dynasty.id === dynasty.id)?.poems || []
+  if (!props.data.length || activeDynastyIndex.value >= props.data.length) return []
+  return props.data[activeDynastyIndex.value]?.poems || []
 })
 
 const selectedEvents = computed(() => {
-  const dynasty = dynasties[activeDynastyIndex.value]
-  if (!dynasty || !props.data.length) return []
-  return props.data.find((d) => d.dynasty.id === dynasty.id)?.events || []
+  if (!props.data.length || activeDynastyIndex.value >= props.data.length) return []
+  return props.data[activeDynastyIndex.value]?.events || []
 })
 
+// 截断提示
+const poetsOverflow = computed(() => {
+  const total = props.data[activeDynastyIndex.value]?.dynasty?.poetCount ?? selectedPoets.value.length
+  return Math.max(0, total - 8)
+})
+const poemsOverflow = computed(() => {
+  const total = props.data[activeDynastyIndex.value]?.dynasty?.poemCount ?? selectedPoems.value.length
+  return Math.max(0, total - 5)
+})
+const eventsOverflow = computed(() => Math.max(0, selectedEvents.value.length - 3))
+
 // 当前活跃场景
-const activeScene = computed(() => dynasties[activeDynastyIndex.value]?.id || 1)
+const activeSceneId = computed(() => {
+  if (!props.data.length || activeDynastyIndex.value >= props.data.length) return 1
+  return props.data[activeDynastyIndex.value]?.dynasty?.id || 1
+})
+
+const sceneUrl = (id) => SCENE_MAP[id] || SCENE_MAP[1]
+
+// 诗风演变（静态五段，移植自旧 RealTimeline）
+const evolution = [
+  { name: '诗经', style: '现实主义' },
+  { name: '楚辞', style: '浪漫主义' },
+  { name: '唐诗', style: '气象万千' },
+  { name: '宋词', style: '婉约豪放' },
+  { name: '元曲', style: '民俗市井' },
+]
+
+// 文脉之最：从 props.data 现算，零额外请求
+const extremes = computed(() => {
+  if (!props.data.length) return null
+  let topPoets = { name: '', count: 0 }
+  let topPoems = { name: '', count: 0 }
+  let longest = { name: '', years: 0 }
+  let totalPoets = 0
+  props.data.forEach((t) => {
+    const poets = t.poets?.length || 0
+    const poems = t.poems?.length || 0
+    if (poets > topPoets.count) topPoets = { name: t.dynasty.name, count: poets }
+    if (poems > topPoems.count) topPoems = { name: t.dynasty.name, count: poems }
+    totalPoets += poets
+    const span = (t.dynasty.endYear || 0) - (t.dynasty.startYear || 0)
+    if (span > longest.years) longest = { name: t.dynasty.name, years: span }
+  })
+  return { topDynastyPoets: topPoets, topDynastyPoems: topPoems, longestSpan: longest, totalPoets }
+})
+
+// 仅渲染当前 ± 1 朝代的场景图，控制并发拉取（9×~1.5MB → 至多 3 张）
+const visibleScenes = computed(() => {
+  if (!props.data.length) return []
+  const idx = Math.min(activeDynastyIndex.value, props.data.length - 1)
+  return props.data.filter((_, i) => Math.abs(i - idx) <= 1)
+})
 
 // 格式化年份
 const formatYear = (y) =>
   y == null ? '' : y < 0 ? '前' + Math.abs(y) : String(y)
 
-const formatYears = (node) =>
-  `${formatYear(node.startYear)}-${formatYear(node.endYear)}`
+const formatYears = (d) =>
+  d ? `${formatYear(d.startYear)}-${formatYear(d.endYear)}` : ''
 
 // 选择朝代
 function selectDynasty(index) {
+  pauseCruise()
   goToDynasty(index, { duration: prefersReduce ? 0.1 : 1.2 })
-  emit('select-dynasty', dynasties[index])
+  const dynasty = dynastyList.value[index]
+  if (dynasty) emit('select-dynasty', dynasty)
+}
+
+// 播放/暂停巡航（模板绑定）
+function toggleCruise() {
+  _toggleCruise()
 }
 
 // 拖拽小舟
@@ -255,37 +386,83 @@ function onPointerDown(e) {
 }
 
 function onPointerMove(e) {
-  if (!_isDragging) return
+  if (!_isDragging || !props.data.length) return
   const dx = e.clientX - _startX
   const containerWidth = scrollRef.value?.offsetWidth || 1200
   const delta = dx / containerWidth
   const newProgress = Math.max(0, Math.min(1, _startProgress + delta))
-  goToDynasty(Math.min(Math.floor(newProgress * dynasties.length), dynasties.length - 1), { duration: 0.1 })
+  goToDynasty(Math.min(Math.floor(newProgress * props.data.length), props.data.length - 1), { duration: 0.1 })
 }
 
 function onPointerUp() {
   _isDragging = false
 }
 
-// 初始化
-onMounted(() => {
-  if (pathRef.value && boatRef.value) {
-    initBoat({
-      pathEl: pathRef.value,
-      boatEl: boatRef.value,
-      onDynastyChange: (index, dynasty) => {
-        emit('select-dynasty', dynasty)
-      },
-    })
+// 键盘导航：Enter/Space 选中，方向键在朝代间移动
+function onNodeKeydown(e, index) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault()
+    selectDynasty(index)
+  } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    e.preventDefault()
+    focusNode(Math.min(index + 1, dynastyList.value.length - 1))
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    e.preventDefault()
+    focusNode(Math.max(index - 1, 0))
+  } else if (e.key === 'Home') {
+    e.preventDefault()
+    focusNode(0)
+  } else if (e.key === 'End') {
+    e.preventDefault()
+    focusNode(dynastyList.value.length - 1)
+  }
+}
 
-    // 自动巡航（非 reduced-motion）
-    if (!prefersReduce) {
+function focusNode(index) {
+  selectDynasty(index)
+  // 选中后 tabindex 转移到该节点，下一 tick 聚焦
+  requestAnimationFrame(() => {
+    const btns = containerRef.value?.querySelectorAll('.ink-timeline__node')
+    btns?.[index]?.focus()
+  })
+}
+
+// 初始化：data 异步到达，需要 watch 触发（onMounted 时 data 可能为空）
+let _boatInited = false
+function tryInitBoat() {
+  if (_boatInited || !pathRef.value || !boatRef.value || !props.data.length) return
+  _boatInited = true
+  initBoat({
+    pathEl: pathRef.value,
+    boatEl: boatRef.value,
+    dynastyCount: props.data.length,
+    viewBoxW: 1200,
+    viewBoxH: 400,
+    // 巡航自动推进只更新面板（activeDynastyIndex 已是响应式），不写 URL——
+    // 否则每过一个朝代都触发 router.replace + scrollBehavior 归顶，页面被反复拽回顶部像卡死，
+    // 且 ?dynasty= 被持续写入，刷新后走深链接分支暂停巡航，看起来"刷新也没用"。
+    // 只有用户显式点击/键盘选择（selectDynasty）才 emit 写 URL。
+    onDynastyChange: null,
+  })
+  if (!prefersReduce) {
+    // 有深链接目标则定位到该朝代，否则自动巡航
+    const targetIdx = props.initialDynastyId != null
+      ? props.data.findIndex((d) => String(d.dynasty.id) === String(props.initialDynastyId))
+      : -1
+    if (targetIdx >= 0) {
+      selectDynasty(targetIdx)
+    } else {
       autoCruise(30)
     }
+  } else if (props.initialDynastyId != null) {
+    const targetIdx = props.data.findIndex((d) => String(d.dynasty.id) === String(props.initialDynastyId))
+    if (targetIdx >= 0) goToDynasty(targetIdx, { duration: 0.1 })
   }
-})
+}
 
-// 清理
+onMounted(tryInitBoat)
+watch(() => props.data.length, tryInitBoat)
+
 onBeforeUnmount(() => {
   disposeBoat()
 })
@@ -304,9 +481,9 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 400px;
   overflow: hidden;
-  background: var(--ink-scroll-bg, #f5f0e8);
+  background: var(--bg-secondary);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 /* 长卷底图 */
@@ -357,6 +534,7 @@ onBeforeUnmount(() => {
   height: 60px;
   transform-origin: 50% 50%;
   cursor: grab;
+  touch-action: pan-y;   /* 纵向滚动优先，横向拖拽由 pointer 事件处理 */
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
   z-index: 10;
   transition: filter 0.3s ease;
@@ -381,6 +559,41 @@ onBeforeUnmount(() => {
   cursor: pointer;
   z-index: 5;
   transition: all 0.3s ease;
+  /* button reset */
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+}
+
+.ink-timeline__node:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+/* 播放/暂停巡航控制 */
+.ink-timeline__controls {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.ink-timeline__cruise-btn {
+  padding: 6px 18px;
+  font-size: var(--fs-body-sm);
+  color: var(--accent);
+  background: transparent;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.25s, color 0.25s;
+}
+
+.ink-timeline__cruise-btn:hover {
+  background: var(--accent);
+  color: var(--text-on-accent);
 }
 
 .ink-timeline__node:hover {
@@ -394,20 +607,20 @@ onBeforeUnmount(() => {
   width: 48px;
   height: 48px;
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   font-family: var(--font-display);
   font-size: 18px;
-  font-weight: 900;
+  font-weight: 600;
   letter-spacing: 2px;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--text-primary) 20%, transparent);
   transition: all 0.3s ease;
 }
 
 .ink-timeline__node--active .ink-timeline__seal {
-  background: var(--ink-seal-active, #c23a2b);
+  background: var(--accent-dark);
   transform: scale(1.15);
-  box-shadow: 0 4px 16px rgba(194, 58, 43, 0.4);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
 .ink-timeline__node--visited .ink-timeline__seal {
@@ -441,10 +654,17 @@ onBeforeUnmount(() => {
 .ink-timeline__panel-name {
   font-family: var(--font-display);
   font-size: 32px;
-  font-weight: 900;
+  font-weight: 600;
   color: var(--text-primary);
   letter-spacing: 4px;
   margin: 0 0 8px 0;
+}
+
+.ink-timeline__panel-desc {
+  font-size: var(--fs-body-sm);
+  color: var(--text-secondary);
+  line-height: var(--lh-body);
+  margin: var(--sp-3) 0 0;
 }
 
 .ink-timeline__panel-years {
@@ -463,10 +683,10 @@ onBeforeUnmount(() => {
   margin-bottom: 24px;
 }
 
-.ink-timeline__panel-stats b {
+.ink-timeline__panel-stats strong {
   font-family: var(--font-display);
   font-size: 20px;
-  font-weight: 900;
+  font-weight: 600;
   color: var(--accent);
   margin-right: 2px;
 }
@@ -486,8 +706,8 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: var(--fs-body-sm);
+  font-weight: 600;
   color: var(--text-primary);
   margin: 0 0 12px 0;
   letter-spacing: 2px;
@@ -497,16 +717,16 @@ onBeforeUnmount(() => {
 
 .ink-timeline__panel-icon {
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: var(--fs-caption);
   width: 20px;
   height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   border-radius: 2px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 /* 名士芯片 */
@@ -532,7 +752,7 @@ onBeforeUnmount(() => {
 .ink-timeline__panel-poet-chip:hover {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
 }
 
 /* 诗篇行 */
@@ -589,10 +809,26 @@ onBeforeUnmount(() => {
   padding: 4px 0;
 }
 
+.ink-timeline__panel-event-img {
+  width: 60px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.ink-timeline__panel-event-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 .ink-timeline__panel-event-year {
   font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--fs-caption);
+  font-weight: 600;
   color: var(--accent);
   min-width: 50px;
   flex-shrink: 0;
@@ -611,6 +847,20 @@ onBeforeUnmount(() => {
   letter-spacing: 1px;
 }
 
+.ink-timeline__panel-event-sig {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.ink-timeline__panel-overflow {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 4px 8px;
+  letter-spacing: 1px;
+}
+
 /* 操作提示 */
 .ink-timeline__hint {
   display: flex;
@@ -625,6 +875,100 @@ onBeforeUnmount(() => {
 
 .ink-timeline__hint-icon {
   font-size: 16px;
+}
+
+/* 诗风演变 + 文脉之最 */
+.ink-timeline__evo,
+.ink-timeline__most {
+  margin-top: var(--sp-8);
+}
+
+.ink-timeline__section-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 2px;
+  margin: 0 0 var(--sp-5);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.ink-timeline__evo-track {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px 12px;
+}
+.ink-timeline__evo-stage {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 120px;
+  justify-content: center;
+}
+.ink-timeline__evo-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+}
+.ink-timeline__evo-name {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 2px;
+}
+.ink-timeline__evo-style {
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 1px;
+}
+.ink-timeline__evo-arrow {
+  color: var(--accent);
+  font-size: 18px;
+  opacity: 0.6;
+}
+
+.ink-timeline__most-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.ink-timeline__most-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.ink-timeline__most-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-3px);
+  box-shadow: var(--card-shadow-hover);
+}
+.ink-timeline__most-num {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 600;
+  color: var(--accent);
+  line-height: 1;
+}
+.ink-timeline__most-lbl {
+  font-size: 12px;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+  line-height: 1.5;
 }
 
 /* 面板滑入动画 */
@@ -705,6 +1049,24 @@ onBeforeUnmount(() => {
     width: 40px;
     height: 40px;
     font-size: 16px;
+  }
+
+  .ink-timeline__evo-track {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .ink-timeline__evo-stage {
+    flex-direction: row;
+    min-width: 0;
+  }
+  .ink-timeline__evo-arrow {
+    transform: rotate(90deg);
+  }
+  .ink-timeline__most-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ink-timeline__most-num {
+    font-size: 28px;
   }
 }
 </style>

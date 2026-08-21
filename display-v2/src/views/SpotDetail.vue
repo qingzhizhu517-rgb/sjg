@@ -28,7 +28,7 @@
         <router-link to="/map" class="back-link">← 返回地图</router-link>
         <div class="sd-hero__titlebox">
           <h1 class="sd-name">{{ spot.name }}</h1>
-          <span class="sd-seal">{{ isAnime ? (getSpotData(spot.name).tag || '胜迹') : (spot.region || '齐鲁') }}</span>
+          <span class="sd-seal">{{ getSpotData(spot.name).tag || spot.region || '胜迹' }}</span>
         </div>
         <p class="sd-tagline">{{ heroLine }}</p>
         <div class="sd-facts">
@@ -146,6 +146,7 @@ import { useImage } from '../composables/useImage'
 import { mockSpots } from '../config/mockDetailData'
 import * as echarts from 'echarts'
 import api from '../api'
+import { usePoetEnrichment } from '../composables/usePoetEnrichment'
 import { cssVar, cssVarAlpha } from '../utils/cssToken'
 import { pickMoodBackdrop } from '../utils/moodBackdrop'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
@@ -153,7 +154,8 @@ import ErrorState from '../components/homepage/ErrorState.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
 
 const route = useRoute()
-const { themeClass, isReal, isAnime } = useTheme()
+const { themeClass } = useTheme()
+const { build: buildPoetMap } = usePoetEnrichment()
 const { getImageUrl } = useImage()
 const spot = ref(null)
 const poems = ref([])
@@ -165,8 +167,9 @@ let chartInstance = null
 
 const imageUrl = computed(() => {
   if (!spot.value) return null
-  const url = isReal.value ? spot.value.imageUrl : (spot.value.imageAnimeUrl || spot.value.imageUrl)
-  return getImageUrl(url, isAnime.value)
+  // 单主题后不再按主题挑字段：优先水墨图，缺失回退实景图
+  const url = spot.value.imageAnimeUrl || spot.value.imageUrl
+  return getImageUrl(url, true)
 })
 
 const moodBg = computed(() => pickMoodBackdrop(imageUrl.value))
@@ -210,8 +213,8 @@ const parseTagsOf = (poem) => {
 
 const getPoetAvatar = (poetObj) => {
   if (!poetObj) return ''
-  const url = isAnime.value ? poetObj.avatarAnimeUrl || poetObj.avatarUrl : poetObj.avatarUrl
-  return getImageUrl(url, isAnime.value)
+  const url = poetObj.avatarUrl
+  return getImageUrl(url, true)
 }
 
 const enrichedPoems = computed(() => {
@@ -422,7 +425,7 @@ const handleResize = () => {
   if (chartInstance) chartInstance.resize()
 }
 
-watch([isAnime, chartRows], () => {
+watch(chartRows, () => {
   nextTick(() => {
     setTimeout(() => initChart(), 120)
   })
@@ -444,6 +447,8 @@ const loadSpot = async () => {
   loading.value = false
 
   try {
+    // 注意：usePoetEnrichment 缓存的是诗词而非诗人，此处仍需单独查询诗人
+    // TODO: 后续可实现 usePoetCache composable 统一缓存诗人数据
     const poetsData = await api.get('/poets', { params: { size: 200 } })
     const map = {}
     ;(poetsData.records || poetsData || []).forEach((p) => { map[p.id] = p })
@@ -532,7 +537,7 @@ onBeforeUnmount(() => {
   margin: 0 auto;
   padding: 48px 48px 44px;
   text-align: left;
-  color: #f5efe3;
+  color: var(--bg-primary);
 }
 .sd-hero__content .back-link {
   color: rgba(245, 239, 227, 0.85);
@@ -552,7 +557,7 @@ onBeforeUnmount(() => {
   font-size: clamp(40px, 5.5vw, 72px);
   font-weight: 700;
   letter-spacing: 8px;
-  color: #f5efe3;
+  color: var(--bg-primary);
   text-shadow: 0 3px 18px rgba(0, 0, 0, 0.45);
 }
 .sd-seal {
@@ -596,7 +601,7 @@ onBeforeUnmount(() => {
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 1px;
-  color: #f5efe3;
+  color: var(--bg-primary);
 }
 
 /* ===== 正文 ===== */

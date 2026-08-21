@@ -3,28 +3,47 @@
     <TimelineHero :stats="heroStats" />
 
     <div ref="revealRoot" class="timeline-content">
-      <!-- 恒水墨长卷(一页一貌) -->
-      <InkTimeline :data="timeline" @select-dynasty="onSelectDynasty" />
-
+      <!-- 错误优先，与长卷互斥（此前 ErrorState 在长卷之后，空长卷与错误并存） -->
       <ErrorState v-if="errorMsg" :message="errorMsg" @retry="loadTimeline" />
+
+      <!-- 加载骨架：避免加载中与真空数据视觉无法区分 -->
+      <div v-else-if="!loaded" class="timeline-skeleton" aria-busy="true" aria-label="朝代长卷加载中">
+        <SkeletonBlock height="400px" />
+        <SkeletonBlock height="180px" />
+      </div>
+
+      <!-- 恒水墨长卷(一页一貌) -->
+      <InkTimeline
+        v-else
+        :data="timeline"
+        :initial-dynasty-id="initialDynastyId"
+        @select-dynasty="onSelectDynasty"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import api from '../api'
 import TimelineHero from '../components/homepage/TimelineHero.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
+import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import InkTimeline from '../components/timeline/InkTimeline.vue'
 import { useReveal } from '../composables/useReveal'
 
 const { reveal } = useReveal()
+const route = useRoute()
+const router = useRouter()
 
 const timeline = ref([])
 const loaded = ref(false)
 const errorMsg = ref(null)
 const revealRoot = ref(null)
+
+// 深链接 ?dynasty=<id>（初始值，长卷首帧定位用）
+const initialDynastyId = ref(route.query.dynasty || null)
 
 const heroStats = computed(() => {
   if (!loaded.value || !timeline.value.length) return []
@@ -56,8 +75,9 @@ const loadTimeline = async () => {
 }
 
 const onSelectDynasty = (dynasty) => {
-  // 可用于联动其他组件
-  console.log('选择朝代:', dynasty.name)
+  // 深链接双向同步：选中朝代写回 URL，刷新可保持
+  const query = { ...route.query, dynasty: dynasty.id }
+  router.replace({ query }).catch(() => {})
 }
 
 onMounted(async () => {
@@ -74,6 +94,11 @@ onMounted(async () => {
 }
 .timeline-content {
   padding: 56px 48px 96px;
+}
+.timeline-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 @media (max-width: 1024px) {

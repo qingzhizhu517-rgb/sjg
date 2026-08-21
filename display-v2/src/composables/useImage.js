@@ -6,7 +6,7 @@ const _localKeys = Object.keys(import.meta.glob('/public/images/**/*.{jpg,jpeg,p
 const localImages = new Set(_localKeys.map(k => k.replace('/public', '')))
 
 // 从 JSON 数组字符串或单值中提取第一个 URL
-const parseFirstUrl = (val) => {
+export const parseFirstUrl = (val) => {
   if (!val) return null
   if (typeof val === 'string') {
     // JSON 数组：'["https://oss.../a.jpg", "https://oss.../b.jpg"]'
@@ -49,20 +49,16 @@ export function useImage() {
     return null
   }
 
-  // 新：直读后端双字段，按当前主题挑选（real 默认 / inkwash 取 animeUrl，缺省回退 realUrl）。
-  // kind: '文' 诗人·城市 / '景' 景点 -- 占位印章首字。集中调用方重复的双字段选择逻辑，供 P1-3 themeAdapter 调用。
-  const resolveImage = (realUrl, animeUrl, kind = '文') => {
+  // 简化版：直接读取单字段，按当前主题选择占位风格
+  const resolveImage = (url, kind = '文') => {
     const isAnime = theme.value === 'inkwash'
-    const picked = isAnime ? (animeUrl || realUrl) : realUrl
-    const parsed = parseFirstUrl(picked)
+    const parsed = parseFirstUrl(url)
     if (!parsed) return getPlaceholder(isAnime, kind)
     if (parsed.startsWith('http://') || parsed.startsWith('https://')) return parsed
     return resolveLocal(parsed) || getPlaceholder(isAnime, kind)
   }
 
-  // 旧契约：单 url + isAnime 布尔。保留供未迁移调用方（P1-3 themeAdapter 统一迁移到 resolveImage）。
-  // isAnime 用途：① 当传入 real 路径时派生 _anime 本地图（DB 未填 imageAnimeUrl 时的兜底）
-  //              ② 决定占位印章风格（real 金色 / inkwash 朱砂）
+  // 旧契约：单 url + isAnime 布尔。保留供未迁移调用方。
   const getImageUrl = (url, isAnime = false) => {
     const parsed = parseFirstUrl(url)
     if (!parsed) return getPlaceholder(isAnime, inferKind(url))

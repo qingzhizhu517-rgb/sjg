@@ -95,9 +95,6 @@ const onImgError = (e) => {
   align-items: center;
   justify-content: center;
 }
-.theme-real .fpoet__stamp {
-  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-}
 .fpoet__body {
   display: flex;
   flex-direction: column;

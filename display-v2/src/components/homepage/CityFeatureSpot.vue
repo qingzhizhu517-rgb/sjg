@@ -93,21 +93,25 @@ onMounted(() => {
     }
   )
 
-  gsap.fromTo(el.querySelectorAll('.feature__stat'),
-    { y: 16, opacity: 0 },
-    {
-      y: 0,
-      opacity: 1,
-      stagger: 0.06,
-      duration: 0.5,
-      ease: 'power2.out',
-      scrollTrigger: {
-        trigger: el,
-        start: 'top 70%',
-        toggleActions: 'play none none reverse'
+  const statEls = el.querySelectorAll('.feature__stat')
+  // stats 为空时(首页 FamousCities 不传该 prop)NodeList 为空, gsap 会刷 target not found 警告
+  if (statEls.length) {
+    gsap.fromTo(statEls,
+      { y: 16, opacity: 0 },
+      {
+        y: 0,
+        opacity: 1,
+        stagger: 0.06,
+        duration: 0.5,
+        ease: 'power2.out',
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 70%',
+          toggleActions: 'play none none reverse'
+        }
       }
-    }
-  )
+    )
+  }
 })
 </script>
 

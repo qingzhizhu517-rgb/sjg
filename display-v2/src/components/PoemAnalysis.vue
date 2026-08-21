@@ -29,7 +29,7 @@
     </div>
 
     <!-- 内容 -->
-    <div v-else class="analysis-content">
+    <div v-else-if="analysis" class="analysis-content">
       <!-- 综合赏析（默认） -->
       <div v-if="activeTab === 'comprehensive'" class="analysis-comprehensive">
         <!-- 逐句解读 -->
@@ -66,12 +66,18 @@
       <!-- 情感分析 -->
       <div v-if="activeTab === 'sentiment'" class="analysis-tab-content">
         <div v-if="sentimentAnalysis" class="sentiment-detail">
-          <h3 class="sub-heading">情感基调</h3>
-          <p class="section-text">{{ sentimentAnalysis.tone }}</p>
-          <h3 class="sub-heading">情感变化</h3>
-          <p class="section-text">{{ sentimentAnalysis.progression }}</p>
-          <h3 class="sub-heading">情感意象</h3>
-          <p class="section-text">{{ sentimentAnalysis.imagery }}</p>
+          <template v-if="typeof sentimentAnalysis === 'object'">
+            <h3 class="sub-heading">情感基调</h3>
+            <p class="section-text">{{ sentimentAnalysis.tone }}</p>
+            <h3 class="sub-heading">情感变化</h3>
+            <p class="section-text">{{ sentimentAnalysis.progression }}</p>
+            <h3 class="sub-heading">情感意象</h3>
+            <p class="section-text">{{ sentimentAnalysis.imagery }}</p>
+          </template>
+          <template v-else>
+            <h3 class="sub-heading">情感分析</h3>
+            <p class="section-text">{{ sentimentAnalysis }}</p>
+          </template>
         </div>
         <div v-else class="analysis-empty">
           <p>暂无情感分析数据</p>
@@ -139,6 +145,11 @@
         </div>
       </div>
     </div>
+
+    <!-- 空态 -->
+    <div v-else class="analysis-empty">
+      <p>暂无赏析数据</p>
+    </div>
   </div>
 </template>
 
@@ -166,7 +177,7 @@ const tabs = [
 ]
 
 // 计算属性：提取各维度分析数据
-const sentimentAnalysis = computed(() => analysis.value?.sentiment_detail)
+const sentimentAnalysis = computed(() => analysis.value?.sentiment)
 const imageryAnalysis = computed(() => analysis.value?.imagery)
 const techniqueAnalysis = computed(() => analysis.value?.technique)
 const translationAnalysis = computed(() => analysis.value?.translation)
@@ -178,11 +189,9 @@ async function fetchAnalysis() {
   error.value = null
   analysis.value = null
   try {
-    // 请求综合分析接口，包含所有维度
-    const data = await api.get(`/poems/${props.poemId}/analysis`, {
-      params: { dimensions: 'all' }
-    })
-    analysis.value = data
+    // 后端返回 {analysis:{...}, model, generatedAt}，取内层 analysis 对象
+    const data = await api.get(`/poems/${props.poemId}/analysis`)
+    analysis.value = (data && data.analysis) || data
   } catch (err) {
     console.error('加载赏析失败:', err)
     error.value = err.message || '赏析加载失败'
@@ -202,11 +211,11 @@ watch(() => props.poemId, fetchAnalysis, { immediate: true })
 .section-heading {
   font-family: var(--font-heading);
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 24px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border);
 }
 
 .analysis-tabs {
@@ -219,7 +228,7 @@ watch(() => props.poemId, fetchAnalysis, { immediate: true })
 
 .tab-btn {
   padding: 8px 16px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 4px;
   background: var(--bg-secondary);
   color: var(--text-secondary);
@@ -230,7 +239,7 @@ watch(() => props.poemId, fetchAnalysis, { immediate: true })
 }
 
 .tab-btn:hover {
-  background: var(--bg-hover);
+  background: var(--accent-hover);
 }
 
 .tab-btn.active {
@@ -250,7 +259,7 @@ watch(() => props.poemId, fetchAnalysis, { immediate: true })
 .analysis-spinner {
   width: 24px;
   height: 24px;
-  border: 2px solid var(--border-color);
+  border: 2px solid var(--border);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 1s linear infinite;

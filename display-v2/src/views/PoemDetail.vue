@@ -13,7 +13,7 @@
 
   <!-- 诗笺式竖排(唯一版式, 一页一貌) -->
   <div v-else class="poem-detail poem-detail--inkwash">
-    <div v-if="moodBg" class="mood-bg mood-bg--inkwash" :style="{ backgroundImage: `url(${moodBg})` }" aria-hidden="true"></div>
+    <div v-if="moodBg" class="mood-bg" :style="{ backgroundImage: `url(${moodBg})` }" aria-hidden="true"></div>
 
     <!-- Back -->
     <div class="detail-top">
@@ -32,7 +32,7 @@
           <router-link :to="`/poets/${poet.id}`" class="ink-poet-link">{{ poet.name }}</router-link>
         </div>
         <div v-if="spot" class="ink-spot-info">
-          <router-link :to="`/regions/${spot.region}`" class="ink-spot-link">{{ spot.name }}</router-link>
+          <router-link :to="`/spots/${spot.id}`" class="ink-spot-link">{{ spot.name }}</router-link>
         </div>
       </aside>
 
@@ -55,11 +55,12 @@
 
       <!-- 右侧：注解面板 -->
       <aside class="ink-annotation-sidebar">
-        <button class="ink-annotation-toggle" @click="showAnnotation = !showAnnotation">
+        <button class="ink-annotation-toggle" :aria-expanded="String(showAnnotation)"
+                aria-controls="ink-annotation-panel" @click="showAnnotation = !showAnnotation">
           {{ showAnnotation ? '合' : '注' }}
         </button>
         <transition name="annotation-slide">
-          <div v-if="showAnnotation && poem.annotation" class="ink-annotation-panel">
+          <div v-if="showAnnotation && poem.annotation" id="ink-annotation-panel" class="ink-annotation-panel">
             <h3 class="ink-annotation-title">注解</h3>
             <p class="ink-annotation-text">{{ poem.annotation }}</p>
           </div>
@@ -84,17 +85,10 @@
     <PoemAnalysis v-if="poem.id" :poem-id="poem.id" />
 
     <!-- Media -->
-    <div v-if="poem.videoUrl" class="detail-section">
+    <div v-if="parsedVideoUrl" class="detail-section">
       <h2 class="section-heading">诗词赏析视频</h2>
       <div class="media-wrap">
-        <video :src="poem.videoUrl" controls preload="none" class="video-player" />
-      </div>
-    </div>
-
-    <div v-if="poem.audioUrl" class="detail-section">
-      <h2 class="section-heading">诗词朗读</h2>
-      <div class="audio-wrap">
-        <audio :src="poem.audioUrl" controls class="audio-player" />
+        <video :src="parsedVideoUrl" controls preload="none" class="video-player" />
       </div>
     </div>
   </div>
@@ -107,7 +101,7 @@ import api from '../api'
 import { parseTags } from '../utils/poem'
 import { adaptSpot, adaptPoem } from '../composables/themeAdapter'
 import { pickMoodBackdrop } from '../utils/moodBackdrop'
-import { useTheme } from '../composables/useTheme'
+import { parseFirstUrl } from '../composables/useImage'
 import PoemAnalysis from '../components/PoemAnalysis.vue'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
@@ -117,7 +111,7 @@ const poem = ref(null)
 const poet = ref(null)
 const dynasty = ref(null)
 const spot = ref(null)
-const showAnnotation = ref(false)
+const showAnnotation = ref(true)
 const errorMsg = ref(null)
 
 // 意境背景：优先诗词自身配图，其次关联景点图；占位印章不算
@@ -131,6 +125,9 @@ const moodBg = computed(() =>
 const poemLines = computed(() => poem.value?.content?.split('\n').filter(l => l.trim()) || [])
 
 const sentimentTags = computed(() => parseTags(poem.value?.sentimentTags))
+
+// videoUrl 是 JSON 数组字符串 '["https://...mp4"]'，取首个有效 URL
+const parsedVideoUrl = computed(() => parseFirstUrl(poem.value?.videoUrl))
 
 const loadPoem = async () => {
   errorMsg.value = null
@@ -196,7 +193,7 @@ onMounted(loadPoem)
 .section-heading {
   font-family: var(--font-heading);
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 24px;
   padding-bottom: 12px;
@@ -220,58 +217,25 @@ onMounted(loadPoem)
   line-height: 2.2;
   color: var(--text-primary);
   text-indent: 2em;
-  text-align: justify;
+  text-align: left;
+  max-width: var(--measure);
 }
 
 /* Media styling */
 .media-wrap {
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   overflow: hidden;
-  box-shadow: var(--card-shadow);
-  border: 8px solid #2b1d12; /* Mahogany frame */
-  outline: 1px solid var(--accent-light);
-  outline-offset: -3px;
-  background: #000;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 2px solid var(--accent);
+  background: var(--text-primary);
   max-width: 640px;
   margin: 0 auto;
-}
-
-.theme-inkwash .media-wrap {
-  border: 2px solid var(--accent);
-  outline: none;
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 0.1%, transparent);
-  border-radius: var(--radius-sm);
 }
 
 .video-player {
   width: 100%;
   max-width: 640px;
   display: block;
-}
-
-.audio-wrap {
-  background: var(--bg-secondary);
-  padding: 20px 24px;
-  border-radius: var(--radius-md);
-  border: 2px solid #2b1d12;
-  box-shadow: var(--card-shadow);
-  display: flex;
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-  justify-content: center;
-  position: relative;
-}
-
-.theme-inkwash .audio-wrap {
-  border: 1px solid var(--accent);
-  background: var(--card-bg);
-  border-radius: var(--radius-sm);
-  box-shadow: none;
-}
-
-.audio-player {
-  width: 100%;
 }
 
 /* 诗笺骨架屏 */
@@ -303,28 +267,13 @@ onMounted(loadPoem)
   pointer-events: none;
 }
 
-:global(.theme-inkwash) .mood-bg {
+/* 意境背景：单一水墨风格 */
+.mood-bg {
   filter: blur(70px) grayscale(0.4);
   opacity: 0.12;
 }
 
-/* 视觉锚点 Hero 带 */
-.poem-hero-anchor {
-  position: relative;
-  height: 38vh;
-  min-height: 220px;
-  margin: 0 calc(50% - 50vw); /* 破容器全宽 */
-  background-size: cover;
-  background-position: center 35%;
-}
-
-.poem-hero-anchor__veil {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, var(--bg-primary) 0%, transparent 30%, transparent 70%, var(--bg-primary) 100%);
-}
-
-/* ========== INKWASH 竖排诗笺布局 ========== */
+/* ========== 竖排诗笺布局 ========== */
 
 .poem-detail--inkwash {
   max-width: 1000px;
@@ -333,17 +282,11 @@ onMounted(loadPoem)
   position: relative;
 }
 
-.mood-bg--inkwash {
-  filter: blur(70px) grayscale(0.4);
-  opacity: 0.12;
-}
-
 /* 竖排诗笺主体 */
 .ink-poem-scroll {
   display: flex;
   gap: 32px;
   margin: 32px 0;
-  min-height: 500px;
 }
 
 /* 左侧：印章装饰 */
@@ -367,7 +310,7 @@ onMounted(loadPoem)
 .ink-seal-char {
   font-family: var(--font-display);
   font-size: 48px;
-  font-weight: 900;
+  font-weight: 600;
   color: var(--accent);
   line-height: 1;
   text-shadow: 2px 2px 4px color-mix(in srgb, var(--accent) 30%, transparent);
@@ -387,7 +330,7 @@ onMounted(loadPoem)
 .ink-poet-link {
   font-family: var(--font-display);
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--accent);
   text-decoration: none;
   letter-spacing: 4px;
@@ -428,7 +371,7 @@ onMounted(loadPoem)
 .ink-poem-title {
   font-family: var(--font-display);
   font-size: 36px;
-  font-weight: 900;
+  font-weight: 600;
   color: var(--text-primary);
   letter-spacing: 8px;
   text-align: center;
@@ -441,26 +384,47 @@ onMounted(loadPoem)
   border-radius: var(--radius-sm);
   padding: 48px 40px;
   position: relative;
+  width: fit-content;      /* 单列诗（62.6%）不再被拉到满宽而左右留白 */
+  max-width: 100%;
+  margin: 0 auto;
   /* 水墨纹理背景 */
   background-image:
-    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--accent) 0.015%, transparent) 30%, transparent 31%),
-    radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--accent) 0.015%, transparent) 30%, transparent 31%);
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--accent) 1.5%, transparent) 30%, transparent 31%),
+    radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--accent) 1.5%, transparent) 30%, transparent 31%);
 }
 
 .ink-poem-text {
   display: flex;
   flex-direction: row-reverse; /* 竖排从右到左 */
   gap: 24px;
-  justify-content: center;
+  justify-content: flex-start;
+  max-width: 100%;
+  overflow-x: auto;           /* 多段/超长诗横向可滚，不再被 body overflow 裁掉 */
+  scroll-snap-type: x proximity;
+  padding-bottom: 8px;        /* 给滚动条留位，避免压住末列 */
+}
+
+/* 横向可滚提示：内容溢出时右侧渐隐 + 可见滚动条 */
+.ink-poem-text::-webkit-scrollbar {
+  height: 6px;
+}
+.ink-poem-text::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 3px;
 }
 
 .ink-poem-line {
   writing-mode: vertical-rl;
+  text-orientation: upright;             /* 中文竖排正立，数字/拉丁不再侧躺 */
+  font-feature-settings: 'vert' 1;       /* 标点竖排变体 */
   font-size: 24px;
   line-height: 2;
   font-weight: 600;
   color: var(--text-primary);
   letter-spacing: 6px;
+  max-height: calc(100dvh - 240px);      /* 超长单段（最长 270 字）不再拉出 8000px 竖条 */
+  flex-wrap: wrap;                        /* 超出列高自动折成多列 */
+  scroll-snap-align: start;
   animation: inkLineReveal 0.8s cubic-bezier(0.1, 0.8, 0.2, 1) both;
 }
 
@@ -486,7 +450,7 @@ onMounted(loadPoem)
 .ink-seal-stamp {
   font-family: var(--font-display);
   font-size: 32px;
-  font-weight: 900;
+  font-weight: 600;
   color: var(--accent);
   width: 48px;
   height: 48px;
@@ -512,7 +476,7 @@ onMounted(loadPoem)
 .ink-annotation-toggle {
   font-family: var(--font-display);
   font-size: 18px;
-  font-weight: 900;
+  font-weight: 600;
   color: var(--accent);
   background: none;
   border: 1px solid var(--accent);
@@ -532,18 +496,19 @@ onMounted(loadPoem)
 
 .ink-annotation-panel {
   writing-mode: vertical-rl;
+  text-orientation: upright;
   background: var(--bg-tertiary);
   border: 1px double var(--accent);
   border-radius: var(--radius-sm);
   padding: 24px 16px;
-  max-height: 400px;
-  overflow-y: auto;
+  max-width: 240px;
+  overflow-x: auto;    /* 竖排文字溢出轴是横向，overflow-y 管不住 */
 }
 
 .ink-annotation-title {
   font-family: var(--font-heading);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--accent);
   margin: 0 0 12px 0;
   letter-spacing: 3px;
@@ -569,7 +534,7 @@ onMounted(loadPoem)
 }
 
 .ink-tag {
-  font-size: 11px;
+  font-size: var(--fs-body-sm);
   color: var(--text-secondary);
   background: color-mix(in srgb, var(--accent) 6%, transparent);
   border: 1px solid var(--border-light);
@@ -616,7 +581,10 @@ onMounted(loadPoem)
 
   .ink-annotation-panel {
     writing-mode: horizontal-tb;
+    text-orientation: mixed;
     max-height: 200px;
+    max-width: none;
+    overflow-y: auto;   /* 移动端转横排后溢出轴恢复为纵向 */
   }
 }
 

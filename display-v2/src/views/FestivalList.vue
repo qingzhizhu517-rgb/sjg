@@ -44,7 +44,6 @@
         <div class="fest-card__body">
           <div class="fest-card__meta">
             <span class="fest-card__region">{{ f.region || '全域' }}</span>
-            <span v-if="festivalDateOf(f.id)" class="fest-card__date">{{ festivalDateOf(f.id) }}</span>
           </div>
           <h3 class="fest-card__title">{{ f.title }}</h3>
           <p class="fest-card__summary">{{ f.summary }}</p>
@@ -66,6 +65,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '../api'
+import { NINE_CITIES } from '../config/nineCities'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
@@ -73,20 +73,15 @@ import EmptyState from '../components/homepage/EmptyState.vue'
 const route = useRoute()
 const router = useRouter()
 
-// 九城顺序与全局一致(黄河上游→下游)
-const REGIONS = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '淄博', '滨州', '东营']
-const regionOptions = ['全部', ...REGIONS]
+const regionOptions = ['全部', ...NINE_CITIES]
 
 const items = ref([])
 const loaded = ref(false)
 const errorMsg = ref(null)
 // ?region= 初始值(非法回退全部), 与筛选条双向同步
-const region = ref(REGIONS.includes(route.query.region) ? route.query.region : '全部')
-// 节庆时间缓存：列表接口不含扩展字段，占位即可（详情页展示完整四区块）
-const dateCache = ref({})
+const region = ref(NINE_CITIES.includes(route.query.region) ? route.query.region : '全部')
 
 const sealOf = (f) => (f.title ? f.title[0] : '节')
-const festivalDateOf = (id) => dateCache.value[id] || ''
 
 const setRegion = (r) => {
   region.value = r
@@ -118,41 +113,41 @@ onMounted(load)
 
 <style scoped>
 .festival-list {
-  max-width: 1280px;
+  max-width: var(--container-max);
   margin: 0 auto;
-  padding: 48px 40px 96px;
+  padding: var(--sp-7) var(--sp-5) var(--sp-10);
 }
 
 /* 页头 */
 .fest-hero {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: var(--sp-6);
 }
 
 .fest-hero__tag {
   display: inline-block;
   font-family: var(--font-heading);
-  font-size: 11px;
-  font-weight: 800;
+  font-size: var(--fs-caption);
+  font-weight: 600;
   letter-spacing: 3px;
-  color: #fff;
-  background: var(--accent, #9e2b25);
+  color: var(--text-on-accent);
+  background: var(--accent);
   padding: 5px 12px;
   border-radius: 2px;
-  margin-bottom: 16px;
+  margin-bottom: var(--sp-4);
 }
 
 .fest-hero__title {
   font-family: var(--font-heading);
   font-size: clamp(26px, 3.4vw, 38px);
-  font-weight: 900;
+  font-weight: 600;
   letter-spacing: 6px;
   color: var(--text-primary);
-  margin: 0 0 12px;
+  margin: 0 0 var(--sp-3);
 }
 
 .fest-hero__desc {
-  font-size: 14px;
+  font-size: var(--fs-body-sm);
   color: var(--text-muted);
   letter-spacing: 1px;
   margin: 0;
@@ -164,57 +159,57 @@ onMounted(load)
   flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
-  margin-bottom: 40px;
+  margin-bottom: var(--sp-6);
 }
 
 .region-chip {
   font-family: var(--font-heading);
-  font-size: 13px;
+  font-size: var(--fs-caption);
   letter-spacing: 2px;
   padding: 7px 18px;
-  border: 1px solid var(--border, #e8e0d5);
+  border: 1px solid var(--border);
   border-radius: 20px;
-  background: var(--card-bg, #fdfaf5);
+  background: var(--card-bg);
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .region-chip:hover {
-  border-color: var(--accent, #9e2b25);
-  color: var(--accent, #9e2b25);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .region-chip.active {
-  background: var(--accent, #9e2b25);
-  border-color: var(--accent, #9e2b25);
-  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text-on-accent);
 }
 
 /* 卡片栅格 */
 .fest-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 24px;
+  gap: var(--sp-5);
 }
 
 .fest-card {
   position: relative;
   display: flex;
-  gap: 16px;
-  padding: 24px;
-  background: var(--card-bg, #fdfaf5);
-  border: 1px solid var(--border, #e8e0d5);
-  border-radius: 6px;
+  gap: var(--sp-4);
+  padding: var(--sp-5);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
   animation: fadeSlideUp 0.5s ease both;
 }
 
 .fest-card:hover {
-  transform: translateY(-5px);
-  border-color: var(--accent, #9e2b25);
-  box-shadow: 0 14px 40px rgba(31, 26, 22, 0.1);
+  transform: translateY(-4px);
+  border-color: var(--accent);
+  box-shadow: var(--card-shadow-hover);
 }
 
 @keyframes fadeSlideUp {
@@ -231,10 +226,10 @@ onMounted(load)
   justify-content: center;
   font-family: var(--font-heading);
   font-size: 26px;
-  font-weight: 900;
-  color: #fff;
-  background: var(--accent, #9e2b25);
-  border-radius: 6px;
+  font-weight: 600;
+  color: var(--text-on-accent);
+  background: var(--accent);
+  border-radius: var(--radius-sm);
 }
 
 .fest-card__body {
@@ -251,21 +246,21 @@ onMounted(load)
 }
 
 .fest-card__region {
-  color: var(--accent, #9e2b25);
-  font-weight: 700;
+  color: var(--accent);
+  font-weight: 600;
 }
 
 .fest-card__title {
   font-family: var(--font-heading);
   font-size: 17px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 1px;
   color: var(--text-primary);
   margin: 0 0 8px;
 }
 
 .fest-card__summary {
-  font-size: 13px;
+  font-size: var(--fs-caption);
   line-height: 1.7;
   color: var(--text-secondary);
   margin: 0;
@@ -277,7 +272,7 @@ onMounted(load)
 
 @media (max-width: 768px) {
   .festival-list {
-    padding: 32px 20px 64px;
+    padding: var(--sp-6) var(--sp-4) var(--sp-8);
   }
 
   .fest-grid {

@@ -44,9 +44,6 @@ defineEmits(['click'])
   font-weight: 900;
   border-radius: 2px;
 }
-.theme-real .city__stamp {
-  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-}
 .city__body {
   flex: 1;
   min-width: 0;

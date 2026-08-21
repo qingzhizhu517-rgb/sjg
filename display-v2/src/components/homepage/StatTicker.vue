@@ -21,7 +21,7 @@ gsap.registerPlugin(ScrollTrigger)
 
 const props = defineProps({
   stats: { type: Array, required: true }, // [{ value: 130, suffix: '位', label: '名士' }]
-  tone: { type: String, default: 'dark' }, // dark | light
+  tone: { type: String, default: 'light' }, // light | dark（默认 light：宣纸底可读；dark 仅供深底 hero 显式opt-in）
 })
 
 const root = ref(null)

@@ -9,12 +9,6 @@
       </p>
     </header>
 
-    <!-- 分类标签(数据层 food/opera 细分在 detail.sub_category, 列表接口不返回, 仅作展示说明) -->
-    <div class="category-tabs">
-      <span class="category-tab category-tab--static">饮食文化</span>
-      <span class="category-tab category-tab--static">戏曲艺术</span>
-    </div>
-
     <!-- 区域筛选条 -->
     <nav class="fo-region-filter" aria-label="按区域筛选">
       <button
@@ -45,7 +39,8 @@
         @keydown.enter="$router.push(`/food-opera/${item.id}`)"
       >
         <div class="fo-card__image">
-          <img v-if="item.imageUrl" :src="item.imageUrl" :alt="item.title" loading="lazy" />
+          <img v-if="resolveImageUrl(item)" :src="resolveImageUrl(item)" :alt="item.title" loading="lazy" />
+          <InkPlaceholder v-else :seed="item.id || item.title" kind="food_opera" />
           <div class="fo-card__category-badge">{{ isFood(item) ? '美食' : '戏曲' }}</div>
         </div>
         <div class="fo-card__body">
@@ -78,6 +73,9 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '../api'
+import { NINE_CITIES } from '../config/nineCities'
+import { parseFirstUrl } from '../composables/useImage'
+import InkPlaceholder from '../components/InkPlaceholder.vue'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
@@ -85,14 +83,12 @@ import ErrorState from '../components/homepage/ErrorState.vue'
 const route = useRoute()
 const router = useRouter()
 
-// 九城顺序与全局一致(黄河上游→下游)
-const NINE = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '淄博', '滨州', '东营']
-const regionOptions = ['全部', ...NINE]
+const regionOptions = ['全部', ...NINE_CITIES]
 
 const items = ref([])
 const loaded = ref(false)
 const errorMsg = ref('')
-const region = ref(NINE.includes(route.query.region) ? route.query.region : '全部')
+const region = ref(NINE_CITIES.includes(route.query.region) ? route.query.region : '全部')
 
 function setRegion(r) {
   region.value = r
@@ -121,6 +117,11 @@ function tagsOf(item) {
 // 饮食/戏曲粗分: 详情表 sub_category 不在列表接口中, 用标题关键词做展示级区分
 function isFood(item) {
   return !/吕剧|柳子|快书|梆子|戏曲|京剧|琴书|戏/.test(item.title || '')
+}
+
+// 图片解析：imageAnimeUrl 优先（库里现有数据在 anime 字段），imageUrl 兜底
+function resolveImageUrl(item) {
+  return parseFirstUrl(item.imageAnimeUrl) || parseFirstUrl(item.imageUrl) || null
 }
 
 async function load() {
@@ -169,7 +170,7 @@ onMounted(load)
 .fo-hero__title {
   font-family: var(--font-heading);
   font-size: 36px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 16px;
 }
@@ -178,41 +179,6 @@ onMounted(load)
   font-size: 16px;
   color: var(--text-secondary);
   line-height: 1.6;
-}
-
-.category-tabs {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 40px;
-}
-
-.category-tab {
-  padding: 10px 24px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: var(--bg-secondary);
-  color: var(--text-secondary);
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.category-tab--static {
-  cursor: default;
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
-  color: var(--text-primary);
-}
-
-.category-tab:hover {
-  background: var(--bg-hover);
-}
-
-.category-tab.active {
-  background: var(--accent);
-  color: var(--text-on-accent);
-  border-color: var(--accent);
 }
 
 .fo-region-filter {
@@ -251,7 +217,7 @@ onMounted(load)
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 24px;
-  max-width: 1200px;
+  max-width: var(--container-max);
   margin: 0 auto;
 }
 
@@ -264,8 +230,8 @@ onMounted(load)
 }
 
 .fo-card:hover {
-  transform: translateY(-2px);
-  box-shadow: none;
+  transform: translateY(-4px);
+  box-shadow: var(--card-shadow-hover);
 }
 
 .fo-card__image {
@@ -313,7 +279,7 @@ onMounted(load)
 .fo-card__title {
   font-family: var(--font-heading);
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 12px;
 }

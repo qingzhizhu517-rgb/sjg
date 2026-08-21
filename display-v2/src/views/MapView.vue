@@ -1,5 +1,5 @@
 <template>
-  <div class="map-view scroll-narrative" :class="{ 'anime-layout': isAnime }">
+  <div class="map-view scroll-narrative">
 
     <!-- ===== S1: 黄河意境 Hero ===== -->
     <section class="sn-section sn-hero">
@@ -18,19 +18,10 @@
       </div>
     </section>
 
-    <!-- ===== S2: 山河数据 · StatTicker 数字滚动 ===== -->
-    <section class="sn-section sn-stats">
-      <div class="sn-container">
-        <StatTicker v-if="heroStats.length" :stats="heroStats" tone="dark" />
-        <div v-else class="sn-stats-placeholder">
-          <SkeletonBlock height="52px" width="60%" />
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== S3: 沙盘/长卷 sticky 段落 ===== -->
-    <!-- REAL 主题 -->
-    <section v-if="isReal" ref="stickyRealRef" class="sn-section sn-sticky-real">
+    <!-- ===== S3: 三维沙盘 sticky 段落 ===== -->
+    <!-- 注：原 S2 StatTicker 统计段已删除 —— 四联统计与 hero 内重复且 tone="dark"
+         在浅底上不可读，统计只在 hero 出现一次。 -->
+    <section ref="stickyRealRef" class="sn-section sn-sticky-real">
       <div class="sn-sticky-viewport">
         <div class="sn-sticky-media">
           <div class="real-3d-container">
@@ -52,7 +43,6 @@
                       :key="label.name"
                       v-show="label.visible"
                       class="city-3d-label"
-                      :class="[isReal ? 'label-theme-real' : 'label-theme-inkwash']"
                       :style="{ left: `${label.x}px`, top: `${label.y}px` }"
                       @click="clickLabel(label.name)"
                     >
@@ -145,95 +135,6 @@
       </div>
     </section>
 
-    <!-- INKWASH 主题 -->
-    <section v-else ref="stickyInkRef" class="sn-section sn-sticky-ink">
-      <div class="sn-sticky-viewport">
-        <div class="sn-sticky-media">
-          <div class="anime-ink-container animate-fade-in">
-            <div class="ink-layout-wrap">
-              <!-- Left calligraphic panel -->
-              <aside class="ink-left-panel">
-                <div class="calligraphy-header">
-                  <div class="seal-red">天下大观</div>
-                  <div class="calligraphy-text">
-                    <h1 class="calligraphy-title">山东揽胜</h1>
-                    <span class="calligraphy-subtitle">黄河入海</span>
-                  </div>
-                </div>
-                <p class="ink-intro-para">
-                  黄河自菏泽入境，经梁山、东平，过济南，北折德州，蜿蜒东营归海。千百年来，诗圣杜甫、诗仙李白同游于此，易安居士、稼轩豪杰吟唱不断。
-                </p>
-                <div class="ink-categories">
-                  <div class="category-stamp">五岳独尊</div>
-                  <div class="category-stamp">泉城名胜</div>
-                  <div class="category-stamp">运河古都</div>
-                  <div class="category-stamp">黄河湿地</div>
-                </div>
-                <div class="ink-legend">
-                  <p class="legend-title">图例</p>
-                  <div class="legend-row"><span class="legend-mark mark-stamp"></span>城市节点（点击进入）</div>
-                  <div class="legend-row"><span class="legend-mark mark-river"></span>黄河流经</div>
-                </div>
-              </aside>
-
-              <!-- Right Parallax Scroll Map -->
-              <div class="scroll-outer-frame">
-                <div class="scroll-wooden-rod left-rod"></div>
-                <div class="scroll-middle-paper" ref="scrollPaper">
-                  <!-- Background Layer: Ink mountains（远景，慢速视差） -->
-                  <div class="parallax-layer bg-mountains" data-depth="0.35"></div>
-
-                  <!-- Content Layer: 黄河 + 九城印章同层同速平移，保证印章与河流始终对齐 -->
-                  <div class="parallax-layer map-content-layer" data-depth="1">
-                    <svg class="ink-river-svg" viewBox="0 0 2000 600" preserveAspectRatio="xMidYMid meet">
-                      <path
-                        d="M40,520 C200,480 260,440 320,450 S460,520 520,520 S640,430 720,410 S840,360 920,350 S1040,280 1120,260 S1240,330 1320,320 S1460,240 1560,220 S1740,120 1840,90 C1900,78 1940,74 1970,70"
-                        fill="none"
-                        :stroke="svgAccent40"
-                        stroke-width="8"
-                        stroke-dasharray="10 8"
-                        class="svg-river-dash"
-                      />
-                    </svg>
-
-                    <!-- 九城印章：坐标以层内百分比（0-100% = 卷轴全程），随河流行进排列 -->
-                    <div
-                      v-for="city in cities"
-                      :key="city"
-                      class="city-ink-stamp-box"
-                      :style="getCityStampPos(city)"
-                      @click="$router.push(`/cities/${city}`)"
-                    >
-                      <div class="stamp-seal-red">
-                        <span class="seal-char">{{ city[0] }}</span>
-                        <span class="seal-char">{{ city[1] }}</span>
-                      </div>
-                      <span class="stamp-lbl-vertical">{{ city }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="scroll-wooden-rod right-rod"></div>
-              </div>
-            </div>
-
-            <!-- 九城快捷导航：点击平滑推进长卷至对应城市 -->
-            <nav class="ink-scroll-nav" aria-label="九城快捷导航">
-              <button
-                v-for="(city, i) in cities"
-                :key="city"
-                class="ink-scroll-nav__item"
-                :class="{ 'is-active': activeInkCity === city }"
-                @click="seekCity(i)"
-              >
-                <span class="ink-scroll-nav__dot" aria-hidden="true"></span>
-                <span class="ink-scroll-nav__name">{{ city }}</span>
-              </button>
-            </nav>
-          </div>
-        </div>
-
-      </div>
-    </section>
 
     <!-- ===== S5: 名城精选 ===== -->
     <section class="sn-section sn-featured">
@@ -244,20 +145,6 @@
     <section class="sn-section sn-footer-cta">
       <FooterCTA @cta="scrollToMap" />
     </section>
-
-    <!-- 数据大屏悬浮按钮 -->
-    <a
-      href="http://localhost:5180"
-      target="_blank"
-      class="datav-float-button"
-      title="打开数据大屏"
-    >
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-        <line x1="3" y1="9" x2="21" y2="9"/>
-        <line x1="9" y1="21" x2="9" y2="9"/>
-      </svg>
-    </a>
   </div>
 </template>
 
@@ -270,7 +157,6 @@ import { resolveContent } from '../content'
 import api from '../api'
 import RiverHero from '../components/homepage/RiverHero.vue'
 import CityDetailCard from '../components/homepage/CityDetailCard.vue'
-import StatTicker from '../components/homepage/StatTicker.vue'
 import FamousCities from '../components/homepage/FamousCities.vue'
 import FooterCTA from '../components/homepage/FooterCTA.vue'
 import { useCityEnrichment } from '../composables/useCityEnrichment'
@@ -281,7 +167,7 @@ import { useFlipTransition } from '../composables/useFlipTransition'
 import { cityIllustration, CITY_RIVER_ORDER } from '../config/cityIllustrations'
 
 const router = useRouter()
-const { isReal, isAnime, theme } = useTheme()
+const { theme } = useTheme()
 
 // Three.js 沙盘引擎（从本组件抽出，P1-5；编排通过 ref + 回调与引擎通信）
 const three = useThreeSandbox()
@@ -296,9 +182,7 @@ const heroStats = ref([])
 
 // ===== Scroll 叙事编排 (P3-1) =====
 const scrollNarrative = useScrollNarrative()
-const { stickyProgress } = scrollNarrative
 const stickyRealRef = ref(null)
-const stickyInkRef = ref(null)
 
 const featuredCityData = computed(() =>
   CITY_RIVER_ORDER.map((name) => {
@@ -358,7 +242,8 @@ const onCardGo = (route) => {
 }
 
 const scrollToMap = () => {
-  const el = document.querySelector('.sn-stats')
+  // S2 统计段已删除，CTA「沿河而下」滚到三维沙盘段落
+  const el = document.querySelector('.sn-sticky-real')
   el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
@@ -406,76 +291,24 @@ const getCityData = (cityName) => {
   }
 }
 
-const getCityStampPos = (city) => {
-  // 横向滚动长卷: 层宽 200%, 内容区为层坐标 0-100%(scroll 全程可见窗口 [50p, 50p+50])。
-  // left 为层内百分比, top 为纸面高度百分比; 与 .ink-river-svg 的河道路径逐城对齐
-  // (菏泽左下 → 东营右上河口)。
-  const coords = {
-    '菏泽': { left: '6%',  top: '82%' },
-    '济宁': { left: '16%', top: '74%' },
-    '泰安': { left: '26%', top: '88%' },
-    '聊城': { left: '36%', top: '66%' },
-    '济南': { left: '46%', top: '56%' },
-    '德州': { left: '56%', top: '40%' },
-    '淄博': { left: '66%', top: '52%' },
-    '滨州': { left: '78%', top: '34%' },
-    '东营': { left: '92%', top: '14%' },
-  }
-  return coords[city] || { left: '25%', top: '50%' }
-}
-
-// 九城快捷导航: 城市居中时对应的 scroll 进度 p=(L-25)/50, 首尾钳制
-const CITY_NAV_PROGRESS = [0, 0, 0.02, 0.22, 0.42, 0.62, 0.82, 1, 1]
-
-const activeInkCity = computed(() => {
-  if (!stickyProgress.value) return '菏泽'
-  // 进度反查: 当前可见窗口中心 L = 50p+25, 取最近的城市
-  const centerL = 50 * stickyProgress.value + 25
-  let nearest = cities[0]
-  let best = Infinity
-  cities.forEach((c) => {
-    const l = parseFloat(getCityStampPos(c).left)
-    const d = Math.abs(l - centerL)
-    if (d < best) {
-      best = d
-      nearest = c
-    }
-  })
-  return nearest
-})
-
-const seekCity = (index) => {
-  const p = CITY_NAV_PROGRESS[index] ?? 0
-  scrollNarrative.seekInkProgress(p)
-}
-
-
-// 主题切换 -> 引擎重建(real)/销毁(inkwash) + 目标段落重新渲染后重建 scroll 叙事触发器
-watch(isReal, (newVal) => {
-  three.setTheme(newVal)
-  nextTick(() => scrollNarrative.reinit())
-})
 
 // 失败重试入口（template 错误态按钮）
 const retryLoadMap = () => {
   three.errorMsg.value = null
-  if (isReal.value) three.setTheme(true)
+  three.setTheme(true)
 }
 
 onMounted(() => {
   loadHeroData()
   ensurePoets()
-  // 始终注入回调（inkwash 时仅注入不启动；切 real 时 setTheme 复用，修复点击失效）
   three.init({
     onPickCity: (name) => openCity(name),
     onDoublePickCity: (name) => router.push(`/regions/${name}`),
   })
   // P3-1: scroll 叙事延迟初始化（等 DOM 就绪）
   scrollNarrative.init({
-    isReal,
     sandboxApi: three,
     stickyRealRef: stickyRealRef.value,
-    stickyInkRef: stickyInkRef.value,
   })
   // P5-5: 预取关键数据（浏览器空闲时）
   api.prefetch('/timeline')
@@ -506,21 +339,8 @@ onBeforeUnmount(() => {
   padding: 0 24px;
 }
 
-/* S2: StatTicker 数字滚动 */
-.sn-stats {
-  padding: 64px 0;
-  text-align: center;
-}
-
-.sn-stats-placeholder {
-  display: flex;
-  justify-content: center;
-  padding: 32px 0;
-}
-
-/* S3: Sticky 沙盘/长卷 */
-.sn-sticky-real,
-.sn-sticky-ink {
+/* S3: Sticky 沙盘 */
+.sn-sticky-real {
   width: 100%;
 }
 
@@ -536,44 +356,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
 }
 
-.sn-sticky-real .sn-sticky-media {
-  /* real-3d-container 内部已有 layout */
-}
-
-.sn-sticky-ink .sn-sticky-media {
-  /* anime-ink-container 内部已有 layout */
-}
-
-@media (max-width: 768px) {
-  .sn-stats {
-    padding: 40px 16px;
-  }
-
-  .sn-container {
-    padding: 0 16px;
-  }
-}
-
-/* 沿黄九城 */
-.map-cities {
-  max-width: 1200px;
-  margin: 56px auto;
-  padding: 0 40px;
-}
-.map-cities-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-@media (max-width: 1024px) {
-  .map-cities-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 640px) {
-  .map-cities { padding: 0 20px; margin: 40px auto; }
-  .map-cities-grid { grid-template-columns: 1fr; }
-}
-
-/* REAL MODE: 左图右册 框体化布局 */
+/* 左图右册 框体化布局 */
 .real-3d-container {
   width: 100%;
   max-width: 1560px;
@@ -622,8 +405,8 @@ onBeforeUnmount(() => {
 .map-frame__seal {
   font-family: var(--font-display);
   font-size: 11px;
-  font-weight: 800;
-  color: #fff;
+  font-weight: 600;
+  color: var(--text-on-accent);
   background: var(--accent);
   padding: 3px 7px;
   border-radius: 2px;
@@ -633,7 +416,7 @@ onBeforeUnmount(() => {
 .map-frame__name {
   font-family: var(--font-heading);
   font-size: 15px;
-  font-weight: 900;
+  font-weight: 600;
   color: var(--text-primary);
   letter-spacing: 2px;
 }
@@ -695,7 +478,7 @@ onBeforeUnmount(() => {
   gap: 10px;
   font-family: var(--font-heading);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
   letter-spacing: 4px;
 }
@@ -742,8 +525,8 @@ onBeforeUnmount(() => {
   text-orientation: upright;
   font-family: var(--font-display);
   font-size: 11px;
-  font-weight: 800;
-  color: #fff;
+  font-weight: 600;
+  color: var(--text-on-accent);
   background: var(--accent);
   padding: 8px 5px;
   border-radius: 2px;
@@ -762,7 +545,7 @@ onBeforeUnmount(() => {
 .hud-eyebrow {
   font-family: var(--font-heading);
   font-size: 9px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--accent);
   letter-spacing: 2px;
   opacity: 0.8;
@@ -771,7 +554,7 @@ onBeforeUnmount(() => {
 .hud-title {
   font-family: var(--font-heading);
   font-size: 17px;
-  font-weight: 900;
+  font-weight: 600;
   color: var(--text-primary);
   letter-spacing: 2px;
   line-height: 1.2;
@@ -814,7 +597,7 @@ onBeforeUnmount(() => {
   color: var(--accent-dark);
   font-family: var(--font-heading);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
   letter-spacing: 1px;
@@ -823,7 +606,7 @@ onBeforeUnmount(() => {
 .action-btn-toggle:hover {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 15%, transparent);
 }
@@ -844,7 +627,7 @@ onBeforeUnmount(() => {
 .stat-num {
   font-family: var(--font-display);
   font-size: 20px;
-  font-weight: 900;
+  font-weight: 600;
   color: var(--accent);
   line-height: 1;
   letter-spacing: 0;
@@ -853,7 +636,7 @@ onBeforeUnmount(() => {
 .stat-lbl {
   font-size: 11px;
   color: var(--text-muted);
-  font-weight: 700;
+  font-weight: 600;
   margin-top: 6px;
   letter-spacing: 2px;
 }
@@ -886,382 +669,8 @@ onBeforeUnmount(() => {
 .stat-suffix {
   font-style: normal;
   font-size: 12px;
-  font-weight: 700;
-  margin-left: 1px;
-}
-
-/* ==========================================
-   ANIME WATER-INK PARALLAX SCROLL THEME
-   ========================================== */
-.anime-ink-container {
-  width: 100%;
-  height: calc(100vh - var(--nav-height));
-  background: var(--bg-primary); /* Traditional ink wash paper base */
-  padding: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.ink-layout-wrap {
-  width: 100%;
-  max-width: 1400px;
-  height: 100%;
-  display: grid;
-  grid-template-columns: 340px 1fr;
-  gap: 48px;
-  align-items: center;
-}
-
-/* Left panel calligraphy */
-.ink-left-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 26px;
-  text-align: left;
-}
-
-.calligraphy-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 18px;
-}
-
-.seal-red {
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-  font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
-  background: var(--accent);
-  padding: 8px 5px;
-  border-radius: 2px;
-  letter-spacing: 3px;
-  box-shadow: 2px 2px 6px color-mix(in srgb, var(--accent) 25%, transparent);
-  flex-shrink: 0;
-}
-
-.calligraphy-text {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.calligraphy-title {
-  font-family: var(--font-display);
-  font-size: 48px;
-  font-weight: 900;
-  color: var(--text-primary);
-  letter-spacing: 4px;
-  line-height: 1.1;
-  margin: 0;
-}
-
-.calligraphy-subtitle {
-  font-family: var(--font-heading);
-  font-size: 18px;
   font-weight: 600;
-  color: var(--accent);
-  letter-spacing: 4px;
-  text-indent: 4px;
-}
-
-.ink-intro-para {
-  font-family: var(--font-heading);
-  font-size: 14px;
-  line-height: 2;
-  color: var(--text-secondary);
-  text-indent: 2em;
-  text-align: justify;
-  margin: 0;
-  letter-spacing: 0.5px;
-}
-
-.ink-categories {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.category-stamp {
-  font-size: 12px;
-  font-weight: 700;
-  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
-  color: var(--accent);
-  padding: 6px 14px;
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--accent) 3%, transparent);
-  letter-spacing: 2px;
-  transition: all 0.2s;
-}
-
-.category-stamp:hover {
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  transform: translateY(-1px);
-}
-
-/* Legend block under categories */
-.ink-legend {
-  margin-top: 8px;
-  padding-top: 16px;
-  border-top: 1px dashed color-mix(in srgb, var(--accent) 20%, transparent);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.legend-title {
-  font-family: var(--font-heading);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: 4px;
-  margin: 0 0 4px 0;
-  text-indent: 4px;
-}
-
-.legend-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 12px;
-  color: var(--text-secondary);
-  letter-spacing: 1px;
-}
-
-.legend-mark {
-  flex-shrink: 0;
-}
-
-.mark-stamp {
-  width: 14px;
-  height: 14px;
-  background: var(--accent);
-  border: 1px dashed rgba(255,255,255,0.4);
-  border-radius: 1px;
-}
-
-.mark-river {
-  width: 24px;
-  height: 0;
-  border-top: 2px dashed color-mix(in srgb, var(--accent) 60%, transparent);
-}
-
-/* Right Scroll Frame */
-.scroll-outer-frame {
-  height: 560px;
-  display: flex;
-  align-items: center;
-  position: relative;
-}
-
-.scroll-wooden-rod {
-  width: 16px;
-  height: 580px;
-  background: linear-gradient(to bottom, #3d240e, #73451d, #3d240e);
-  border-radius: 8px;
-  box-shadow: 4px 0 12px rgba(0,0,0,0.28);
-  z-index: 5;
-  position: relative;
-}
-
-.scroll-wooden-rod::before,
-.scroll-wooden-rod::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 24px;
-  height: 18px;
-  background: linear-gradient(90deg, #d4af37, #aa7c11, #d4af37);
-  border-radius: 2px;
-}
-
-.scroll-wooden-rod::before { top: -12px; }
-.scroll-wooden-rod::after { bottom: -12px; }
-
-.left-rod { margin-right: -4px; }
-.right-rod { margin-left: -4px; }
-
-.scroll-middle-paper {
-  flex: 1;
-  height: 520px;
-  background: var(--bg-primary);
-  border-top: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
-  box-shadow: inset 0 0 40px rgba(115, 69, 29, 0.06), 0 10px 30px rgba(0,0,0,0.15);
-  position: relative;
-  /* 横向平移由 GSAP scrub 单一驱动; 移除原生溢出滚动, 消除与页面滚动的双重来源 */
-  overflow: hidden;
-}
-
-/* Parallax Layer core */
-.parallax-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 200%; /* 横向滚动长卷; 内容区在层坐标 0-100%, 右侧 100-200% 供平移后铺满 */
-  height: 100%;
-  pointer-events: none;
-  /* 勿加 transition: transform —— 会与 GSAP scrub 的逐帧写入打架导致拖影 */
-}
-
-/* Background water-ink mountains（远景慢速层, data-depth=0.35） */
-.bg-mountains {
-  background-image: url('/images/inkwash-map.png');
-  background-size: cover;
-  background-position: center;
-  opacity: 0.82;
-  filter: contrast(0.95) sepia(0.12);
-  z-index: 1;
-}
-
-/* 黄河 + 九城印章同层（data-depth=1）: 保证印章与河道在任何 scroll 进度下对齐 */
-.map-content-layer {
-  z-index: 2;
-}
-
-.ink-river-svg {
-  width: 100%;
-  height: 100%;
-}
-
-.svg-river-dash {
-  stroke-dasharray: 20;
-  animation: riverFlowAnimation 16s linear infinite;
-}
-
-@keyframes riverFlowAnimation {
-  to {
-    stroke-dashoffset: -400;
-  }
-}
-
-/* Foreground city stamps（在 map-content-layer 内, 恢复点击） */
-.city-ink-stamp-box {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  transform: translate(-50%, -50%);
-  pointer-events: auto;
-  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-/* 九城快捷导航 */
-.ink-scroll-nav {
-  display: flex;
-  justify-content: center;
-  gap: 4px;
-  margin: 14px auto 0;
-  max-width: 100%;
-  flex-wrap: wrap;
-}
-
-.ink-scroll-nav__item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px 6px;
-  min-width: 44px;
-  font-family: inherit;
-}
-
-.ink-scroll-nav__dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--text-muted);
-  opacity: 0.45;
-  transition: all 0.25s ease;
-}
-
-.ink-scroll-nav__name {
-  font-size: 11px;
-  letter-spacing: 2px;
-  color: var(--text-muted);
-  transition: color 0.25s ease;
-}
-
-.ink-scroll-nav__item:hover .ink-scroll-nav__dot {
-  opacity: 0.9;
-  transform: scale(1.3);
-}
-
-.ink-scroll-nav__item.is-active .ink-scroll-nav__dot {
-  background: var(--accent);
-  opacity: 1;
-  transform: scale(1.35);
-}
-
-.ink-scroll-nav__item.is-active .ink-scroll-nav__name {
-  color: var(--accent);
-  font-weight: 700;
-}
-
-/* reduced-motion: 无 GSAP 时回退为原生横向滚动(长卷内容仍可达) */
-@media (prefers-reduced-motion: reduce) {
-  .scroll-middle-paper {
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
-}
-
-.city-ink-stamp-box {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  transform: translate(-50%, -50%);
-  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-.city-ink-stamp-box:hover {
-  transform: translate(-50%, -55%) scale(1.08);
-}
-
-/* 朱红泥印章 */
-.stamp-seal-red {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 42px;
-  background: var(--accent);
-  border-radius: 2px;
-  color: #fff;
-  font-family: var(--font-display);
-  font-size: 12px;
-  line-height: 1.1;
-  font-weight: 900;
-  box-shadow: 3px 3px 8px color-mix(in srgb, var(--accent) 40%, transparent);
-  border: 1px dashed rgba(255, 255, 255, 0.3);
-  padding: 3px 2px;
-  letter-spacing: 0;
-}
-
-.stamp-lbl-vertical {
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-  font-family: var(--font-heading);
-  font-size: 12px;
-  font-weight: bold;
-  color: var(--text-primary);
-  letter-spacing: 2px;
-  margin-top: 8px;
-  background: rgba(251, 248, 242, 0.92);
-  padding: 4px 2px;
-  border-radius: 2px;
-  box-shadow: 0 1px 3px var(--shadow-a6);
+  margin-left: 1px;
 }
 
 /* Animations */
@@ -1296,34 +705,11 @@ onBeforeUnmount(() => {
 
 /* Wide desktop */
 @media (min-width: 1600px) {
-  .ink-layout-wrap { max-width: 1560px; grid-template-columns: 380px 1fr; gap: 56px; }
-  .scroll-outer-frame { height: 620px; }
-  .scroll-wooden-rod { height: 640px; }
-  .scroll-middle-paper { height: 580px; }
   .real-3d-container { max-width: 1680px; }
 }
 
 /* Tablet: map-stage 单列堆叠 */
 @media (max-width: 1024px) {
-  .ink-layout-wrap {
-    grid-template-columns: 1fr;
-    gap: 24px;
-    align-items: stretch;
-  }
-  .ink-left-panel {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 18px;
-  }
-  .calligraphy-header { flex: 1; min-width: 240px; }
-  .calligraphy-title { font-size: 40px; }
-  .ink-intro-para { flex: 1 1 100%; }
-  .ink-categories, .ink-legend { flex: 1 1 auto; }
-  .scroll-outer-frame { height: 400px; }
-  .scroll-wooden-rod { height: 420px; }
-  .scroll-middle-paper { height: 370px; }
-
   .map-stage {
     grid-template-columns: 1fr;
     height: auto;
@@ -1333,15 +719,6 @@ onBeforeUnmount(() => {
 
 /* Mobile */
 @media (max-width: 640px) {
-  .anime-ink-container { padding: 24px 16px; }
-  .ink-left-panel { gap: 14px; }
-  .calligraphy-title { font-size: 32px; letter-spacing: 3px; }
-  .calligraphy-subtitle { font-size: 14px; letter-spacing: 3px; }
-  .ink-intro-para { font-size: 13px; line-height: 1.85; }
-  .scroll-outer-frame { height: 340px; }
-  .scroll-wooden-rod { height: 360px; }
-  .scroll-middle-paper { height: 310px; }
-  .stamp-seal-red { width: 32px; height: 36px; font-size: 10px; }
   .label-plaque-card { min-width: 110px; padding: 6px 10px; }
   .real-3d-container { padding: 20px 16px; }
   .map-stage { gap: 16px; }
@@ -1397,31 +774,17 @@ onBeforeUnmount(() => {
   align-items: center;
 }
 
-/* Theme specific colors */
-.label-theme-real .label-plaque-card {
-  background: rgba(253, 250, 245, 0.94);
-  border: 1px solid var(--accent-light);
-}
-
-.label-theme-inkwash .label-plaque-card {
-  background: color-mix(in srgb, var(--text-primary) 92%, transparent);
-  border: 1px solid var(--accent);
+/* 城市标签匾额（单一水墨版式：宣纸卡面 + 朱砂描边） */
+.label-plaque-card {
+  background: var(--card-bg);
+  border: 1px solid var(--accent-a35);
 }
 
 /* Hover effects */
 .city-3d-label:hover .label-plaque-card {
   transform: translateY(-5px) scale(1.06);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-}
-
-.label-theme-real:hover .label-plaque-card {
+  box-shadow: 0 12px 30px var(--shadow-soft);
   border-color: var(--accent);
-  background: #ffffff;
-}
-
-.label-theme-inkwash:hover .label-plaque-card {
-  border-color: #ffffff;
-  background: #111111;
 }
 
 /* Decorative Chinese Plaque Corners */
@@ -1429,16 +792,8 @@ onBeforeUnmount(() => {
   position: absolute;
   width: 6px;
   height: 6px;
-  border: 1.5px solid transparent;
+  border: 1.5px solid var(--accent-a35);
   pointer-events: none;
-}
-
-.label-theme-real .decor-corner {
-  border-color: var(--accent-light);
-}
-
-.label-theme-inkwash .decor-corner {
-  border-color: var(--accent);
 }
 
 /* TL, TR, BL, BR corners */
@@ -1448,38 +803,23 @@ onBeforeUnmount(() => {
 .corner-br { bottom: 3px; right: 3px; border-left: 0; border-top: 0; }
 
 .city-3d-label:hover .decor-corner {
-  border-color: currentColor;
-}
-
-.label-theme-real:hover .decor-corner {
   border-color: var(--accent);
-}
-
-.label-theme-inkwash:hover .decor-corner {
-  border-color: #ffffff;
 }
 
 /* Plaque Content */
 .plaque-content {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   white-space: nowrap;
 }
 
 .plaque-name {
   font-family: var(--font-heading);
-  font-size: 14px;
-  font-weight: 800;
+  font-size: var(--fs-body-sm);
+  font-weight: 600;
   letter-spacing: 1px;
-}
-
-.label-theme-real .plaque-name {
   color: var(--text-primary);
-}
-
-.label-theme-inkwash .plaque-name {
-  color: #ffffff;
 }
 
 .plaque-divider {
@@ -1488,48 +828,27 @@ onBeforeUnmount(() => {
   background: var(--border);
 }
 
-.label-theme-inkwash .plaque-divider {
-  background: rgba(255, 255, 255, 0.2);
-}
-
 .plaque-tag {
   font-family: var(--font-body);
   font-size: 11px;
   font-weight: 600;
   padding: 1px 6px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   letter-spacing: 0.5px;
-}
-
-.label-theme-real .plaque-tag {
   color: var(--accent-dark);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-}
-
-.label-theme-inkwash .plaque-tag {
-  color: var(--accent-light);
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  background: var(--accent-a15);
 }
 
 /* Connecting Line */
 .label-connector-line {
   width: 1.5px;
   height: 24px;
-  background: linear-gradient(to bottom, var(--accent-light), transparent);
-  transition: all 0.3s ease;
-}
-
-.label-theme-inkwash .label-connector-line {
   background: linear-gradient(to bottom, var(--accent), transparent);
+  transition: height 0.3s ease;
 }
 
 .city-3d-label:hover .label-connector-line {
   height: 30px;
-  background: linear-gradient(to bottom, var(--accent), transparent);
-}
-
-.label-theme-inkwash:hover .label-connector-line {
-  background: linear-gradient(to bottom, #ffffff, transparent);
 }
 
 /* Glow Pin Base */
@@ -1609,7 +928,7 @@ onBeforeUnmount(() => {
 
 .error-overlay .error-icon {
   font-size: 48px;
-  font-weight: 900;
+  font-weight: 600;
   color: var(--accent);
   margin-bottom: 16px;
   opacity: 0.6;
@@ -1643,29 +962,4 @@ onBeforeUnmount(() => {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 3%, transparent);
 }
-
-/* 数据大屏悬浮按钮 */
-.datav-float-button {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  text-decoration: none;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  z-index: 1000;
-}
-
-.datav-float-button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-}
-
 </style>

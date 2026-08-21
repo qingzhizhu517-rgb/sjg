@@ -1,64 +1,63 @@
-import { ref, onBeforeUnmount } from 'vue'
+import { ref } from 'vue'
 import gsap from 'gsap'
-import { MotionPathPlugin } from 'gsap/MotionPathPlugin'
-
-gsap.registerPlugin(MotionPathPlugin)
 
 /**
  * 朝代年轮划舟 composable
- * 驱动小舟沿黄河曲线 SVG path 移动，9 个朝代节点等分定位
+ * 驱动小舟沿黄河曲线 SVG path 移动，朝代节点等分定位。
+ * 坐标使用百分比（%）而非 SVG viewBox 像素，与容器宽度解耦。
  */
 export function useBoatJourney() {
   const progress = ref(0) // 0→1 全局进度
-  const activeDynastyIndex = ref(0) // 当前朝代索引 0-8
+  const activeDynastyIndex = ref(0) // 当前朝代索引
+  const isCruising = ref(false) // 自动巡航是否进行中（供播放/暂停 UI 绑定）
 
   let _pathEl = null
   let _boatEl = null
   let _tween = null
-  const _dynastyNodes = ref([]) // 响应式，确保 computed 能追踪
+  let _cruiseDuration = 30
+  let _dynastyCount = 0
+  const _dynastyNodes = ref([])
   let _onDynastyChange = null
-
-  // 9 朝代定义（与数据库 dynasty 表一致：id 1-8 加金 9；按起始年排序，金与宋元并存故列于其间）
-  const DYNASTIES = [
-    { id: 1, name: '先秦', startYear: -2070, endYear: -221 },
-    { id: 2, name: '秦汉', startYear: -221, endYear: 220 },
-    { id: 3, name: '魏晋南北朝', startYear: 220, endYear: 589 },
-    { id: 4, name: '隋唐', startYear: 581, endYear: 907 },
-    { id: 5, name: '宋', startYear: 960, endYear: 1279 },
-    { id: 9, name: '金', startYear: 1115, endYear: 1234 },
-    { id: 6, name: '元', startYear: 1271, endYear: 1368 },
-    { id: 7, name: '明', startYear: 1368, endYear: 1644 },
-    { id: 8, name: '清', startYear: 1644, endYear: 1912 },
-  ]
+  let _viewBoxW = 1200
+  let _viewBoxH = 400
 
   /**
    * 初始化划舟动画
    * @param {object} opts
    * @param {SVGPathElement} opts.pathEl - 黄河曲线 SVG path
    * @param {HTMLElement} opts.boatEl - 小舟精灵元素
-   * @param {function} opts.onDynastyChange - 朝代切换回调 (index, dynasty) => void
+   * @param {number} opts.dynastyCount - 朝代数量
+   * @param {function} opts.onDynastyChange - 朝代切换回调 (index) => void
+   * @param {number} opts.viewBoxW - SVG viewBox 宽（默认 1200）
+   * @param {number} opts.viewBoxH - SVG viewBox 高（默认 400）
    */
-  function init({ pathEl, boatEl, onDynastyChange }) {
+  function init({ pathEl, boatEl, dynastyCount, onDynastyChange, viewBoxW = 1200, viewBoxH = 400 }) {
     if (!pathEl || !boatEl) return
 
     _pathEl = pathEl
     _boatEl = boatEl
+    _dynastyCount = dynastyCount
     _onDynastyChange = onDynastyChange
+    _viewBoxW = viewBoxW
+    _viewBoxH = viewBoxH
 
-    // 计算朝代节点在 path 上的位置
-    _dynastyNodes.value = DYNASTIES.map((d, i) => {
-      const t = (i + 0.5) / DYNASTIES.length // 等分点，偏移 0.5 格居中
+    // 计算朝代节点在 path 上的百分比位置
+    _dynastyNodes.value = Array.from({ length: dynastyCount }, (_, i) => {
+      const t = (i + 0.5) / dynastyCount
       const point = pathEl.getPointAtLength(t * pathEl.getTotalLength())
-      return { ...d, index: i, x: point.x, y: point.y, t }
+      return {
+        index: i,
+        xPct: (point.x / viewBoxW) * 100,
+        yPct: (point.y / viewBoxH) * 100,
+        t,
+      }
     })
 
-    // 初始位置
     _updateBoatPosition(0)
   }
 
   /**
-   * 更新小舟位置
-   * @param {number} t - 0→1 进度
+   * 更新小舟位置（百分比坐标）
    */
   function _updateBoatPosition(t) {
     if (!_pathEl || !_boatEl) return
@@ -66,44 +65,38 @@ export function useBoatJourney() {
     const totalLength = _pathEl.getTotalLength()
     const point = _pathEl.getPointAtLength(t * totalLength)
 
-    // 计算切线角度（小舟朝向）
     const delta = 0.01
     const nextPoint = _pathEl.getPointAtLength(Math.min(t + delta, 1) * totalLength)
     const angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * (180 / Math.PI)
 
-    // 应用变换
+    // 转百分比后应用
+    const xPct = (point.x / _viewBoxW) * 100
+    const yPct = (point.y / _viewBoxH) * 100
+
     gsap.set(_boatEl, {
-      x: point.x,
-      y: point.y,
+      left: `${xPct}%`,
+      top: `${yPct}%`,
       rotation: angle,
       transformOrigin: '50% 50%',
     })
 
-    // 更新进度
     progress.value = t
 
-    // 检测当前朝代
-    const newIndex = Math.min(
-      Math.floor(t * DYNASTIES.length),
-      DYNASTIES.length - 1,
-    )
+    const newIndex = Math.min(Math.floor(t * _dynastyCount), _dynastyCount - 1)
     if (newIndex !== activeDynastyIndex.value) {
       activeDynastyIndex.value = newIndex
-      _onDynastyChange?.(newIndex, DYNASTIES[newIndex])
+      _onDynastyChange?.(newIndex)
     }
   }
 
-  /**
-   * 划舟到指定朝代
-   * @param {number} index - 朝代索引 0-7
-   * @param {object} opts - { duration, ease }
-   */
   function goToDynasty(index, opts = {}) {
     const { duration = 1.2, ease = 'power2.inOut' } = opts
-    if (index < 0 || index >= DYNASTIES.length) return
+    if (index < 0 || index >= _dynastyCount) return
 
-    const targetT = (index + 0.5) / DYNASTIES.length
+    const targetT = (index + 0.5) / _dynastyCount
 
+    // 暂停（而非杀掉）巡航：用户选完朝代后仍可恢复
+    pauseCruise()
     if (_tween) _tween.kill()
     _tween = gsap.to(
       { t: progress.value },
@@ -118,39 +111,56 @@ export function useBoatJourney() {
     )
   }
 
-  /**
-   * 自动巡航（从头到尾匀速划行）
-   * @param {number} duration - 总时长（秒）
-   */
-  function autoCruise(duration = 20) {
+  function autoCruise(duration = 30) {
+    _cruiseDuration = duration
     if (_tween) _tween.kill()
-    _tween = gsap.to(
-      { t: 0 },
-      {
-        t: 1,
-        duration,
-        ease: 'none',
-        repeat: -1, // 无限循环
-        onUpdate() {
-          _updateBoatPosition(this.targets()[0].t)
-        },
+    isCruising.value = true
+
+    // 始终跑完整的 0→1 长河循环（repeat:-1）。用线性 ease，使 tween 进度与 t 一一对应，
+    // 从而可用 .progress() 从当前位置无缝续播，而不是把循环截断成 [progress,1] 那一段。
+    const proxy = { t: 0 }
+    _tween = gsap.to(proxy, {
+      t: 1,
+      duration,
+      ease: 'none',
+      repeat: -1,
+      onUpdate() {
+        _updateBoatPosition(proxy.t)
       },
-    )
+    })
+
+    // 从当前进度续播；已到终点则从头开始（避免停在 1 处零时长空转）
+    const startT = progress.value >= 1 ? 0 : progress.value
+    _tween.progress(startT)
   }
 
-  /**
-   * 停止动画
-   */
+  // 暂停巡航但保留位置，可恢复
+  function pauseCruise() {
+    if (isCruising.value && _tween) {
+      _tween.kill()
+      _tween = null
+    }
+    isCruising.value = false
+  }
+
+  // 从当前位置恢复巡航
+  function resumeCruise() {
+    autoCruise(_cruiseDuration)
+  }
+
+  function toggleCruise() {
+    if (isCruising.value) pauseCruise()
+    else resumeCruise()
+  }
+
   function stop() {
     if (_tween) {
       _tween.kill()
       _tween = null
     }
+    isCruising.value = false
   }
 
-  /**
-   * 销毁
-   */
   function dispose() {
     stop()
     _pathEl = null
@@ -161,11 +171,14 @@ export function useBoatJourney() {
   return {
     progress,
     activeDynastyIndex,
-    dynasties: DYNASTIES,
-    dynastyNodes: _dynastyNodes, // 直接返回 ref
+    isCruising,
+    dynastyNodes: _dynastyNodes,
     init,
     goToDynasty,
     autoCruise,
+    pauseCruise,
+    resumeCruise,
+    toggleCruise,
     stop,
     dispose,
   }
