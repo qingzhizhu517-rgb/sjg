@@ -9,13 +9,13 @@
     <div ref="revealRoot" class="pd-content">
       <!-- 英雄区域 -->
       <div class="pd-hero">
-        <div class="pd-hero__bg"></div>
+        <div class="pd-hero__wash" aria-hidden="true"></div>
         <div class="pd-hero__content">
-          <!-- 左侧头像 -->
-          <div class="pd-portrait">
-            <div class="pd-portrait__frame" :style="{ aspectRatio: avatarPresentation.aspectRatio }">
+          <div class="pd-hero__art">
+            <div class="pd-portrait">
+              <div class="pd-portrait__frame" :style="{ aspectRatio: avatarPresentation.aspectRatio }">
               <img
-                v-if="avatar"
+                v-if="avatar && !avatarLoadFailed"
                 :src="avatar"
                 :alt="poet.name"
                 class="pd-portrait__img"
@@ -27,13 +27,18 @@
                 @error="onAvatarError"
               />
               <InkPlaceholder v-else :seed="poet.id || poet.name" kind="文" />
+              </div>
             </div>
-            <div class="pd-portrait__seal" v-if="dynasty">{{ dynasty.name }}</div>
           </div>
 
           <!-- 右侧信息 -->
           <div class="pd-info">
-            <span class="pd-dynasty" v-if="dynasty">{{ dynasty.name }}</span>
+            <div class="pd-dynasty-row">
+              <span class="pd-dynasty" v-if="dynasty">{{ dynasty.name }}</span>
+              <span class="pd-dynasty-years" v-if="dynasty?.startYear != null && dynasty?.endYear != null">
+                {{ dynasty.startYear }}—{{ dynasty.endYear }}
+              </span>
+            </div>
             <h1 class="pd-name">{{ poet.name }}</h1>
             <p class="pd-style" v-if="poet.style">{{ poet.style }}</p>
             <div class="pd-meta" v-if="poet.birthYear || poet.birthplace">
@@ -41,6 +46,7 @@
               <span v-if="poet.birthYear && poet.birthplace" class="pd-meta__sep">·</span>
               <span v-if="poet.birthplace">{{ poet.birthplace }}</span>
             </div>
+            <p v-if="biographyLead" class="pd-biography-lead">{{ biographyLead }}</p>
 
             <div class="pd-stats">
               <div class="pd-stat">
@@ -51,10 +57,6 @@
                 <span class="pd-stat__num">{{ lifespan }}</span>
                 <span class="pd-stat__label">春秋享年</span>
               </div>
-              <div class="pd-stat" v-if="dynastySpan">
-                <span class="pd-stat__num">{{ dynastySpan }}</span>
-                <span class="pd-stat__label">{{ dynasty.name }}国祚(年)</span>
-              </div>
             </div>
           </div>
         </div>
@@ -62,32 +64,35 @@
 
       <!-- 主内容 -->
       <main class="pd-main">
-        <!-- 代表作 -->
-        <section v-if="signature" class="pd-signature">
-          <div class="pd-signature__label">
-            <span>✦</span>
-            代表作
+        <!-- 生平 -->
+        <section class="pd-section pd-section--bio" data-reveal>
+          <div class="pd-section__body">
+            <div class="pd-section__header">
+              <div class="pd-section__icon" aria-hidden="true">传</div>
+              <div class="pd-section__title-group">
+                <h2 class="pd-section__title">生平</h2>
+                <p class="pd-section__subtitle">{{ dynasty ? `${dynasty.name} · ${poet.name}` : poet.name }}</p>
+              </div>
+            </div>
+            <div class="pd-bio">{{ biographyText }}</div>
           </div>
-          <p class="pd-signature__poem">「{{ signature.firstLine }}」</p>
-          <cite class="pd-signature__title">——《{{ signature.title }}》</cite>
         </section>
 
-        <!-- 生平 -->
-        <section class="pd-section" data-reveal>
-          <div class="pd-section__header">
-            <div class="pd-section__icon">传</div>
-            <div class="pd-section__title-group">
-              <h2 class="pd-section__title">生平</h2>
-              <p class="pd-section__subtitle">{{ dynasty ? `${dynasty.name} · ${poet.name}` : poet.name }}</p>
-            </div>
-          </div>
-          <div class="pd-bio">{{ poet.biography || '生平待考，然其诗已传。' }}</div>
-        </section>
+        <router-link
+          v-if="signature"
+          :to="`/poems/${signature.id}`"
+          class="pd-signature__link"
+        >
+          <span class="pd-signature__label">代表句</span>
+          <span class="pd-signature__poem">「{{ signature.firstLine }}」</span>
+          <cite class="pd-signature__title">——《{{ signature.title }}》</cite>
+          <span class="pd-signature__arrow" aria-hidden="true">→</span>
+        </router-link>
 
         <!-- 传世诗篇 -->
         <section class="pd-section" data-reveal>
           <div class="pd-section__header">
-            <div class="pd-section__icon">诗</div>
+            <div class="pd-section__icon" aria-hidden="true">诗</div>
             <div class="pd-section__title-group">
               <h2 class="pd-section__title">传世诗篇</h2>
               <p class="pd-section__subtitle">共收录 {{ poems.length }} 首经典作品</p>
@@ -145,6 +150,7 @@ const poems = ref([])
 const dynasty = ref(null)
 const errorMsg = ref(null)
 const revealRoot = ref(null)
+const avatarLoadFailed = ref(false)
 
 const backTo = computed(() => (route.query.from === 'all' ? '/poets?view=all' : '/poets'))
 
@@ -160,8 +166,8 @@ const avatar = computed(() => {
   return resolved && !resolved.startsWith('data:') ? resolved : ''
 })
 const avatarPresentation = computed(() => getCuratedPresentation(avatar.value))
-const onAvatarError = (e) => {
-  e.target.style.display = 'none'
+const onAvatarError = () => {
+  avatarLoadFailed.value = true
 }
 
 // 派生统计：填充空荡的 hero 右栏（此前只有"传世诗篇"一项）
@@ -171,11 +177,14 @@ const lifespan = computed(() => {
   if (b && d && d > b) return d - b
   return null
 })
-const dynastySpan = computed(() => {
-  const s = dynasty.value?.startYear
-  const e = dynasty.value?.endYear
-  if (s != null && e != null && e > s) return e - s
-  return null
+const biographyText = computed(() =>
+  poet.value?.biography?.trim() || '生平待考，然其诗已传。',
+)
+const biographyLead = computed(() => {
+  const text = poet.value?.biography?.trim()
+  if (!text) return ''
+  const sentence = text.match(/^.*?[。！？]/)?.[0] || text
+  return sentence.length > 72 ? `${sentence.slice(0, 72)}…` : sentence
 })
 
 const signature = computed(() => pickSignaturePoem(poems.value))
@@ -185,6 +194,7 @@ const loadDetail = async () => {
   try {
     const data = await api.get(`/poets/${route.params.id}`)
     poet.value = data.poet
+    avatarLoadFailed.value = false
     poems.value = data.poems || []
     dynasty.value = data.dynasty
     await nextTick()
@@ -287,27 +297,6 @@ onMounted(loadDetail)
   height: 100%;
   object-fit: cover;
   z-index: 2;
-}
-
-.pd-portrait__seal {
-  position: absolute;
-  bottom: -16px;
-  right: -16px;
-  width: 72px;
-  height: 72px;
-  background: var(--accent);
-  color: var(--text-on-accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 600;
-  border-radius: var(--radius-md);
-  transform: rotate(-5deg);
-  box-shadow: var(--card-shadow);
-  border: 2px solid var(--accent-light);
-  letter-spacing: 2px;
 }
 
 /* 诗人信息 */
