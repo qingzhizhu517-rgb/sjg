@@ -17,7 +17,7 @@
               <img
                 v-if="avatar && !avatarLoadFailed"
                 :src="avatar"
-                :alt="poet.name"
+                :alt="`${poet.name}画像`"
                 class="pd-portrait__img"
                 :style="{
                   objectFit: avatarPresentation.objectFit,
@@ -33,7 +33,7 @@
 
           <!-- 右侧信息 -->
           <div class="pd-info">
-            <div class="pd-dynasty-row">
+            <div v-if="dynasty" class="pd-dynasty-row">
               <span class="pd-dynasty" v-if="dynasty">{{ dynasty.name }}</span>
               <span class="pd-dynasty-years" v-if="dynasty?.startYear != null && dynasty?.endYear != null">
                 {{ dynasty.startYear }}—{{ dynasty.endYear }}
@@ -46,7 +46,7 @@
               <span v-if="poet.birthYear && poet.birthplace" class="pd-meta__sep">·</span>
               <span v-if="poet.birthplace">{{ poet.birthplace }}</span>
             </div>
-            <p v-if="biographyLead" class="pd-biography-lead">{{ biographyLead }}</p>
+            <p v-if="biographyLead" class="pd-lede">{{ biographyLead }}</p>
 
             <div class="pd-stats">
               <div class="pd-stat">
@@ -71,7 +71,7 @@
               <div class="pd-section__icon" aria-hidden="true">传</div>
               <div class="pd-section__title-group">
                 <h2 class="pd-section__title">生平</h2>
-                <p class="pd-section__subtitle">{{ dynasty ? `${dynasty.name} · ${poet.name}` : poet.name }}</p>
+                <p class="pd-section__subtitle">{{ poet.name }}</p>
               </div>
             </div>
             <div class="pd-bio">{{ biographyText }}</div>
@@ -82,6 +82,7 @@
           v-if="signature"
           :to="`/poems/${signature.id}`"
           class="pd-signature__link"
+          data-reveal
         >
           <span class="pd-signature__label">代表句</span>
           <span class="pd-signature__poem">「{{ signature.firstLine }}」</span>
@@ -165,7 +166,12 @@ const avatar = computed(() => {
   // resolveImage 无图时会回占位 SVG data-uri；此处只想要真实图，占位交给 InkPlaceholder
   return resolved && !resolved.startsWith('data:') ? resolved : ''
 })
-const avatarPresentation = computed(() => getCuratedPresentation(avatar.value))
+const avatarPresentation = computed(() => ({
+  ...getCuratedPresentation(avatar.value),
+  // 诗人素材统一按竖幅展签呈现，避免未收录素材继承 4:3/cover 默认值。
+  aspectRatio: '3 / 4',
+  objectFit: 'contain',
+}))
 const onAvatarError = () => {
   avatarLoadFailed.value = true
 }
@@ -245,49 +251,74 @@ onMounted(loadDetail)
   transform: translateX(-4px);
 }
 
-/* 英雄区域：宣纸底 + 朱砂细线框（旧版深棕渐变与宣纸主题脱节） */
+/* 英雄区域：桌面编辑式左图右栏，画像向宣纸底自然淡出 */
 .pd-hero {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
-  background: var(--bg-secondary);
-  border-bottom: 2px solid var(--accent);
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border);
 }
 
-.pd-hero__bg {
+.pd-hero__wash {
   position: absolute;
   inset: 0;
-  opacity: 0.04;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background: var(--bg-secondary);
+  opacity: 0.72;
+  pointer-events: none;
 }
 
 .pd-hero__content {
   position: relative;
-  z-index: 2;
-  display: flex;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 58fr) minmax(420px, 42fr);
   align-items: center;
-  gap: var(--sp-8);
+  gap: 0;
   max-width: var(--container-max);
-  padding: var(--sp-8) var(--sp-5);
+  min-height: 580px;
+  margin: 0 auto;
+  padding: var(--sp-6) var(--sp-5);
   width: 100%;
 }
 
-/* 头像区域 */
+.pd-hero__art {
+  position: relative;
+  min-height: 520px;
+  display: flex;
+  align-items: center;
+}
+
+.pd-hero__art::after {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  inset: 0 calc(var(--sp-9) * -1) 0 28%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--bg-primary) 20%, transparent) 36%,
+    color-mix(in srgb, var(--bg-primary) 76%, transparent) 70%,
+    var(--bg-primary) 100%
+  );
+  pointer-events: none;
+}
+
 .pd-portrait {
   position: relative;
+  z-index: 1;
+  width: clamp(360px, 32vw, 440px);
   flex-shrink: 0;
 }
 
 .pd-portrait__frame {
   position: relative;
-  width: 240px;
+  width: 100%;
   aspect-ratio: 3 / 4;
-  border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: var(--card-shadow-hover);
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  box-shadow: var(--card-shadow);
+  background: var(--bg-secondary);
 }
 
 .pd-portrait__img {
@@ -295,14 +326,30 @@ onMounted(loadDetail)
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   z-index: 2;
 }
 
 /* 诗人信息 */
 .pd-info {
-  flex: 1;
+  position: relative;
+  z-index: 4;
+  padding-left: var(--sp-6);
   color: var(--text-primary);
+}
+
+.pd-dynasty-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+
+.pd-dynasty-row::before {
+  content: '';
+  width: var(--sp-5);
+  height: 1px;
+  background: var(--accent);
 }
 
 .pd-dynasty {
@@ -314,13 +361,19 @@ onMounted(loadDetail)
   font-size: var(--fs-caption);
   font-weight: 600;
   letter-spacing: 3px;
-  margin-bottom: var(--sp-4);
+  margin-bottom: 0;
   color: var(--accent-dark);
+}
+
+.pd-dynasty-years {
+  color: var(--text-muted);
+  font-size: var(--fs-caption);
+  letter-spacing: 1px;
 }
 
 .pd-name {
   font-family: var(--font-display);
-  font-size: clamp(40px, 5vw, 64px);
+  font-size: var(--fs-h1);
   font-weight: 600;
   letter-spacing: 8px;
   line-height: var(--lh-tight);
@@ -341,7 +394,7 @@ onMounted(loadDetail)
   gap: var(--sp-4);
   font-size: var(--fs-body-sm);
   color: var(--text-secondary);
-  margin-bottom: var(--sp-5);
+  margin-bottom: var(--sp-4);
   letter-spacing: 1px;
 }
 
@@ -352,18 +405,25 @@ onMounted(loadDetail)
   border-radius: 50%;
 }
 
+.pd-lede {
+  inline-size: min(var(--measure), 100%);
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
 .pd-stats {
   display: flex;
-  gap: var(--sp-5);
+  gap: var(--sp-7);
   margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--border);
 }
 
 .pd-stat {
-  text-align: center;
-  padding: var(--sp-3) var(--sp-5);
-  background: var(--card-bg);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
+  min-width: 96px;
+  text-align: left;
 }
 
 .pd-stat__num {
@@ -373,7 +433,7 @@ onMounted(loadDetail)
   display: block;
   line-height: 1;
   margin-bottom: var(--sp-1);
-  color: var(--accent);
+  color: var(--text-primary);
 }
 
 .pd-stat__label {
@@ -389,29 +449,23 @@ onMounted(loadDetail)
   padding: var(--sp-9) var(--sp-5) var(--sp-10);
 }
 
-/* 代表作区块 */
-.pd-signature {
-  position: relative;
+/* 代表句：保留为轻量的横向引用链接 */
+.pd-signature__link {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: baseline;
+  gap: var(--sp-4);
   margin-bottom: var(--sp-9);
-  padding: var(--sp-7);
-  background: var(--card-bg);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--card-shadow);
-  border: 1px solid var(--border);
-  overflow: hidden;
+  padding: var(--sp-5) 0;
+  color: inherit;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
 }
 
-.pd-signature::before {
-  content: '诗';
-  position: absolute;
-  top: -20px;
-  right: 20px;
-  font-family: var(--font-display);
-  font-size: 200px;
-  font-weight: 600;
-  color: var(--accent);
-  opacity: 0.05;
-  line-height: 1;
+.pd-signature__link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
 }
 
 .pd-signature__label {
@@ -422,36 +476,50 @@ onMounted(loadDetail)
   font-weight: 600;
   color: var(--accent);
   letter-spacing: 3px;
-  margin-bottom: var(--sp-5);
-  padding: var(--sp-1) var(--sp-3);
-  background: var(--accent-faint);
-  border-radius: var(--radius-lg);
+  margin: 0;
 }
 
 .pd-signature__poem {
   font-family: var(--font-heading);
-  font-size: clamp(24px, 3vw, 36px);
+  font-size: var(--fs-lead);
   font-weight: 600;
-  line-height: 2;
+  line-height: var(--lh-body);
   color: var(--text-primary);
-  letter-spacing: 4px;
-  margin-bottom: var(--sp-5);
-  position: relative;
-  z-index: 1;
+  letter-spacing: 2px;
 }
 
 .pd-signature__title {
-  font-style: italic;
+  font-style: normal;
   color: var(--text-muted);
   font-size: var(--fs-body-sm);
-  letter-spacing: 2px;
-  position: relative;
-  z-index: 1;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.pd-signature__arrow {
+  color: var(--accent);
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pd-signature__link:hover .pd-signature__arrow,
+.pd-signature__link:focus-visible .pd-signature__arrow {
+  transform: translateX(var(--sp-1));
 }
 
 /* 区块样式 */
 .pd-section {
   margin-bottom: var(--sp-9);
+}
+
+.pd-section--bio .pd-section__header {
+  margin-bottom: 0;
+}
+
+.pd-section--bio .pd-section__body {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.28fr) minmax(0, 1fr);
+  gap: var(--sp-7);
+  align-items: start;
 }
 
 .pd-section__header {
@@ -497,18 +565,16 @@ onMounted(loadDetail)
 /* 生平区块 */
 .pd-bio {
   position: relative;
-  padding: var(--sp-6) var(--sp-7);
-  background: var(--card-bg);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--card-shadow);
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--accent);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
   font-size: var(--fs-body);
   line-height: var(--lh-loose);
   color: var(--text-secondary);
   text-indent: 2em;
   letter-spacing: 0.5px;
-  max-width: var(--measure);
+  max-width: var(--measure-wide);
 }
 
 /* 诗篇网格 */
@@ -623,22 +689,53 @@ onMounted(loadDetail)
 /* 响应式 */
 @media (max-width: 1024px) {
   .pd-hero__content {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    min-height: auto;
     text-align: center;
     gap: var(--sp-6);
     padding: var(--sp-7) var(--sp-5);
   }
 
-  .pd-portrait__frame {
-    width: 200px;
-  }
-
-  .pd-meta {
+  .pd-hero__art {
+    min-height: auto;
     justify-content: center;
   }
 
+  .pd-hero__art::after {
+    inset: 45% 0 calc(var(--sp-7) * -1);
+    background: linear-gradient(180deg, transparent 0%, var(--bg-primary) 100%);
+  }
+
+  .pd-portrait {
+    width: clamp(240px, 45vw, 360px);
+  }
+
+  .pd-info {
+    padding-left: 0;
+  }
+
+  .pd-dynasty-row,
+  .pd-meta,
   .pd-stats {
     justify-content: center;
+  }
+
+  .pd-lede {
+    margin: 0 auto;
+  }
+
+  .pd-section--bio .pd-section__body {
+    grid-template-columns: 1fr;
+    gap: var(--sp-5);
+  }
+
+  .pd-signature__link {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+
+  .pd-signature__title {
+    white-space: normal;
   }
 }
 
@@ -647,7 +744,7 @@ onMounted(loadDetail)
     padding: var(--sp-6) var(--sp-4);
   }
 
-  .pd-portrait__frame {
+  .pd-portrait {
     width: 160px;
   }
 
@@ -665,13 +762,18 @@ onMounted(loadDetail)
     padding: var(--sp-6) var(--sp-4) var(--sp-9);
   }
 
-  .pd-signature,
-  .pd-bio {
-    padding: var(--sp-5);
-  }
-
   .pd-poems-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pd-back-link,
+  .pd-poem-card,
+  .pd-poem-card::before,
+  .pd-poem-card__arrow,
+  .pd-signature__arrow {
+    transition-duration: 0.01ms;
   }
 }
 </style>

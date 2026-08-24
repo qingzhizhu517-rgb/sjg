@@ -24,10 +24,16 @@ test('B-1 删除头像方印并把代表句放在生平之后', () => {
 })
 
 test('B-1 画像使用大尺寸、3:4 contain 和右侧渐隐层', () => {
+  assert.match(source, /grid-template-columns:\s*minmax\(0,\s*58fr\)\s*minmax\(420px,\s*42fr\)/)
   assert.match(source, /\.pd-portrait\s*\{[\s\S]*?width:\s*clamp\(360px/)
   assert.match(source, /aspect-ratio:\s*3\s*\/\s*4/)
   assert.match(source, /object-fit:\s*contain/)
   assert.match(source, /\.pd-hero__art::after\s*\{[\s\S]*?linear-gradient\([^;]*var\(--bg-primary\)/)
+  assert.match(source, /aspectRatio:\s*avatarPresentation\.aspectRatio/)
+  assert.match(source, /objectFit:\s*avatarPresentation\.objectFit/)
+  assert.match(source, /objectPosition:\s*avatarPresentation\.objectPosition/)
+  assert.match(source, /aspectRatio:\s*'3\s*\/\s*4'/)
+  assert.match(source, /objectFit:\s*'contain'/)
 })
 
 test('代表句是指向诗词详情的真实链接，并在头像失败时显示占位', () => {
