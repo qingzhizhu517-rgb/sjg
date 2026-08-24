@@ -3,16 +3,22 @@
     <h2 class="section-heading">AI 赏析</h2>
 
     <!-- 分析维度标签页 -->
-    <div class="analysis-tabs">
-      <button
-        v-for="tab in tabs"
-        :key="tab.key"
-        class="tab-btn"
-        :class="{ active: activeTab === tab.key }"
-        @click="activeTab = tab.key"
-      >
-        {{ tab.label }}
-      </button>
+    <div
+      class="analysis-tabs-wrap"
+      role="region"
+      aria-label="赏析维度标签，横向滑动查看更多"
+    >
+      <div class="analysis-tabs">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          class="tab-btn"
+          :class="{ active: activeTab === tab.key }"
+          @click="activeTab = tab.key"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
     </div>
 
     <!-- 加载态 -->
@@ -218,15 +224,41 @@ watch(() => props.poemId, fetchAnalysis, { immediate: true })
   border-bottom: 1px solid var(--border);
 }
 
+.analysis-tabs-wrap {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.analysis-tabs-wrap::after {
+  content: '横向滑动 →';
+  position: absolute;
+  right: 0;
+  bottom: 8px;
+  display: none;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 8px 0 24px;
+  background: linear-gradient(90deg, transparent, var(--card-bg) 30%);
+  color: var(--text-muted);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.08em;
+  pointer-events: none;
+}
+
 .analysis-tabs {
   display: flex;
   gap: 8px;
-  margin-bottom: 24px;
   overflow-x: auto;
   padding-bottom: 8px;
+  scrollbar-width: thin;
+  overscroll-behavior-inline: contain;
 }
 
 .tab-btn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 8px 16px;
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -393,11 +425,17 @@ watch(() => props.poemId, fetchAnalysis, { immediate: true })
 
 /* 响应式 */
 @media (max-width: 768px) {
+  .analysis-tabs-wrap::after {
+    display: flex;
+  }
+
   .analysis-tabs {
     gap: 4px;
+    padding-right: 84px;
   }
   
   .tab-btn {
+    min-height: 44px;
     padding: 6px 12px;
     font-size: 13px;
   }
