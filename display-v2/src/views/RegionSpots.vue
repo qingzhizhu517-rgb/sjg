@@ -53,6 +53,7 @@
           :description="spot.description"
           :address="spot.address"
           :image="getImage(spot)"
+          :presentation="getPresentation(spot)"
           :tag="getSpotData(spot.name).tag || cityData.tag"
           :stats="getSpotStats(spot)"
           :reversed="i % 2 === 1"
@@ -78,7 +79,14 @@
             @keydown.enter="$router.push(`/spots/${spot.id}`)"
           >
             <div class="more-spot__image-wrap">
-              <img :src="getImage(spot)" :alt="spot.name" class="more-spot__image" loading="lazy" decoding="async" />
+              <img
+                :src="getImage(spot)"
+                :alt="spot.name"
+                class="more-spot__image"
+                :style="getImageStyle(spot)"
+                loading="lazy"
+                decoding="async"
+              />
             </div>
             <div class="more-spot__body">
               <h3 class="more-spot__title">{{ spot.name }}</h3>
@@ -122,6 +130,7 @@ import { resolveCityHeroMedia } from '../utils/cityHeroMedia'
 import api from '../api'
 import CityHero from '../components/homepage/CityHero.vue'
 import CityFeatureSpot from '../components/homepage/CityFeatureSpot.vue'
+import { getCuratedPresentation } from '../config/curatedMedia'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
@@ -133,7 +142,7 @@ gsap.registerPlugin(ScrollTrigger)
 
 const route = useRoute()
 const { theme, resolveAsset } = useTheme()
-const { getImageUrl } = useImage()
+const { resolveFirstImage } = useImage()
 const region = ref(route.params.region)
 const spots = ref([])
 const loaded = ref(false)
@@ -209,9 +218,16 @@ const padZero = (num) => num < 10 ? `0${num}` : num
 
 const getImage = (spot) => {
   if (!spot) return ''
-  // 单主题后不再按主题挑字段：优先水墨图，缺失回退实景图
-  const url = spot.imageAnimeUrl || spot.imageUrl
-  return getImageUrl(url, true)
+  return resolveFirstImage([spot.imageAnimeUrl, spot.imageUrl], '景')
+}
+
+const getPresentation = (spot) => getCuratedPresentation(getImage(spot))
+const getImageStyle = (spot) => {
+  const presentation = getPresentation(spot)
+  return {
+    objectFit: presentation.objectFit,
+    objectPosition: presentation.objectPosition,
+  }
 }
 
 const loadSpots = async () => {
@@ -905,4 +921,3 @@ onMounted(async () => {
 }
 
 </style>
-

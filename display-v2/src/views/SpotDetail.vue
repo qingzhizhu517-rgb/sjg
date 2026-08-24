@@ -16,8 +16,14 @@
 
     <!-- ===== 全宽 Hero: 景观主图 + 大标题 ===== -->
     <header class="sd-hero">
-      <div class="sd-hero__media" v-if="imageUrl">
-        <img :src="imageUrl" :alt="spot.name" class="sd-hero__img" decoding="async" />
+      <div class="sd-hero__media" v-if="imageUrl" :style="{ aspectRatio: imagePresentation.aspectRatio }">
+        <img
+          :src="imageUrl"
+          :alt="spot.name"
+          class="sd-hero__img"
+          :style="{ objectFit: imagePresentation.objectFit, objectPosition: imagePresentation.objectPosition }"
+          decoding="async"
+        />
         <div class="sd-hero__veil"></div>
       </div>
       <div class="sd-hero__media sd-hero__media--fallback" v-else aria-hidden="true">
@@ -143,6 +149,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
 import { useImage } from '../composables/useImage'
+import { getCuratedPresentation } from '../config/curatedMedia'
 import { mockSpots } from '../config/mockDetailData'
 import * as echarts from 'echarts'
 import api from '../api'
@@ -156,7 +163,7 @@ import EmptyState from '../components/homepage/EmptyState.vue'
 const route = useRoute()
 const { themeClass } = useTheme()
 const { build: buildPoetMap } = usePoetEnrichment()
-const { getImageUrl } = useImage()
+const { resolveFirstImage } = useImage()
 const spot = ref(null)
 const poems = ref([])
 const poetsMap = ref({})
@@ -167,10 +174,9 @@ let chartInstance = null
 
 const imageUrl = computed(() => {
   if (!spot.value) return null
-  // 单主题后不再按主题挑字段：优先水墨图，缺失回退实景图
-  const url = spot.value.imageAnimeUrl || spot.value.imageUrl
-  return getImageUrl(url, true)
+  return resolveFirstImage([spot.value.imageAnimeUrl, spot.value.imageUrl], '景')
 })
+const imagePresentation = computed(() => getCuratedPresentation(imageUrl.value))
 
 const moodBg = computed(() => pickMoodBackdrop(imageUrl.value))
 
@@ -213,8 +219,7 @@ const parseTagsOf = (poem) => {
 
 const getPoetAvatar = (poetObj) => {
   if (!poetObj) return ''
-  const url = poetObj.avatarUrl
-  return getImageUrl(url, true)
+  return resolveFirstImage([poetObj.avatarAnimeUrl, poetObj.avatarUrl], '文')
 }
 
 const enrichedPoems = computed(() => {

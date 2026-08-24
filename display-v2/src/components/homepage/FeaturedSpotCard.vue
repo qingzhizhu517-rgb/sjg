@@ -1,7 +1,15 @@
 <template>
   <article class="spot hover-lift" tabindex="0" role="link" @click="$emit('click')" @keydown.enter="$emit('click')">
-    <div class="spot__cover">
-      <img v-if="imageUrl" :src="imageUrl" :alt="spot.name" loading="lazy" decoding="async" @error="onImgError" />
+    <div class="spot__cover" :style="{ aspectRatio: imagePresentation.aspectRatio }">
+      <img
+        v-if="imageUrl"
+        :src="imageUrl"
+        :alt="spot.name"
+        :style="{ objectFit: imagePresentation.objectFit, objectPosition: imagePresentation.objectPosition }"
+        loading="lazy"
+        decoding="async"
+        @error="onImgError"
+      />
       <span v-else class="spot__cover-fallback">{{ spot.name ? spot.name.charAt(0) : '景' }}</span>
       <span class="spot__region">{{ spot.region }}</span>
     </div>
@@ -19,15 +27,15 @@
 <script setup>
 import { computed } from 'vue'
 import { adaptSpot } from '../../composables/themeAdapter'
+import { getCuratedPresentation } from '../../config/curatedMedia'
 
 const props = defineProps({
   spot: { type: Object, required: true },
 })
 defineEmits(['click'])
 
-const imageUrl = computed(() =>
-  props.spot.imageUrl ? adaptSpot(props.spot).image : '',
-)
+const imageUrl = computed(() => adaptSpot(props.spot).image)
+const imagePresentation = computed(() => getCuratedPresentation(imageUrl.value))
 const onImgError = (e) => {
   e.target.style.display = 'none'
 }

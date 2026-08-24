@@ -13,8 +13,19 @@
         <div class="pd-hero__content">
           <!-- 左侧头像 -->
           <div class="pd-portrait">
-            <div class="pd-portrait__frame">
-              <img v-if="avatar" :src="avatar" :alt="poet.name" class="pd-portrait__img" decoding="async" @error="onAvatarError" />
+            <div class="pd-portrait__frame" :style="{ aspectRatio: avatarPresentation.aspectRatio }">
+              <img
+                v-if="avatar"
+                :src="avatar"
+                :alt="poet.name"
+                class="pd-portrait__img"
+                :style="{
+                  objectFit: avatarPresentation.objectFit,
+                  objectPosition: avatarPresentation.objectPosition,
+                }"
+                decoding="async"
+                @error="onAvatarError"
+              />
               <InkPlaceholder v-else :seed="poet.id || poet.name" kind="文" />
             </div>
             <div class="pd-portrait__seal" v-if="dynasty">{{ dynasty.name }}</div>
@@ -117,6 +128,7 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useImage } from '../composables/useImage'
+import { getCuratedPresentation } from '../config/curatedMedia'
 import { useReveal } from '../composables/useReveal'
 import api from '../api'
 import { firstLine, pickSignaturePoem } from '../utils/poem'
@@ -125,7 +137,7 @@ import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import InkPlaceholder from '../components/InkPlaceholder.vue'
 
 const route = useRoute()
-const { resolveImage } = useImage()
+const { resolveFirstImage } = useImage()
 const { reveal } = useReveal()
 
 const poet = ref(null)
@@ -140,12 +152,14 @@ const backTo = computed(() => (route.query.from === 'all' ? '/poets?view=all' : 
 // 无图返回 null，模板改用程序化水墨占位 InkPlaceholder（不再是纯色首字方块）
 const avatar = computed(() => {
   if (!poet.value) return ''
-  const raw = poet.value.avatarAnimeUrl || poet.value.avatarUrl
-  if (!raw) return ''
-  const resolved = resolveImage(raw, '文')
+  const resolved = resolveFirstImage(
+    [poet.value.avatarAnimeUrl, poet.value.avatarUrl],
+    '文',
+  )
   // resolveImage 无图时会回占位 SVG data-uri；此处只想要真实图，占位交给 InkPlaceholder
   return resolved && !resolved.startsWith('data:') ? resolved : ''
 })
+const avatarPresentation = computed(() => getCuratedPresentation(avatar.value))
 const onAvatarError = (e) => {
   e.target.style.display = 'none'
 }
@@ -259,7 +273,7 @@ onMounted(loadDetail)
 .pd-portrait__frame {
   position: relative;
   width: 240px;
-  height: 320px;
+  aspect-ratio: 3 / 4;
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--card-shadow-hover);
@@ -628,7 +642,6 @@ onMounted(loadDetail)
 
   .pd-portrait__frame {
     width: 200px;
-    height: 270px;
   }
 
   .pd-meta {
@@ -647,7 +660,6 @@ onMounted(loadDetail)
 
   .pd-portrait__frame {
     width: 160px;
-    height: 220px;
   }
 
   .pd-stats {

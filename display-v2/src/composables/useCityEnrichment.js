@@ -48,7 +48,7 @@ async function loadCitySpots(name) {
     spotCount: records.length,
     poemCount,
     firstSpotId: first ? first.id : null,
-    imageUrl: first ? first.imageUrl || first.imageAnimeUrl || null : null,
+    imageUrl: first ? first.imageAnimeUrl || first.imageUrl || null : null,
     spotNames: records.slice(0, 4).map((s) => s.name).filter(Boolean)
   }
   _spotCache.set(name, detail)

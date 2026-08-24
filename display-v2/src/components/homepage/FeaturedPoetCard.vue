@@ -1,7 +1,15 @@
 <template>
   <article class="fpoet hover-lift" tabindex="0" role="link" @click="$emit('click')" @keydown.enter="$emit('click')">
     <div class="fpoet__avatar">
-      <img v-if="avatarUrl" :src="avatarUrl" :alt="poet.name" loading="lazy" decoding="async" @error="onImgError" />
+      <img
+        v-if="avatarUrl"
+        :src="avatarUrl"
+        :alt="poet.name"
+        :style="{ objectFit: avatarPresentation.objectFit, objectPosition: avatarPresentation.objectPosition }"
+        loading="lazy"
+        decoding="async"
+        @error="onImgError"
+      />
       <span v-else class="fpoet__stamp">{{ poet.name ? poet.name.charAt(0) : '文' }}</span>
     </div>
     <div class="fpoet__body">
@@ -26,6 +34,7 @@
 <script setup>
 import { computed } from 'vue'
 import { adaptPoet } from '../../composables/themeAdapter'
+import { getCuratedPresentation } from '../../config/curatedMedia'
 
 const props = defineProps({
   // poet: 已 enrichment，含 signaturePoem / poemCount
@@ -34,9 +43,8 @@ const props = defineProps({
 })
 defineEmits(['click'])
 
-const avatarUrl = computed(() =>
-  props.poet.avatarUrl ? adaptPoet(props.poet).avatar : '',
-)
+const avatarUrl = computed(() => adaptPoet(props.poet).avatar)
+const avatarPresentation = computed(() => getCuratedPresentation(avatarUrl.value))
 
 const onImgError = (e) => {
   e.target.style.display = 'none'

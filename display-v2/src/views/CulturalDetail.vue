@@ -14,8 +14,14 @@
 
     <div v-else-if="item" class="cd-content">
       <header class="cd-head">
-        <div class="cd-head-media">
-          <img v-if="heroImage" :src="heroImage" :alt="item.title" class="cd-hero-img" />
+        <div class="cd-head-media" :style="{ aspectRatio: heroPresentation.aspectRatio }">
+          <img
+            v-if="heroImage"
+            :src="heroImage"
+            :alt="item.title"
+            class="cd-hero-img"
+            :style="{ objectFit: heroPresentation.objectFit, objectPosition: heroPresentation.objectPosition }"
+          />
           <InkPlaceholder v-else :seed="item.id || item.title" :kind="item.category || '文'" />
         </div>
         <div class="cd-head-main">
@@ -63,7 +69,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '../api'
-import { parseFirstUrl } from '../composables/useImage'
+import { useImage } from '../composables/useImage'
+import { getCuratedPresentation } from '../config/curatedMedia'
 import { CATEGORY_LABELS } from '../config/culturalCategories'
 import InkPlaceholder from '../components/InkPlaceholder.vue'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
@@ -71,6 +78,7 @@ import ErrorState from '../components/homepage/ErrorState.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
 
 const route = useRoute()
+const { resolveFirstImage } = useImage()
 
 const item = ref(null)
 const detail = ref(null)
@@ -96,8 +104,13 @@ const categoryLabel = (c) => CATEGORY_LABELS_LOCAL[c] || c
 
 // 主表配图：imageAnimeUrl 优先（库里现有数据在 anime 字段），imageUrl 兜底
 const heroImage = computed(() =>
-  parseFirstUrl(item.value?.imageAnimeUrl) || parseFirstUrl(item.value?.imageUrl) || null,
+  resolveFirstImage(
+    [item.value?.imageAnimeUrl, item.value?.imageUrl],
+    '文',
+    { placeholder: false },
+  ),
 )
+const heroPresentation = computed(() => getCuratedPresentation(heroImage.value))
 
 // 各 detail 表的字段中文标签(与后端实体字段对应)
 const DETAIL_LABELS = {

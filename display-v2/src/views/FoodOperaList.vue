@@ -38,8 +38,14 @@
         @click="$router.push(`/food-opera/${item.id}`)"
         @keydown.enter="$router.push(`/food-opera/${item.id}`)"
       >
-        <div class="fo-card__image">
-          <img v-if="resolveImageUrl(item)" :src="resolveImageUrl(item)" :alt="item.title" loading="lazy" />
+        <div class="fo-card__image" :style="{ aspectRatio: getPresentation(item).aspectRatio }">
+          <img
+            v-if="resolveImageUrl(item)"
+            :src="resolveImageUrl(item)"
+            :alt="item.title"
+            :style="getImageStyle(item)"
+            loading="lazy"
+          />
           <InkPlaceholder v-else :seed="item.id || item.title" kind="food_opera" />
           <div class="fo-card__category-badge">{{ isFood(item) ? '美食' : '戏曲' }}</div>
         </div>
@@ -74,7 +80,8 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '../api'
 import { NINE_CITIES } from '../config/nineCities'
-import { parseFirstUrl } from '../composables/useImage'
+import { useImage } from '../composables/useImage'
+import { getCuratedPresentation } from '../config/curatedMedia'
 import InkPlaceholder from '../components/InkPlaceholder.vue'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
@@ -82,6 +89,7 @@ import ErrorState from '../components/homepage/ErrorState.vue'
 
 const route = useRoute()
 const router = useRouter()
+const { resolveFirstImage } = useImage()
 
 const regionOptions = ['全部', ...NINE_CITIES]
 
@@ -121,7 +129,19 @@ function isFood(item) {
 
 // 图片解析：imageAnimeUrl 优先（库里现有数据在 anime 字段），imageUrl 兜底
 function resolveImageUrl(item) {
-  return parseFirstUrl(item.imageAnimeUrl) || parseFirstUrl(item.imageUrl) || null
+  return resolveFirstImage([item.imageAnimeUrl, item.imageUrl], '味', { placeholder: false })
+}
+
+function getPresentation(item) {
+  return getCuratedPresentation(resolveImageUrl(item))
+}
+
+function getImageStyle(item) {
+  const presentation = getPresentation(item)
+  return {
+    objectFit: presentation.objectFit,
+    objectPosition: presentation.objectPosition,
+  }
 }
 
 async function load() {

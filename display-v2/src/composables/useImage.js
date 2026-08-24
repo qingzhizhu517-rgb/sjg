@@ -1,4 +1,5 @@
 import { useTheme } from './useTheme'
+import { buildLocalImageCandidates, firstMediaValue } from '../utils/imageCandidates'
 
 // 构建期注册 public/images 下本地图（替代硬编码白名单）。
 // import.meta.glob 键形如 '/public/images/poets/du_fu.jpg'，归一化为服务路径 '/images/...'。
@@ -41,35 +42,30 @@ export function useImage() {
   const { theme } = useTheme()
 
   // 校验本地路径存在性 -> 返回服务路径或 null
-  const resolveLocal = (rawPath) => {
-    if (!rawPath || !rawPath.startsWith('/')) return null
-    // 兼容 .png/.jpg 后缀差异
-    const candidates = [rawPath, rawPath.replace('.png', '.jpg')]
-    for (const c of candidates) if (localImages.has(c)) return c
-    return null
+  const resolveLocal = (rawPath, options = {}) =>
+    buildLocalImageCandidates(rawPath, options)
+      .find((candidate) => localImages.has(candidate)) || null
+
+  const resolveFirstImage = (values, kind = '文', options = {}) => {
+    const isAnime = theme.value === 'inkwash'
+    const { placeholder = true, ...candidateOptions } = options
+    const imageOptions = { inkwash: isAnime, ...candidateOptions }
+    for (const value of values || []) {
+      const parsed = parseFirstUrl(value)
+      if (!parsed) continue
+      if (parsed.startsWith('http://') || parsed.startsWith('https://')) return parsed
+      const local = resolveLocal(parsed, imageOptions)
+      if (local) return local
+    }
+    return placeholder ? getPlaceholder(isAnime, kind) : null
   }
 
   // 简化版：直接读取单字段，按当前主题选择占位风格
-  const resolveImage = (url, kind = '文') => {
-    const isAnime = theme.value === 'inkwash'
-    const parsed = parseFirstUrl(url)
-    if (!parsed) return getPlaceholder(isAnime, kind)
-    if (parsed.startsWith('http://') || parsed.startsWith('https://')) return parsed
-    return resolveLocal(parsed) || getPlaceholder(isAnime, kind)
-  }
+  const resolveImage = (url, kind = '文') => resolveFirstImage([url], kind)
 
   // 旧契约：单 url + isAnime 布尔。保留供未迁移调用方。
-  const getImageUrl = (url, isAnime = false) => {
-    const parsed = parseFirstUrl(url)
-    if (!parsed) return getPlaceholder(isAnime, inferKind(url))
-    if (parsed.startsWith('http://') || parsed.startsWith('https://')) return parsed
-    let localPath = parsed.replace('.png', '.jpg')
-    if (isAnime && !localPath.includes('_anime')) {
-      localPath = localPath.replace('.jpg', '_anime.jpg')
-    }
-    if (localImages.has(localPath)) return localPath
-    return getPlaceholder(isAnime, inferKind(parsed))
-  }
+  const getImageUrl = (url, isAnime = false) =>
+    resolveFirstImage([url], inferKind(url), { inkwash: isAnime })
 
-  return { getImageUrl, resolveImage, getPlaceholder }
+  return { getImageUrl, resolveImage, resolveFirstImage, getPlaceholder, firstMediaValue }
 }
