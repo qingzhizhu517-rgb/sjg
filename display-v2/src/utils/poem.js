@@ -42,3 +42,19 @@ export function pickSignaturePoem(poems = []) {
     sentimentTags: parseTags(p.sentimentTags),
   }
 }
+
+// 诗词详情优先尊重数据库人工换行；单段正文则按完整句末标点拆行。
+export function splitPoemLines(content) {
+  if (typeof content !== 'string' || !content.trim()) return []
+
+  const explicit = content
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+
+  if (explicit.length > 1) return explicit
+
+  const sentences = explicit[0].match(/[^。！？；]+[。！？；]?/g) || []
+  return sentences.map((line) => line.trim()).filter(Boolean)
+}
