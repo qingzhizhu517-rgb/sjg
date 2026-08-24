@@ -502,6 +502,9 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 5%, #000 95%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 5%, #000 95%, transparent 100%);
 }
 
 .ink-timeline__scene {
@@ -509,7 +512,8 @@ onBeforeUnmount(() => {
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
   opacity: 0;
   transition: opacity 1.5s ease;
 }
@@ -530,11 +534,16 @@ onBeforeUnmount(() => {
 /* 小舟 */
 .ink-timeline__boat {
   position: absolute;
-  width: 60px;
-  height: 60px;
+  width: clamp(82px, 7vw, 120px);
+  height: auto;
+  aspect-ratio: 1024 / 942;
+  object-fit: contain;
+  object-position: center;
   transform-origin: 50% 50%;
   cursor: grab;
   touch-action: pan-y;   /* 纵向滚动优先，横向拖拽由 pointer 事件处理 */
+  user-select: none;
+  -webkit-user-drag: none;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
   z-index: 10;
   transition: filter 0.3s ease;
