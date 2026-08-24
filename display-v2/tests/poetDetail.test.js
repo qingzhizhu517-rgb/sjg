@@ -16,9 +16,9 @@ test('B-1 删除头像方印并把代表句放在生平之后', () => {
       /:to="`\/poems\/\$\{signature\.id\}`"/.test(tag),
   )
   assert.ok(signatureLink)
-  assert.match(signatureLink[0], /v-if="signature"/)
-  assert.match(signatureLink[0], /class="pd-signature__link"/)
-  assert.match(signatureLink[0], /:to="`\/poems\/\$\{signature\.id\}`"/)
+  assert.match(signatureLink, /v-if="signature"/)
+  assert.match(signatureLink, /class="pd-signature__link"/)
+  assert.match(signatureLink, /:to="`\/poems\/\$\{signature\.id\}`"/)
   assert.ok(source.indexOf('>生平</h2>') < source.indexOf('>代表句</span>'))
   assert.ok(source.indexOf('>代表句</span>') < source.indexOf('>传世诗篇</h2>'))
 })
