@@ -43,6 +43,7 @@ backend/target/
 # Antigravity/Superpowers Tool Metadata
 .superpowers/
 .antigravitycli/
+.worktrees/
 
 # Generated or local-only media and intermediate output
 output/
