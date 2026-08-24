@@ -9,7 +9,12 @@ const source = await readFile(
 
 test('B-1 删除头像方印并把代表句放在生平之后', () => {
   assert.doesNotMatch(source, /pd-portrait__seal/)
-  assert.match(source, /pd-signature__link/)
+  const signatureLink = source.match(
+    /<router-link\b[^>]*class="pd-signature__link"[^>]*>[\s\S]*?<\/router-link>/,
+  )
+  assert.ok(signatureLink)
+  assert.match(signatureLink[0], /v-if="signature"/)
+  assert.match(signatureLink[0], /:to="`\/poems\/\$\{signature\.id\}`"/)
   assert.ok(source.indexOf('>生平</h2>') < source.indexOf('>代表句</span>'))
   assert.ok(source.indexOf('>代表句</span>') < source.indexOf('>传世诗篇</h2>'))
 })
@@ -22,9 +27,9 @@ test('B-1 画像使用大尺寸、3:4 contain 和右侧渐隐层', () => {
 })
 
 test('代表句是指向诗词详情的真实链接，并在头像失败时显示占位', () => {
-  assert.match(source, /:to="`\/poems\/\$\{signature\.id\}`"/)
-  assert.match(source, /avatarLoadFailed/)
-  assert.match(source, /InkPlaceholder/)
+  assert.match(source, /v-if="avatar\s*&&\s*!avatarLoadFailed"/)
+  assert.match(source, /<InkPlaceholder\b[^>]*\bv-else\b/)
+  assert.match(source, /avatarLoadFailed\.value\s*=\s*true/)
   assert.match(source, /@error="onAvatarError"/)
 })
 
@@ -32,4 +37,6 @@ test('生平正文使用宽幅阅读列而非窄 measure 卡片', () => {
   assert.match(source, /grid-template-columns:\s*minmax\(180px,\s*0\.28fr\)/)
   assert.match(source, /max-width:\s*var\(--measure-wide\)/)
   assert.doesNotMatch(source, /\.pd-bio[\s\S]*?max-width:\s*var\(--measure\)/)
+  assert.doesNotMatch(source, /dynastySpan/)
+  assert.doesNotMatch(source, /<div class="pd-stat"[\s\S]*?dynasty\.name[\s\S]*?国祚/)
 })
