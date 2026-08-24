@@ -9,11 +9,15 @@ const source = await readFile(
 
 test('B-1 删除头像方印并把代表句放在生平之后', () => {
   assert.doesNotMatch(source, /pd-portrait__seal/)
-  const signatureLink = source.match(
-    /<router-link\b[^>]*class="pd-signature__link"[^>]*>[\s\S]*?<\/router-link>/,
+  const signatureLink = (source.match(/<router-link\b[^>]*>/g) || []).find(
+    (tag) =>
+      /v-if="signature"/.test(tag) &&
+      /class="pd-signature__link"/.test(tag) &&
+      /:to="`\/poems\/\$\{signature\.id\}`"/.test(tag),
   )
   assert.ok(signatureLink)
   assert.match(signatureLink[0], /v-if="signature"/)
+  assert.match(signatureLink[0], /class="pd-signature__link"/)
   assert.match(signatureLink[0], /:to="`\/poems\/\$\{signature\.id\}`"/)
   assert.ok(source.indexOf('>生平</h2>') < source.indexOf('>代表句</span>'))
   assert.ok(source.indexOf('>代表句</span>') < source.indexOf('>传世诗篇</h2>'))
