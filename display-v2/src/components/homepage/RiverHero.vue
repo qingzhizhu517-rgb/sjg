@@ -322,6 +322,18 @@ onBeforeUnmount(() => {
   transform: rotate(-3deg);
 }
 
+/* 短屏桌面：让画廊缩略条和控制行留在首屏可操作范围内。 */
+@media (min-width: 981px) and (max-height: 800px) {
+  .rh {
+    min-height: 0;
+    padding: var(--sp-4) var(--sp-5);
+  }
+
+  .rh__inner {
+    grid-template-columns: minmax(0, 1.8fr) minmax(300px, 1fr);
+  }
+}
+
 @media (max-width: 980px) {
   .rh {
     min-height: 0;

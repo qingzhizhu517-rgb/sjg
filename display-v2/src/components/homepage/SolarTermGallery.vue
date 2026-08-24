@@ -490,6 +490,13 @@ onBeforeUnmount(() => {
   opacity: 0;
 }
 
+@media (min-width: 981px) and (max-height: 800px) {
+  .solar-gallery__thumbs,
+  .solar-gallery__controls {
+    margin-top: var(--sp-1);
+  }
+}
+
 @media (max-width: 760px) {
   .solar-gallery__caption {
     right: var(--sp-3);
