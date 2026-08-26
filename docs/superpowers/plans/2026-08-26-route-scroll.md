@@ -167,13 +167,13 @@ scrollBehavior(to, from, savedPosition) {
 }
 ```
 
-- [ ] **Step 3: 运行回归测试确认绿灯**
+- [ ] **Step 3: 运行回归测试确认路由行为绿灯**
 
 ```bash
 node --test tests/routeScroll.test.js
 ```
 
-Expected: 5 tests pass.
+Expected: 前 4 个行为测试通过；最后一个综合源码契约测试暂时因 `variables.css` 仍有 `scroll-behavior: smooth` 而失败，待 Task 3 移除全局声明后再全绿。
 
 - [ ] **Step 4: Commit the router implementation**
 
