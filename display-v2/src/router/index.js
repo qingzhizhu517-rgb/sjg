@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { resolveRouteScroll } from '../utils/routeScroll.js'
 
 const routes = [
   { path: '/', redirect: '/map' },
@@ -26,10 +27,7 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior(to, from, savedPosition) {
-    if (savedPosition) return savedPosition
-    return { top: 0 }
-  }
+  scrollBehavior: resolveRouteScroll,
 })
 
 export default router
