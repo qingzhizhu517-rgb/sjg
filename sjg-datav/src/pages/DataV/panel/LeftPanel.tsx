@@ -1,109 +1,64 @@
+import { useMemo } from 'react'
 import styled from 'styled-components'
 import Chart from '../../../components/Chart'
-import { useSpots, usePoems, useCulturalCategories } from '../../../api'
+import { EmptyState, PanelCard, SkeletonBlock } from '../../../components/PanelKit'
+import SentimentCloud from '../../../components/SentimentCloud'
+import {
+  ANIM,
+  T,
+  alpha,
+  axisLabelBase,
+  barBackgroundStyle,
+  goldGradient,
+  gridBase,
+  tooltipBase,
+} from '../../../theme/chartTheme'
+import type { DashboardView } from '../../../hooks/useDashboardData'
 
-/* ============ 面板基础样式(水墨青金) ============ */
-const PanelWrapper = styled.div`
-  width: 400px;
+const Column = styled.div`
+  width: 340px;
+  flex-shrink: 0;
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 20px;
+  gap: 14px;
 `
 
-const Card = styled.div`
-  position: relative;
-  background: var(--dv-panel);
-  border: 1px solid var(--dv-line);
-  padding: 18px;
-  backdrop-filter: blur(8px);
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-`
-
-/* 四角金色折线装饰 */
-const CardCorner = styled.i`
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border-color: var(--dv-gold);
-  border-style: solid;
-  pointer-events: none;
-  &.tl { top: -1px; left: -1px; border-width: 1.5px 0 0 1.5px; }
-  &.br { bottom: -1px; right: -1px; border-width: 0 1.5px 1.5px 0; }
-`
-
-const CardTitle = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
-`
-
-const TitleSeal = styled.span`
-  width: 24px;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--dv-vermilion);
-  color: #f5efe3;
-  font-size: 13px;
-  font-weight: 700;
-  transform: rotate(-3deg);
-  flex-shrink: 0;
-`
-
-const TitleText = styled.span`
-  font-size: 16px;
-  letter-spacing: 4px;
-  color: var(--dv-ink);
-`
-
-const TitleNote = styled.span`
-  margin-left: auto;
-  font-size: 11px;
-  letter-spacing: 1px;
-  color: var(--dv-ink-3);
-`
-
-/* ============ 文化五类 bento ============ */
 const CultureGrid = styled.div`
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: 74px;
-  gap: 10px;
-  flex: 1;
-  align-content: center;
+  grid-template-rows: repeat(2, 1fr);
+  gap: 8px;
 `
 
-const CultureTile = styled.div`
+const CultureTile = styled.div<{ $highlight?: boolean }>`
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  border: 1px solid var(--dv-line);
-  background: rgba(201, 162, 39, 0.04);
+  gap: 2px;
+  border: 1px solid ${(p) => (p.$highlight ? alpha(T.gold, 0.45) : 'var(--dv-line)')};
+  background: ${(p) => (p.$highlight ? alpha(T.gold, 0.09) : alpha(T.gold, 0.03))};
 `
 
 const CultureSeal = styled.span`
-  font-size: 20px;
+  font-family: var(--dv-serif);
+  font-size: 19px;
   color: var(--dv-gold);
-  font-weight: 700;
+  line-height: 1.1;
 `
 
 const CultureName = styled.span`
-  font-size: 12px;
-  letter-spacing: 2px;
+  font-size: 11px;
+  letter-spacing: 1.5px;
   color: var(--dv-ink-2);
 `
 
 const CultureCount = styled.span`
-  font-size: 15px;
+  font-family: var(--dv-num);
+  font-size: 16px;
   color: var(--dv-ink);
   font-variant-numeric: tabular-nums;
 `
@@ -115,96 +70,121 @@ const CULTURE_META: Array<{ key: string; name: string; seal: string }> = [
   { key: 'food_opera', name: '饮食戏曲', seal: '味' },
 ]
 
-/* 古诗词单独大格(诗为齐鲁文脉主线) */
-export default function LeftPanel() {
-  const { spots } = useSpots()
-  const { poems } = usePoems()
-  const { categories } = useCulturalCategories()
+interface LeftPanelProps {
+  view: DashboardView
+  selectedRegion: string | null
+  onSelectRegion: (region: string | null) => void
+  loading: boolean
+}
 
-  // 九城景观分布: 按 region 聚合
-  const regionOrder = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '淄博', '滨州', '东营']
-  const regionCount = new Map<string, number>()
-  spots.forEach((s: any) => regionCount.set(s.region, (regionCount.get(s.region) || 0) + 1))
-  const cityData = regionOrder.map((name) => ({ name, value: regionCount.get(name) || 0 }))
+export default function LeftPanel({ view, selectedRegion, onSelectRegion, loading }: LeftPanelProps) {
+  const { cities } = view
+  const maxCount = Math.max(1, ...cities.map((c) => c.count))
 
-  const categoryMap = new Map(categories.map((c: any) => [c.category, c.count]))
-
-  const cityBarOption = {
-    grid: { top: 6, bottom: 6, left: 8, right: 34 },
-    xAxis: { type: 'value', show: false },
-    yAxis: {
-      type: 'category',
-      data: cityData.map((d) => d.name).reverse(),
-      axisLine: { show: false },
-      axisTick: { show: false },
-      axisLabel: { color: '#b7ad92', fontSize: 12, margin: 12 },
-    },
-    series: [
-      {
-        type: 'bar',
-        data: cityData.map((d) => d.value).reverse(),
-        barWidth: 9,
-        showBackground: true,
-        backgroundStyle: { color: 'rgba(201,162,39,0.07)' },
-        itemStyle: {
-          color: {
-            type: 'linear',
-            x: 0, y: 0, x2: 1, y2: 0,
-            colorStops: [
-              { offset: 0, color: 'rgba(201,162,39,0.35)' },
-              { offset: 1, color: '#e5c96b' },
-            ],
-          },
-        },
-        label: {
-          show: true,
-          position: 'right',
-          color: '#ece4d0',
-          fontSize: 12,
-          formatter: '{c}',
+  const cityOption = useMemo(
+    () => ({
+      grid: { ...gridBase, left: 4, right: 30, top: 2, bottom: 2 },
+      tooltip: {
+        ...tooltipBase,
+        trigger: 'item',
+        formatter: (p: { dataIndex: number }) => {
+          const c = cities[p.dataIndex]
+          return `${c.name} · ${c.count} 处景观<br/><span style="opacity:.6">点击只看该城</span>`
         },
       },
-    ],
-    animationDuration: 1200,
-    animationEasing: 'cubicOut' as const,
+      xAxis: { type: 'value', show: false, max: maxCount * 1.08 },
+      yAxis: {
+        type: 'category',
+        inverse: true,
+        data: cities.map((c) => c.name),
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: {
+          ...axisLabelBase,
+          fontSize: 12,
+          margin: 10,
+          formatter: (value: string) => `{${value === selectedRegion ? 'on' : 'off'}|${value}}`,
+          rich: {
+            on: { color: T.vermilion, fontSize: 12 },
+            off: { color: T.ink2, fontSize: 12 },
+          },
+        },
+      },
+      series: [
+        {
+          type: 'bar',
+          barWidth: 8,
+          showBackground: true,
+          backgroundStyle: barBackgroundStyle,
+          data: cities.map((c) => ({
+            value: c.count,
+            itemStyle: {
+              color: c.name === selectedRegion ? T.vermilion : goldGradient(),
+            },
+          })),
+          label: {
+            show: true,
+            position: 'right',
+            fontSize: 12,
+            color: T.ink,
+            formatter: '{c}',
+          },
+          emphasis: { itemStyle: { color: T.goldLight } },
+        },
+      ],
+      animationDuration: ANIM.duration,
+      animationEasing: ANIM.easing,
+    }),
+    [cities, maxCount, selectedRegion],
+  )
+
+  const handleCityClick = (p: { dataIndex?: number }) => {
+    if (p.dataIndex == null) return
+    const name = cities[p.dataIndex]?.name
+    if (!name) return
+    onSelectRegion(name === selectedRegion ? null : name)
   }
 
   return (
-    <PanelWrapper>
-      <Card>
-        <CardCorner className="tl" />
-        <CardCorner className="br" />
-        <CardTitle>
-          <TitleSeal>城</TitleSeal>
-          <TitleText>九城景观分布</TitleText>
-          <TitleNote>共 {spots.length} 处</TitleNote>
-        </CardTitle>
-        <Chart option={cityBarOption} style={{ flex: 1, minHeight: 0 }} />
-      </Card>
+    <Column>
+      <PanelCard seal="城" title="九城景观分布" note={loading ? '' : `共 ${view.totals.spots} 处`}>
+        {loading ? (
+          <SkeletonBlock rows={6} height={14} />
+        ) : (
+          <Chart option={cityOption} onEvents={{ click: handleCityClick }} />
+        )}
+      </PanelCard>
 
-      <Card>
-        <CardCorner className="tl" />
-        <CardCorner className="br" />
-        <CardTitle>
-          <TitleSeal>脉</TitleSeal>
-          <TitleText>五脉文华</TitleText>
-          <TitleNote>已发布条目</TitleNote>
-        </CardTitle>
-        <CultureGrid>
-          {CULTURE_META.map((m) => (
-            <CultureTile key={m.key}>
-              <CultureSeal>{m.seal}</CultureSeal>
-              <CultureName>{m.name}</CultureName>
-              <CultureCount>{categoryMap.get(m.key) ?? '—'}</CultureCount>
+      <PanelCard seal="脉" title="五脉文华" note="已发布条目">
+        {loading ? (
+          <SkeletonBlock rows={4} height={22} />
+        ) : (
+          <CultureGrid>
+            {CULTURE_META.map((m) => (
+              <CultureTile key={m.key} $highlight={(view.culture[m.key] ?? 0) > 0}>
+                <CultureSeal>{m.seal}</CultureSeal>
+                <CultureName>{m.name}</CultureName>
+                <CultureCount>{view.culture[m.key] ?? '—'}</CultureCount>
+              </CultureTile>
+            ))}
+            <CultureTile>
+              <CultureSeal>诗</CultureSeal>
+              <CultureName>古诗词</CultureName>
+              <CultureCount>{view.totals.poems}</CultureCount>
             </CultureTile>
-          ))}
-          <CultureTile style={{ gridColumn: 'span 2' }}>
-            <CultureSeal>诗</CultureSeal>
-            <CultureName>古诗词</CultureName>
-            <CultureCount>{poems.length} 首</CultureCount>
-          </CultureTile>
-        </CultureGrid>
-      </Card>
-    </PanelWrapper>
+          </CultureGrid>
+        )}
+      </PanelCard>
+
+      <PanelCard seal="情" title="诗情词意" note={loading ? '' : `${view.sentiment.length} 个标签`}>
+        {loading ? (
+          <SkeletonBlock rows={4} height={16} />
+        ) : view.sentiment.length === 0 ? (
+          <EmptyState message="当前筛选范围内没有情感标签" />
+        ) : (
+          <SentimentCloud data={view.sentiment} />
+        )}
+      </PanelCard>
+    </Column>
   )
 }
