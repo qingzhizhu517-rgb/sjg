@@ -111,12 +111,20 @@ if (aspect > 1) { viewRect.width = size; viewRect.height = size / aspect }
   连接参数取环境变量 `MYSQL_HOST/PORT/USER/PASSWORD`（与后端 `SPRING_DATASOURCE_*` 同一套库）。
 - ⚠️ **有效库是 `sjg01`**。`sjg` 是近乎空的旧测试库，别看错。
 - ⚠️ 实例数别信 `information_schema.TABLE_ROWS`（InnoDB 估算），要用 `COUNT(*)`。
+- ⚠️ **导出中文数据必须加 `--default-character-set=utf8mb4`**：
+  mysql 客户端在 Windows 下默认输出 GBK，不加会得到乱码 TSV——
+  连 URL 路径都会变成乱码，进而让远端请求全部 404，极易误判成「素材缺失」。
+  判别：读出来含 `\uFFFD` 就是编码错了。
 - 媒体字段两种形态：**OSS 外链存成 JSON 数组字符串**、**本地资产存 `/images/...` 路径**
   （落在 `display-v2/public/`）。`[]` 空数组等同于缺失，必须解析后判断。
-- 2026-09-16 审计：`poem.audio_url`（203 全缺）与 `cultural_item.image_url`（63 全缺）为全空字段；
-  报告见 `output/media-gaps.md` + `media-gaps.csv`。
-- ⚠️ **本机无法访问阿里云 OSS**（DNS fake-ip + 直连真实 IP 也 SSL 失败，
-  无头浏览器加载 186 条链接 0 成功）。排查素材时不要把「加载失败」当成「素材缺失」。
+- 2026-09-16 审计（`output/media-gaps.md` + `media-gaps.csv`）：
+  - 字段全空：`poem.audio_url` 203/203、`cultural_item.image_url` 63/63
+  - **OSS 实测 404：42 个文件 / 62 处引用**（水墨图 20 + 实景图 21 + 地图 1），需补传或改指本地
+  - 本地引用的 23 个路径磁盘上全部存在
+- ⚠️ **访问阿里云 OSS 必须绕过本机代理**：走系统代理 TLS 握手失败（curl 返回 `000`），
+  加 `--noproxy '*'` 直连才正常（`206`）。本机 DNS 时而 fake-ip 时而真实 IP，会随代理配置变，
+  **先探测再下结论**，不要凭一次失败判定素材缺失。
+- OSS 桶不允许公共列举（`?list-type=2` 返回 AccessDenied），无法反查已有对象清单。
 
 ## 五、后端构建（本机配方）
 
