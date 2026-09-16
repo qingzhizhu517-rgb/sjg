@@ -58,8 +58,12 @@ if (aspect > 1) { viewRect.width = size; viewRect.height = size / aspect }
   加卡片优先考虑它们。**刻意不用 `/timeline`**——每朝代 4 次查询且返回全量不分页。
 - **poets 表没有 region 字段**。城市维度只能走「诗 → `poem.spotId` → `spot.region`」归属；
   诗人的城市归属 = 其诗所在城市。
+- **文化条目表（`cultural_item`）有 `region` 列**（NULL = 全域性内容）但**没有朝代字段**，
+  所以五脉文华只能按城市下钻、不随朝代变化，卡片标注要如实写明口径。
+- **九城顺序的权威来源是 `/api/public/spots/regions`**（后端按上游→下游返回），
+  前端 `FALLBACK_REGION_ORDER` 仅作接口不可达时的兜底。加城市只改后端。
 - 筛选状态支持 `?region=济南&dynasty=4` 深链预置（挂大屏可固定专题，也便于回归验证）。
-- `REGION_ORDER` 仍是硬编码九市；`/spots/regions` 已有该信息，可后续改成动态获取。
+- 五脉的下钻 SWR key 是 `cultural-categories:<region|all>`，各城市独立缓存。
 
 ### 主题与字体
 - 主题 token 在 `src/styles/global.css` 的 `:root`。ECharts option 读不到 CSS 变量，
@@ -96,8 +100,29 @@ if (aspect > 1) { viewRect.width = size; viewRect.height = size / aspect }
   用 `git -c gc.auto=0 -c maintenance.auto=false <cmd>` 规避；不影响提交对象。
 - 后端 8080 未运行时系统代理会返回 502；`curl` 用 `localhost` 会命中代理，
   需用 `127.0.0.1` 并加 `--noproxy '*'`。vite 需显式 `--host 127.0.0.1`。
+- 本会话出现过 **PATH 被清空**（`dirname/grep/head: command not found`），
+  命令开头显式 `export PATH=...` 即可恢复。
+- **托管 node 目录版本号会变**（`22.22.2-2` → `22.22.2-3`），写死路径前先
+  `ls -d .../node/versions/*/`。
 
-## 四、视觉类改动必须实测截图
+## 四、后端构建（本机配方）
 
-纯逻辑测试抓不到渲染层错误（本次绕序 bug、悬空 bug、右栏塌陷都是截图才发现的）。
+```bash
+export JAVA_HOME="D:\\app\\jdk\\17"
+export PATH="$JAVA_HOME/bin:/c/Users/Aohs/.workbuddy/binaries/PortableGit/versions/1.2.0/mingw64/bin:/c/Users/Aohs/.workbuddy/binaries/PortableGit/versions/1.2.0/usr/bin:/c/Windows/System32:/c/Windows"
+cd backend
+"/d/app/idea/IntelliJ IDEA 2026.1.2/plugins/maven/lib/maven3/bin/mvn.cmd" -o test
+```
+
+- `mvn` 不在 PATH、`mvnw` 不存在；用 IDEA 内置 Maven 的 **`mvn.cmd`**——
+  bash 的 `mvn` 脚本在 Git Bash 下会报
+  `找不到主类 org.codehaus.plexus.classworlds.launcher.Launcher`。
+- **必须用 JDK 17，不要用 IDEA 的 JBR**：JBR 是 Java 25，Lombok 注解处理不生效，
+  会在**未改动的文件**里报一堆「找不到符号 getXxx()」，极易误判成自己改坏了。
+  本机可用 JDK：`/d/app/jdk/{11,17,21}`。
+- `.m2/repository` 已存在，`-o` 离线即可；`mvn test` = 4 个测试类 21 个用例，不需要 DB。
+
+## 五、视觉类改动必须实测截图
+
+纯逻辑测试抓不到渲染层错误（绕序 bug、悬空 bug、右栏塌陷都是截图才发现的）。
 配方见用户级技能 `webgl-headless-screenshot`（3D/WebGL）与 `spa-stub-visual-review`（SPA + 数据桩）。
