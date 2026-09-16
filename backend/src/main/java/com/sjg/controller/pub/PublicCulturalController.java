@@ -56,9 +56,10 @@ public class PublicCulturalController {
         return ResponseEntity.ok(Result.success(view));
     }
 
-    @Operation(summary = "文化类别元信息", description = "五类名称/印章字/已发布条目数，首页聚合入口用")
+    @Operation(summary = "文化类别元信息", description = "五类名称/印章字/已发布条目数；可按区域下钻，首页聚合入口与数据大屏用")
     @GetMapping("/categories")
-    public ResponseEntity<Result<List<Map<String, Object>>>> categories() {
-        return ResponseEntity.ok(Result.success(culturalItemService.categoryStats()));
+    public ResponseEntity<Result<List<Map<String, Object>>>> categories(
+            @Parameter(description = "区域筛选", example = "济南") @RequestParam(required = false) String region) {
+        return ResponseEntity.ok(Result.success(culturalItemService.categoryStats(region)));
     }
 }

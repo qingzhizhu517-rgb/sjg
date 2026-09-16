@@ -160,16 +160,20 @@ public class CulturalItemService {
     }
 
     /**
-     * 各类别已发布条目数（首页聚合入口用）。
+     * 各类别已发布条目数（首页聚合入口与数据大屏用）。
+     * 传 region 时只统计属于该区域的条目（NULL 区域 = 全域性内容，不计入单城口径）。
      */
-    public List<Map<String, Object>> categoryStats() {
+    public List<Map<String, Object>> categoryStats(String region) {
         String[] categories = {"festival", "craft", "literature", "food_opera"};
         List<Map<String, Object>> stats = new ArrayList<>();
         for (String category : categories) {
-            Long count = itemMapper.selectCount(new LambdaQueryWrapper<CulturalItem>()
+            LambdaQueryWrapper<CulturalItem> wrapper = new LambdaQueryWrapper<CulturalItem>()
                     .eq(CulturalItem::getCategory, category)
-                    .eq(CulturalItem::getStatus, STATUS_PUBLISHED));
-            stats.add(Map.of("category", category, "count", count));
+                    .eq(CulturalItem::getStatus, STATUS_PUBLISHED);
+            if (StringUtils.hasText(region)) {
+                wrapper.eq(CulturalItem::getRegion, region);
+            }
+            stats.add(Map.of("category", category, "count", itemMapper.selectCount(wrapper)));
         }
         return stats;
     }
