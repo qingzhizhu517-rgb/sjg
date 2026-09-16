@@ -105,7 +105,7 @@ if (aspect > 1) { viewRect.width = size; viewRect.height = size / aspect }
 - **托管 node 目录版本号会变**（`22.22.2-2` → `22.22.2-3`），写死路径前先
   `ls -d .../node/versions/*/`。
 
-## 五、数据库与素材（本机）
+## 四、数据库与素材（本机）
 
 - 本机 MySQL 在跑，客户端在 **`/d/app/mysql/install/bin/mysql.exe`**（不在 PATH）。
   连接参数取环境变量 `MYSQL_HOST/PORT/USER/PASSWORD`（与后端 `SPRING_DATASOURCE_*` 同一套库）。
@@ -118,7 +118,7 @@ if (aspect > 1) { viewRect.width = size; viewRect.height = size / aspect }
 - ⚠️ **本机无法访问阿里云 OSS**（DNS fake-ip + 直连真实 IP 也 SSL 失败，
   无头浏览器加载 186 条链接 0 成功）。排查素材时不要把「加载失败」当成「素材缺失」。
 
-## 六、后端构建（本机配方）
+## 五、后端构建（本机配方）
 
 ```bash
 export JAVA_HOME="D:\\app\\jdk\\17"
@@ -135,7 +135,7 @@ cd backend
   本机可用 JDK：`/d/app/jdk/{11,17,21}`。
 - `.m2/repository` 已存在，`-o` 离线即可；`mvn test` = 4 个测试类 21 个用例，不需要 DB。
 
-## 七、视觉类改动必须实测截图
+## 六、视觉类改动必须实测截图
 
 纯逻辑测试抓不到渲染层错误（绕序 bug、悬空 bug、右栏塌陷都是截图才发现的）。
 配方见用户级技能 `webgl-headless-screenshot`（3D/WebGL）与 `spa-stub-visual-review`（SPA + 数据桩）。
