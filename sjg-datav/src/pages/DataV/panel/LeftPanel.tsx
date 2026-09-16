@@ -75,9 +75,24 @@ interface LeftPanelProps {
   selectedRegion: string | null
   onSelectRegion: (region: string | null) => void
   loading: boolean
+  /** 五脉随城市重取时的加载态 */
+  cultureLoading: boolean
+  /** 朝代筛选是否生效——五脉不含朝代维度，需要如实标注 */
+  dynastyActive: boolean
 }
 
-export default function LeftPanel({ view, selectedRegion, onSelectRegion, loading }: LeftPanelProps) {
+export default function LeftPanel({
+  view,
+  selectedRegion,
+  onSelectRegion,
+  loading,
+  cultureLoading,
+  dynastyActive,
+}: LeftPanelProps) {
+  // 五脉按城市下钻，文化条目没有朝代字段；标注写清口径，
+  // 否则会与「数据概览」里随朝代变化的诗篇数被当成同一个数。
+  const cultureScope = selectedRegion ?? '全域'
+  const cultureNote = dynastyActive ? `${cultureScope} · 不含朝代` : `${cultureScope} · 已发布`
   const { cities } = view
   const maxCount = Math.max(1, ...cities.map((c) => c.count))
 
@@ -155,8 +170,8 @@ export default function LeftPanel({ view, selectedRegion, onSelectRegion, loadin
         )}
       </PanelCard>
 
-      <PanelCard seal="脉" title="五脉文华" note="已发布条目">
-        {loading ? (
+      <PanelCard seal="脉" title="五脉文华" note={loading ? '' : cultureNote}>
+        {loading || cultureLoading ? (
           <SkeletonBlock rows={4} height={22} />
         ) : (
           <CultureGrid>
@@ -164,13 +179,13 @@ export default function LeftPanel({ view, selectedRegion, onSelectRegion, loadin
               <CultureTile key={m.key} $highlight={(view.culture[m.key] ?? 0) > 0}>
                 <CultureSeal>{m.seal}</CultureSeal>
                 <CultureName>{m.name}</CultureName>
-                <CultureCount>{view.culture[m.key] ?? '—'}</CultureCount>
+                <CultureCount>{view.culture[m.key] ?? 0}</CultureCount>
               </CultureTile>
             ))}
             <CultureTile>
               <CultureSeal>诗</CultureSeal>
               <CultureName>古诗词</CultureName>
-              <CultureCount>{view.totals.poems}</CultureCount>
+              <CultureCount>{view.culturePoems}</CultureCount>
             </CultureTile>
           </CultureGrid>
         )}

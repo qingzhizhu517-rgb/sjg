@@ -47,6 +47,12 @@ export interface CultureCategory {
   count: number
 }
 
+/** 沿黄九市（上游→下游）及其景观数——顺序的权威来源是后端，前端不再硬编码 */
+export interface RegionStat {
+  name: string
+  spotCount: number
+}
+
 const fetcher = async (url: string) => {
   const response = await fetch(url)
   if (!response.ok) {
@@ -85,7 +91,10 @@ export const api = {
   getSpots: () => fetchAllPaginated(`${BASE_URL}/spots`, 100),
   getEvents: () => fetcher(`${BASE_URL}/events`),
   getDynasties: () => fetcher(`${BASE_URL}/dynasties`),
-  getCulturalCategories: () => fetcher(`${BASE_URL}/cultural/categories`),
+  getRegions: () => fetcher(`${BASE_URL}/spots/regions`),
+  /** 五脉文华计数；传 region 时只统计属于该区域的条目 */
+  getCulturalCategories: (region?: string) =>
+    fetcher(`${BASE_URL}/cultural/categories${region ? `?region=${encodeURIComponent(region)}` : ''}`),
 }
 
 /**
@@ -127,10 +136,18 @@ export function useDynasties() {
   return { dynasties: data, ...rest }
 }
 
-export function useCulturalCategories() {
+export function useRegions() {
+  const { data, ...rest } = useResource<RegionStat>('regions', api.getRegions)
+  return { regions: data, ...rest }
+}
+
+/**
+ * 五脉文华计数。SWR key 带区域后缀，切换城市会各自缓存、来回点不再重复请求。
+ */
+export function useCulturalCategories(region: string | null = null) {
   const { data, ...rest } = useResource<CultureCategory>(
-    'cultural-categories',
-    api.getCulturalCategories,
+    `cultural-categories:${region ?? 'all'}`,
+    () => api.getCulturalCategories(region ?? undefined),
   )
   return { categories: data, ...rest }
 }

@@ -62,7 +62,8 @@ function readInitialFilter(): DashboardFilter {
 export default function Panel() {
   const [filter, setFilter] = useState<DashboardFilter>(readInitialFilter)
   const [updatedAt, setUpdatedAt] = useState<number | null>(null)
-  const { view, dynasties, isLoading, error, retry, hasData } = useDashboardData(filter)
+  const { view, dynasties, isLoading, cultureLoading, error, retry, hasData } =
+    useDashboardData(filter)
 
   // 数据首次到达时记一次「数据截至」，用于顶栏回显
   useEffect(() => {
@@ -102,6 +103,8 @@ export default function Panel() {
               selectedRegion={filter.region}
               onSelectRegion={selectRegion}
               loading={isLoading}
+              cultureLoading={cultureLoading}
+              dynastyActive={filter.dynastyId != null}
             />
             <CenterSlot>
               <ShanheMapChart view={view} filter={filter} onSelectRegion={selectRegion} />

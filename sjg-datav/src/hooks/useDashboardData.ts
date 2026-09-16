@@ -5,12 +5,17 @@ import {
   useEvents,
   usePoems,
   usePoets,
+  useRegions,
   useSpots,
 } from '../api'
 import type { CultureCategory, Dynasty, EventItem, Poem, Poet, Spot } from '../api'
 
-/** 沿黄九市（上游→下游）。顺序与首页 /regions 一致，加城市要同步改这里。 */
-export const REGION_ORDER = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '淄博', '滨州', '东营'] as const
+/**
+ * 九城顺序的兜底值。**权威来源是 `/api/public/spots/regions`**——
+ * 后端按「上游→下游」返回，前端加城市只需改后端一处。
+ * 这里只在该接口不可达时兜底，保证地图与榜单不会因为没有顺序而空白。
+ */
+export const FALLBACK_REGION_ORDER = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '淄博', '滨州', '东营']
 
 export interface DashboardFilter {
   /** 选中城市（region 名），null = 全部 */
@@ -43,8 +48,10 @@ export interface MapSpot {
 export interface DashboardView {
   /** 九城景观数（朝代筛选会收窄；城市筛选只做高亮，不参与收窄） */
   cities: CityStat[]
-  /** 五脉文华计数（接口只给全量，不随筛选变化） */
+  /** 五脉文华计数（按城市下钻，不随朝代变化——文化条目没有朝代字段） */
   culture: Record<string, number>
+  /** 与五脉同口径的诗词数（只按城市收窄），供「古诗词」格使用 */
+  culturePoems: number
   poetRank: Array<{ id: number; name: string; value: number }>
   dynastyStats: DynastyStat[]
   sentiment: Array<{ name: string; value: number }>
@@ -62,6 +69,8 @@ interface RawData {
   events: EventItem[]
   dynasties: Dynasty[]
   categories: CultureCategory[]
+  /** 九城顺序，来自 /spots/regions；为空时用兜底列表 */
+  regionOrder: string[]
 }
 
 /** 情感标签列可能是 JSON 字符串 */
@@ -82,6 +91,7 @@ function parseTags(raw: Poem['sentimentTags']): string[] {
  */
 export function buildView(raw: RawData, filter: DashboardFilter): DashboardView {
   const { spots, poets, poems, events, dynasties, categories } = raw
+  const regionOrder = raw.regionOrder.length ? raw.regionOrder : FALLBACK_REGION_ORDER
 
   const spotRegion = new Map<number, string>()
   spots.forEach((s) => {
@@ -99,7 +109,7 @@ export function buildView(raw: RawData, filter: DashboardFilter): DashboardView 
       : new Set(dynastyPoems.map((p) => p.spotId).filter((id): id is number => id != null))
   const cityScopedSpots = dynastySpotIds == null ? spots : spots.filter((s) => dynastySpotIds.has(s.id))
 
-  const cities = REGION_ORDER.map((name) => ({
+  const cities = regionOrder.map((name) => ({
     name,
     count: cityScopedSpots.filter((s) => s.region === name).length,
   }))
@@ -149,11 +159,17 @@ export function buildView(raw: RawData, filter: DashboardFilter): DashboardView 
     .sort((a, b) => b.value - a.value)
     .slice(0, 20)
 
-  // 五脉文华：接口只提供全量计数，没有按城市/朝代下钻的维度，故不随筛选变化
+  // 五脉文华：categories 已是按当前城市取回的（后端 /cultural/categories 支持 region 下钻）。
+  // 文化条目没有朝代字段，所以这一卡只随城市变化、不随朝代变化。
   const culture: Record<string, number> = {}
   categories.forEach((c) => {
     culture[c.category] = c.count
   })
+  // 「古诗词」格保持与五脉同口径（只按城市收窄）——
+  // 否则同一张卡里一半跟着朝代变、一半不跟，读数会被误读
+  const culturePoems = filter.region
+    ? poems.filter((p) => p.spotId != null && spotRegion.get(p.spotId) === filter.region).length
+    : poems.length
 
   const mapSpots: MapSpot[] = cityScopedSpots
     .filter((s) => typeof s.longitude === 'number' && typeof s.latitude === 'number')
@@ -162,6 +178,7 @@ export function buildView(raw: RawData, filter: DashboardFilter): DashboardView 
   return {
     cities,
     culture,
+    culturePoems,
     poetRank,
     dynastyStats,
     sentiment,
@@ -186,12 +203,15 @@ export function useDashboardData(filter: DashboardFilter) {
   const poemsQ = usePoems()
   const eventsQ = useEvents()
   const dynastiesQ = useDynasties()
-  const cultureQ = useCulturalCategories()
+  const regionsQ = useRegions()
+  // 五脉随城市下钻：SWR key 带区域后缀，各城市独立缓存
+  const cultureQ = useCulturalCategories(filter.region)
 
   const isLoading =
     spotsQ.isLoading || poetsQ.isLoading || poemsQ.isLoading || eventsQ.isLoading ||
     dynastiesQ.isLoading || cultureQ.isLoading
 
+  // regions 不参与 error 聚合：它有前端兜底，不应连累整屏报错
   const error = spotsQ.error || poetsQ.error || poemsQ.error || eventsQ.error || dynastiesQ.error || cultureQ.error
 
   const retry = useCallback(() => {
@@ -200,8 +220,12 @@ export function useDashboardData(filter: DashboardFilter) {
     void poemsQ.mutate()
     void eventsQ.mutate()
     void dynastiesQ.mutate()
+    void regionsQ.mutate()
     void cultureQ.mutate()
-  }, [spotsQ.mutate, poetsQ.mutate, poemsQ.mutate, eventsQ.mutate, dynastiesQ.mutate, cultureQ.mutate])
+  }, [
+    spotsQ.mutate, poetsQ.mutate, poemsQ.mutate, eventsQ.mutate,
+    dynastiesQ.mutate, regionsQ.mutate, cultureQ.mutate,
+  ])
 
   const view = useMemo(
     () =>
@@ -213,6 +237,7 @@ export function useDashboardData(filter: DashboardFilter) {
           events: eventsQ.events,
           dynasties: dynastiesQ.dynasties,
           categories: cultureQ.categories,
+          regionOrder: regionsQ.regions.map((r) => r.name),
         },
         filter,
       ),
@@ -223,6 +248,7 @@ export function useDashboardData(filter: DashboardFilter) {
       eventsQ.events,
       dynastiesQ.dynasties,
       cultureQ.categories,
+      regionsQ.regions,
       filter,
     ],
   )
@@ -230,8 +256,9 @@ export function useDashboardData(filter: DashboardFilter) {
   return {
     view,
     dynasties: dynastiesQ.dynasties,
-    /** 原始景观列表（地图需要未裁切的坐标全集） */
     isLoading,
+    /** 仅五脉在切换城市时的加载态（其余面板数据不随城市重取） */
+    cultureLoading: cultureQ.isLoading,
     error,
     retry,
     /** 是否有任何数据到达（用于区分「加载中」与「真的没数据」） */
