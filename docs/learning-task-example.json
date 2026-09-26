@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "resources": [
+    {
+      "id": "poem-1",
+      "entityType": "poem",
+      "entityId": 1,
+      "title": "替换为已审核诗词标题",
+      "snippet": "替换为来源支持的诗句、背景或地点摘要",
+      "sourceIds": [1],
+      "path": "/poems/1"
+    },
+    {
+      "id": "spot-1",
+      "entityType": "scenic_spot",
+      "entityId": 1,
+      "title": "替换为文学景观名称",
+      "snippet": "替换为景点与诗词关联的证据摘要",
+      "sourceIds": [2],
+      "path": "/spots/1"
+    }
+  ],
+  "steps": [
+    {
+      "type": "evidence",
+      "title": "证据阅读",
+      "prompt": "先从材料中找出可以核实的事实。",
+      "questions": [
+        {
+          "id": "q-evidence-1",
+          "type": "fact",
+          "prompt": "材料明确告诉了我们什么？",
+          "entityRefs": [{ "type": "poem", "id": 1 }],
+          "sourceIds": [1]
+        }
+      ]
+    },
+    {
+      "type": "compare",
+      "title": "比较分析",
+      "prompt": "把诗词和景观材料放在一起比较。",
+      "questions": [
+        {
+          "id": "q-compare-1",
+          "type": "compare",
+          "prompt": "诗词中的地点想象与景观资料有什么异同？",
+          "hint": "分别引用两份不同来源的材料，再写你的比较。",
+          "entityRefs": [{ "type": "poem", "id": 1 }, { "type": "scenic_spot", "id": 1 }],
+          "sourceIds": [1, 2]
+        }
+      ]
+    },
+    {
+      "type": "reflection",
+      "title": "反思表达",
+      "prompt": "用证据支持你自己的判断。",
+      "questions": [
+        {
+          "id": "q-reflection-1",
+          "type": "reflection",
+          "prompt": "你如何理解这座城市与诗词的关系？",
+          "entityRefs": [{ "type": "poem", "id": 1 }, { "type": "scenic_spot", "id": 1 }],
+          "sourceIds": [1, 2]
+        }
+      ]
+    }
+  ]
+}

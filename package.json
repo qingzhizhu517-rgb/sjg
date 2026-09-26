@@ -1,0 +1,24 @@
+{
+  "name": "sjg-human-ai-platform",
+  "private": true,
+  "version": "0.1.0",
+  "description": "齐鲁文脉人文 AI 平台统一开发入口",
+  "scripts": {
+    "verify:all": "bash scripts/verify-all.sh",
+    "test:unit": "npm --prefix display-v2 run test:unit",
+    "build:display": "npm --prefix display-v2 run build",
+    "build:admin": "npm --prefix admin-frontend run build",
+    "build:datav": "npm --prefix sjg-datav run build",
+    "test:backend": "mvn -B -f backend/pom.xml test",
+    "test:ai-eval": "node --test scripts/ai-eval.test.mjs",
+    "test:learning-task": "node --test scripts/learning-task-check.test.mjs",
+    "test:admin-contract": "node --test admin-frontend/sourceGovernance.test.mjs admin-frontend/apiErrorHandling.test.mjs admin-frontend/accessControlContract.test.mjs admin-frontend/dataTableErrorState.test.mjs admin-frontend/aiMetricsContract.test.mjs",
+    "test:migrations": "node --test scripts/migration-check.test.mjs",
+    "check:migrations": "node scripts/check-migrations.mjs",
+    "test:content-ledger": "node --test scripts/content-ledger-check.test.mjs",
+    "test:ci-contract": "node --test scripts/ci-contract.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

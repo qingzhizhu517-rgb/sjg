@@ -1,0 +1,65 @@
+name: SJG CI
+
+on:
+  push:
+    branches: [master, 'codex/**', 'auto/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            display-v2/package-lock.json
+            admin-frontend/package-lock.json
+            sjg-datav/package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Install frontend dependencies
+        run: |
+          npm ci --prefix display-v2
+          npm ci --prefix admin-frontend
+          npm ci --prefix sjg-datav
+
+      - name: Test platform quality gates
+        run: |
+          npm run test:ai-eval
+          npm run test:learning-task
+          npm run test:admin-contract
+          npm run test:migrations
+          npm run check:migrations
+          npm run test:content-ledger
+          npm run test:ci-contract
+          PYTHONDONTWRITEBYTECODE=1 python3 scripts/apply_migration_test.py
+
+      - name: Test display-v2
+        run: npm --prefix display-v2 run test:unit
+
+      - name: Build frontends
+        run: |
+          npm --prefix display-v2 run build
+          npm --prefix admin-frontend run build
+          npm --prefix sjg-datav run build
+
+      - name: Test backend
+        run: mvn -B -f backend/pom.xml test
+
+      - name: Check whitespace
+        run: git diff --check

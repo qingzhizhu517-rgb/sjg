@@ -18,7 +18,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `docs/` | - | - | 接口规范、计划、DB 搭建说明 |
 | 工作区外归档 | - | - | 历史素材、旧备份与废弃生成流程，不参与构建 |
 
-四个项目彼此独立，**没有根 package.json、没有 monorepo/workspace**。
+四个项目彼此独立，**不是 monorepo/workspace**（各自独立 `npm install`）。但**根目录现有一个 `package.json`**（`sjg-human-ai-platform`），它不含依赖、不聚合子项目，只是一层 npm scripts 门面，把各子项目的 build/test 与仓库级质量关卡（AI 评测、迁移校验、治理契约测试等）串成 `npm run verify:all`（见「质量关卡」）。
 
 ## 常用命令
 
@@ -30,7 +30,7 @@ mvn test                                 # 3 个测试类，纯 Mockito/JUnit5�
 mvn test -Dtest=PoemAnalysisServiceTest   # 单个测试类
 mvn package -DskipTests
 ```
-四个测试类：`PoemAnalysisServiceTest`、`PublicPoemAnalysisControllerTest`（均 `@ExtendWith(MockitoExtension.class)`）、`ChatServicePromptTest`（用 `ReflectionTestUtils` 注入 `systemPrompt`，连 Mockito 都不需要）、`SpotServiceTest`（验证删除景点前会清空诗词外键）。**零个 `@SpringBootTest`**。
+测试类现已 ~30 个（原 4 个之外，工作树新增了治理/审计/学习任务/限流/来源等一大批），**仍然零个 `@SpringBootTest`**：全是 `MockitoExtension` 或纯手工注入。`ApiSmokeTest` 只是把所有 controller/service 用 Mockito mock 出来验证依赖能装配，不起 Spring 上下文、不连 DB。`mvn test` 无需 DB。
 
 ### 前端
 ```bash
@@ -49,15 +49,17 @@ node --test tests/mediaBase.test.js   # 单文件
 只能测纯 `.js` 模块，**`.vue` SFC 完全测不了**——这就是 `src/utils/` 下存在 `cityHeroMedia.js`、`moodBackdrop.js`、`routeFeedback.js` 这类 10 行小文件的原因：想被覆盖就把逻辑抽成纯函数。
 
 ### 质量关卡
-仓库**没有 CI、没有 ESLint/Prettier、没有 Checkstyle**，任何目录都没有 `lint` 脚本。唯一自动关卡是 `sjg-datav` 的 `tsc -b`。改完必须手动跑 `npm run build` / `npm run test:unit` / `mvn test`。
+**现有 CI**（`.github/workflows/ci.yml`，push 到 `master`/`codex/**`/`auto/**` 及所有 PR 触发）与**根 `package.json` 的 `npm run verify:all`**（`scripts/verify-all.sh`）。CI 与 verify:all 跑同一批门禁：三前端 `npm ci` → 仓库级 node `--test` 契约测试（`test:ai-eval` / `test:learning-task` / `test:admin-contract` / `test:migrations` / `check:migrations` / `test:content-ledger` / `test:ci-contract`）→ `apply_migration_test.py` → display-v2 单测 → 三前端 build → `mvn test` → `git diff --check` 空白检查。
+
+仍然**没有 ESLint/Prettier/Checkstyle**，任何目录都没有 `lint` 脚本；`sjg-datav` 的 `tsc -b` 仍是唯一的类型关卡。这些 node `--test` 契约测试是**纯 `.mjs`/`.js` 断言**（校验 SQL 文本、脚本行为、前端源码字符串），不起后端、不连 DB。本地快速自检：改后端跑 `mvn test`，改前端跑对应 `npm run build` / `test:unit`，改迁移或治理逻辑跑 `npm run test:migrations` / `test:content-ledger` / `check:migrations`。
 
 ## 后端架构
 
 ### 分层与鉴权
-- `controller/pub/`（**11 个**）- 公开只读 `/api/public/**`，permitAll。三个展示前端全部走这里；包括 `PublicDynastyController`（`GET /api/public/dynasties`）与 `PublicEventController`（`GET /api/public/events`）。
-- `controller/admin/`（9 个）- `/api/admin/**`。**GET 只需任意登录用户（含 `user` 角色），非 GET 才需要 `admin`**（`SecurityConfig.java:49-50`）。`AuthController` 虽在 admin 包下，但路径是 `/api/auth`（register/login permitAll）。
-- `service/`（14 个）- 只有 `AiPoemService` 用了 MyBatis-Plus `ServiceImpl`，其余全是手写 mapper 调用。
-- `mapper/`（15 个）- **全部是空的 `extends BaseMapper<T>`，没有一行注解 SQL，也没有任何 XML**。所有查询靠 `LambdaQueryWrapper`。`application.yml:17` 的 `mapper-locations: classpath:mapper/*.xml` 指向不存在的目录，是死配置。
+- `controller/pub/`（**12 个**）- 公开只读 `/api/public/**`，permitAll。三个展示前端全部走这里；含 `PublicDynastyController`、`PublicEventController`、`PublicPoetRelationController`、`PublicLearningTaskController`（一城一课学习任务，`task_code` 短 ID 分享）。⚠️ **公开列表现已强制「只返回已发布内容」**（见下文治理层）——`PoemService`/`CulturalItemService` 等的 `listInternal(..., publishedOnly=true)` 会用 `content_review.status='published'` 子查询过滤，未发布实体在前台不可见。
+- `controller/admin/`（12 个）- `/api/admin/**`。**GET 只需任意登录用户（含 `user` 角色），非 GET 才需要 `admin`**（`SecurityConfig.java:49-50`）。新增 `ContentReviewController`（内容审核工作台）、`AiMetricsController`（AI 指标）、`LearningTaskAdminController`、`PoemAnalysisAdminController`。`AuthController` 虽在 admin 包下，但路径是 `/api/auth`（register/login permitAll）。
+- `service/`（22 个）- 只有 `AiPoemService` 用了 MyBatis-Plus `ServiceImpl`，其余全是手写 mapper 调用。新增治理/审计/学习/检索一族：`ContentReviewService`、`ContentGovernanceCleanupService`、`AiAuditService`、`AiMetricsService`、`LearningTaskService`、`KnowledgeRetrievalService`、`ClientIpResolver`、`RateLimitService`+`InMemoryRateLimitService`。
+- `mapper/`（21 个）- **全部是空的 `extends BaseMapper<T>`，没有一行注解 SQL，也没有任何 XML**。所有查询靠 `LambdaQueryWrapper`（治理层的 `publishedOnly` 子查询用 `.inSql(...)` 拼原生 SELECT）。`application.yml:17` 的 `mapper-locations: classpath:mapper/*.xml` 指向不存在的目录，是死配置。
 - `dto/`（10 个）有 `Result`/`PageResult`/各种 Request；**没有 `vo/` 包**，公开接口大量直接返回手拼的 `Map<String,Object>`（`PublicSpotController:67,97`、`PublicPoemController:63`、`PublicPoetController:72`、`PublicTimelineController:46` 等）。
 - `util/`：`JwtUtil`（jjwt 0.12 API）、`PoetCompletenessCalculator`（诗人资料完整度 0-100 评分）。
 
@@ -81,9 +83,22 @@ node --test tests/mediaBase.test.js   # 单文件
 ### AI 相关（两条独立的 LLM 通路）
 - `LlmClient` 用 JDK 自带 `java.net.http.HttpClient`（刻意不引新依赖）。`streamChat` 是**阻塞式**的（`http.send(...)` 同步，在调用线程上逐行读 SSE）。`llm.api-key` 为空时启动只 WARN 不失败——聊天返回 error 事件、赏析返回 fallback。
 - `ChatService`：`SseEmitter` + `newCachedThreadPool`；事件 payload 是 `{"delta":"..."}` / `{"error":"..."}`，**没有命名事件类型（无 `.name(...)`）也没有向客户端发 `[DONE]`**（`[DONE]` 只出现在 `LlmClient` 消费上游 SSE 那一侧），前端靠 emitter 关闭判断结束。system prompt 里 `{rag_context}` 占位符缺失时会 WARN 并把 RAG 追加到末尾（`ChatServicePromptTest` 锁定了这个行为）。
-- **限流是内存滑动窗口，且有两份独立拷贝**（`ChatService.rateMap:38`、`AiPoemService.rateMap:27`），各自 60s/10 次，重启清零，key 来自可伪造的 `X-Forwarded-For`。
-- **`RagRetrievalService` 是 SQL `LIKE` 关键词检索，不是向量检索**——仓库里没有任何 embedding/向量库。因为没有中文分词器，`extractKeywords`（`:144-156`）的策略是「整串 + 全部 2-gram，最多 8 个」，然后对 `CONCAT(IFNULL(...)) LIKE '%kw%'` 做 OR。这类谓词**用不上索引**，每轮对话都全表扫 poet/poem/scenic_spot。
+- **限流已抽成 `RateLimitService` 接口**（唯一实现 `InMemoryRateLimitService`），`ChatService` 与 `AiPoemService` 各自注入一个实例（默认构造走 `new InMemoryRateLimitService()`），仍是内存滑动窗口 60s/10 次、重启清零。客户端标识不再直读可伪造的 `X-Forwarded-For`，而是经 `ClientIpResolver` 统一解析。旧文档「两份独立 `rateMap` 拷贝」已过时。
+- **两套 RAG 检索并存**：老的 `RagRetrievalService` 仍是 SQL `LIKE` 关键词检索（`extractKeywords` 整串 + 全部 2-gram 最多 8 个，`CONCAT(IFNULL(...)) LIKE '%kw%'` OR，用不上索引、全表扫 poet/poem/scenic_spot）。新增 `KnowledgeRetrievalService` 是**带来源的证据检索**：返回 `EvidenceSnippet`（携 `content_source_link` 溯源），`ChatService` 现会把证据/来源随对话下发（`display-v2` 的 `SourceList.vue` + `utils/source.js` 消费）。改检索行为要分清动的是哪一套。
 - `PoemAnalysisService`：以 `poem_analysis` 表为缓存（`poem_id` UNIQUE，查询 `.last("LIMIT 1")`），`CURRENT_VERSION = 2`（`:40`）——**改这个常量等于让全部 ~195 首重新走付费生成**。fallback JSON（含 `raw` 字段）永不落库（`:143-146`），避免缺 key 时污染缓存。
+
+### 内容治理 / 审计 / 学习任务（人机协同平台层，多在工作树中）
+这是 CLAUDE.md 首版之后新增的一整层（对应 `docs/superpowers/plans/2026-09-04-human-ai-platform-goal.md` 与 `docs/superpowers/specs/2026-09-05-content-governance-workbench-design.md`），当前大量以未提交工作树 + 未应用迁移（`V27`–`V30`）形式存在。别按旧提交推断；以 `git status` 为准。
+
+- **内容审核状态机**：`ContentReviewService` 用 `content_review` 表按 `(entity_type, entity_id)` 记录状态，合法流转 `draft → needs_review → approved → published → archived`（`ALLOWED_TRANSITIONS` 白名单，非法流转抛异常）。受治理实体：`dynasty/poem/poet/scenic_spot/event/cultural_item/poem_analysis/poet_relation`。
+- **发布即可见门禁**：公开端查询强制 `publishedOnly=true`——`PoemService.listInternal` 用 `.inSql("id","SELECT entity_id FROM content_review WHERE entity_type='poem' AND status='published'")` 过滤；`CulturalItemService` 额外要求 `cultural_item.status='published'` 且其 `content_review` 也为 `published` 才允许改状态。**新增/编辑实体会自动 `ensureNeedsReview` / `resetReviewForEdit`**（`ContentGovernanceCleanupService`），即改过的内容会退回待审、前台隐藏，直到重新发布。
+- **来源溯源**：`source_document`（书/文章/官网/档案）+ `content_source_link`（实体↔来源多态关联）。`V27` 只建表、不伪造历史来源，历史实体统一进 `needs_review`；`V30` 为存量 `poet_relation` 建待审记录。前端 `SourceList.vue` 展示来源。
+- **AI 审计**：`AiAuditService` 写 `ai_audit_log`——**不落原始 IP**，只存 `client_key_hash`（SHA-256）、截断后的 `query_text`、上下文类型、耗时、用户反馈（`ChatFeedbackRequest`）。`AiMetricsService`/`AiMetricsController` 出聚合指标供 admin `AiMetrics.vue`。
+- **一城一课学习任务**：`LearningTask`/`LearningSubmission`，公开端 `PublicLearningTaskController`（`task_code` 短 ID 分享）、admin 端 `LearningTaskAdminController`。任务正文是结构化 JSON 文本，**发布前由服务层校验步骤/实体/来源绑定**。前端 `LearningTaskIndex.vue`/`LearningTaskView.vue` + `utils/learning*.js`。
+- **仓库级契约测试**（node `--test`，纯断言无后端）：根/scripts 下 `ai-eval*`、`learning-task-check*`、`content-ledger-check*`、`migration-check*`、`ci-contract*`；admin 下 `sourceGovernance`/`apiErrorHandling`/`accessControlContract`/`dataTableErrorState`/`aiMetricsContract`（`*.test.mjs`）；display-v2 `tests/` 下新增 `sse`/`source`/`learning*`/`chatEvidence`/`craft*` 等。这些锁定治理契约，改治理逻辑前先看它们期望什么。
+
+### 后端删除/查询/治理副作用（勿当 bug 回滚）
+- **写操作自动触发治理**：poem/poet/spot/event/cultural 的 create/update 会调用 `ContentGovernanceCleanupService` 把实体置回 `needs_review`，delete 会级联清理其 `content_review`/`content_source_link`。看到「刚编辑的内容前台消失了」是设计，不是 bug——需在审核台重新 `published`。
 
 ### 前端代理
 三个前端的 vite config 都把 `/api` 代理到 `http://localhost:8080`，开发时后端必须同时运行。`admin-frontend` 与 `display-v2` 额外配了 `allowedHosts: ['.cpolar.top', '.cpolar.cn']`（cpolar 隧道）。
@@ -177,10 +192,10 @@ CORS 是独立的 `CorsFilter` bean（不是 `http.cors()`）：读 `@Value("${c
 - ⚠️ **库名有三种说法**：`application.yml:7` 默认 `sjg01`，`schema.sql:1-2` 创建并 `USE sjg`，脚本默认使用 `DB_NAME=sjg01`，均可由环境变量覆盖。
 - 旧远程实例已弃用；`scripts/apply_migration.py` 默认连接本机 `127.0.0.1:3306`，并使用环境变量 `DB_HOST/DB_PORT/DB_USER/DB_PASSWORD/DB_NAME` 覆盖，不再携带远程地址或默认口令。
 - **Flyway 不是依赖**。`db/migration/` 是 Flyway 命名风格但没人自动应用，全靠 `python scripts/apply_migration.py <file>` 手动跑（env: `DB_HOST/DB_PORT/DB_USER/DB_PASSWORD/DB_NAME`）。该脚本结尾的 "verify" 块（`:47-57`）硬编码查 `poet_relation`，对非 V4 的 migration 是无意义噪音。
-- 现有 `V2`–`V4`、`V6`–`V10`、`V12`–`V24`。**缺口是 V1 / V5 / V11**：V1 相当于 `schema.sql`；**V5（`poem_analysis` 建表）和 v4 在 `display-v2/migrations/` 下**，小写 `v4_poet_relation.sql` / `v5_poem_analysis.sql`；V12–V16 是从某 worktree 的 V7–V11 重编号来的。
+- 现有 `V2`–`V4`、`V6`–`V10`、`V12`–`V30`。**缺口仍是 V1 / V5 / V11**：V1 相当于 `schema.sql`；**V5（`poem_analysis` 建表）和 v4 在 `display-v2/migrations/` 下**，小写 `v4_poet_relation.sql` / `v5_poem_analysis.sql`；V12–V16 是从某 worktree 的 V7–V11 重编号来的。**V25/V26 是 inkwash 素材回填**；**V27–V30 是人机协同平台层**（`V27` 内容来源/证据/审核表、`V28` AI 审计、`V29` 学习任务、`V30` 诗人关系待审记录），多数尚未应用到本地库——功能改动前先确认迁移是否已跑。
 - **`V24__imagegen_asset_backfill.sql`**：把 OSS 上新生成的素材回填到空字段，三段共 33 行（21 条 `scenic_spot.image_url`、9 条 `poet.avatar_url`、3 条 `event.image_url`），每条 `WHERE name = '...' AND (field IS NULL OR field = '')` 保证幂等。
 - 所有 migration 都在文件头注明幂等策略且**必须幂等**。MySQL 8 没有 `ADD COLUMN IF NOT EXISTS`，所以 V12 之后的标准做法是查 `information_schema.COLUMNS/STATISTICS` + `SET @ddl := IF(...)` + `PREPARE/EXECUTE/DEALLOCATE PREPARE`（照抄 V12–V16）。文化条目 seed（V18–V21）的幂等靠「按 `(category,title)` DELETE 再 INSERT」+ 详情表 `ON DELETE CASCADE`。
-- `schema.sql` / `schema_utf8.sql` **不幂等**（裸 `CREATE TABLE`），只含 7 张基础表，且种了默认 admin 账号。`poem_analysis`/`poet_relation`/`cultural_item` 及四张详情表都不在里面——要到当前 schema 得 `schema.sql` + `display-v2/migrations/` + V2..V25。`_utf8` 变体是为 Windows/MySQL 字符集问题准备的。
+- `schema.sql` / `schema_utf8.sql` **不幂等**（裸 `CREATE TABLE`），只含 7 张基础表，且种了默认 admin 账号。`poem_analysis`/`poet_relation`/`cultural_item` 及四张详情表都不在里面——要到当前 schema 得 `schema.sql` + `display-v2/migrations/` + V2..V30（含治理层 `source_document`/`content_source_link`/`content_review`/`ai_audit_log`/`learning_task`/`learning_submission`）。`_utf8` 变体是为 Windows/MySQL 字符集问题准备的。
 - V12 给多张表加了 `deleted` 列，但**全项目零个 `@TableLogic`**，删除全是物理删除，服务层手写级联。查询也不过滤 `deleted = 0`——一旦有人开始写这个列，数据就会诡异地"复活"。
 - ORM 用 MyBatis-Plus，`map-underscore-to-camel-case: true`（`application.yml:19`）。分页依赖 `MyBatisPlusConfig:14` 的 `PaginationInnerInterceptor`，**移掉这个 bean 会让所有 `selectPage` 静默返回全量数据**。
 
@@ -190,8 +205,9 @@ CORS 是独立的 `CorsFilter` bean（不是 `http.cors()`）：读 `@Value("${c
 - `PublicSpotController.list` 修掉了 N+1：从每个景点一次 `selectCount` 改为单次 `selectList ... IN(spotIds)` + stream 分组。
 
 ## scripts/
-- `apply_migration.py` —— 见上。
+- `apply_migration.py` —— 见上；`apply_migration_test.py` 是它的 preflight 单测（CI/verify:all 会跑，`python3` 直接执行）。
 - `gen_cultural_migration.mjs` —— 当前在用的文化 seed 生成器（Node，零依赖，JSON → 幂等 DELETE+INSERT SQL）：`node scripts/gen_cultural_migration.mjs <input.json> festival V18`，产物落 `scripts/output/`（本地生成目录，已忽略），然后**首字母大写复制**到 `backend/src/main/resources/db/migration/`（`v18__festival_seed.sql` → `V18__festival_seed.sql`，两处内容逐字节相同）。
+- **平台质量门禁工具**（均 node `--test` 或纯 node 脚本，被根 `package.json` scripts 与 CI 调用）：`ai-eval.mjs`/`ai-eval-cli.mjs`（AI 评测，评测集 `docs/ai-evaluation-set.json`）、`check-migrations.mjs`+`migration-check.mjs`（迁移编号/幂等静态校验）、`content-ledger-check.mjs`（来源台账）、`learning-task-check.mjs`（学习任务 JSON 校验）、`ci-contract.test.mjs`（校验 CI 与 verify:all 门禁一致）、`verify-all.sh`（本地全量门禁）、`run-ai-eval.sh`。
 - 旧的 Python seed 生成器、图片批处理脚本和素材库存已移出仓库并保存在工作区外归档；当前仓库只保留可复现的 Node seed 生成器、migration 应用脚本和已落盘的运行时素材。
 
 ## 素材生成（有真金白银成本）
@@ -211,7 +227,8 @@ CORS 是独立的 `CorsFilter` bean（不是 `http.cors()`）：读 `@Value("${c
 - `docs/plans/2026-08-05-display-v2-ui-optimization-tasks.md` —— 文件自称**进度唯一源**（`:5`）。标记约定 `[x]` 完成 ｜ `[ ]` 未完成 ｜ `[~]` 进行中 ｜ `⏸` 阻塞/后期。仍开放：P2-M5~M9（批量素材/OSS，全部 `⏸`）、B-1~B-3（后端 `?style=` 参数、`/api/public/theme-assets`、admin 双风格上传，全部 `⏸`）。⚠️ **B-1~B-3 都是为双风格服务的，主题已收敛单一 inkwash，这三项事实上已作废，但该文件尚未更新**。
 - `docs/plans/2026-08-15-{theme-strategy,beautify-plan,media-visual-plan,nine-cities-display-proposal}.md` —— theme-strategy 已执行完毕（且被 08-20 规格接管），其余三个仍是待执行提案。
 - `docs/plans/2026-08-14-codex-*.md` 是历史自动运行日志，**其 V7–V11 编号与仓库实际不符**（对应仓库的 V12–V16），只当技术债清单看。
-- `docs/superpowers/{plans,specs}/` —— 历史设计文档，按日期命名。
+- `docs/superpowers/{plans,specs}/` —— 历史 + 当前设计文档，按日期命名。**当前平台方向的权威文档在此**：`plans/2026-09-04-human-ai-platform-goal.md`（人机协同平台总目标）、`specs/2026-09-05-content-governance-workbench-design.md`（内容治理工作台设计）。另有 `docs/development.md`（开发流程 + verify:all）、`docs/ai-evaluation.md`（AI 评测规范）、`docs/goal-environment-checklist.md`。
+- 仓库根还散着几个**过程性 markdown**（未提交、非规范来源，随时会变）：`findings.md`、`progress.md`、`task_plan.md`——当草稿看，别当权威。
 - `.workbuddy/memory/` —— 按日期的工作记忆；`.workbuddy/artifacts/` 有三份审计报告（backend 审计列了 83 个问题，其中多个文件正在被改）。
 
 ## 其他注意事项
