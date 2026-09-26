@@ -17,16 +17,25 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class EventService {
 
     private final EventMapper eventMapper;
     private final PoemEventMapper poemEventMapper;
+    private final ContentGovernanceCleanupService governanceCleanup;
 
     public EventService(EventMapper eventMapper, PoemEventMapper poemEventMapper) {
+        this(eventMapper, poemEventMapper, null);
+    }
+
+    @Autowired
+    public EventService(EventMapper eventMapper, PoemEventMapper poemEventMapper,
+                        ContentGovernanceCleanupService governanceCleanup) {
         this.eventMapper = eventMapper;
         this.poemEventMapper = poemEventMapper;
+        this.governanceCleanup = governanceCleanup;
     }
 
     public PageResult<Event> list(int page, int size, String keyword) {
@@ -41,13 +50,25 @@ public class EventService {
     }
 
     public Event getById(Long id) { return eventMapper.selectById(id); }
-    public void create(Event event) { eventMapper.insert(event); }
-    public void update(Long id, Event event) { event.setId(id); eventMapper.updateById(event); }
+    public void create(Event event) {
+        eventMapper.insert(event);
+        if (governanceCleanup != null) governanceCleanup.ensureNeedsReview("event", event.getId());
+    }
+    public void update(Long id, Event event) {
+        if (id == null || id <= 0 || eventMapper.selectById(id) == null) {
+            throw new IllegalArgumentException("事件不存在");
+        }
+        if (event == null) throw new IllegalArgumentException("事件不能为空");
+        event.setId(id);
+        eventMapper.updateById(event);
+        if (governanceCleanup != null) governanceCleanup.resetReviewForEdit("event", id);
+    }
     @Transactional
     public void delete(Long id) {
         // 1. 先删除诗词-事件关联表中的记录，以避免外键约束错误
         poemEventMapper.delete(new LambdaQueryWrapper<PoemEvent>().eq(PoemEvent::getEventId, id));
-        // 2. 再删除事件本身
+        if (governanceCleanup != null) governanceCleanup.deleteEntityReferences("event", id);
+        // 3. 再删除事件本身
         eventMapper.deleteById(id);
     }
 
@@ -71,7 +92,10 @@ public class EventService {
                 events.add(event);
             }
         }
-        for (Event event : events) { eventMapper.insert(event); }
+        for (Event event : events) {
+            eventMapper.insert(event);
+            if (governanceCleanup != null) governanceCleanup.ensureNeedsReview("event", event.getId());
+        }
         return events.size();
     }
 

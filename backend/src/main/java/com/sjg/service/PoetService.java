@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.sjg.util.PoetCompletenessCalculator;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class PoetService {
@@ -33,17 +34,30 @@ public class PoetService {
     private final OssService ossService;
     private final PoemMapper poemMapper;
     private final PoetRelationMapper poetRelationMapper;
+    private final ContentGovernanceCleanupService governanceCleanup;
 
     public PoetService(PoetMapper poetMapper, OssService ossService, PoemMapper poemMapper,
                        PoetRelationMapper poetRelationMapper) {
+        this(poetMapper, ossService, poemMapper, poetRelationMapper, null);
+    }
+
+    @Autowired
+    public PoetService(PoetMapper poetMapper, OssService ossService, PoemMapper poemMapper,
+                       PoetRelationMapper poetRelationMapper,
+                       ContentGovernanceCleanupService governanceCleanup) {
         this.poetMapper = poetMapper;
         this.ossService = ossService;
         this.poemMapper = poemMapper;
         this.poetRelationMapper = poetRelationMapper;
+        this.governanceCleanup = governanceCleanup;
     }
 
     public PageResult<Poet> list(int page, int size, String keyword) {
         return list(page, size, keyword, null);
+    }
+
+    public PageResult<Poet> listPublished(int page, int size, String keyword, String region) {
+        return listInternal(page, size, keyword, region, true);
     }
 
     /**
@@ -51,6 +65,11 @@ public class PoetService {
      * 用于「每城文化页」的本城名士聚合。
      */
     public PageResult<Poet> list(int page, int size, String keyword, String region) {
+        return listInternal(page, size, keyword, region, false);
+    }
+
+    private PageResult<Poet> listInternal(int page, int size, String keyword, String region,
+                                          boolean publishedOnly) {
         LambdaQueryWrapper<Poet> wrapper = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
             wrapper.and(w -> w.like(Poet::getName, keyword)
@@ -60,19 +79,27 @@ public class PoetService {
             wrapper.and(w -> w.like(Poet::getBirthplace, region)
                    .or().like(Poet::getBiography, region));
         }
+        if (publishedOnly) {
+            wrapper.inSql(Poet::getId,
+                    "SELECT entity_id FROM content_review WHERE entity_type = 'poet' AND status = 'published'");
+        }
         wrapper.orderByDesc(Poet::getId);
         Page<Poet> result = poetMapper.selectPage(new Page<>(page, size), wrapper);
         List<Poet> poets = result.getRecords();
-        enrichCompleteness(poets);
+        enrichCompleteness(poets, publishedOnly);
         return new PageResult<>(poets, result.getTotal(), page, size);
     }
 
     /** 批量回填完整度分: 一次查出本页诗人关联诗数, 逐人计算。 */
-    private void enrichCompleteness(List<Poet> poets) {
+    private void enrichCompleteness(List<Poet> poets, boolean publishedOnly) {
         if (poets == null || poets.isEmpty()) return;
         List<Long> ids = poets.stream().map(Poet::getId).collect(Collectors.toList());
-        List<Poem> poems = poemMapper.selectList(
-            new LambdaQueryWrapper<Poem>().in(Poem::getPoetId, ids));
+        LambdaQueryWrapper<Poem> poemWrapper = new LambdaQueryWrapper<Poem>().in(Poem::getPoetId, ids);
+        if (publishedOnly) {
+            poemWrapper.inSql(Poem::getId,
+                    "SELECT entity_id FROM content_review WHERE entity_type = 'poem' AND status = 'published'");
+        }
+        List<Poem> poems = poemMapper.selectList(poemWrapper);
         Map<Long, Long> countById = poems.stream()
             .collect(Collectors.groupingBy(Poem::getPoetId, Collectors.counting()));
         for (Poet p : poets) {
@@ -87,11 +114,17 @@ public class PoetService {
 
     public void create(Poet poet) {
         poetMapper.insert(poet);
+        if (governanceCleanup != null) governanceCleanup.ensureNeedsReview("poet", poet.getId());
     }
 
     public void update(Long id, Poet poet) {
+        if (id == null || id <= 0 || poetMapper.selectById(id) == null) {
+            throw new IllegalArgumentException("诗人不存在");
+        }
+        if (poet == null) throw new IllegalArgumentException("诗人不能为空");
         poet.setId(id);
         poetMapper.updateById(poet);
+        if (governanceCleanup != null) governanceCleanup.resetReviewForEdit("poet", id);
     }
 
     /**
@@ -102,13 +135,19 @@ public class PoetService {
      */
     @Transactional
     public void delete(Long id) {
-        // 1. 先删除该诗人关联的所有诗词，以避免外键约束错误
-        poemMapper.delete(new LambdaQueryWrapper<Poem>().eq(Poem::getPoetId, id));
-        // 2. 删除该诗人在关系图谱中的所有关联（作为 poetA 或 poetB）
+        List<Long> poemIds = poemMapper.selectList(new LambdaQueryWrapper<Poem>().eq(Poem::getPoetId, id))
+                .stream().map(Poem::getId).toList();
+        // 1. 先清理诗词赏析、审核和来源关联，兼容 poem_analysis 的旧外键约束
         poetRelationMapper.delete(new LambdaQueryWrapper<PoetRelation>()
             .eq(PoetRelation::getPoetAId, id)
             .or()
             .eq(PoetRelation::getPoetBId, id));
+        if (governanceCleanup != null) {
+            governanceCleanup.deleteEntityReferences("poet", id);
+            governanceCleanup.deletePoems(poemIds);
+        }
+        // 2. 删除该诗人关联的所有诗词
+        poemMapper.delete(new LambdaQueryWrapper<Poem>().eq(Poem::getPoetId, id));
         // 3. 再删除诗人本身
         poetMapper.deleteById(id);
     }
@@ -172,6 +211,7 @@ public class PoetService {
             poet.setAvatarUrl(newJson);
         }
         poetMapper.updateById(poet);
+        if (governanceCleanup != null) governanceCleanup.resetReviewForEdit("poet", id);
 
         // 返回结果，包含新增的 URL，最新的完整 URL 数组，以及更新后的诗人实体
         Map<String, Object> result = new HashMap<>();
@@ -186,6 +226,7 @@ public class PoetService {
         List<Poet> poets = parseExcel(file);
         for (Poet poet : poets) {
             poetMapper.insert(poet);
+            if (governanceCleanup != null) governanceCleanup.ensureNeedsReview("poet", poet.getId());
         }
         return poets.size();
     }

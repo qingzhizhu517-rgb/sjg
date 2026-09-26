@@ -28,7 +28,9 @@ public class PublicDynastyController {
     @GetMapping
     public ResponseEntity<Result<List<Dynasty>>> list() {
         List<Dynasty> dynasties = dynastyMapper.selectList(
-            new LambdaQueryWrapper<Dynasty>().orderByAsc(Dynasty::getStartYear));
+            new LambdaQueryWrapper<Dynasty>().inSql(Dynasty::getId,
+                    "SELECT entity_id FROM content_review WHERE entity_type = 'dynasty' AND status = 'published'")
+                    .orderByAsc(Dynasty::getStartYear));
         return ResponseEntity.ok(Result.success(dynasties));
     }
 }

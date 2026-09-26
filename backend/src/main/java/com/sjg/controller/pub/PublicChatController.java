@@ -1,6 +1,10 @@
 package com.sjg.controller.pub;
 
 import com.sjg.dto.ChatRequest;
+import com.sjg.dto.ChatFeedbackRequest;
+import com.sjg.dto.Result;
+import com.sjg.service.AiAuditService;
+import com.sjg.service.ClientIpResolver;
 import com.sjg.service.ChatService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,9 +26,19 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 public class PublicChatController {
 
     private final ChatService chatService;
+    private final AiAuditService auditService;
+    private final ClientIpResolver clientIpResolver;
 
-    public PublicChatController(ChatService chatService) {
+    public PublicChatController(ChatService chatService, AiAuditService auditService) {
+        this(chatService, auditService, new ClientIpResolver(""));
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public PublicChatController(ChatService chatService, AiAuditService auditService,
+                                ClientIpResolver clientIpResolver) {
         this.chatService = chatService;
+        this.auditService = auditService;
+        this.clientIpResolver = clientIpResolver;
     }
 
     /**
@@ -34,18 +48,20 @@ public class PublicChatController {
     @Operation(summary = "AI小文对话", description = "POST 用户消息，SSE 流式返回回复")
     @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter chat(@RequestBody ChatRequest req, HttpServletRequest http) {
-        return chatService.stream(req, clientIp(http));
+        return chatService.stream(req, clientIpResolver.resolve(http));
     }
 
-    private String clientIp(HttpServletRequest req) {
-        String xff = req.getHeader("x-forwarded-for");
-        if (xff != null && !xff.isBlank()) {
-            return xff.split(",")[0].trim();
+    @Operation(summary = "提交AI回复反馈", description = "记录有帮助、无帮助或事实错误反馈")
+    @PostMapping("/chat/feedback")
+    public Result<Void> feedback(@RequestBody ChatFeedbackRequest request) {
+        try {
+            auditService.recordFeedback(request == null ? null : request.auditId(),
+                    request == null ? null : request.feedback(),
+                    request == null ? null : request.comment());
+            return Result.success();
+        } catch (IllegalArgumentException e) {
+            return Result.error(400, e.getMessage());
         }
-        String real = req.getHeader("x-real-ip");
-        if (real != null && !real.isBlank()) {
-            return real;
-        }
-        return req.getRemoteAddr();
     }
+
 }

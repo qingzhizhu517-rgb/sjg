@@ -7,6 +7,7 @@ import com.sjg.entity.PoetRelation;
 import com.sjg.mapper.DynastyMapper;
 import com.sjg.mapper.PoetMapper;
 import com.sjg.mapper.PoetRelationMapper;
+import com.sjg.mapper.ContentReviewMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -21,13 +22,23 @@ public class PoetRelationService {
     private final PoetRelationMapper relationMapper;
     private final PoetMapper poetMapper;
     private final DynastyMapper dynastyMapper;
+    private final ContentReviewMapper contentReviewMapper;
 
     public PoetRelationService(PoetRelationMapper relationMapper,
                                PoetMapper poetMapper,
                                DynastyMapper dynastyMapper) {
+        this(relationMapper, poetMapper, dynastyMapper, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public PoetRelationService(PoetRelationMapper relationMapper,
+                               PoetMapper poetMapper,
+                               DynastyMapper dynastyMapper,
+                               ContentReviewMapper contentReviewMapper) {
         this.relationMapper = relationMapper;
         this.poetMapper = poetMapper;
         this.dynastyMapper = dynastyMapper;
+        this.contentReviewMapper = contentReviewMapper;
     }
 
     /**
@@ -38,6 +49,21 @@ public class PoetRelationService {
     public Map<String, Object> getGraph() {
         List<PoetRelation> relations = relationMapper.selectList(
             new LambdaQueryWrapper<PoetRelation>().orderByAsc(PoetRelation::getRelationType));
+
+        Set<Long> publishedRelationIds = null;
+        if (!relations.isEmpty() && contentReviewMapper != null) {
+            Set<Long> relationIds = relations.stream()
+                    .map(PoetRelation::getId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            publishedRelationIds = relationIds.isEmpty() ? Collections.emptySet()
+                    : contentReviewMapper.selectList(
+                            new LambdaQueryWrapper<com.sjg.entity.ContentReview>()
+                                    .eq(com.sjg.entity.ContentReview::getEntityType, "poet_relation")
+                                    .eq(com.sjg.entity.ContentReview::getStatus, com.sjg.entity.ContentReview.PUBLISHED)
+                                    .in(com.sjg.entity.ContentReview::getEntityId, relationIds))
+                    .stream().map(com.sjg.entity.ContentReview::getEntityId).collect(Collectors.toSet());
+        }
 
         // 收集所有涉及的诗人 id (去重)
         Set<Long> poetIds = new HashSet<>();
@@ -50,8 +76,28 @@ public class PoetRelationService {
         Map<Long, Poet> poetMap = poetIds.isEmpty() ? Collections.emptyMap()
             : poetMapper.selectBatchIds(poetIds).stream()
                 .collect(Collectors.toMap(Poet::getId, p -> p));
+        if (!poetMap.isEmpty() && contentReviewMapper != null) {
+            Set<Long> publishedIds = contentReviewMapper.selectList(
+                    new LambdaQueryWrapper<com.sjg.entity.ContentReview>()
+                            .eq(com.sjg.entity.ContentReview::getEntityType, "poet")
+                            .eq(com.sjg.entity.ContentReview::getStatus, com.sjg.entity.ContentReview.PUBLISHED)
+                            .in(com.sjg.entity.ContentReview::getEntityId, poetMap.keySet()))
+                    .stream().map(com.sjg.entity.ContentReview::getEntityId).collect(Collectors.toSet());
+            poetMap = poetMap.entrySet().stream()
+                    .filter(entry -> publishedIds.contains(entry.getKey()))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        }
         Set<Long> dynastyIds = poetMap.values().stream()
             .map(Poet::getDynastyId).filter(Objects::nonNull).collect(Collectors.toSet());
+        if (!dynastyIds.isEmpty() && contentReviewMapper != null) {
+            Set<Long> publishedDynastyIds = contentReviewMapper.selectList(
+                    new LambdaQueryWrapper<com.sjg.entity.ContentReview>()
+                            .eq(com.sjg.entity.ContentReview::getEntityType, "dynasty")
+                            .eq(com.sjg.entity.ContentReview::getStatus, com.sjg.entity.ContentReview.PUBLISHED)
+                            .in(com.sjg.entity.ContentReview::getEntityId, dynastyIds))
+                    .stream().map(com.sjg.entity.ContentReview::getEntityId).collect(Collectors.toSet());
+            dynastyIds.retainAll(publishedDynastyIds);
+        }
         Map<Long, String> dynastyName = dynastyIds.isEmpty() ? Collections.emptyMap()
             : dynastyMapper.selectBatchIds(dynastyIds).stream()
                 .collect(Collectors.toMap(Dynasty::getId, Dynasty::getName));
@@ -76,6 +122,9 @@ public class PoetRelationService {
         // 组装 edges
         List<Map<String, Object>> edges = new ArrayList<>();
         for (PoetRelation r : relations) {
+            if (publishedRelationIds != null && !publishedRelationIds.contains(r.getId())) {
+                continue;
+            }
             // 跳过引用不存在诗人的关系
             if (!poetMap.containsKey(r.getPoetAId()) || !poetMap.containsKey(r.getPoetBId())) {
                 continue;

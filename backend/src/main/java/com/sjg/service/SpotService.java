@@ -19,19 +19,37 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class SpotService {
 
     private final ScenicSpotMapper spotMapper;
     private final PoemMapper poemMapper;
+    private final ContentGovernanceCleanupService governanceCleanup;
 
     public SpotService(ScenicSpotMapper spotMapper, PoemMapper poemMapper) {
+        this(spotMapper, poemMapper, null);
+    }
+
+    @Autowired
+    public SpotService(ScenicSpotMapper spotMapper, PoemMapper poemMapper,
+                       ContentGovernanceCleanupService governanceCleanup) {
         this.spotMapper = spotMapper;
         this.poemMapper = poemMapper;
+        this.governanceCleanup = governanceCleanup;
     }
 
     public PageResult<ScenicSpot> list(int page, int size, String keyword, String region) {
+        return listInternal(page, size, keyword, region, false);
+    }
+
+    public PageResult<ScenicSpot> listPublished(int page, int size, String keyword, String region) {
+        return listInternal(page, size, keyword, region, true);
+    }
+
+    private PageResult<ScenicSpot> listInternal(int page, int size, String keyword, String region,
+                                                boolean publishedOnly) {
         LambdaQueryWrapper<ScenicSpot> wrapper = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
             wrapper.and(w -> w.like(ScenicSpot::getName, keyword)
@@ -40,14 +58,29 @@ public class SpotService {
         if (StringUtils.hasText(region)) {
             wrapper.eq(ScenicSpot::getRegion, region);
         }
+        if (publishedOnly) {
+            wrapper.inSql(ScenicSpot::getId,
+                    "SELECT entity_id FROM content_review WHERE entity_type = 'scenic_spot' AND status = 'published'");
+        }
         wrapper.orderByDesc(ScenicSpot::getId);
         Page<ScenicSpot> result = spotMapper.selectPage(new Page<>(page, size), wrapper);
         return new PageResult<>(result.getRecords(), result.getTotal(), page, size);
     }
 
     public ScenicSpot getById(Long id) { return spotMapper.selectById(id); }
-    public void create(ScenicSpot spot) { spotMapper.insert(spot); }
-    public void update(Long id, ScenicSpot spot) { spot.setId(id); spotMapper.updateById(spot); }
+    public void create(ScenicSpot spot) {
+        spotMapper.insert(spot);
+        if (governanceCleanup != null) governanceCleanup.ensureNeedsReview("scenic_spot", spot.getId());
+    }
+    public void update(Long id, ScenicSpot spot) {
+        if (id == null || id <= 0 || spotMapper.selectById(id) == null) {
+            throw new IllegalArgumentException("景点不存在");
+        }
+        if (spot == null) throw new IllegalArgumentException("景点不能为空");
+        spot.setId(id);
+        spotMapper.updateById(spot);
+        if (governanceCleanup != null) governanceCleanup.resetReviewForEdit("scenic_spot", id);
+    }
 
     /**
      * 删除景点：级联清理关联数据
@@ -61,7 +94,8 @@ public class SpotService {
             .eq("spot_id", id)
             .set("spot_id", null);
         poemMapper.update(null, clearSpot);
-        // 2. 删除景点本身
+        if (governanceCleanup != null) governanceCleanup.deleteEntityReferences("scenic_spot", id);
+        // 3. 删除景点本身
         spotMapper.deleteById(id);
     }
 
@@ -86,7 +120,10 @@ public class SpotService {
                 spots.add(spot);
             }
         }
-        for (ScenicSpot spot : spots) { spotMapper.insert(spot); }
+        for (ScenicSpot spot : spots) {
+            spotMapper.insert(spot);
+            if (governanceCleanup != null) governanceCleanup.ensureNeedsReview("scenic_spot", spot.getId());
+        }
         return spots.size();
     }
 

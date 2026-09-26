@@ -55,7 +55,10 @@ public class PoemController {
      */
     @Operation(summary = "创建诗词", description = "新增诗词记录")
     @PostMapping
-    public ResponseEntity<Result<Map<String, String>>> create(@Parameter(description = "诗词信息", required = true) @RequestBody Poem poem) {
+    public ResponseEntity<Result<Map<String, String>>> create(@Parameter(description = "诗词信息", required = true) @RequestBody(required = false) Poem poem) {
+        if (poem == null) {
+            return ResponseEntity.badRequest().body(Result.error(400, "诗词不能为空"));
+        }
         poemService.create(poem);
         return ResponseEntity.ok(Result.success(Map.of("message", "创建成功")));
     }
@@ -67,7 +70,10 @@ public class PoemController {
     @PutMapping("/{id}")
     public ResponseEntity<Result<Map<String, String>>> update(
             @Parameter(description = "诗词ID", example = "1", required = true) @PathVariable Long id,
-            @Parameter(description = "诗词信息", required = true) @RequestBody Poem poem) {
+            @Parameter(description = "诗词信息", required = true) @RequestBody(required = false) Poem poem) {
+        if (poem == null) {
+            return ResponseEntity.badRequest().body(Result.error(400, "诗词不能为空"));
+        }
         poemService.update(id, poem);
         return ResponseEntity.ok(Result.success(Map.of("message", "更新成功")));
     }

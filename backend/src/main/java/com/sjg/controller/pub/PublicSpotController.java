@@ -4,6 +4,8 @@ import com.sjg.dto.Result;
 import com.sjg.entity.ScenicSpot;
 import com.sjg.entity.Poem;
 import com.sjg.service.SpotService;
+import com.sjg.service.ContentReviewService;
+import com.sjg.entity.ContentReview;
 import com.sjg.mapper.PoemMapper;
 import com.sjg.mapper.PoetMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -28,11 +30,14 @@ public class PublicSpotController {
     private final SpotService spotService;
     private final PoemMapper poemMapper;
     private final PoetMapper poetMapper;
+    private final ContentReviewService contentReviewService;
 
-    public PublicSpotController(SpotService spotService, PoemMapper poemMapper, PoetMapper poetMapper) {
+    public PublicSpotController(SpotService spotService, PoemMapper poemMapper, PoetMapper poetMapper,
+                                ContentReviewService contentReviewService) {
         this.spotService = spotService;
         this.poemMapper = poemMapper;
         this.poetMapper = poetMapper;
+        this.contentReviewService = contentReviewService;
     }
 
     /**
@@ -45,7 +50,7 @@ public class PublicSpotController {
             @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页数量", example = "20") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "区域筛选", example = "济南") @RequestParam(required = false) String region) {
-        var result = spotService.list(page, size, null, region);
+        var result = spotService.listPublished(page, size, null, region);
 
         // 批量查询所有景点的诗词数量，避免 N+1 查询
         List<Long> spotIds = result.getRecords().stream()
@@ -56,7 +61,9 @@ public class PublicSpotController {
         if (!spotIds.isEmpty()) {
             // 一次性查询所有相关诗词的 spot_id，然后按 spot_id 分组计数
             List<Poem> allPoems = poemMapper.selectList(
-                new LambdaQueryWrapper<Poem>().in(Poem::getSpotId, spotIds));
+                new LambdaQueryWrapper<Poem>().in(Poem::getSpotId, spotIds)
+                        .inSql(Poem::getId,
+                                "SELECT entity_id FROM content_review WHERE entity_type = 'poem' AND status = 'published'"));
             poemCountMap = allPoems.stream()
                 .filter(p -> p.getSpotId() != null)
                 .collect(Collectors.groupingBy(Poem::getSpotId, Collectors.counting()));
@@ -90,13 +97,20 @@ public class PublicSpotController {
         if (spot == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.error(404, "景点不存在"));
         }
+        ContentReview review = contentReviewService.getReview("scenic_spot", id);
+        if (review == null || !ContentReview.PUBLISHED.equals(review.getStatus())) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.error(404, "景点不存在"));
+        }
 
         List<Poem> poems = poemMapper.selectList(
-            new LambdaQueryWrapper<Poem>().eq(Poem::getSpotId, id));
+            new LambdaQueryWrapper<Poem>().eq(Poem::getSpotId, id)
+                    .inSql(Poem::getId,
+                            "SELECT entity_id FROM content_review WHERE entity_type = 'poem' AND status = 'published'"));
 
         Map<String, Object> result = new HashMap<>();
         result.put("spot", spot);
         result.put("poems", poems);
+        result.put("sources", contentReviewService.listSourceSummaries("scenic_spot", id));
         return ResponseEntity.ok(Result.success(result));
     }
 
@@ -110,7 +124,7 @@ public class PublicSpotController {
         String[] regions = {"菏泽", "济宁", "泰安", "聊城", "济南", "德州", "淄博", "滨州", "东营"};
         List<Map<String, Object>> regionList = new ArrayList<>();
         for (String region : regions) {
-            Long count = spotService.list(1, 1, null, region).getTotal();
+            Long count = spotService.listPublished(1, 1, null, region).getTotal();
             regionList.add(Map.of("name", region, "spotCount", count));
         }
         return ResponseEntity.ok(Result.success(regionList));

@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class PoemService {
@@ -29,17 +30,30 @@ public class PoemService {
     private final PoemEventMapper poemEventMapper;
     private final PoetMapper poetMapper;
     private final ScenicSpotMapper spotMapper;
+    private final ContentGovernanceCleanupService governanceCleanup;
 
     public PoemService(PoemMapper poemMapper, PoemEventMapper poemEventMapper,
                        PoetMapper poetMapper, ScenicSpotMapper spotMapper) {
+        this(poemMapper, poemEventMapper, poetMapper, spotMapper, null);
+    }
+
+    @Autowired
+    public PoemService(PoemMapper poemMapper, PoemEventMapper poemEventMapper,
+                       PoetMapper poetMapper, ScenicSpotMapper spotMapper,
+                       ContentGovernanceCleanupService governanceCleanup) {
         this.poemMapper = poemMapper;
         this.poemEventMapper = poemEventMapper;
         this.poetMapper = poetMapper;
         this.spotMapper = spotMapper;
+        this.governanceCleanup = governanceCleanup;
     }
 
     public PageResult<Poem> list(int page, int size, String keyword) {
         return list(page, size, keyword, null);
+    }
+
+    public PageResult<Poem> listPublished(int page, int size, String keyword, String region) {
+        return listInternal(page, size, keyword, region, true);
     }
 
     /**
@@ -49,6 +63,10 @@ public class PoemService {
      * 用于「每城文化页」的本城诗词聚合。
      */
     public PageResult<Poem> list(int page, int size, String keyword, String region) {
+        return listInternal(page, size, keyword, region, false);
+    }
+
+    private PageResult<Poem> listInternal(int page, int size, String keyword, String region, boolean publishedOnly) {
         LambdaQueryWrapper<Poem> wrapper = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
             wrapper.and(w -> w.like(Poem::getTitle, keyword)
@@ -76,19 +94,35 @@ public class PoemService {
                 }
             });
         }
+        if (publishedOnly) {
+            wrapper.inSql(Poem::getId,
+                    "SELECT entity_id FROM content_review WHERE entity_type = 'poem' AND status = 'published'");
+        }
         wrapper.orderByDesc(Poem::getId);
         Page<Poem> result = poemMapper.selectPage(new Page<>(page, size), wrapper);
         return new PageResult<>(result.getRecords(), result.getTotal(), page, size);
     }
 
     public Poem getById(Long id) { return poemMapper.selectById(id); }
-    public void create(Poem poem) { poemMapper.insert(poem); }
-    public void update(Long id, Poem poem) { poem.setId(id); poemMapper.updateById(poem); }
+    public void create(Poem poem) {
+        poemMapper.insert(poem);
+        if (governanceCleanup != null) governanceCleanup.ensureNeedsReview("poem", poem.getId());
+    }
+    public void update(Long id, Poem poem) {
+        if (id == null || id <= 0 || poemMapper.selectById(id) == null) {
+            throw new IllegalArgumentException("诗词不存在");
+        }
+        if (poem == null) throw new IllegalArgumentException("诗词不能为空");
+        poem.setId(id);
+        poemMapper.updateById(poem);
+        if (governanceCleanup != null) governanceCleanup.resetReviewForEdit("poem", id);
+    }
     @Transactional
     public void delete(Long id) {
         // 1. 先删除诗词-事件关联表中的记录，以避免外键约束错误
         poemEventMapper.delete(new LambdaQueryWrapper<PoemEvent>().eq(PoemEvent::getPoemId, id));
-        // 2. 再删除诗词本身
+        if (governanceCleanup != null) governanceCleanup.deletePoems(java.util.List.of(id));
+        // 3. 再删除诗词本身
         poemMapper.deleteById(id);
     }
 
@@ -117,7 +151,10 @@ public class PoemService {
                 poems.add(poem);
             }
         }
-        for (Poem poem : poems) { poemMapper.insert(poem); }
+        for (Poem poem : poems) {
+            poemMapper.insert(poem);
+            if (governanceCleanup != null) governanceCleanup.ensureNeedsReview("poem", poem.getId());
+        }
         return poems.size();
     }
 

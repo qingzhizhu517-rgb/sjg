@@ -5,6 +5,7 @@ import com.sjg.dto.PageResult;
 import com.sjg.entity.*;
 import com.sjg.mapper.*;
 import com.sjg.service.PoemService;
+import com.sjg.service.ContentReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,13 +27,16 @@ public class PublicPoemController {
     private final PoetMapper poetMapper;
     private final DynastyMapper dynastyMapper;
     private final ScenicSpotMapper spotMapper;
+    private final ContentReviewService contentReviewService;
 
     public PublicPoemController(PoemService poemService, PoetMapper poetMapper,
-                                 DynastyMapper dynastyMapper, ScenicSpotMapper spotMapper) {
+                                 DynastyMapper dynastyMapper, ScenicSpotMapper spotMapper,
+                                 ContentReviewService contentReviewService) {
         this.poemService = poemService;
         this.poetMapper = poetMapper;
         this.dynastyMapper = dynastyMapper;
         this.spotMapper = spotMapper;
+        this.contentReviewService = contentReviewService;
     }
 
     /**
@@ -45,7 +49,7 @@ public class PublicPoemController {
             @Parameter(description = "每页数量", example = "20") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "搜索关键字（按诗词标题/内容模糊匹配）") @RequestParam(required = false) String keyword,
             @Parameter(description = "区域筛选（如 济南）") @RequestParam(required = false) String region) {
-        return ResponseEntity.ok(Result.success(poemService.list(page, size, keyword, region)));
+        return ResponseEntity.ok(Result.success(poemService.listPublished(page, size, keyword, region)));
     }
 
     /**
@@ -59,14 +63,30 @@ public class PublicPoemController {
         if (poem == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.error(404, "诗词不存在"));
         }
+        ContentReview review = contentReviewService.getReview("poem", id);
+        if (review == null || !ContentReview.PUBLISHED.equals(review.getStatus())) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.error(404, "诗词不存在"));
+        }
 
         Map<String, Object> result = new HashMap<>();
         result.put("poem", poem);
-        result.put("poet", poetMapper.selectById(poem.getPoetId()));
-        result.put("dynasty", dynastyMapper.selectById(poem.getDynastyId()));
+        Poet poet = poetMapper.selectById(poem.getPoetId());
+        if (poet != null && !isPublished("poet", poet.getId())) poet = null;
+        Dynasty dynasty = dynastyMapper.selectById(poem.getDynastyId());
+        if (dynasty != null && !isPublished("dynasty", dynasty.getId())) dynasty = null;
+        result.put("poet", poet);
+        result.put("dynasty", dynasty);
         if (poem.getSpotId() != null) {
-            result.put("spot", spotMapper.selectById(poem.getSpotId()));
+            ScenicSpot spot = spotMapper.selectById(poem.getSpotId());
+            if (spot != null && !isPublished("scenic_spot", spot.getId())) spot = null;
+            result.put("spot", spot);
         }
+        result.put("sources", contentReviewService.listSourceSummaries("poem", id));
         return ResponseEntity.ok(Result.success(result));
+    }
+
+    private boolean isPublished(String entityType, Long entityId) {
+        ContentReview review = contentReviewService.getReview(entityType, entityId);
+        return review != null && ContentReview.PUBLISHED.equals(review.getStatus());
     }
 }

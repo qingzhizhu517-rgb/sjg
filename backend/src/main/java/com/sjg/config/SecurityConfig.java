@@ -46,7 +46,6 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/admin/**").authenticated()
                 .requestMatchers("/api/admin/**").hasAuthority("admin")
                 .requestMatchers("/api/auth/**").authenticated()
                 .anyRequest().authenticated()
@@ -55,7 +54,12 @@ public class SecurityConfig {
                 .authenticationEntryPoint((request, response, authException) -> {
                     response.setContentType("application/json;charset=utf-8");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("{\"code\":401,\"message\":\"未登录或登录已过期\"}");
+                    response.getWriter().write("{\"code\":401,\"message\":\"未登录或登录已过期\",\"data\":null}");
+                })
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setContentType("application/json;charset=utf-8");
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.getWriter().write("{\"code\":403,\"message\":\"无权访问\",\"data\":null}");
                 })
             )
             .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
@@ -79,7 +83,9 @@ public class SecurityConfig {
                         String username = jwtUtil.getUsernameFromToken(token);
                         User user = userMapper.selectOne(
                                 new LambdaQueryWrapper<User>().eq(User::getUsername, username));
-                        if (user != null) {
+                        // Token 本身未携带实时账号状态；每次请求都要求账号仍处于已审批状态，
+                        // 这样禁用/拒绝账号的旧 token 会立即失效。
+                        if (user != null && "approved".equalsIgnoreCase(user.getStatus())) {
                             var auth = new UsernamePasswordAuthenticationToken(
                                     username, null,
                                     List.of(new SimpleGrantedAuthority(user.getRole())));

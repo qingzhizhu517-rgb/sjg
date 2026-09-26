@@ -55,7 +55,7 @@ public class CulturalController {
     @Operation(summary = "创建文化条目", description = "公共字段 + 扩展字段一并提交，service 层分写两表")
     @PostMapping
     public ResponseEntity<Result<Map<String, String>>> create(@RequestBody CulturalItemRequest request) {
-        if (request.getItem() == null) {
+        if (request == null || request.getItem() == null) {
             return ResponseEntity.badRequest().body(Result.error(400, "item 不能为空"));
         }
         culturalItemService.create(request);
@@ -67,7 +67,7 @@ public class CulturalController {
     public ResponseEntity<Result<Map<String, String>>> update(
             @Parameter(description = "条目ID", example = "1", required = true) @PathVariable Long id,
             @RequestBody CulturalItemRequest request) {
-        if (request.getItem() == null) {
+        if (request == null || request.getItem() == null) {
             return ResponseEntity.badRequest().body(Result.error(400, "item 不能为空"));
         }
         if (culturalItemService.getById(id) == null) {
@@ -90,7 +90,7 @@ public class CulturalController {
     public ResponseEntity<Result<Map<String, String>>> updateStatus(
             @Parameter(description = "条目ID", example = "1", required = true) @PathVariable Long id,
             @RequestBody Map<String, String> body) {
-        String status = body.get("status");
+        String status = body == null ? null : body.get("status");
         if (!CulturalItemService.STATUS_DRAFT.equals(status)
                 && !CulturalItemService.STATUS_PUBLISHED.equals(status)) {
             return ResponseEntity.badRequest().body(Result.error(400, "status 仅支持 draft/published"));
@@ -98,7 +98,11 @@ public class CulturalController {
         if (culturalItemService.getById(id) == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.error(404, "条目不存在"));
         }
-        culturalItemService.updateStatus(id, status);
-        return ResponseEntity.ok(Result.success(Map.of("message", "状态已更新")));
+        try {
+            culturalItemService.updateStatus(id, status);
+            return ResponseEntity.ok(Result.success(Map.of("message", "状态已更新")));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Result.error(409, e.getMessage()));
+        }
     }
 }

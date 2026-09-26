@@ -4,8 +4,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sjg.dto.ChatMessage;
+import com.sjg.entity.ContentReview;
 import com.sjg.entity.Poem;
 import com.sjg.entity.PoemAnalysis;
+import com.sjg.mapper.ContentReviewMapper;
 import com.sjg.mapper.PoemAnalysisMapper;
 import com.sjg.mapper.PoemMapper;
 import org.slf4j.Logger;
@@ -76,6 +78,7 @@ public class PoemAnalysisService {
     private final PoemMapper poemMapper;
     private final LlmClient llm;
     private final ObjectMapper objectMapper;
+    private final ContentReviewMapper contentReviewMapper;
 
     /** 单诗生成线程池：有界 + 守护线程，避免无界缓存线程与进程无法退出 */
     private final ExecutorService executor = Executors.newFixedThreadPool(4, r -> {
@@ -101,10 +104,20 @@ public class PoemAnalysisService {
                                PoemMapper poemMapper,
                                LlmClient llm,
                                ObjectMapper objectMapper) {
+        this(analysisMapper, poemMapper, llm, objectMapper, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public PoemAnalysisService(PoemAnalysisMapper analysisMapper,
+                               PoemMapper poemMapper,
+                               LlmClient llm,
+                               ObjectMapper objectMapper,
+                               ContentReviewMapper contentReviewMapper) {
         this.analysisMapper = analysisMapper;
         this.poemMapper = poemMapper;
         this.llm = llm;
         this.objectMapper = objectMapper;
+        this.contentReviewMapper = contentReviewMapper;
     }
 
     /**
@@ -247,6 +260,7 @@ public class PoemAnalysisService {
                 existing.setVersion(CURRENT_VERSION);
                 existing.setGeneratedAt(LocalDateTime.now());
                 analysisMapper.updateById(existing);
+                resetReviewForRegeneration(existing.getId());
             } else {
                 PoemAnalysis entity = new PoemAnalysis();
                 entity.setPoemId(poemId);
@@ -255,10 +269,56 @@ public class PoemAnalysisService {
                 entity.setVersion(CURRENT_VERSION);
                 entity.setGeneratedAt(LocalDateTime.now());
                 analysisMapper.insert(entity);
+                ensureReviewRecord(entity.getId());
             }
             log.debug("赏析缓存已保存: poemId={}", poemId);
         } catch (Exception e) {
             log.error("保存赏析缓存失败: poemId={}", poemId, e);
+        }
+    }
+
+    /** AI 赏析先作为待审核材料存在，不让生成结果自动成为 RAG 事实证据。 */
+    private void ensureReviewRecord(Long analysisId) {
+        if (contentReviewMapper == null || analysisId == null) return;
+        try {
+            ContentReview existing = contentReviewMapper.selectOne(
+                    new LambdaQueryWrapper<ContentReview>()
+                            .eq(ContentReview::getEntityType, "poem_analysis")
+                            .eq(ContentReview::getEntityId, analysisId));
+            if (existing != null) return;
+            ContentReview review = new ContentReview();
+            review.setEntityType("poem_analysis");
+            review.setEntityId(analysisId);
+            review.setStatus(ContentReview.NEEDS_REVIEW);
+            review.setReviewNote("AI 赏析默认待人工审核");
+            review.setCreatedAt(LocalDateTime.now());
+            contentReviewMapper.insert(review);
+        } catch (Exception e) {
+            log.warn("创建赏析审核记录失败: analysisId={}", analysisId, e);
+        }
+    }
+
+    /** 重新生成会改变公开内容，已有 published 审核必须失效并重新进入人工审核。 */
+    private void resetReviewForRegeneration(Long analysisId) {
+        if (contentReviewMapper == null || analysisId == null) return;
+        try {
+            ContentReview existing = contentReviewMapper.selectOne(
+                    new LambdaQueryWrapper<ContentReview>()
+                            .eq(ContentReview::getEntityType, "poem_analysis")
+                            .eq(ContentReview::getEntityId, analysisId));
+            if (existing == null) {
+                ensureReviewRecord(analysisId);
+                return;
+            }
+            if (ContentReview.NEEDS_REVIEW.equals(existing.getStatus())) return;
+            existing.setStatus(ContentReview.NEEDS_REVIEW);
+            existing.setReviewerId(null);
+            existing.setReviewedAt(null);
+            existing.setReviewNote("AI 赏析内容更新，需重新审核");
+            existing.setUpdatedAt(LocalDateTime.now());
+            contentReviewMapper.updateById(existing);
+        } catch (Exception e) {
+            log.warn("重置赏析审核记录失败: analysisId={}", analysisId, e);
         }
     }
 

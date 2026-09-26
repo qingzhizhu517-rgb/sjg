@@ -1,5 +1,6 @@
 server:
   port: 8080
+  trusted-proxies: ${TRUSTED_PROXIES:}
 
 spring:
   datasource:
@@ -59,6 +60,8 @@ llm:
   rate-limit:
     window-seconds: 60
     max-requests: 10
+    max-keys: 10000
+    cleanup-interval-millis: 60000
 
 logging:
   level:

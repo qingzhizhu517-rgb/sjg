@@ -28,7 +28,9 @@ public class PublicEventController {
     @GetMapping
     public ResponseEntity<Result<List<Event>>> list() {
         List<Event> events = eventMapper.selectList(
-            new LambdaQueryWrapper<Event>().orderByAsc(Event::getYear));
+            new LambdaQueryWrapper<Event>().inSql(Event::getId,
+                    "SELECT entity_id FROM content_review WHERE entity_type = 'event' AND status = 'published'")
+                    .orderByAsc(Event::getYear));
         return ResponseEntity.ok(Result.success(events));
     }
 }

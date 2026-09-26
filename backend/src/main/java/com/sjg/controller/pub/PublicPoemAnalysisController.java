@@ -4,8 +4,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sjg.dto.Result;
 import com.sjg.entity.PoemAnalysis;
+import com.sjg.entity.ContentReview;
 import com.sjg.mapper.PoemAnalysisMapper;
 import com.sjg.service.PoemAnalysisService;
+import com.sjg.service.ContentReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,13 +34,23 @@ public class PublicPoemAnalysisController {
     private final PoemAnalysisService poemAnalysisService;
     private final PoemAnalysisMapper poemAnalysisMapper;
     private final ObjectMapper objectMapper;
+    private final ContentReviewService contentReviewService;
 
     public PublicPoemAnalysisController(PoemAnalysisService poemAnalysisService,
                                          PoemAnalysisMapper poemAnalysisMapper,
                                          ObjectMapper objectMapper) {
+        this(poemAnalysisService, poemAnalysisMapper, objectMapper, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public PublicPoemAnalysisController(PoemAnalysisService poemAnalysisService,
+                                         PoemAnalysisMapper poemAnalysisMapper,
+                                         ObjectMapper objectMapper,
+                                         ContentReviewService contentReviewService) {
         this.poemAnalysisService = poemAnalysisService;
         this.poemAnalysisMapper = poemAnalysisMapper;
         this.objectMapper = objectMapper;
+        this.contentReviewService = contentReviewService;
     }
 
     /**
@@ -50,6 +62,20 @@ public class PublicPoemAnalysisController {
     public ResponseEntity<Result<Map<String, Object>>> getAnalysis(
             @Parameter(description = "诗词ID", example = "1", required = true) @PathVariable Long id) {
         try {
+            if (contentReviewService != null) {
+                ContentReview review = contentReviewService.getReview("poem", id);
+                if (review == null || !ContentReview.PUBLISHED.equals(review.getStatus())) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.error(404, "诗词不存在"));
+                }
+            }
+            // 先检查已有缓存，避免把待审核的 AI 赏析送回公开端或无谓触发生成。
+            PoemAnalysis cached = poemAnalysisMapper.selectOne(
+                    new LambdaQueryWrapper<PoemAnalysis>()
+                            .eq(PoemAnalysis::getPoemId, id)
+                            .last("LIMIT 1"));
+            if (contentReviewService != null && cached != null && !isPublishedAnalysis(cached)) {
+                return hiddenAnalysis();
+            }
             // 1. 调用服务获取或生成赏析（确保缓存存在）
             poemAnalysisService.getOrGenerate(id);
 
@@ -63,6 +89,9 @@ public class PublicPoemAnalysisController {
                 log.warn("赏析生成后仍未找到记录: poemId={}", id);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(Result.error("赏析生成失败"));
+            }
+            if (contentReviewService != null && !isPublishedAnalysis(analysis)) {
+                return hiddenAnalysis();
             }
 
             // 3. 解析赏析JSON字符串为对象
@@ -86,5 +115,16 @@ public class PublicPoemAnalysisController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Result.error("获取赏析失败: " + e.getMessage()));
         }
+    }
+
+    private boolean isPublishedAnalysis(PoemAnalysis analysis) {
+        if (analysis == null || analysis.getId() == null) return false;
+        ContentReview review = contentReviewService.getReview("poem_analysis", analysis.getId());
+        return review != null && ContentReview.PUBLISHED.equals(review.getStatus());
+    }
+
+    private ResponseEntity<Result<Map<String, Object>>> hiddenAnalysis() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Result.error(404, "赏析不存在或尚未通过审核"));
     }
 }

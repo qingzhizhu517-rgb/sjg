@@ -55,7 +55,10 @@ public class EventController {
      */
     @Operation(summary = "创建历史事件", description = "新增历史事件记录")
     @PostMapping
-    public ResponseEntity<Result<Map<String, String>>> create(@Parameter(description = "事件信息", required = true) @RequestBody Event event) {
+    public ResponseEntity<Result<Map<String, String>>> create(@Parameter(description = "事件信息", required = true) @RequestBody(required = false) Event event) {
+        if (event == null) {
+            return ResponseEntity.badRequest().body(Result.error(400, "事件不能为空"));
+        }
         eventService.create(event);
         return ResponseEntity.ok(Result.success(Map.of("message", "创建成功")));
     }
@@ -67,7 +70,10 @@ public class EventController {
     @PutMapping("/{id}")
     public ResponseEntity<Result<Map<String, String>>> update(
             @Parameter(description = "事件ID", example = "1", required = true) @PathVariable Long id,
-            @Parameter(description = "事件信息", required = true) @RequestBody Event event) {
+            @Parameter(description = "事件信息", required = true) @RequestBody(required = false) Event event) {
+        if (event == null) {
+            return ResponseEntity.badRequest().body(Result.error(400, "事件不能为空"));
+        }
         eventService.update(id, event);
         return ResponseEntity.ok(Result.success(Map.of("message", "更新成功")));
     }

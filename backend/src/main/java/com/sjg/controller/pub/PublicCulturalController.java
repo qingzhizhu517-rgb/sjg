@@ -3,7 +3,9 @@ package com.sjg.controller.pub;
 import com.sjg.dto.PageResult;
 import com.sjg.dto.Result;
 import com.sjg.entity.CulturalItem;
+import com.sjg.entity.ContentReview;
 import com.sjg.service.CulturalItemService;
+import com.sjg.service.ContentReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,9 +26,12 @@ import java.util.Map;
 public class PublicCulturalController {
 
     private final CulturalItemService culturalItemService;
+    private final ContentReviewService contentReviewService;
 
-    public PublicCulturalController(CulturalItemService culturalItemService) {
+    public PublicCulturalController(CulturalItemService culturalItemService,
+                                    ContentReviewService contentReviewService) {
         this.culturalItemService = culturalItemService;
+        this.contentReviewService = contentReviewService;
     }
 
     @Operation(summary = "分页查询文化条目", description = "仅返回已发布条目，支持类别/区域/关键字筛选")
@@ -53,6 +58,11 @@ public class PublicCulturalController {
         if (!CulturalItemService.STATUS_PUBLISHED.equals(item.getStatus())) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.error(404, "条目不存在"));
         }
+        ContentReview review = contentReviewService.getReview("cultural_item", id);
+        if (review == null || !ContentReview.PUBLISHED.equals(review.getStatus())) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.error(404, "条目不存在"));
+        }
+        view.put("sources", contentReviewService.listSourceSummaries("cultural_item", id));
         return ResponseEntity.ok(Result.success(view));
     }
 

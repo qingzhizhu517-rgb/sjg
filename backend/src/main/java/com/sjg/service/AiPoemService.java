@@ -4,14 +4,13 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sjg.entity.AiPoem;
 import com.sjg.mapper.AiPoemMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
+import java.time.Duration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,29 +18,24 @@ import java.util.regex.Pattern;
 public class AiPoemService extends ServiceImpl<AiPoemMapper, AiPoem> {
 
     private final LlmClient llmClient;
+    private final RateLimitService rateLimiter;
 
     @Value("${llm.rate-limit.window-seconds:60}") private int windowSeconds;
     @Value("${llm.rate-limit.max-requests:10}") private int maxRequests;
 
-    /** 与 ChatService 同样的内存滑动窗口限流，但计数互相独立 */
-    private final Map<String, List<Long>> rateMap = new ConcurrentHashMap<>();
-
     public AiPoemService(LlmClient llmClient) {
+        this(llmClient, new InMemoryRateLimitService());
+    }
+
+    @Autowired
+    public AiPoemService(LlmClient llmClient, RateLimitService rateLimiter) {
         this.llmClient = llmClient;
+        this.rateLimiter = rateLimiter;
     }
 
     /** 滑动窗口限流：windowSeconds 内同一 key 不超过 maxRequests 次 */
     public boolean checkRate(String key) {
-        if (key == null || key.isBlank()) key = "anon";
-        long now = System.currentTimeMillis();
-        long windowMs = windowSeconds * 1000L;
-        List<Long> times = rateMap.computeIfAbsent(key, k -> new ArrayList<>());
-        synchronized (times) {
-            times.removeIf(t -> now - t > windowMs);
-            if (times.size() >= maxRequests) return false;
-            times.add(now);
-            return true;
-        }
+        return rateLimiter.tryAcquire(key, maxRequests, Duration.ofSeconds(windowSeconds));
     }
 
     /**
@@ -65,7 +59,6 @@ public class AiPoemService extends ServiceImpl<AiPoemMapper, AiPoem> {
         if (!checkRate(clientKey)) {
             throw new IllegalStateException("创作过于频繁，请稍后再试");
         }
-
         // 构建prompt
         String prompt = buildPrompt(t, style, wordCount, dynasty);
         

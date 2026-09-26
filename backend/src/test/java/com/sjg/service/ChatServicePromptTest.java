@@ -4,6 +4,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+import com.sjg.dto.EvidenceSnippet;
+
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -50,5 +54,25 @@ class ChatServicePromptTest {
 
         assertTrue(sys.contains("检索资料"), "缺失占位符时应追加检索资料段");
         assertTrue(sys.endsWith("黄河文化"), "检索资料应出现在末尾");
+    }
+
+    @Test
+    @DisplayName("证据片段可转换为提示词资料")
+    void evidenceCanBeFormattedForPrompt() {
+        String context = service.formatEvidence(List.of(
+                new EvidenceSnippet("poem", 1L, "《静夜思》", "床前明月光", List.of(), 100)));
+
+        assertTrue(context.contains("《静夜思》"));
+        assertTrue(context.contains("床前明月光"));
+    }
+
+    @Test
+    @DisplayName("文化条目详情上下文会注入系统提示")
+    void culturalItemContextHintIsIncluded() {
+        String hint = ReflectionTestUtils.invokeMethod(service, "buildContextHint",
+                Map.of("type", "cultural_item", "entityId", "42"));
+
+        assertTrue(hint.contains("文化条目"));
+        assertTrue(hint.contains("42"));
     }
 }

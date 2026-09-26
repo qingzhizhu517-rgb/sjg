@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sjg.dto.Result;
 import com.sjg.entity.PoemAnalysis;
+import com.sjg.entity.ContentReview;
 import com.sjg.mapper.PoemAnalysisMapper;
+import com.sjg.service.ContentReviewService;
 import com.sjg.service.PoemAnalysisService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,6 +29,7 @@ class PublicPoemAnalysisControllerTest {
 
     @Mock PoemAnalysisService poemAnalysisService;
     @Mock PoemAnalysisMapper poemAnalysisMapper;
+    @Mock ContentReviewService contentReviewService;
     ObjectMapper objectMapper = new ObjectMapper();
 
     PublicPoemAnalysisController controller;
@@ -90,5 +93,47 @@ class PublicPoemAnalysisControllerTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertNotNull(response.getBody());
         assertTrue(response.getBody().getMessage().contains("获取赏析失败"));
+    }
+
+    @Test
+    @DisplayName("未发布诗词的公开赏析返回404且不触发生成")
+    void getAnalysis_unpublishedPoemIsHidden() {
+        ContentReview review = new ContentReview();
+        review.setEntityType("poem");
+        review.setEntityId(1L);
+        review.setStatus(ContentReview.DRAFT);
+        when(contentReviewService.getReview("poem", 1L)).thenReturn(review);
+        PublicPoemAnalysisController guardedController = new PublicPoemAnalysisController(
+                poemAnalysisService, poemAnalysisMapper, objectMapper, contentReviewService);
+
+        ResponseEntity<Result<Map<String, Object>>> response = guardedController.getAnalysis(1L);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals(404, response.getBody().getCode());
+        verifyNoInteractions(poemAnalysisService, poemAnalysisMapper);
+    }
+
+    @Test
+    @DisplayName("诗词已发布但赏析未审核时返回404且不触发重新生成")
+    void getAnalysis_unreviewedAnalysisIsHidden() {
+        ContentReview poemReview = new ContentReview();
+        poemReview.setStatus(ContentReview.PUBLISHED);
+        ContentReview analysisReview = new ContentReview();
+        analysisReview.setStatus(ContentReview.NEEDS_REVIEW);
+        PoemAnalysis analysis = sampleAnalysis();
+        analysis.setVersion(2);
+
+        when(contentReviewService.getReview("poem", 1L)).thenReturn(poemReview);
+        when(poemAnalysisMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(analysis);
+        when(contentReviewService.getReview("poem_analysis", 1L)).thenReturn(analysisReview);
+        PublicPoemAnalysisController guardedController = new PublicPoemAnalysisController(
+                poemAnalysisService, poemAnalysisMapper, objectMapper, contentReviewService);
+
+        ResponseEntity<Result<Map<String, Object>>> response = guardedController.getAnalysis(1L);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals(404, response.getBody().getCode());
+        verifyNoInteractions(poemAnalysisService);
+        verify(poemAnalysisMapper).selectOne(any(LambdaQueryWrapper.class));
     }
 }

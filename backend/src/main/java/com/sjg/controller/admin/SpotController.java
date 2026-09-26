@@ -56,7 +56,10 @@ public class SpotController {
      */
     @Operation(summary = "创建景点", description = "新增景点记录")
     @PostMapping
-    public ResponseEntity<Result<Map<String, String>>> create(@Parameter(description = "景点信息", required = true) @RequestBody ScenicSpot spot) {
+    public ResponseEntity<Result<Map<String, String>>> create(@Parameter(description = "景点信息", required = true) @RequestBody(required = false) ScenicSpot spot) {
+        if (spot == null) {
+            return ResponseEntity.badRequest().body(Result.error(400, "景点不能为空"));
+        }
         spotService.create(spot);
         return ResponseEntity.ok(Result.success(Map.of("message", "创建成功")));
     }
@@ -68,7 +71,10 @@ public class SpotController {
     @PutMapping("/{id}")
     public ResponseEntity<Result<Map<String, String>>> update(
             @Parameter(description = "景点ID", example = "1", required = true) @PathVariable Long id,
-            @Parameter(description = "景点信息", required = true) @RequestBody ScenicSpot spot) {
+            @Parameter(description = "景点信息", required = true) @RequestBody(required = false) ScenicSpot spot) {
+        if (spot == null) {
+            return ResponseEntity.badRequest().body(Result.error(400, "景点不能为空"));
+        }
         spotService.update(id, spot);
         return ResponseEntity.ok(Result.success(Map.of("message", "更新成功")));
     }

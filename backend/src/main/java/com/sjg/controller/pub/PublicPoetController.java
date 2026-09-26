@@ -4,11 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.sjg.dto.PageResult;
 import com.sjg.dto.Result;
 import com.sjg.entity.Dynasty;
+import com.sjg.entity.ContentReview;
 import com.sjg.entity.Poet;
 import com.sjg.entity.Poem;
 import com.sjg.mapper.DynastyMapper;
 import com.sjg.mapper.PoemMapper;
 import com.sjg.service.PoetService;
+import com.sjg.service.ContentReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,11 +31,14 @@ public class PublicPoetController {
     private final PoetService poetService;
     private final PoemMapper poemMapper;
     private final DynastyMapper dynastyMapper;
+    private final ContentReviewService contentReviewService;
 
-    public PublicPoetController(PoetService poetService, PoemMapper poemMapper, DynastyMapper dynastyMapper) {
+    public PublicPoetController(PoetService poetService, PoemMapper poemMapper, DynastyMapper dynastyMapper,
+                                ContentReviewService contentReviewService) {
         this.poetService = poetService;
         this.poemMapper = poemMapper;
         this.dynastyMapper = dynastyMapper;
+        this.contentReviewService = contentReviewService;
     }
 
     /**
@@ -46,7 +51,7 @@ public class PublicPoetController {
             @Parameter(description = "每页数量", example = "20") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "搜索关键字（按诗人名称模糊匹配）") @RequestParam(required = false) String keyword,
             @Parameter(description = "区域筛选（如 济南）") @RequestParam(required = false) String region) {
-        return ResponseEntity.ok(Result.success(poetService.list(page, size, keyword, region)));
+        return ResponseEntity.ok(Result.success(poetService.listPublished(page, size, keyword, region)));
     }
 
     /**
@@ -60,11 +65,18 @@ public class PublicPoetController {
         if (poet == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.error(404, "诗人不存在"));
         }
+        ContentReview review = contentReviewService.getReview("poet", id);
+        if (review == null || !ContentReview.PUBLISHED.equals(review.getStatus())) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.error(404, "诗人不存在"));
+        }
 
         List<Poem> poems = poemMapper.selectList(
-            new LambdaQueryWrapper<Poem>().eq(Poem::getPoetId, id));
+            new LambdaQueryWrapper<Poem>().eq(Poem::getPoetId, id)
+                    .inSql(Poem::getId,
+                            "SELECT entity_id FROM content_review WHERE entity_type = 'poem' AND status = 'published'"));
 
         Dynasty dynasty = dynastyMapper.selectById(poet.getDynastyId());
+        if (dynasty != null && !isPublished("dynasty", dynasty.getId())) dynasty = null;
 
         poet.setCompleteness(
             com.sjg.util.PoetCompletenessCalculator.compute(poet, poems.size()));
@@ -73,6 +85,12 @@ public class PublicPoetController {
         result.put("poet", poet);
         result.put("poems", poems);
         result.put("dynasty", dynasty);
+        result.put("sources", contentReviewService.listSourceSummaries("poet", id));
         return ResponseEntity.ok(Result.success(result));
+    }
+
+    private boolean isPublished(String entityType, Long entityId) {
+        ContentReview review = contentReviewService.getReview(entityType, entityId);
+        return review != null && ContentReview.PUBLISHED.equals(review.getStatus());
     }
 }

@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sjg.dto.ChatMessage;
 import com.sjg.entity.Poem;
 import com.sjg.entity.PoemAnalysis;
+import com.sjg.entity.ContentReview;
+import com.sjg.mapper.ContentReviewMapper;
 import com.sjg.mapper.PoemAnalysisMapper;
 import com.sjg.mapper.PoemMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +30,7 @@ class PoemAnalysisServiceTest {
 
     @Mock PoemAnalysisMapper analysisMapper;
     @Mock PoemMapper poemMapper;
+    @Mock ContentReviewMapper contentReviewMapper;
     @Mock LlmClient llm;
     ObjectMapper objectMapper = new ObjectMapper();
 
@@ -35,7 +38,7 @@ class PoemAnalysisServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new PoemAnalysisService(analysisMapper, poemMapper, llm, objectMapper);
+        service = new PoemAnalysisService(analysisMapper, poemMapper, llm, objectMapper, contentReviewMapper);
     }
 
     // ─── 辅助方法 ───────────────────────────────────────────────
@@ -116,6 +119,29 @@ class PoemAnalysisServiceTest {
         }
 
         @Test
+        @DisplayName("首次生成的赏析自动创建待审核记录")
+        void cacheMiss_createsNeedsReviewRecord() {
+            when(analysisMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
+            when(poemMapper.selectById(1L)).thenReturn(samplePoem());
+            when(llm.getModel()).thenReturn("deepseek-chat");
+            stubStreamChat(validAnalysisJson());
+            doAnswer(inv -> {
+                PoemAnalysis saved = inv.getArgument(0);
+                saved.setId(42L);
+                return 1;
+            }).when(analysisMapper).insert(any(PoemAnalysis.class));
+            when(contentReviewMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
+
+            service.getOrGenerate(1L);
+
+            ArgumentCaptor<ContentReview> captor = ArgumentCaptor.forClass(ContentReview.class);
+            verify(contentReviewMapper).insert(captor.capture());
+            assertEquals("poem_analysis", captor.getValue().getEntityType());
+            assertEquals(42L, captor.getValue().getEntityId());
+            assertEquals(ContentReview.NEEDS_REVIEW, captor.getValue().getStatus());
+        }
+
+        @Test
         @DisplayName("缓存版本过期 -> 重新生成")
         void cacheExpired_regenerates() {
             PoemAnalysis old = sampleAnalysis(1L, 0); // version 0 < CURRENT_VERSION
@@ -130,6 +156,29 @@ class PoemAnalysisServiceTest {
             assertTrue(result.contains("思乡之情"));
             // 应该是 update 而不是 insert
             verify(analysisMapper).updateById(any(PoemAnalysis.class));
+        }
+
+        @Test
+        @DisplayName("重新生成已发布赏析时降回待审核")
+        void regenerationDemotesPublishedReview() {
+            PoemAnalysis old = sampleAnalysis(1L, 0);
+            ContentReview published = new ContentReview();
+            published.setId(88L);
+            published.setEntityType("poem_analysis");
+            published.setEntityId(1L);
+            published.setStatus(ContentReview.PUBLISHED);
+            when(analysisMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(old);
+            when(poemMapper.selectById(1L)).thenReturn(samplePoem());
+            when(llm.getModel()).thenReturn("deepseek-chat");
+            stubStreamChat(validAnalysisJson());
+            when(contentReviewMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(published);
+
+            service.getOrGenerate(1L);
+
+            verify(contentReviewMapper).updateById(argThat(review ->
+                    ContentReview.NEEDS_REVIEW.equals(review.getStatus())
+                            && review.getReviewerId() == null
+                            && review.getReviewedAt() == null));
         }
 
         @Test

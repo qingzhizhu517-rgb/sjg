@@ -2,17 +2,23 @@ package com.sjg.service;
 
 import com.sjg.dto.ChatMessage;
 import com.sjg.dto.ChatRequest;
+import com.sjg.dto.EntityContext;
+import com.sjg.dto.EvidenceSnippet;
+import com.sjg.entity.AiAuditLog;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.LinkedHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +33,9 @@ public class ChatService {
 
     private final LlmClient llm;
     private final RagRetrievalService rag;
+    private final KnowledgeRetrievalService knowledge;
+    private final AiAuditService audit;
+    private final RateLimitService rateLimiter;
 
     @Value("${llm.system-prompt}") private String systemPrompt;
     @Value("${llm.timeout-seconds:60}") private int timeoutSeconds;
@@ -34,12 +43,29 @@ public class ChatService {
     @Value("${llm.rate-limit.max-requests:10}") private int maxRequests;
 
     private final ExecutorService executor = Executors.newCachedThreadPool();
-    /** v1：内存限流，key→时间戳列表。map 不自动清理，长期可换 Caffeine/Redis。 */
-    private final Map<String, List<Long>> rateMap = new ConcurrentHashMap<>();
 
     public ChatService(LlmClient llm, RagRetrievalService rag) {
+        this(llm, rag, null, null, new InMemoryRateLimitService());
+    }
+
+    public ChatService(LlmClient llm, RagRetrievalService rag, KnowledgeRetrievalService knowledge) {
+        this(llm, rag, knowledge, null, new InMemoryRateLimitService());
+    }
+
+    public ChatService(LlmClient llm, RagRetrievalService rag,
+                       KnowledgeRetrievalService knowledge, AiAuditService audit) {
+        this(llm, rag, knowledge, audit, new InMemoryRateLimitService());
+    }
+
+    @Autowired
+    public ChatService(LlmClient llm, RagRetrievalService rag,
+                       KnowledgeRetrievalService knowledge, AiAuditService audit,
+                       RateLimitService rateLimiter) {
         this.llm = llm;
         this.rag = rag;
+        this.knowledge = knowledge;
+        this.audit = audit;
+        this.rateLimiter = rateLimiter;
     }
 
     /**
@@ -54,7 +80,7 @@ public class ChatService {
             return emitter;
         }
         // 2. 限流
-        if (!checkRate(clientKey)) {
+        if (!rateLimiter.tryAcquire(clientKey, maxRequests, Duration.ofSeconds(windowSeconds))) {
             executor.submit(() -> sendOnce(emitter, Map.of("error", "提问过于频繁，请稍后再试。")));
             return emitter;
         }
@@ -65,8 +91,30 @@ public class ChatService {
         }
 
         executor.submit(() -> {
+            AiAuditLog auditLog = null;
+            AtomicReference<String> errorRef = new AtomicReference<>();
             try {
-                String ragCtx = rag.retrieve(req.message());
+                if (audit != null) {
+                    try {
+                        auditLog = audit.start(req, clientKey);
+                    } catch (Exception auditError) {
+                        log.warn("AI 审计记录启动失败", auditError);
+                    }
+                }
+                List<EvidenceSnippet> evidence = knowledge == null
+                        ? List.of()
+                        : knowledge.retrieve(req.message(), EntityContext.from(req.context()));
+                String ragCtx = formatEvidence(evidence);
+                // 统一知识检索器存在时不再回退到旧版三表 LIKE RAG，避免绕过审核/来源链路。
+                if (ragCtx.isEmpty() && rag != null && knowledge == null) {
+                    ragCtx = rag.retrieve(req.message());
+                }
+                if (auditLog != null || !evidence.isEmpty()) {
+                    Map<String, Object> evidencePayload = new LinkedHashMap<>();
+                    evidencePayload.put("items", evidence);
+                    if (auditLog != null && auditLog.getId() != null) evidencePayload.put("auditId", auditLog.getId());
+                    sendEvent(emitter, "evidence", evidencePayload);
+                }
                 String sys = buildSystemPrompt(ragCtx);
 
                 // 注入前端页面上下文
@@ -87,11 +135,18 @@ public class ChatService {
                 messages.add(new ChatMessage("user", req.message()));
 
                 llm.streamChat(messages,
-                        delta -> sendEvent(emitter, Map.of("delta", delta)),
-                        err -> sendEvent(emitter, Map.of("error", err)));
+                        delta -> sendEvent(emitter, "delta", Map.of("delta", delta)),
+                        err -> {
+                            errorRef.set(err);
+                            sendEvent(emitter, "error", Map.of("error", err));
+                        });
+                sendEvent(emitter, "done", Map.of("done", true));
+                if (audit != null) audit.complete(auditLog, evidence, llm.getModel(), errorRef.get());
                 emitter.complete();
             } catch (Exception e) {
-                sendEvent(emitter, Map.of("error", "生成失败：" + e.getMessage()));
+                errorRef.set(e.getClass().getSimpleName());
+                sendEvent(emitter, "error", Map.of("error", "生成失败：" + e.getMessage()));
+                if (audit != null) audit.complete(auditLog, List.of(), llm.getModel(), errorRef.get());
                 emitter.complete();
             }
         });
@@ -99,8 +154,14 @@ public class ChatService {
     }
 
     private void sendEvent(SseEmitter emitter, Map<String, String> payload) {
+        sendEvent(emitter, null, payload);
+    }
+
+    private void sendEvent(SseEmitter emitter, String eventName, Object payload) {
         try {
-            emitter.send(SseEmitter.event().data(payload));
+            SseEmitter.SseEventBuilder event = SseEmitter.event();
+            if (eventName != null) event.name(eventName);
+            emitter.send(event.data(payload));
         } catch (Exception ignore) {
             // 客户端可能已断开，忽略
         }
@@ -108,23 +169,9 @@ public class ChatService {
 
     private void sendOnce(SseEmitter emitter, Map<String, String> payload) {
         try {
-            emitter.send(SseEmitter.event().data(payload));
+            emitter.send(SseEmitter.event().name("error").data(payload));
             emitter.complete();
         } catch (Exception ignore) {
-        }
-    }
-
-    /** 滑动窗口限流：windowSeconds 内同一 key 不超过 maxRequests 次 */
-    private boolean checkRate(String key) {
-        if (key == null || key.isBlank()) key = "anon";
-        long now = System.currentTimeMillis();
-        long windowMs = windowSeconds * 1000L;
-        List<Long> times = rateMap.computeIfAbsent(key, k -> new ArrayList<>());
-        synchronized (times) {
-            times.removeIf(t -> now - t > windowMs);
-            if (times.size() >= maxRequests) return false;
-            times.add(now);
-            return true;
         }
     }
 
@@ -143,6 +190,17 @@ public class ChatService {
         return (sys == null ? "" : sys) + "\n\n检索资料：\n" + ragBlock;
     }
 
+    String formatEvidence(List<EvidenceSnippet> evidence) {
+        if (evidence == null || evidence.isEmpty()) return "";
+        StringBuilder out = new StringBuilder();
+        for (EvidenceSnippet snippet : evidence) {
+            out.append("【").append(snippet.entityType()).append("】")
+                    .append(snippet.title()).append("：")
+                    .append(snippet.snippet()).append("\n");
+        }
+        return out.toString().trim();
+    }
+
     /**
      * 根据前端上下文生成提示语，注入到 system prompt 末尾。
      */
@@ -154,8 +212,15 @@ public class ChatService {
             case "poet" -> "【上下文】用户正在查看一位诗人的详情页，请优先回答与该诗人相关的问题。";
             case "poem" -> "【上下文】用户正在查看一首诗词的详情页，请优先回答与该诗词及其作者相关的问题。";
             case "spot" -> "【上下文】用户正在查看一处文学景观的详情页，请优先回答与该景观相关的问题。";
+            case "cultural_item" -> {
+                String entityId = context.getOrDefault("entityId", "");
+                String idHint = StringUtils.hasText(entityId) ? "（条目 ID：" + entityId + "）" : "";
+                yield "【上下文】用户正在查看齐鲁文化条目详情页" + idHint
+                        + "，请优先回答与该文化条目相关的问题，并区分页面资料与推断。";
+            }
             case "timeline" -> "【上下文】用户正在浏览朝代时间线页面，请优先回答与朝代、历史时期相关的问题。";
             case "poets" -> "【上下文】用户正在浏览诗人列表页面，请优先回答与齐鲁名士相关的问题。";
+            case "learning_task" -> "【上下文】用户正在完成诗词探究学习任务，请把回答限定为任务材料和可核实证据，优先指出证据覆盖与遗漏。";
             default -> "";
         };
     }

@@ -5,11 +5,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sjg.dto.CulturalItemRequest;
 import com.sjg.dto.PageResult;
 import com.sjg.entity.CraftDetail;
+import com.sjg.entity.ContentReview;
 import com.sjg.entity.CulturalItem;
 import com.sjg.entity.FestivalDetail;
 import com.sjg.entity.FoodOperaDetail;
 import com.sjg.entity.LiteratureDetail;
 import com.sjg.mapper.CraftDetailMapper;
+import com.sjg.mapper.ContentReviewMapper;
 import com.sjg.mapper.CulturalItemMapper;
 import com.sjg.mapper.FestivalDetailMapper;
 import com.sjg.mapper.FoodOperaDetailMapper;
@@ -27,6 +29,7 @@ import java.util.Map;
 public class CulturalItemService {
 
     public static final String STATUS_DRAFT = "draft";
+    public static final String STATUS_NEEDS_REVIEW = "needs_review";
     public static final String STATUS_PUBLISHED = "published";
 
     private final CulturalItemMapper itemMapper;
@@ -34,17 +37,44 @@ public class CulturalItemService {
     private final CraftDetailMapper craftDetailMapper;
     private final LiteratureDetailMapper literatureDetailMapper;
     private final FoodOperaDetailMapper foodOperaDetailMapper;
+    private final ContentReviewMapper contentReviewMapper;
+    private final ContentGovernanceCleanupService governanceCleanup;
 
     public CulturalItemService(CulturalItemMapper itemMapper,
                                FestivalDetailMapper festivalDetailMapper,
                                CraftDetailMapper craftDetailMapper,
                                LiteratureDetailMapper literatureDetailMapper,
                                FoodOperaDetailMapper foodOperaDetailMapper) {
+        this(itemMapper, festivalDetailMapper, craftDetailMapper, literatureDetailMapper,
+                foodOperaDetailMapper, null, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public CulturalItemService(CulturalItemMapper itemMapper,
+                               FestivalDetailMapper festivalDetailMapper,
+                               CraftDetailMapper craftDetailMapper,
+                               LiteratureDetailMapper literatureDetailMapper,
+                               FoodOperaDetailMapper foodOperaDetailMapper,
+                               ContentReviewMapper contentReviewMapper) {
+        this(itemMapper, festivalDetailMapper, craftDetailMapper, literatureDetailMapper,
+                foodOperaDetailMapper, contentReviewMapper, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public CulturalItemService(CulturalItemMapper itemMapper,
+                               FestivalDetailMapper festivalDetailMapper,
+                               CraftDetailMapper craftDetailMapper,
+                               LiteratureDetailMapper literatureDetailMapper,
+                               FoodOperaDetailMapper foodOperaDetailMapper,
+                               ContentReviewMapper contentReviewMapper,
+                               ContentGovernanceCleanupService governanceCleanup) {
         this.itemMapper = itemMapper;
         this.festivalDetailMapper = festivalDetailMapper;
         this.craftDetailMapper = craftDetailMapper;
         this.literatureDetailMapper = literatureDetailMapper;
         this.foodOperaDetailMapper = foodOperaDetailMapper;
+        this.contentReviewMapper = contentReviewMapper;
+        this.governanceCleanup = governanceCleanup;
     }
 
     /**
@@ -65,6 +95,10 @@ public class CulturalItemService {
         }
         if (publishedOnly) {
             wrapper.eq(CulturalItem::getStatus, STATUS_PUBLISHED);
+            if (contentReviewMapper != null) {
+                wrapper.inSql(CulturalItem::getId,
+                        "SELECT entity_id FROM content_review WHERE entity_type = 'cultural_item' AND status = 'published'");
+            }
         } else if (StringUtils.hasText(status)) {
             wrapper.eq(CulturalItem::getStatus, status);
         }
@@ -102,9 +136,12 @@ public class CulturalItemService {
         CulturalItem item = request.getItem();
         // 未显式指定状态时默认草稿, 避免误公开发布(与 V12 的 DB 默认值解耦)
         if (!StringUtils.hasText(item.getStatus())) {
-            item.setStatus(STATUS_DRAFT);
+            item.setStatus("ai".equalsIgnoreCase(item.getSource())
+                    ? STATUS_NEEDS_REVIEW
+                    : STATUS_DRAFT);
         }
         itemMapper.insert(item);
+        if (governanceCleanup != null) governanceCleanup.ensureNeedsReview("cultural_item", item.getId());
         saveDetails(item, request);
     }
 
@@ -112,6 +149,7 @@ public class CulturalItemService {
     public void update(Long id, CulturalItemRequest request) {
         CulturalItem item = request.getItem();
         item.setId(id);
+        item.setStatus(STATUS_DRAFT);
         itemMapper.updateById(item);
         // 扩展表一律先删后插, 保证与请求体一致
         festivalDetailMapper.deleteById(id);
@@ -119,6 +157,7 @@ public class CulturalItemService {
         literatureDetailMapper.deleteById(id);
         foodOperaDetailMapper.deleteById(id);
         saveDetails(item, request);
+        if (governanceCleanup != null) governanceCleanup.resetReviewForEdit("cultural_item", id);
     }
 
     /** 按 category 落对应扩展表 */
@@ -149,14 +188,26 @@ public class CulturalItemService {
         craftDetailMapper.deleteById(id);
         literatureDetailMapper.deleteById(id);
         foodOperaDetailMapper.deleteById(id);
+        if (governanceCleanup != null) governanceCleanup.deleteEntityReferences("cultural_item", id);
         itemMapper.deleteById(id);
     }
 
     public void updateStatus(Long id, String status) {
+        if (STATUS_PUBLISHED.equals(status) && contentReviewMapper != null) {
+            ContentReview review = contentReviewMapper.selectOne(new LambdaQueryWrapper<ContentReview>()
+                    .eq(ContentReview::getEntityType, "cultural_item")
+                    .eq(ContentReview::getEntityId, id));
+            if (review == null || !ContentReview.PUBLISHED.equals(review.getStatus())) {
+                throw new IllegalStateException("请先在内容治理工作台完成发布审核");
+            }
+        }
         CulturalItem item = new CulturalItem();
         item.setId(id);
         item.setStatus(status);
         itemMapper.updateById(item);
+        if (STATUS_DRAFT.equals(status) && governanceCleanup != null) {
+            governanceCleanup.resetReviewForEdit("cultural_item", id);
+        }
     }
 
     /**
@@ -168,7 +219,9 @@ public class CulturalItemService {
         for (String category : categories) {
             Long count = itemMapper.selectCount(new LambdaQueryWrapper<CulturalItem>()
                     .eq(CulturalItem::getCategory, category)
-                    .eq(CulturalItem::getStatus, STATUS_PUBLISHED));
+                    .eq(CulturalItem::getStatus, STATUS_PUBLISHED)
+                    .apply(contentReviewMapper != null,
+                            "id IN (SELECT entity_id FROM content_review WHERE entity_type = 'cultural_item' AND status = 'published')"));
             stats.add(Map.of("category", category, "count", count));
         }
         return stats;
