@@ -78,6 +78,8 @@
           </div>
         </section>
 
+        <SourceList :sources="sources" class="pd-section" data-reveal />
+
         <router-link
           v-if="signature"
           :to="`/poems/${signature.id}`"
@@ -141,6 +143,7 @@ import { firstLine, pickSignaturePoem } from '../utils/poem'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import InkPlaceholder from '../components/InkPlaceholder.vue'
+import SourceList from '../components/SourceList.vue'
 
 const route = useRoute()
 const { resolveFirstImage } = useImage()
@@ -149,6 +152,7 @@ const { reveal } = useReveal()
 const poet = ref(null)
 const poems = ref([])
 const dynasty = ref(null)
+const sources = ref([])
 const errorMsg = ref(null)
 const revealRoot = ref(null)
 const avatarLoadFailed = ref(false)
@@ -197,12 +201,14 @@ const signature = computed(() => pickSignaturePoem(poems.value))
 
 const loadDetail = async () => {
   errorMsg.value = null
+  sources.value = []
   try {
     const data = await api.get(`/poets/${route.params.id}`)
     poet.value = data.poet
     avatarLoadFailed.value = false
     poems.value = data.poems || []
     dynasty.value = data.dynasty
+    sources.value = Array.isArray(data.sources) ? data.sources : []
     await nextTick()
     if (revealRoot.value) reveal(revealRoot.value)
   } catch (err) {

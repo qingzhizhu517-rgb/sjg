@@ -68,6 +68,24 @@
                   🗺️ {{ msg.navAction.label }}
                 </button>
               </div>
+              <details v-if="msg.role === 'assistant' && msg.evidence?.length" class="evidence-details">
+                <summary>本次依据</summary>
+                <div class="evidence-list">
+                  <div v-for="item in msg.evidence" :key="`${item.entityType}-${item.entityId}`" class="evidence-item">
+                    <strong>{{ item.title }}</strong>
+                    <p v-if="item.snippet">{{ item.snippet }}</p>
+                    <span v-if="item.sourceIds?.length" class="evidence-sources">来源 ID：{{ item.sourceIds.join('、') }}</span>
+                    <span v-else class="evidence-sources">暂无来源 ID</span>
+                  </div>
+                </div>
+              </details>
+              <div v-if="msg.role === 'assistant' && msg.auditId && msg.content && !msg.feedback" class="feedback-row">
+                <span class="feedback-label">这条回答对你有帮助吗？</span>
+                <button type="button" class="feedback-btn" @click="sendFeedback(msg, 'helpful')">有帮助</button>
+                <button type="button" class="feedback-btn" @click="sendFeedback(msg, 'unhelpful')">没帮助</button>
+                <button type="button" class="feedback-btn" @click="sendFeedback(msg, 'factual_error')">事实有误</button>
+              </div>
+              <div v-if="msg.role === 'assistant' && msg.feedback" class="feedback-thanks">感谢反馈</div>
             </div>
           </div>
           <!-- Typing indicator -->
@@ -115,6 +133,7 @@ import { ref, nextTick, reactive, computed, watch, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import { consumeSseBuffer } from '../utils/sse.js'
 
 // Markdown 渲染：breaks(单换行-><br>) + gfm(表格/删除线)
 marked.setOptions({ breaks: true, gfm: true })
@@ -200,6 +219,12 @@ const chatContext = computed(() => {
     ctx.type = 'timeline'
   } else if (route.name === 'Poets') {
     ctx.type = 'poets'
+  } else if (route.name === 'LearningTask') {
+    ctx.type = 'learning_task'
+    ctx.taskCode = route.params.taskCode
+  } else if (typeof route.name === 'string' && route.name.startsWith('CulturalDetail')) {
+    ctx.type = 'cultural_item'
+    ctx.entityId = route.params.id
   }
   return ctx
 })
@@ -233,6 +258,13 @@ const quickList = computed(() => {
       `哪个朝代的齐鲁诗人最多？`,
       `唐宋时期的山东文学特点`,
       `齐鲁文脉的演变历程`,
+    ]
+  }
+  if (ctx.type === 'cultural_item') {
+    return [
+      '这个文化条目的历史渊源是什么？',
+      '这个条目与齐鲁文化有什么联系？',
+      '页面资料中有哪些可以核实的依据？',
     ]
   }
   // 默认（地图/首页）
@@ -296,7 +328,7 @@ const sendMessage = async () => {
   scrollToBottom()
 
   isTyping.value = true
-  const assistantMsg = reactive({ role: 'assistant', content: '' })
+  const assistantMsg = reactive({ role: 'assistant', content: '', evidence: [], auditId: null, feedback: null })
   messages.value.push(assistantMsg)
   scrollToBottom()
 
@@ -325,39 +357,39 @@ const sendMessage = async () => {
     let buffer = ''
     let firstDelta = true
 
+    const handleSseEvent = (payload) => {
+      if (!payload || payload === '[DONE]') return
+      try {
+        const obj = JSON.parse(payload)
+        if (obj.delta) {
+          if (firstDelta) { isTyping.value = false; firstDelta = false }
+          assistantMsg.content += obj.delta
+          scrollToBottom()
+        } else if (Array.isArray(obj.items)) {
+          assistantMsg.evidence = obj.items
+          if (obj.auditId) assistantMsg.auditId = obj.auditId
+        } else if (obj.error) {
+          isTyping.value = false
+          assistantMsg.content += (assistantMsg.content ? '\n' : '') + '⚠ ' + obj.error
+          errorMsg.value = obj.error
+          scrollToBottom()
+        }
+      } catch {
+        // 非 JSON 数据块，忽略
+      }
+    }
+
     while (true) {
       const { done, value } = await reader.read()
-      if (done) break
-      buffer += decoder.decode(value, { stream: true })
-
-      // SSE 事件以空行(\n\n)分隔
-      let idx
-      while ((idx = buffer.indexOf('\n\n')) >= 0) {
-        const event = buffer.slice(0, idx)
-        buffer = buffer.slice(idx + 2)
-        const dataLines = event
-          .split('\n')
-          .filter(l => l.startsWith('data:'))
-          .map(l => l.slice(5))
-        if (!dataLines.length) continue
-        const payload = dataLines.join('\n').trim()
-        if (!payload || payload === '[DONE]') continue
-        try {
-          const obj = JSON.parse(payload)
-          if (obj.delta) {
-            if (firstDelta) { isTyping.value = false; firstDelta = false }
-            assistantMsg.content += obj.delta
-            scrollToBottom()
-          } else if (obj.error) {
-            isTyping.value = false
-            assistantMsg.content += (assistantMsg.content ? '\n' : '') + '⚠ ' + obj.error
-            errorMsg.value = obj.error
-            scrollToBottom()
-          }
-        } catch {
-          // 非 JSON 数据块，忽略
-        }
+      if (done) {
+        buffer += decoder.decode()
+        consumeSseBuffer(buffer, true).events.forEach(handleSseEvent)
+        break
       }
+      buffer += decoder.decode(value, { stream: true })
+      const parsed = consumeSseBuffer(buffer)
+      parsed.events.forEach(handleSseEvent)
+      buffer = parsed.rest
     }
 
     isTyping.value = false
@@ -383,6 +415,20 @@ const sendMessage = async () => {
     isTyping.value = false
     assistantMsg.content = '（网络异常，请稍后再试）'
     errorMsg.value = '网络异常'
+  }
+}
+
+const sendFeedback = async (msg, feedback) => {
+  if (!msg?.auditId || msg.feedback) return
+  try {
+    const res = await fetch('/api/public/chat/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ auditId: msg.auditId, feedback }),
+    })
+    if (res.ok) msg.feedback = feedback
+  } catch {
+    // 反馈失败不影响当前对话
   }
 }
 
@@ -798,6 +844,76 @@ const retryLastMessage = () => {
   background: var(--accent);
   color: #fff;
   transform: translateY(-1px);
+}
+
+.evidence-details {
+  margin-top: 10px;
+  border-top: 1px dashed var(--border-light);
+  padding-top: 8px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.evidence-details summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.evidence-list {
+  display: grid;
+  gap: 7px;
+  margin-top: 7px;
+}
+
+.evidence-item {
+  padding: 7px 8px;
+  border-left: 2px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+
+.evidence-item p {
+  margin: 3px 0;
+  color: var(--text-secondary);
+}
+
+.evidence-item a {
+  color: var(--accent);
+}
+
+.feedback-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+
+.feedback-label {
+  margin-right: 2px;
+}
+
+.feedback-btn {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  padding: 3px 8px;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.feedback-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.feedback-thanks {
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 0.76rem;
 }
 
 /* Input Form */

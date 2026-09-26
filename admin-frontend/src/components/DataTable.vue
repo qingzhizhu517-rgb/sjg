@@ -28,6 +28,15 @@
       </div>
     </div>
 
+    <div v-if="error" class="table-error" role="alert">
+      <el-icon><WarningFilled /></el-icon>
+      <span>{{ error }}</span>
+      <el-button link type="primary" @click="fetch">
+        <el-icon><Refresh /></el-icon>
+        重试
+      </el-button>
+    </div>
+
     <el-table :data="data" v-loading="loading" stripe class="traditional-table" style="width: 100%; height: 100%">
       <slot />
       <el-table-column label="操作" :width="actionWidth" fixed="right">
@@ -74,6 +83,7 @@ const emit = defineEmits(['add', 'edit', 'delete', 'import'])
 
 const data = ref([])
 const loading = ref(false)
+const error = ref('')
 const keyword = ref('')
 const page = ref(1)
 const size = ref(10)
@@ -81,10 +91,15 @@ const total = ref(0)
 
 const fetch = async () => {
   loading.value = true
+  error.value = ''
   try {
     const result = await props.fetchFn(page.value, size.value, keyword.value)
-    data.value = result.records
-    total.value = result.total
+    data.value = Array.isArray(result?.records) ? result.records : []
+    total.value = Number(result?.total) || 0
+  } catch (e) {
+    data.value = []
+    total.value = 0
+    error.value = e?.message || '列表暂时无法加载，请稍后重试'
   } finally {
     loading.value = false
   }
@@ -122,5 +137,21 @@ defineExpose({ fetch })
   padding-top: 16px;
   border-top: 1px solid var(--border-light);
   justify-content: flex-end;
+}
+
+.table-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border: 1px solid #F1B8B0;
+  background: #FFF4F2;
+  color: #9B2C1F;
+  font-size: 13px;
+}
+
+.table-error .el-button {
+  margin-left: auto;
 }
 </style>

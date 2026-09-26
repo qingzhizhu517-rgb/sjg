@@ -170,7 +170,8 @@ body {
   background: var(--bg-sidebar);
   border-right: none;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .sidebar::after {
@@ -288,7 +289,8 @@ body {
   padding: 24px;
   background: var(--bg-page);
   height: calc(100vh - 56px);
-  overflow: hidden;
+  overflow: auto;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
@@ -298,6 +300,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
 }
 
 /* ============================================
@@ -313,6 +316,8 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
+  overflow-x: auto;
 }
 
 .table-toolbar {
@@ -322,18 +327,23 @@ body {
   margin-bottom: 20px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--border-light);
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .table-toolbar .search-group {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .table-toolbar .action-group {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 /* 表格样式覆盖 */
@@ -633,7 +643,19 @@ body {
   }
 
   .sidebar {
-    width: 64px !important;
+    position: fixed;
+    z-index: 30;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(82vw, 280px) !important;
+    transform: translateX(-105%);
+    transition: transform var(--transition-normal);
+    box-shadow: var(--shadow-heavy);
+  }
+
+  .sidebar.is-mobile-open {
+    transform: translateX(0);
   }
 
   .sidebar-logo h2 {
@@ -641,7 +663,57 @@ body {
     letter-spacing: 2px;
   }
 
-  .sidebar .el-menu-item span {
+  .sidebar:not(.is-mobile-open) .el-menu-item span {
     display: none;
+  }
+
+  .main-content {
+    padding: 14px;
+    overflow: auto;
+  }
+
+  .data-table-wrapper {
+    padding: 14px;
+  }
+
+  .table-toolbar {
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .table-toolbar .search-group,
+  .table-toolbar .action-group {
+    width: 100%;
+  }
+
+  .table-toolbar .search-group .el-input {
+    width: min(260px, 100%) !important;
+    max-width: 100%;
+    flex: 1 1 180px;
+  }
+
+  .table-toolbar .search-group > .el-button,
+  .table-toolbar .action-group > .el-button {
+    flex: 0 1 auto;
+  }
+
+  .data-table-wrapper .el-table {
+    min-width: 640px;
+  }
+
+  .data-table-wrapper .el-pagination {
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  .traditional-dialog .el-dialog {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px);
+    margin: 12px auto;
+  }
+
+  .traditional-dialog .el-dialog__body {
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
   }
 }

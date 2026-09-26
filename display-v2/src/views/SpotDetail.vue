@@ -140,6 +140,8 @@
           </div>
         </section>
       </div>
+
+      <SourceList :sources="sources" />
     </main>
   </div>
 </template>
@@ -159,6 +161,7 @@ import { pickMoodBackdrop } from '../utils/moodBackdrop'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
+import SourceList from '../components/SourceList.vue'
 
 const route = useRoute()
 const { themeClass } = useTheme()
@@ -166,6 +169,7 @@ const { build: buildPoetMap } = usePoetEnrichment()
 const { resolveFirstImage } = useImage()
 const spot = ref(null)
 const poems = ref([])
+const sources = ref([])
 const poetsMap = ref({})
 const chartRef = ref(null)
 const loading = ref(true)
@@ -439,10 +443,12 @@ watch(chartRows, () => {
 const loadSpot = async () => {
   loading.value = true
   loadError.value = ''
+  sources.value = []
   try {
     const data = await api.get(`/spots/${route.params.id}`)
     spot.value = data.spot || data
     poems.value = data.poems || []
+    sources.value = Array.isArray(data.sources) ? data.sources : []
   } catch (err) {
     console.error('加载景观详情失败:', err)
     loadError.value = '加载景观详情失败，请稍后重试'

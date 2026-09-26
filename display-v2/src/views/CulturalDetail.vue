@@ -56,6 +56,8 @@
           <span v-for="t in tagsOf(item)" :key="t" class="cd-tag">{{ t }}</span>
         </div>
       </section>
+
+      <SourceList :sources="sources" class="cd-section" />
     </div>
 
     <!-- 加载完成但无数据（item===null）: 此前整页空白只剩返回链接 -->
@@ -76,12 +78,14 @@ import InkPlaceholder from '../components/InkPlaceholder.vue'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
+import SourceList from '../components/SourceList.vue'
 
 const route = useRoute()
 const { resolveFirstImage } = useImage()
 
 const item = ref(null)
 const detail = ref(null)
+const sources = ref([])
 const loaded = ref(false)
 const errorMsg = ref('')
 
@@ -161,10 +165,12 @@ function tagsOf(it) {
 async function load() {
   loaded.value = false
   errorMsg.value = ''
+  sources.value = []
   try {
     const data = await api.get(`/cultural/${route.params.id}`)
     item.value = data.item
     detail.value = data.detail
+    sources.value = Array.isArray(data.sources) ? data.sources : []
   } catch (err) {
     console.error('加载文化详情失败:', err)
     errorMsg.value = err.message || '加载失败'

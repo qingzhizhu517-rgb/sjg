@@ -31,6 +31,13 @@
             <span class="cw-free-roam-hint__icon">↕</span>
           </div>
         </Transition>
+
+        <!-- 知识卡以舞台为定位上下文，避免随页面布局漂移 -->
+        <KnowledgeCard
+          :info="knowledgeInfo"
+          :active="showKnowledge"
+          @close="showKnowledge = false"
+        />
       </div>
 
       <!-- 右侧控制面板 -->
@@ -53,13 +60,6 @@
       </aside>
     </div>
 
-    <!-- 知识点卡（自由把玩模式） -->
-    <KnowledgeCard
-      :info="knowledgeInfo"
-      :active="showKnowledge"
-      @close="showKnowledge = false"
-    />
-
     <!-- 底部工序详情展开 -->
     <section class="cw-detail" data-reveal>
       <h2 class="cw-detail__heading">工序详解</h2>
@@ -76,6 +76,15 @@
           <p class="cw-detail__card-desc">{{ step.desc }}</p>
         </article>
       </div>
+    </section>
+
+    <section v-if="isLast" class="cw-completion" data-reveal>
+      <div>
+        <span class="cw-completion__eyebrow">工序已走完</span>
+        <h2>你已经看过东昌葫芦从生料到成品的五道工序</h2>
+        <p>把工序、材料和知识点带走，作为一次可分享的非遗探索记录。</p>
+      </div>
+      <button type="button" class="cw-completion__btn" @click="exportExploration">导出探索记录</button>
     </section>
   </div>
 </template>
@@ -101,10 +110,21 @@ const knowledgeInfo = ref(null)
 
 // 工序状态机（延迟绑定 sceneApi）
 let processApi = null
+let processWatchStops = []
 const currentStep = ref(0)
 const stepMeta = ref(config.steps[0])
 const playing = ref(false)
 const isLast = computed(() => currentStep.value >= config.steps.length - 1)
+
+const cleanupProcess = () => {
+  processWatchStops.forEach((stop) => stop())
+  processWatchStops = []
+  processApi?.dispose()
+  processApi = null
+}
+
+// 生命周期钩子必须在 setup 同步阶段注册；舞台 ready 回调可能在异步加载后触发。
+onBeforeUnmount(cleanupProcess)
 
 const onStageReady = async (sceneApi) => {
   if (!sceneApi) {
@@ -114,6 +134,7 @@ const onStageReady = async (sceneApi) => {
   }
 
   // 初始化工序状态机
+  cleanupProcess()
   processApi = useCraftProcess(config, {
     setVisible: sceneApi.setVisible,
     getObject: sceneApi.getObject,
@@ -130,9 +151,11 @@ const onStageReady = async (sceneApi) => {
     playing.value = processApi.playing.value
   }
 
-  const stopWatch1 = watch(() => processApi.currentStep.value, syncState)
-  const stopWatch2 = watch(() => processApi.stepMeta.value, syncState)
-  const stopWatch3 = watch(() => processApi.playing.value, syncState)
+  processWatchStops = [
+    watch(() => processApi.currentStep.value, syncState),
+    watch(() => processApi.stepMeta.value, syncState),
+    watch(() => processApi.playing.value, syncState),
+  ]
 
   // 部件交互：hover 高亮 + click 弹知识点
   sceneApi.onPartHover((name) => {
@@ -157,14 +180,6 @@ const onStageReady = async (sceneApi) => {
   processApi.enter(0)
   syncState()
   loading.value = false
-
-  // 清理
-  onBeforeUnmount(() => {
-    stopWatch1()
-    stopWatch2()
-    stopWatch3()
-    processApi?.dispose()
-  })
 }
 
 const onStageError = () => {
@@ -175,6 +190,20 @@ const next = () => processApi?.next()
 const prev = () => processApi?.prev()
 const toggleAuto = () => processApi?.toggleAuto()
 const jumpTo = (i) => processApi?.enter(i)
+
+const exportExploration = () => {
+  const lines = [`# ${config.title}探索记录`, '', config.subtitle, '', '## 工序', '']
+  config.steps.forEach((step, index) => lines.push(`${index + 1}. **${step.name}**：${step.desc}`))
+  lines.push('', '## 知识点', '')
+  Object.values(config.knowledge).forEach(item => lines.push(`- **${item.title}**：${item.body}`))
+  const blob = new Blob([lines.join('\n')], { type: 'text/markdown;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${config.slug}-探索记录.md`
+  link.click()
+  URL.revokeObjectURL(url)
+}
 
 onMounted(async () => {
   await nextTick()
@@ -347,6 +376,50 @@ onMounted(async () => {
   color: var(--text-muted, #A0896C);
 }
 
+.cw-completion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 1px solid var(--accent, #C5A55A);
+  background: var(--accent-glow, rgba(197, 165, 90, 0.08));
+}
+
+.cw-completion__eyebrow {
+  color: var(--accent, #C5A55A);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+}
+
+.cw-completion h2 {
+  margin: 0.45rem 0;
+  font-family: var(--font-heading, serif);
+  font-size: 1.25rem;
+  color: var(--text-primary, #2D2D2D);
+}
+
+.cw-completion p {
+  margin: 0;
+  color: var(--text-muted, #A0896C);
+  line-height: 1.6;
+}
+
+.cw-completion__btn {
+  flex: 0 0 auto;
+  border: 1px solid var(--accent, #C5A55A);
+  border-radius: 4px;
+  background: var(--accent, #C5A55A);
+  color: #fff;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+}
+
+.cw-completion__btn:hover {
+  filter: brightness(0.95);
+}
+
 /* 过渡 */
 .fade-enter-active { transition: opacity 0.3s; }
 .fade-leave-active { transition: opacity 0.2s; }
@@ -364,6 +437,14 @@ onMounted(async () => {
 
   .cw-detail__grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .cw-completion {
+    display: block;
+  }
+
+  .cw-completion__btn {
+    margin-top: 1rem;
   }
 }
 

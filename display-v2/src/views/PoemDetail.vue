@@ -34,6 +34,8 @@
       </div>
     </div>
 
+    <SourceList :sources="sources" class="detail-section" />
+
     <!-- AI Analysis -->
     <PoemAnalysis v-if="poem.id" :poem-id="poem.id" />
 
@@ -57,6 +59,7 @@ import { pickMoodBackdrop } from '../utils/moodBackdrop'
 import { parseFirstUrl } from '../composables/useImage'
 import PoemManuscript from '../components/poem/PoemManuscript.vue'
 import PoemAnalysis from '../components/PoemAnalysis.vue'
+import SourceList from '../components/SourceList.vue'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 
@@ -65,6 +68,7 @@ const poem = ref(null)
 const poet = ref(null)
 const dynasty = ref(null)
 const spot = ref(null)
+const sources = ref([])
 const errorMsg = ref(null)
 let loadSequence = 0
 
@@ -88,6 +92,7 @@ const loadPoem = async () => {
   poet.value = null
   dynasty.value = null
   spot.value = null
+  sources.value = []
   try {
     const data = await api.get(`/poems/${route.params.id}`)
     if (sequence !== loadSequence) return
@@ -95,6 +100,7 @@ const loadPoem = async () => {
     poet.value = data.poet
     dynasty.value = data.dynasty
     spot.value = data.spot
+    sources.value = Array.isArray(data.sources) ? data.sources : []
   } catch (err) {
     if (sequence !== loadSequence) return
     console.error('加载诗词详情失败:', err)

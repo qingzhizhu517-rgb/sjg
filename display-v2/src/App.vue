@@ -18,6 +18,7 @@
           <router-link to="/poets" class="nav-link" :class="{ active: isPoetsActive }">齐鲁名士</router-link>
           <router-link to="/culture" class="nav-link" :class="{ active: isCultureActive }">文化长廊</router-link>
           <router-link to="/timeline" class="nav-link" :class="{ active: isTimelineActive }">文脉长河</router-link>
+          <router-link to="/learn" class="nav-link" :class="{ active: isLearningActive }">探究任务</router-link>
           <a class="nav-link nav-link--external" :href="datavUrl" target="_blank" rel="noopener">
             数据大屏<svg class="nav-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M7 7h10v10" /></svg>
           </a>
@@ -74,6 +75,7 @@
           <router-link to="/poets" class="drawer-nav-link" :class="{ active: isPoetsActive }" @click="closeMobileMenu">齐鲁名士</router-link>
           <router-link to="/culture" class="drawer-nav-link" :class="{ active: isCultureActive }" @click="closeMobileMenu">文化长廊</router-link>
           <router-link to="/timeline" class="drawer-nav-link" :class="{ active: isTimelineActive }" @click="closeMobileMenu">文脉长河</router-link>
+          <router-link to="/learn" class="drawer-nav-link" :class="{ active: isLearningActive }" @click="closeMobileMenu">探究任务</router-link>
           <a class="drawer-nav-link drawer-nav-link--external" :href="datavUrl" target="_blank" rel="noopener" @click="closeMobileMenu">数据大屏 ↗</a>
         </nav>
 
@@ -193,6 +195,8 @@ const isPoetsActive = computed(() => {
 const isTimelineActive = computed(() => {
   return route.path === '/timeline'
 })
+
+const isLearningActive = computed(() => route.path === '/learn' || route.path.startsWith('/learn/'))
 
 // 文化长廊: 聚合页 + 五类列表/详情 + 每城文化页均高亮
 const isCultureActive = computed(() => {

@@ -84,6 +84,7 @@ const initScene = async () => {
 
 const activateFallback = () => {
   fallback.value = true
+  updateFallbackImage()
   loading.value = false
   emit('ready', null)
 }

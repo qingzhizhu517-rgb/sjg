@@ -25,6 +25,7 @@
 
     <!-- 五格册页 -->
     <section v-else class="cc-bento">
+      <p v-if="partialMsg" class="cc-partial-warning" role="status">{{ partialMsg }}</p>
       <article class="cc-tile cc-tile--big">
         <header class="cc-tile__head">
           <span class="cc-tile__seal">节</span>
@@ -46,7 +47,7 @@
         <header class="cc-tile__head">
           <span class="cc-tile__seal">诗</span>
           <h2 class="cc-tile__title">古诗词</h2>
-          <router-link class="cc-tile__more" :to="`/poems`">更多 →</router-link>
+          <router-link class="cc-tile__more" :to="{ path: '/poems', query: { region: city } }">更多 →</router-link>
         </header>
         <ul v-if="groups.poems.length" class="cc-tile__list">
           <li v-for="pm in groups.poems.slice(0, 4)" :key="pm.id" class="cc-tile__item">
@@ -154,6 +155,7 @@ const nextCity = computed(() => (cityIndex.value < NINE_CITIES.length - 1 ? NINE
 
 const loaded = ref(false)
 const errorMsg = ref('')
+const partialMsg = ref('')
 const groups = ref({ festival: [], craft: [], literature: [], food_opera: [], poems: [] })
 const spots = ref([])
 const poets = ref([])
@@ -163,9 +165,10 @@ const poetNameOf = (poetId) => poets.value.find((p) => p.id === poetId)?.name ||
 async function load() {
   loaded.value = false
   errorMsg.value = ''
+  partialMsg.value = ''
   try {
     const region = city.value
-    const [festival, craft, literature, foodOpera, poemsRes, poetsRes, spotsRes] = await Promise.allSettled([
+    const results = await Promise.allSettled([
       api.get('/cultural', { params: { category: 'festival', region, size: 10 } }),
       api.get('/cultural', { params: { category: 'craft', region, size: 10 } }),
       api.get('/cultural', { params: { category: 'literature', region, size: 10 } }),
@@ -174,6 +177,14 @@ async function load() {
       api.get('/poets', { params: { region, size: 30 } }),
       api.get('/spots', { params: { region, size: 30 } }),
     ])
+    if (results.every((result) => result.status === 'rejected')) {
+      throw new Error('城市文化数据加载失败，请稍后重试')
+    }
+    const failedCount = results.filter((result) => result.status === 'rejected').length
+    if (failedCount > 0) {
+      partialMsg.value = '部分城市资料暂时无法加载，已显示可用内容。'
+    }
+    const [festival, craft, literature, foodOpera, poemsRes, poetsRes, spotsRes] = results
     const rec = (r) => (r.status === 'fulfilled' ? r.value.records || [] : [])
     groups.value = {
       festival: rec(festival),
@@ -271,6 +282,15 @@ onMounted(load)
   grid-auto-rows: minmax(150px, auto);
   gap: 16px;
   margin-top: 48px;
+}
+.cc-partial-warning {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 2px solid var(--accent);
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+  font-size: 13px;
 }
 .cc-tile {
   grid-column: span 2;

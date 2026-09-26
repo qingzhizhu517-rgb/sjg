@@ -1,6 +1,11 @@
 <template>
-  <el-container class="layout-container">
-    <el-aside width="220px" class="sidebar">
+  <el-container class="layout-container" @keydown.esc="closeSidebar">
+    <el-aside
+      width="220px"
+      class="sidebar"
+      :class="{ 'is-mobile-open': mobileMenuOpen }"
+      aria-label="主导航"
+    >
       <div class="sidebar-logo">
         <div class="logo-seal">文</div>
         <h2>山左文渊</h2>
@@ -33,6 +38,18 @@
           <el-icon><Collection /></el-icon>
           <span>文化条目</span>
         </el-menu-item>
+        <el-menu-item index="/content-governance">
+          <el-icon><DocumentChecked /></el-icon>
+          <span>来源与审核</span>
+        </el-menu-item>
+        <el-menu-item index="/learning-tasks">
+          <el-icon><Collection /></el-icon>
+          <span>探究任务</span>
+        </el-menu-item>
+        <el-menu-item index="/ai-metrics">
+          <el-icon><Collection /></el-icon>
+          <span>AI 指标</span>
+        </el-menu-item>
         <!-- 底部分隔区 -->
         <div class="sidebar-divider"></div>
         <el-menu-item v-if="isAdmin" index="/users">
@@ -45,9 +62,25 @@
         <span class="footer-label">黄河流域 · 山东段</span>
       </div>
     </el-aside>
-    <el-container>
+    <button
+      v-if="mobileMenuOpen"
+      type="button"
+      class="sidebar-backdrop"
+      aria-label="关闭导航"
+      @click="closeSidebar"
+    ></button>
+    <el-container class="content-container">
       <el-header class="top-header" height="56px">
         <div class="header-left">
+          <el-button
+            class="mobile-menu-toggle"
+            text
+            aria-label="打开导航"
+            :aria-expanded="mobileMenuOpen"
+            @click="toggleSidebar"
+          >
+            <el-icon><Menu /></el-icon>
+          </el-button>
           <span class="page-breadcrumb">{{ currentPageTitle }}</span>
         </div>
         <div class="header-right">
@@ -74,11 +107,12 @@
 
 <script setup>
 import { UserFilled, Collection } from '@element-plus/icons-vue'
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
+const mobileMenuOpen = ref(false)
 const username = computed(() => localStorage.getItem('username') || '管理员')
 const isAdmin = computed(() => localStorage.getItem('role') === 'admin')
 
@@ -88,10 +122,17 @@ const pageTitles = {
   '/poems': '诗词管理',
   '/events': '事件管理',
   '/cultural': '文化条目管理',
+  '/content-governance': '内容来源与审核',
+  '/learning-tasks': '诗词探究任务',
+  '/ai-metrics': 'AI 运行指标',
   '/users': '用户管理',
 }
 
 const currentPageTitle = computed(() => pageTitles[route.path] || '管理后台')
+
+const toggleSidebar = () => { mobileMenuOpen.value = !mobileMenuOpen.value }
+const closeSidebar = () => { mobileMenuOpen.value = false }
+watch(() => route.path, closeSidebar)
 
 const logout = () => {
   localStorage.removeItem('token')
@@ -104,13 +145,20 @@ const logout = () => {
 <style scoped>
 .layout-container {
   height: 100vh;
+  min-width: 0;
+  position: relative;
+}
+
+.content-container {
+  min-width: 0;
 }
 
 .sidebar {
   background: linear-gradient(180deg, #1a1a2e 0%, #2C2A2E 50%, #1a1a2e 100%);
   border-right: none;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
@@ -234,6 +282,18 @@ const logout = () => {
   padding: 0 24px;
 }
 
+.header-left {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-menu-toggle,
+.sidebar-backdrop {
+  display: none;
+}
+
 .header-left .page-breadcrumb {
   font-family: var(--font-display);
   font-size: 16px;
@@ -273,7 +333,8 @@ const logout = () => {
   padding: 24px;
   background: var(--bg-page);
   height: calc(100vh - 56px);
-  overflow: hidden;
+  overflow: auto;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
@@ -297,5 +358,66 @@ const logout = () => {
   height: 1px;
   margin: 8px 20px;
   background: linear-gradient(90deg, transparent, rgba(232, 220, 200, 0.15), transparent);
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    z-index: 30;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(82vw, 280px) !important;
+    transform: translateX(-105%);
+    transition: transform var(--transition-normal);
+    box-shadow: var(--shadow-heavy);
+  }
+
+  .sidebar.is-mobile-open {
+    transform: translateX(0);
+  }
+
+  .sidebar .el-menu-item span {
+    display: inline;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    z-index: 20;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: rgba(44, 42, 46, 0.42);
+  }
+
+  .mobile-menu-toggle {
+    display: inline-flex;
+    flex: 0 0 auto;
+    padding: 8px;
+    color: var(--color-zhu);
+  }
+
+  .top-header {
+    padding: 0 12px;
+  }
+
+  .header-right {
+    gap: 8px;
+  }
+
+  .username {
+    max-width: 34vw;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .main-content {
+    padding: 14px;
+    overflow: auto;
+  }
 }
 </style>
