@@ -49,6 +49,7 @@ backend/target/
 output/
 display-v2/output/
 scripts/imagegen/
+.local/ai-eval/
 
 # Local database dumps and generated backups
 _localhost-*.sql
@@ -57,6 +58,8 @@ sjg_*.sql
 
 # External archives are intentionally outside the repository
 sjg-new-archive-*/
+else/
+.DS_Store
 
 # TypeScript build cache
 *.tsbuildinfo
