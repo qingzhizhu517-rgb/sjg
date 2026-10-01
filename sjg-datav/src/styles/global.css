@@ -1,4 +1,18 @@
-/* SJG 数据大屏 · 水墨青金主题(数字人文风格, 非通用 AI 紫渐变) */
+/* SJG 数据大屏 · 水墨青金主题（数字人文风格，非通用 AI 紫渐变） */
+
+/*
+ * 衬线标题字。Noto Serif SC 按项目实际用字（源码 + 后端种子数据共 2097 字）子集化，
+ * 354KB / 单字重 Regular。字重刻意只用 400——水墨题跋本就细笔，
+ * 层级靠字号、字距与颜色区分，不靠加粗（CJK 合成粗体边缘会糊）。
+ */
+@font-face {
+  font-family: 'DvSerif';
+  src: url('/fonts/dv-serif.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -16,18 +30,39 @@
   --dv-vermilion: #c23a2b;
   --dv-teal: #7f9aa0;
   --dv-line: rgba(201, 162, 39, 0.25);
-  --dv-serif: 'Noto Serif SC', 'Songti SC', 'STSong', 'SimSun', Georgia, serif;
+
+  /*
+   * 字体分两层：
+   * 标题 / 印章用衬线（水墨题跋感），正文 / 标签 / 数字用无衬线。
+   * 原先全局只用 --dv-serif，而 'Noto Serif SC' 从未真正加载，
+   * Windows 上一律回落 SimSun——深底小字号下宋体笔画过细、字重层级全丢。
+   */
+  --dv-serif: 'DvSerif', 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', 'SimSun', Georgia, serif;
+  --dv-sans: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --dv-num: 'Bahnschrift', 'DIN Alternate', 'Segoe UI', var(--dv-sans);
 }
 
-html, body, #root {
+html,
+body,
+#root {
   width: 100%;
   height: 100%;
   overflow: hidden;
   background: var(--dv-bg);
   color: var(--dv-ink);
-  font-family: var(--dv-serif);
+  font-family: var(--dv-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(201, 162, 39, 0.35); border-radius: 3px; }
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(201, 162, 39, 0.35);
+  border-radius: 3px;
+}
