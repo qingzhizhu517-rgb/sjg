@@ -23,24 +23,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 常用命令
 
 ### 后端（backend/）
-**没有 Maven wrapper**（`mvnw` 不存在），`mvn` 也可能不在 PATH。可用 IDEA 内置 Maven（`D:\app\idea\IntelliJ IDEA */plugins/maven/lib/maven3/bin/mvn`）或自行安装。命令本体：
+**没有 Maven wrapper**（`mvnw` 不存在）。macOS 开发机用 Homebrew `mvn`（`/opt/homebrew/bin/mvn`，JDK 21 运行、`pom.xml` 目标 Java 17，CI 用 17）；Windows 机可用 IDEA 内置 Maven（`D:\app\idea\IntelliJ IDEA */plugins/maven/lib/maven3/bin/mvn`）。命令本体：
 ```bash
-mvn spring-boot:run                      # 启动（需本地 MySQL 已起）
-mvn test                                 # 3 个测试类，纯 Mockito/JUnit5，不需要 DB
+mvn spring-boot:run                      # 启动（需本地 MySQL 已起 + SPRING_DATASOURCE_PASSWORD）
+mvn test                                 # 纯 Mockito/JUnit5，不需要 DB
 mvn test -Dtest=PoemAnalysisServiceTest   # 单个测试类
 mvn package -DskipTests
 ```
-测试类现已 ~30 个（原 4 个之外，工作树新增了治理/审计/学习任务/限流/来源等一大批），**仍然零个 `@SpringBootTest`**：全是 `MockitoExtension` 或纯手工注入。`ApiSmokeTest` 只是把所有 controller/service 用 Mockito mock 出来验证依赖能装配，不起 Spring 上下文、不连 DB。`mvn test` 无需 DB。
+测试类 ~30 个，**零个 `@SpringBootTest`**：全是 `MockitoExtension` 或纯手工注入。`ApiSmokeTest` 只是把所有 controller/service 用 Mockito mock 出来验证依赖能装配，不起 Spring 上下文、不连 DB。
+
+⚠️ **因此 `mvn test` 全绿 ≠ 能启动**。Spring 装配错误只在 `spring-boot:run` 时暴露——实例：`CulturalItemService` 曾有两个 `@Autowired` 构造器，测试 137/137 通过但启动即 `Invalid autowire-marked constructor`。治理层给多个 service 加了「无治理依赖的旧构造器（供测试）+ 带治理依赖的新构造器」重载，**一个类只能有一个 `@Autowired` 构造器**。改 service 构造器后务必真起一次后端。
+
+启动必需环境变量：`SPRING_DATASOURCE_PASSWORD`（`application.yml` 里密码无默认值；URL/用户名默认已指向 `127.0.0.1:3306/sjg01` + `root`）。登录相关还需要 `JWT_SECRET`（≥32 字节，`JwtUtil` 用 `Keys.hmacShaKeyFor`，空值时签发 token 会抛 `WeakKeyException`，但公开接口不受影响）。AI 功能需要 `LLM_API_KEY`（缺失只 WARN）。
 
 ### 前端
 ```bash
 cd <project-dir> && npm install
 npm run dev / npm run build / npm run preview
 ```
-`sjg-datav` 的 `build` 是 `tsc -b && vite build`（`strict` + `noUnusedLocals` + `noUnusedParameters`，`tsconfig.app.json` 的 `include` 是整个 `src`），**类型错误会阻断构建**，包括 `src/pages/DataV/test.tsx`~`test8.tsx` 那些废弃试验文件。`admin-frontend` 与 `display-v2` 无任何类型/lint 关卡。
+`sjg-datav` 的 `build` 是 `tsc -b && vite build`（`strict` + `noUnusedLocals` + `noUnusedParameters`，`tsconfig.app.json` 的 `include` 是整个 `src`），**类型错误会阻断构建**。`admin-frontend` 与 `display-v2` 无任何类型/lint 关卡。
 
 ### display-v2 测试
-用 **Node 内置 test runner**（非 Vitest），当前 7 个测试文件：
+用 **Node 内置 test runner**（非 Vitest），`tests/` 下 30+ 个测试文件（另有 `tests/helpers/`）：
 ```bash
 npm test          # node --test --experimental-test-coverage tests/*.test.js
 npm run test:unit # 无覆盖率
@@ -112,7 +116,7 @@ CORS 是独立的 `CorsFilter` bean（不是 `http.cors()`）：读 `@Value("${c
 ## display-v2 架构
 
 ### 路由
-`/` 重定向到 `/map`（3D 地图即首页）。其余：`/poets`（`/poets/all` 重定向到 `/poets?view=all`）、`/poets/:id`、`/poems/:id`、`/spots/:id`、`/timeline`、`/culture`、`/festivals`、`/crafts`、`/literature`、`/food-opera`（四类各带 `/:id`）、`/regions/:region`、`/cities/:region`、`/compose`。全部懒加载。
+`/` 重定向到 `/map`（3D 地图即首页）。其余：`/river-sandbox`、`/poets`（`/poets/all` 重定向到 `/poets?view=all`）、`/poets/:id`、`/poems`、`/poems/:id`、`/spots/:id`、`/timeline`、`/culture`、`/festivals`、`/crafts`、`/literature`、`/food-opera`（四类各带 `/:id`）、`/regions/:region`、`/cities/:region`、`/compose`、`/learn`、`/learn/:taskCode`（一城一课）。全部懒加载。
 
 两个坑：**四条文化详情路由共用 `CulturalDetail.vue`**；**`:region` 参数是中文城市名**（`/regions/济南`），所以 URL 实际是百分号编码的，`cityAliases.js` 存在就是为了把出生地字符串归一到规范的九市名（规范列表见 `src/config/nineCities.js`）。
 
@@ -138,9 +142,10 @@ CORS 是独立的 `CorsFilter` bean（不是 `http.cors()`）：读 `@Value("${c
 仍存活的双轨**基础设施**（不是页面分支，暂勿清理）：`themes/manifest.js` 的 `resolveAsset(key, theme)` 与 `MEDIA_PREF = { real: 'video-first', inkwash: 'image-first' }`（`:53,70`）、`src/content/{real,inkwash}/` 双语文案（经 `resolveContent(scope, key, theme)`，`MapView`/`RegionSpots`/`CityDetailCard` 在用）。
 
 ### 样式与 token
-`src/styles/`（注意此目录已重构，只剩两个文件）：
+`src/styles/`（`interactions.css` 在工作树中新增、尚未提交，以 `git status` 为准）：
 - `variables.css`（`main.js:5` 加载）—— **全部 token 都在 `:root`，已不存在 `.theme-inkwash` 覆盖块**（单主题后无需覆盖）。约 13 个派生 token 用 `color-mix(in srgb, var(--accent) …)` 构建（`:38,42-54`），硬依赖 `color-mix()`，无 fallback。
-- `theme.css`（`App.vue:130` import）—— **纯装饰性全局规则，按其文件头声明不定义任何 token**：纸纹 `body::before`、`.card` 朱红内环、`.divider` 印章字、`.section-heading` 笔刷下划线、`.hover-lift`、`prefers-reduced-motion` 兜底。
+- `theme.css`（`App.vue` import）—— **纯装饰性全局规则，按其文件头声明不定义任何 token**：纸纹 `body::before`、`.card` 朱红内环、`.divider` 印章字、`.section-heading` 笔刷下划线、`.hover-lift`、`prefers-reduced-motion` 兜底。
+- `interactions.css`（`App.vue` import）—— 共享阅读/交互层（控件高度、页边距等少量 token + 通用交互规则），装饰性绘制仍留在页面组件内。
 - 写死 `rgba(184,134,11,.08)` 而不用 `var(--accent-soft)` 会无声破坏 token 体系。
 
 ### 图片与媒体（三套机制并存）
@@ -171,10 +176,14 @@ CORS 是独立的 `CorsFilter` bean（不是 `http.cors()`）：读 `@Value("${c
 ## sjg-datav 要点
 - 无 router，`App.tsx` 只渲染 `<DataV />`。
 - **舞台缩放/信箱适配**：`src/hooks/useAutoFit.ts` + `src/components/AutoFit.tsx`，设计稿 **1920×1080**。用 `ResizeObserver` 量**外层容器的 `clientWidth/Height`**（`:19-21`，刻意不用 `window.innerWidth`，避免 iframe/滚动条误差），`scale = min(w/1920, h/1080)` 即 contain + 居中，永不裁切。这修的是 1699×828 之类窗口下"只显示一半"的问题。舞台内部可以放心写死 px。
-- **zustand store 是死代码**：`src/pages/DataV/stores/index.ts` 定义了 `useDataVStore` 但无人 import（zustand 依赖仅为它存在）。真实状态是 SWR 缓存 + 局部 `useState`。SWR key 是裸字符串（`'poets'`/`'poems'`/`'spots'`/`'dynasties'`/`'timeline'`/`'cultural-categories'`），所以多个面板各自调 `usePoets()` 会共享同一请求。
-- 主题 token 在 `src/styles/global.css:8-20` 的 `:root`（`--dv-gold #c9a227`、`--dv-gold-light #e5c96b`、`--dv-vermilion #c23a2b`、`--dv-ink #ece4d0`、`--dv-teal #7f9aa0` 等水墨青金）。ECharts option 读不到 CSS 变量，`RightPanel.DARK_PALETTE`（`:148`，8 色）、`SentimentCloud.CLOUD_COLORS`（`:17-20`，10 色）是硬编码副本，`ShanheMapChart` 则是散落的内联 hex（`:126,156,191,192,199`），改色要多处一起改。`NumberAnimation.tsx` 还残留旧的 AI 紫渐变。
-- **死代码更正**：`src/pages/DataV/map/*` 目录**不存在**（旧文档记录有误）。地图是 `src/components/ShanheMapChart.tsx`，**正在使用**。真正的死代码是 `src/pages/DataV/test.tsx`~`test8.tsx`（8 个）与 `src/components/TimelineChart.tsx`，零引用但**仍被 `tsc -b` 检查**，会阻断构建。
-- **无任何 mock 降级**：后端挂了 SWR 报错、hook 返回 `[]`，面板静默显示 0/`—`。
+- **2026-09 已整体重做（`feat-datav-overhaul` 合入）**：旧的 zustand store、`test*.tsx` 试验文件、`TimelineChart.tsx` 均已删除，zustand 依赖也已移除。现结构：`pages/DataV/panel/{Header,LeftPanel,RightPanel}.tsx` 三栏 + `components/`（`ShanheMapChart` 地图、`DynastyRibbon`、`SentimentCloud`、`PanelKit` 面板基元、`Chart` 通用 ECharts 容器、`GradientWaves` 用 `ogl` 的 WebGL 背景）。
+- **数据流**：`src/api/index.ts` 的 `useResource` 包 SWR，所有 hook 统一返回 `{data, isLoading, error, mutate}`（`mutate` 用于错误态「重新加载」）。`hooks/useDashboardData.ts` 汇总全部原始数据，再用纯函数 `buildView(raw, filter)` 按 `DashboardFilter { region, dynastyId }` 派生整屏视图——**筛选全在前端内存完成**，只有五脉文华计数例外：`/api/public/cultural/categories?region=` 由后端下钻，SWR key 带区域后缀分城缓存。
+- **九城顺序的权威来源是后端 `/api/public/spots/regions`**（`PublicSpotController` 的硬编码数组），前端 `FALLBACK_REGION_ORDER` 只是兜底；regions 请求失败不计入整屏 error。
+- **主题单一真源**：token 在 `src/styles/global.css` 的 `:root`（`--dv-*` 水墨青金）。ECharts 读不到 CSS 变量，所以 `theme/chartTheme.ts` 在模块加载时从 `:root` 读一次 token 导出 `T`/`PALETTE`/`alpha()` 及 `tooltipBase`/`gridBase` 等通用样式——**改色只改 `global.css`**，图表跟随；别再往组件里写字面量 hex。
+- **ECharts 按需注册集中在 `theme/echartsSetup.ts`**（`echarts/core` + `echarts.use([...])`，同时注册山东 GeoJSON `assets/shandong.json`）。新增图表类型/组件只改这里，否则会出现「A 组件依赖 B 组件注册的类型」的隐式依赖。
+- 标题字 `DvSerif` 是按项目用字子集化的 Noto Serif SC（`public/fonts/dv-serif.woff2`），新增大量生僻字会回落系统字体。
+- **无任何 mock 降级**：后端挂了 hook 返回 `[]`，面板显示 0/`—`。
+- dev server 只监听 IPv6 `::1`：浏览器用 `http://localhost:5180`，`127.0.0.1:5180` 连不上。
 
 ## admin-frontend 要点
 - 路由守卫纯 localStorage 驱动（`token`/`username`/`role`），`/users` 带 `meta.requireAdmin`。**这只是装饰**，真实权限靠后端 `/api/admin/**` 的 JWT+role 校验。注册自助（`/api/auth/register`）后进 `pending`，需 admin 在 `UserList` 审批。
@@ -188,11 +197,13 @@ CORS 是独立的 `CorsFilter` bean（不是 `http.cors()`）：读 `@Value("${c
 - `traditional.css`（647 行）全局引入（`main.js:5`）并 `@import` Google Fonts，离线/墙内会回落 KaiTi/SimSun。它的 token（`--color-zhu #C23B22`、`--color-jin #B8860B`、`--color-mo #2C2A2E`）与 sjg-datav 的 `--dv-*`、display-v2 的主题 token 是**三套互不相干的设计系统**，没有共享包。
 
 ## 数据库与 Migration
-- 本地 MySQL 8.0.46：`127.0.0.1:3306`，Windows 服务名 `MySQL80`，user `root`。主力库 **`sjg01`**（生产数据完整副本）；`sjg` 为小型测试库。完整搭建/恢复步骤与预期行数校验表见 `docs/local_db_setup.md`，数据库口令只允许通过环境变量提供。
+- 本地 MySQL：`127.0.0.1:3306`，user `root`，主力库 **`sjg01`**（生产数据完整副本）；`sjg` 为小型测试库。两台开发机：Windows（MySQL 8.0.46，服务名 `MySQL80`）与 macOS（MySQL 9.0.1，`/usr/local/mysql/bin/mysql`，不在默认 PATH）。完整搭建步骤见 `docs/local_db_setup.md`，口令只通过环境变量提供。
+- **从全量导出恢复**（macOS 实测流程）：`db-export/<时间戳>/sjg01_full.sql`（已 gitignore，勿提交）自带 `CREATE DATABASE sjg01` + `USE`，但**不含治理层表**，导入后必须补跑 V27–V30。用 `mysql -uroot --default-character-set=utf8mb4 -e "source <file>"` 导入（不带 utf8mb4 中文会乱码）；`apply_migration.py` 需要 `pymysql`，没装时直接用 mysql 客户端 `source` 迁移文件即可（V27–V30 无 `DELIMITER`）。
+- ⚠️ **导入后前台全空是正常的**：V27 把所有历史实体写成 `content_review.status='needs_review'`，公开接口只返回 `published`。本地开发若要看数据，在本地库执行 `UPDATE content_review SET status='published', review_note='LOCAL-DEV 批量发布' WHERE status='needs_review'`（用该 note 可回滚），或在 admin 审核台逐条发布。`poem_analysis` 导出为空，首次访问赏析会触发付费 LLM 生成。
 - ⚠️ **库名有三种说法**：`application.yml:7` 默认 `sjg01`，`schema.sql:1-2` 创建并 `USE sjg`，脚本默认使用 `DB_NAME=sjg01`，均可由环境变量覆盖。
 - 旧远程实例已弃用；`scripts/apply_migration.py` 默认连接本机 `127.0.0.1:3306`，并使用环境变量 `DB_HOST/DB_PORT/DB_USER/DB_PASSWORD/DB_NAME` 覆盖，不再携带远程地址或默认口令。
 - **Flyway 不是依赖**。`db/migration/` 是 Flyway 命名风格但没人自动应用，全靠 `python scripts/apply_migration.py <file>` 手动跑（env: `DB_HOST/DB_PORT/DB_USER/DB_PASSWORD/DB_NAME`）。该脚本结尾的 "verify" 块（`:47-57`）硬编码查 `poet_relation`，对非 V4 的 migration 是无意义噪音。
-- 现有 `V2`–`V4`、`V6`–`V10`、`V12`–`V30`。**缺口仍是 V1 / V5 / V11**：V1 相当于 `schema.sql`；**V5（`poem_analysis` 建表）和 v4 在 `display-v2/migrations/` 下**，小写 `v4_poet_relation.sql` / `v5_poem_analysis.sql`；V12–V16 是从某 worktree 的 V7–V11 重编号来的。**V25/V26 是 inkwash 素材回填**；**V27–V30 是人机协同平台层**（`V27` 内容来源/证据/审核表、`V28` AI 审计、`V29` 学习任务、`V30` 诗人关系待审记录），多数尚未应用到本地库——功能改动前先确认迁移是否已跑。
+- 现有 `V2`–`V4`、`V6`–`V10`、`V12`–`V30`。**缺口仍是 V1 / V5 / V11**：V1 相当于 `schema.sql`；**V5（`poem_analysis` 建表）和 v4 在 `display-v2/migrations/` 下**，小写 `v4_poet_relation.sql` / `v5_poem_analysis.sql`；V12–V16 是从某 worktree 的 V7–V11 重编号来的。**V25/V26 是 inkwash 素材回填**；**V27–V30 是人机协同平台层**（`V27` 内容来源/证据/审核表、`V28` AI 审计、`V29` 学习任务、`V30` 诗人关系待审记录）。macOS 本地 `sjg01` 已应用到 V30；其他机器上的库功能改动前先确认迁移是否已跑（`SHOW TABLES LIKE 'content_review'`）。
 - **`V24__imagegen_asset_backfill.sql`**：把 OSS 上新生成的素材回填到空字段，三段共 33 行（21 条 `scenic_spot.image_url`、9 条 `poet.avatar_url`、3 条 `event.image_url`），每条 `WHERE name = '...' AND (field IS NULL OR field = '')` 保证幂等。
 - 所有 migration 都在文件头注明幂等策略且**必须幂等**。MySQL 8 没有 `ADD COLUMN IF NOT EXISTS`，所以 V12 之后的标准做法是查 `information_schema.COLUMNS/STATISTICS` + `SET @ddl := IF(...)` + `PREPARE/EXECUTE/DEALLOCATE PREPARE`（照抄 V12–V16）。文化条目 seed（V18–V21）的幂等靠「按 `(category,title)` DELETE 再 INSERT」+ 详情表 `ON DELETE CASCADE`。
 - `schema.sql` / `schema_utf8.sql` **不幂等**（裸 `CREATE TABLE`），只含 7 张基础表，且种了默认 admin 账号。`poem_analysis`/`poet_relation`/`cultural_item` 及四张详情表都不在里面——要到当前 schema 得 `schema.sql` + `display-v2/migrations/` + V2..V30（含治理层 `source_document`/`content_source_link`/`content_review`/`ai_audit_log`/`learning_task`/`learning_submission`）。`_utf8` 变体是为 Windows/MySQL 字符集问题准备的。
@@ -235,7 +246,8 @@ CORS 是独立的 `CorsFilter` bean（不是 `http.cors()`）：读 `@Value("${c
 - 历史 `else/`、生成库存、旧生成器和过时 SQL dump 已从仓库移除，并在工作区外保留可恢复归档；其中历史配置文档可能含敏感凭证，禁止回显或重新提交。
 - `output/`、`display-v2/output/`、`scripts/imagegen/` 与本地备份文件已加入 `.gitignore`，运行时素材必须落在 `display-v2/public/`。
 - 数据库快照已移至工作区外归档（2026-08-13 生产全量，9 张表）；导入说明见 `docs/local_db_setup.md`。
-- 后端有若干性能已知项：`PublicSpotController.regions()`（`:110,113`）硬编码九市（上游→下游 `菏泽 济宁 泰安 聊城 济南 德州 淄博 滨州 东营`）并为每市发一次 `list(1,1,...).getTotal()` 即 COUNT（9 查询/请求，加城市要改这个数组，V10 就是为了让 `scenic_spot.region` 对齐这个列表）；`PublicTimelineController` 每朝代 4 次查询且返回全量不分页。
+- `PublicSpotController.regions()`（路径 `/api/public/spots/regions`）硬编码九市（上游→下游 `菏泽 济宁 泰安 聊城 济南 德州 淄博 滨州 东营`），计数已改为单次 `SpotService.countByRegion()` 内存分组（且只计已发布景点）。加城市要改这个数组，它同时是 sjg-datav 九城排序的权威来源；V10 就是为了让 `scenic_spot.region` 对齐这个列表。已知性能项：`PublicTimelineController` 每朝代 4 次查询且返回全量不分页。
+- 公开端新增统计口径时，**必须同时套治理过滤**（`content_review.status='published'` 的 `inSql`/`apply` 子查询），否则大屏/首页计数会把待审内容算进去、与列表对不上。`countByRegion`、`categoryStats(region)` 都是这么做的。
 - `PublicPoemController:22` 与 `PublicPoemAnalysisController:27` **共用 `/api/public/poems` 基路径**，靠子路由区分（前者 `/` 与 `/{id}`，后者 `/{id}/analysis`）。往其中一个加路由前先看另一个，否则可能启动时 ambiguous mapping 失败。
 - `PoemService.list`（`:57-77`）的 region 过滤有非直观语义：命中「景点在该区域的诗」**或**「无景点且诗人出生地 LIKE 该区域」，两者都空时注入 `id = -1` 强制返回空集。V22 的 seed 数据必须遵循同一规则。
 - 工作区已按功能拆分提交；后续排查请以当前 `git status` 和提交内容为准，**别拿旧提交的状态推断当前代码**。
