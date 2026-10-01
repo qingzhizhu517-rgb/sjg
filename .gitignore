@@ -55,6 +55,7 @@ scripts/imagegen/
 _localhost-*.sql
 sjg_*_backup*.sql
 sjg_*.sql
+db-export/
 
 # External archives are intentionally outside the repository
 sjg-new-archive-*/

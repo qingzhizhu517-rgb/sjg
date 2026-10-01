@@ -18,7 +18,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
@@ -80,6 +82,25 @@ public class SpotService {
         spot.setId(id);
         spotMapper.updateById(spot);
         if (governanceCleanup != null) governanceCleanup.resetReviewForEdit("scenic_spot", id);
+    }
+
+    /**
+     * 各区域景点数。
+     * 一次性只取 region 列再在内存分组，替代原先「逐个区域一次 COUNT」的 9 次查询。
+     */
+    public Map<String, Long> countByRegion() {
+        List<ScenicSpot> spots = spotMapper.selectList(
+            new LambdaQueryWrapper<ScenicSpot>().select(ScenicSpot::getRegion)
+                    // 治理门禁：只计已发布景点，与 listPublished 口径一致
+                    .inSql(ScenicSpot::getId,
+                            "SELECT entity_id FROM content_review WHERE entity_type = 'scenic_spot' AND status = 'published'"));
+        Map<String, Long> counts = new HashMap<>();
+        for (ScenicSpot spot : spots) {
+            String region = spot.getRegion();
+            if (!StringUtils.hasText(region)) continue;
+            counts.merge(region, 1L, Long::sum);
+        }
+        return counts;
     }
 
     /**

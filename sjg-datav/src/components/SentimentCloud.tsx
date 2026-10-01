@@ -1,70 +1,86 @@
 import styled from 'styled-components'
+import { PALETTE, alpha } from '../theme/chartTheme'
 
 /**
- * 情感标签云（零依赖版）
- * 说明: worktree 原版使用 ECharts wordCloud 系列, 但该系列需要额外的
- * echarts-wordcloud 插件(项目未安装, 且与 ECharts 6 的按需注册约定不兼容),
- * 故改写为 styled-components 标签云: 保留词频可视化意图, 无运行时依赖。
- * 颜色取自固定的莫兰迪柔和色板(非随机), 视觉稳定。
+ * 情感标签云（零依赖版）。
+ * 原版依赖 echarts-wordcloud 插件，与 ECharts 6 的按需注册约定不兼容，
+ * 故用 flex 排版实现：保留词频可视化的意图，无运行时额外依赖。
+ *
+ * 尺寸语义改为「撑满父容器」——原先默认 width=400/height=300，
+ * 而卡片内可用宽度只有约 324px，导致右侧与底部被裁。
  */
 
 interface SentimentCloudProps {
   data: Array<{ name: string; value: number }>
-  width?: number
-  height?: number
 }
 
-const CLOUD_COLORS = [
-  '#e5c96b', '#ece4d0', '#7f9aa0', '#c9a227', '#b98a6a',
-  '#a89f8f', '#c23a2b', '#8f8a7a', '#6f928e', '#b7ad92',
-]
-
 const CloudContainer = styled.div`
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
   align-content: center;
-  gap: 10px 14px;
+  justify-content: center;
+  gap: 4px 14px;
   overflow: hidden;
 `
 
 const CloudTag = styled.span<{ $size: number; $color: string; $opacity: number }>`
+  font-family: var(--dv-serif);
   font-size: ${(p) => p.$size}px;
-  font-weight: 700;
+  line-height: 1.25;
+  font-weight: 400;
   color: ${(p) => p.$color};
   opacity: ${(p) => p.$opacity};
-  letter-spacing: 2px;
+  letter-spacing: 1px;
+  white-space: nowrap;
   cursor: default;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease;
   &:hover {
-    transform: scale(1.15);
     opacity: 1;
-    text-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
+    transform: scale(1.08);
   }
 `
 
-export default function SentimentCloud({ data, width = 400, height = 300 }: SentimentCloudProps) {
+const MoreTag = styled.span`
+  font-size: 11px;
+  color: var(--dv-ink-3);
+  letter-spacing: 1px;
+  align-self: flex-end;
+`
+
+/** 字号区间：卡片内高约 190px，11–24px 是既不挤爆又能体现词频的区间 */
+const MIN_SIZE = 11
+const MAX_SIZE = 24
+
+export default function SentimentCloud({ data }: SentimentCloudProps) {
   if (!data.length) {
     return (
-      <div style={{ width, height, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>
-        暂无情感标签数据
-      </div>
+      <CloudContainer>
+        <MoreTag>当前筛选下暂无情感标签</MoreTag>
+      </CloudContainer>
     )
   }
-  // 词频归一化 → 字号(14~34) 与透明度(0.55~1)
+
   const max = Math.max(...data.map((d) => d.value), 1)
   const tags = data.map((d, i) => ({
     ...d,
-    size: 14 + Math.round((d.value / max) * 20),
-    color: CLOUD_COLORS[i % CLOUD_COLORS.length],
-    opacity: 0.55 + (d.value / max) * 0.45,
+    size: Math.round(MIN_SIZE + (d.value / max) * (MAX_SIZE - MIN_SIZE)),
+    color: PALETTE[i % PALETTE.length],
+    opacity: 0.6 + (d.value / max) * 0.4,
   }))
 
   return (
-    <CloudContainer style={{ width, height }}>
+    <CloudContainer>
       {tags.map((t) => (
-        <CloudTag key={t.name} $size={t.size} $color={t.color} $opacity={t.opacity}>
+        <CloudTag
+          key={t.name}
+          $size={t.size}
+          $color={t.color}
+          $opacity={t.opacity}
+          title={`${t.name} · ${t.value} 次`}
+          style={t.size >= MAX_SIZE - 2 ? { textShadow: `0 0 14px ${alpha(t.color, 0.35)}` } : undefined}
+        >
           {t.name}
         </CloudTag>
       ))}

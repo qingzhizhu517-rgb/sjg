@@ -116,16 +116,18 @@ public class PublicSpotController {
 
     /**
      * 获取所有区域及其景点数量
+     * 顺序即沿黄九市「上游→下游」，是前端九城排序的权威来源。
      */
-    @Operation(summary = "获取区域列表", description = "返回所有预设区域及其景点数量统计")
+    @Operation(summary = "获取区域列表", description = "返回沿黄九市（上游→下游）及其景点数量统计")
     @GetMapping("/regions")
     public ResponseEntity<Result<List<Map<String, Object>>>> regions() {
         // 黄河上游→下游顺序(与 MapView 九城一致): 菏泽入境 → 东营归海
         String[] regions = {"菏泽", "济宁", "泰安", "聊城", "济南", "德州", "淄博", "滨州", "东营"};
+        // 单次查询后在内存分组，替代原先逐区域 COUNT 的 9 次查询
+        Map<String, Long> counts = spotService.countByRegion();
         List<Map<String, Object>> regionList = new ArrayList<>();
         for (String region : regions) {
-            Long count = spotService.listPublished(1, 1, null, region).getTotal();
-            regionList.add(Map.of("name", region, "spotCount", count));
+            regionList.add(Map.of("name", region, "spotCount", counts.getOrDefault(region, 0L)));
         }
         return ResponseEntity.ok(Result.success(regionList));
     }
