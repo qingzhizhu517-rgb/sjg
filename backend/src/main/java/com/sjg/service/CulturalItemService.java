@@ -49,7 +49,7 @@ public class CulturalItemService {
                 foodOperaDetailMapper, null, null);
     }
 
-    @org.springframework.beans.factory.annotation.Autowired
+    // 仅供测试：不带治理清理服务。Spring 只能有一个 @Autowired 构造器，注入走下方 7 参版本。
     public CulturalItemService(CulturalItemMapper itemMapper,
                                FestivalDetailMapper festivalDetailMapper,
                                CraftDetailMapper craftDetailMapper,
