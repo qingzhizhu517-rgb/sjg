@@ -1,6 +1,6 @@
 import useSWR from 'swr'
 
-const BASE_URL = '/api/public'
+const BASE_URL = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/+$/, '') + '/api/public'
 
 /** 后端公开接口的实体形态（只声明大屏用到的字段） */
 export interface Spot {

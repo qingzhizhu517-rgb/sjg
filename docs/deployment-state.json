@@ -1,0 +1,80 @@
+{
+  "railway": {
+    "project_id": "a20a55f3-ba67-4817-8a4e-b352e41121c8",
+    "workspace_id": "5c2ae5b4-28c4-4f3e-9669-c2bacd01b50e",
+    "environment_id": "6aee3bd0-22ac-4b16-b3c3-c0dbebcb14cf",
+    "backend_service_id": "b1096b4d-6a47-41f9-a679-8b964666eec0",
+    "mysql_service_id": "709c2f47-8b04-47f1-81be-961fc12a880b",
+    "backend_url": "https://sjg-api-production.up.railway.app",
+    "mysql_proxy_id": "13a72fa0-1687-418e-950d-239005eab0d9",
+    "mysql_proxy_host": "mainline.proxy.rlwy.net",
+    "mysql_proxy_port": 58212,
+    "backend_deployment_id": "60f5e614-cf3d-4ae9-944c-caa0b7e94695",
+    "status": "success",
+    "bootstrap_service_id": "db374c4f-0457-4225-b079-8d51a78b2581",
+    "bootstrap_deployment_id": "e70d0d4c-d081-4794-80e4-c4effa59c7db",
+    "mysql_deployment_id": "cee5a030-d650-46ad-a6c3-4afdeac32ad4",
+    "mysql_proxy_status": "deleted",
+    "bootstrap_status": "completed_service_deleted",
+    "trial_days_remaining": 30,
+    "trial_credit_remaining_usd": 4.997662051125679,
+    "temporary_ssh_key_status": "removed"
+  },
+  "sites": {
+    "display-v2": {
+      "project_id": "appgprj_6aca26e375b081919acfa874a379028d",
+      "expected_url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
+      "checkout_path": "/Users/a1/.codex/worktrees/ba33/sjg/.local/sites/display-v2",
+      "status": "succeeded_private",
+      "commit_sha": "04b215f0ab6710d9a7ac9535d7025ff1b6eb4b59",
+      "deployment_id": "appgdep_6aca2b3d6ae08191a1c24ea3a734c889",
+      "version_id": "appgprj_6aca26e375b081919acfa874a379028d~appgver_4f272aed66088191839d1fe2960b7541",
+      "url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site"
+    },
+    "admin-frontend": {
+      "project_id": "appgprj_6aca26f42d9081918bc7545e1b373f99",
+      "expected_url": "https://qilu-wenmai-admin-qzzhu.noisyamber1.chatgpt.site",
+      "checkout_path": "/Users/a1/.codex/worktrees/ba33/sjg/.local/sites/admin-frontend",
+      "status": "succeeded_private",
+      "commit_sha": "da9fe78604535461f9d16e598030b81e7c9ad2ae",
+      "deployment_id": "appgdep_6aca2aeaa6408191b6a1b6f2f45da1c4",
+      "version_id": "appgprj_6aca26f42d9081918bc7545e1b373f99~appgver_75b906d031108191b5bb9725d407c817",
+      "url": "https://qilu-wenmai-admin-qzzhu.noisyamber1.chatgpt.site"
+    },
+    "sjg-datav": {
+      "project_id": "appgprj_6aca26caccb0819188666ef76e25ea68",
+      "expected_url": "https://qilu-wenmai-datav-qzzhu.noisyamber1.chatgpt.site",
+      "checkout_path": "/Users/a1/.codex/worktrees/ba33/sjg/.local/sites/sjg-datav",
+      "status": "succeeded_private",
+      "commit_sha": "109d7cc086654cfb9682540648cf92afa205b4c8",
+      "deployment_id": "appgdep_6aca2ad714ac819185797fb2e6517a15",
+      "version_id": "appgprj_6aca26caccb0819188666ef76e25ea68~appgver_7f94fdef9618819183db1e6e387621f0",
+      "url": "https://qilu-wenmai-datav-qzzhu.noisyamber1.chatgpt.site"
+    }
+  },
+  "validation": {
+    "backend_tests": 138,
+    "display_tests": 124,
+    "frontend_builds": [
+      "display-v2",
+      "admin-frontend",
+      "sjg-datav"
+    ],
+    "database_import": "snapshot_and_25_migrations_completed",
+    "browser": "private_login_gate_verified; content_pages_require_owner_login",
+    "llm": "not_configured",
+    "admin_login": "not_verified",
+    "oss_upload": "not_verified",
+    "public_api": "6_endpoints_HTTP200_business200_empty_published_content",
+    "cors": "three_site_origins_OPTIONS200_exact_allow_origin",
+    "admin_anonymous": "HTTP401",
+    "learning_task_absent": "HTTP404",
+    "ai_sse": "error_event_explicitly_reports_missing_LLM_API_KEY"
+  },
+  "repository": {
+    "online_base_sha": "c01773fba580b0a7c15964d2c3a3b03fadffd30d",
+    "online_latest_local_redesign": false,
+    "publication_mode": "manual_upload_and_independent_sites_source_repositories",
+    "master_updates_do_not_auto_deploy": true
+  }
+}
