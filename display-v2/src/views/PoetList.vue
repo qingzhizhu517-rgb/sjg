@@ -339,6 +339,10 @@
                   <ErrorState message="关系数据加载失败" @retry="initG6" />
                 </div>
 
+                <div v-else-if="graphStatus === 'ready' && graphFilterEmpty" class="graph-status-box" role="status">
+                  <EmptyState icon="谱" :message="graphFilterEmptyMessage" hint="可清除城市条件，或更换朝代与关系筛选" />
+                </div>
+
                 <Transition name="drawer-slide">
                   <aside v-if="drawerPoet" class="graph-drawer" role="dialog" aria-label="诗人关系卡片">
                     <button class="drawer-close" aria-label="关闭卡片" @click="closeDrawer">✕</button>
@@ -576,6 +580,8 @@ const onAvatarError = (id) => {
 const g6Container = ref(null)
 // graphStatus: 'idle' | 'loading' | 'empty' | 'error' | 'ready'
 const graphStatus = ref('idle')
+const graphFilterEmpty = ref(false)
+const graphFilterEmptyMessage = computed(() => `${region.value}暂无符合筛选条件的关系数据`)
 let graphInstance = null
 let graphRequestSeq = 0
 // 画布 Ctrl+滚轮缩放监听的清理句柄(随 graph 生命周期挂载/卸载)
@@ -590,6 +596,7 @@ const clearGraphWheel = () => {
 // 销毁同时使在途的 initG6 请求作废(seq 递增), 避免请求返回后向已卸载容器建图
 const safeDestroyGraph = () => {
   graphRequestSeq++
+  graphFilterEmpty.value = false
   if (graphInstance) {
     try {
       graphInstance.destroy()
@@ -1185,7 +1192,11 @@ const applyGraphFilter = () => {
       ? nodes.filter(dynOK)
       : nodes.filter((n) => dynOK(n) && touched.has(n.id))
 
-  if (isDefault && visibleNodes.length === nodes.length && visibleEdges.length === edges.length) {
+  graphFilterEmpty.value = !visibleNodes.length
+  if (graphFilterEmpty.value) closeDrawer()
+  // 初始全量已交给 Graph；从筛选空态返回全量时仍须恢复其数据。
+  if (isDefault && visibleNodes.length === nodes.length && visibleEdges.length === edges.length
+    && graphInstance.getNodeData().length === nodes.length && graphInstance.getEdgeData().length === edges.length) {
     return
   }
 

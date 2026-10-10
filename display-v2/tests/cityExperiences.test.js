@@ -167,3 +167,65 @@ test('名士城市条件也约束关系图谱，朝代过滤仍可叠加', async
   assert.deepEqual(displayed.nodes.map(node => node.id), ['1'])
   assert.equal(displayed.edges.length, 0)
 })
+
+test('城市名士有记录而无关系节点时显示筛选空态，清除城市后恢复图谱', async t => {
+  let displayed
+  class GraphBoundary {
+    constructor(options) { displayed = options.data }
+    setData(data) { displayed = data }
+    getNodeData() { return displayed.nodes }
+    getEdgeData() { return displayed.edges }
+    render() {}
+    on() {}
+    setPlugins() {}
+    destroy() {}
+  }
+  const page = await openPoets({ region: '济南' }, async (_path, params) => ({ data: { records: params.region ? [{ id: 1, name: '李清照', dynastyId: 5 }] : [{ id: 1, name: '李清照', dynastyId: 5 }, { id: 2, name: '别城名士', dynastyId: 4 }] } }), {
+    Graph: GraphBoundary, cssVar: () => '#a93226',
+    get: async () => ({ nodes: [{ id: 2, name: '别城名士', dynastyId: 4, dynasty: '隋唐' }], edges: [] }),
+  })
+  t.after(page.dispose)
+  await page.ready; await settle()
+  const container = { clientWidth: 800, clientHeight: 600, addEventListener() {}, removeEventListener() {} }
+  page.state.g6Container.value = container
+  const mountedContainer = page.state.g6Container.value
+  page.state.setTab('graph'); await settle()
+  assert.equal(page.state.poets.value.length, 1)
+  assert.deepEqual(displayed.nodes, [])
+  assert.equal(page.state.graphStatus.value, 'ready', '筛选空态不能覆盖全库状态')
+  assert.equal(page.state.graphFilterEmpty?.value, true, '应显式标记过滤后的无节点状态')
+  assert.equal(page.state.graphFilterEmptyMessage?.value, '济南暂无符合筛选条件的关系数据')
+  await page.state.clearRegion(); await settle()
+  assert.equal(page.state.region.value, '')
+  assert.equal(page.state.graphFilterEmpty.value, false)
+  assert.equal(page.state.graphStatus.value, 'ready')
+  assert.deepEqual(displayed.nodes.map(node => node.id), ['2'])
+  assert.equal(page.state.g6Container.value, mountedContainer, '清除条件不销毁画布容器')
+  page.state.selectDynasty(5); await settle()
+  assert.equal(page.state.graphFilterEmpty.value, true)
+  page.state.selectDynasty(null); await settle()
+  assert.equal(page.state.graphFilterEmpty.value, false)
+  assert.deepEqual(displayed.nodes.map(node => node.id), ['2'])
+})
+
+test('筛选空态不会覆盖图谱原始的加载、全库空数据和请求失败状态', async t => {
+  let resolveGraph
+  let fail = false
+  const page = await openPoets({ region: '济南' }, undefined, {
+    cssVar: () => '#a93226',
+    get: () => fail ? Promise.reject(new Error('关系服务不可用')) : new Promise(resolve => { resolveGraph = resolve }),
+  })
+  t.after(page.dispose)
+  await page.ready; await settle()
+  page.state.g6Container.value = { clientWidth: 800, clientHeight: 600, addEventListener() {}, removeEventListener() {} }
+  const loading = page.state.initG6()
+  assert.equal(page.state.graphStatus.value, 'loading')
+  assert.equal(page.state.graphFilterEmpty.value, false)
+  resolveGraph({ nodes: [], edges: [] }); await loading
+  assert.equal(page.state.graphStatus.value, 'empty')
+  assert.equal(page.state.graphFilterEmpty.value, false)
+  fail = true
+  await page.state.initG6()
+  assert.equal(page.state.graphStatus.value, 'error')
+  assert.equal(page.state.graphFilterEmpty.value, false)
+})

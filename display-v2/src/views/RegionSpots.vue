@@ -403,7 +403,8 @@ watch([region, previewMode], loadSpots, { immediate: true })
   mask-composite: intersect;
 }
 .city-landscape--jinan figcaption { top: auto; bottom: 0; right: 0; writing-mode: horizontal-tb; font-size: 10px; letter-spacing: 1px; }
-#city-spots { scroll-margin-top: 100px; }
+/* 主导航与分区导航合计约 130px，锚点另留 20px 阅读间距。 */
+#city-spots { scroll-margin-top: 150px; }
 .city-spots-empty :deep(.empty__brush) { width: 70px; height: 28px; margin-bottom: 6px; }
 .city-spots-empty :deep(.empty__icon) { font-size: 25px; margin-bottom: 8px; }
 .city-atlas__pages :deep(.city-spots-empty) { padding: 24px 16px; }
