@@ -1,19 +1,13 @@
 <template>
   <div ref="rootRef" class="culture-view">
-    <!-- 页头 -->
-    <header class="cv-hero">
-      <span class="cv-hero__tag">数字人文 · 文化长廊</span>
-      <h1 class="cv-hero__title">五脉流芳 · 齐鲁大观</h1>
-      <p class="cv-hero__desc">
-        节令风物、诗词歌赋、百工之艺、闾巷传说、食味梨园——沿黄九城的文化全景，在此徐徐展开。
-      </p>
-    </header>
-
+    <PageHeading eyebrow="齐鲁文化 / 文化总览" title="风物有情，文脉相连" description="从节令、工艺、故事与乡音出发，走近黄河岸边的文化日常。">
+      <template #actions><a href="#culture-cities" class="folio-button folio-button--secondary">按城市探索 ↓</a></template>
+    </PageHeading>
     <!-- 五大板块入口(复用首页聚合组件, 计数来自 /cultural/categories) -->
     <CulturalGallery />
 
     <!-- 沿黄九城文化册页入口 -->
-    <section class="cv-cities">
+    <section id="culture-cities" class="cv-cities">
       <SectionHeading
         eyebrow="沿黄文化"
         title="九城文脉 · 一城一册"
@@ -23,7 +17,7 @@
         <router-link
           v-for="(c, i) in NINE_CITIES"
           :key="c"
-          :to="`/cities/${c}`"
+          :to="atlasLink(`/cities/${c}`, route)"
           class="cv-city"
           :style="{ animationDelay: `${i * 0.05}s` }"
           data-reveal
@@ -39,6 +33,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import PageHeading from '../components/ui/PageHeading.vue'
+import { atlasLink } from '../config/atlasPreview'
+const route = useRoute()
 import { useReveal } from '../composables/useReveal'
 import CulturalGallery from '../components/homepage/CulturalGallery.vue'
 import SectionHeading from '../components/homepage/SectionHeading.vue'
@@ -153,4 +151,5 @@ onMounted(() => {
   .culture-view { padding: 24px 16px 88px; }
   .cv-cities__grid { grid-template-columns: 1fr; }
 }
+.culture-view { max-width:1360px; padding:32px var(--page-gutter) 70px; } .cv-cities { margin-top:40px; scroll-margin-top:145px; } .cv-city__seal { background:transparent; border:1px solid var(--border); color:var(--reading-green); }
 </style>

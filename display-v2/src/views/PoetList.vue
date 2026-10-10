@@ -1,25 +1,21 @@
 <template>
   <div class="poets-view">
-    <InkHero
-      variant="roster"
-      seal-char="名"
-      kuan="济南名士多"
-      eyebrow="齐鲁文脉"
-      title="齐鲁名士"
-      subtitle="探寻黄河流域历代齐鲁大家之生平轨迹与文学连结。"
-      :stats="heroStats"
-    />
-
+    <PageHeading eyebrow="诗文名士 / 齐鲁名士" title="山河之间，遇见故人" description="按姓名与朝代寻找名士，读生平、品诗文，也可从关系图谱展开探索。">
+      <template #actions><router-link :to="atlasLink('/poems', route)" class="folio-button folio-button--quiet">检索诗词 ↗</router-link></template>
+    </PageHeading>
     <div ref="revealRoot" class="poets-content">
-      <!-- 朝代筛选 + 视图切换 -->
-      <section class="poets-toolbar" data-reveal>
+      <form class="folio-toolbar" role="search" @submit.prevent="searchPoets">
+        <label class="folio-field folio-field--search">查找名士<input v-model="poetSearchInput" class="folio-input" type="search" placeholder="输入姓名、字号或生平关键词" /></label>
+        <div class="folio-actions"><button type="submit" class="folio-button folio-button--primary">查找名士</button><button type="button" class="folio-button folio-button--quiet" :disabled="!poetSearchInput && selectedDynastyId == null" @click="clearPoetFilters">清除条件</button></div>
+      </form>
+      <section class="poets-toolbar" aria-label="名士浏览方式">
         <DynastyRail
           :dynasties="dynastyItems"
           :model-value="selectedDynastyId"
           aria-label="按朝代筛选名士"
           @update:model-value="selectDynasty"
         />
-        <div class="layout-toggle-group" role="tablist" aria-label="文人廊视图切换">
+        <div class="layout-toggle-group folio-tabs" role="tablist" aria-label="文人廊视图切换">
           <button
             class="toggle-btn"
             :class="{ active: activeTab === 'gallery' }"
@@ -56,8 +52,9 @@
           <section v-if="featuredPoets.length" class="poets-section poets-featured" data-reveal>
             <SectionHeading
               eyebrow="本期名士"
-              title="传世最丰"
-              :subtitle="selectedDynastyId == null
+              :title="previewMode ? '名士选读' : '传世最丰'"
+              :subtitle="previewMode ? '以四位名士的生平与选文，预览文人长廊'
+                : selectedDynastyId == null
                 ? '诗篇传世最多的齐鲁文人，附其代表句'
                 : `${selectedDynastyName} · 诗篇传世最多`"
             />
@@ -67,7 +64,8 @@
                 :key="p.id"
                 :poet="p"
                 :dynasty-name="getDynastyName(p.dynastyId)"
-                @click="$router.push(`/poets/${p.id}`)"
+                :count-suffix="previewMode ? '篇样本文选' : undefined"
+                @click="openPoet(p.id)"
               />
             </div>
           </section>
@@ -91,8 +89,8 @@
                 class="poet-card-wrap card hover-lift"
                 tabindex="0"
                 role="link"
-                @click="$router.push(`/poets/${p.id}`)"
-                @keydown.enter="$router.push(`/poets/${p.id}`)"
+                @click="openPoet(p.id)"
+                @keydown.enter="openPoet(p.id)"
                 :aria-label="`查看 ${p.name} 详情`"
               >
                 <div class="poet-avatar-box">
@@ -103,9 +101,9 @@
                     class="poet-img"
                     loading="lazy"
                     decoding="async"
-                    @error="onAvatarError"
+                    @error="onAvatarError(p.id)"
                   />
-                  <span class="poet-avatar-stamp">{{ p.name ? p.name.charAt(0) : '文' }}</span>
+                  <span v-else class="poet-avatar-stamp">{{ p.name ? p.name.charAt(0) : '文' }}</span>
                   <span class="poet-stamp">文</span>
                 </div>
                 <div class="poet-card-body">
@@ -120,7 +118,7 @@
                   </blockquote>
                   <p v-else class="poet-biography poet-biography--empty">生平待考，然其诗已传。</p>
                   <div class="poet-style-box">
-                    <span class="style-lbl">传世</span>
+                    <span class="style-lbl">{{ previewMode ? '样本' : '传世' }}</span>
                     <span class="style-val">{{ p.poemCount || 0 }} 篇</span>
                   </div>
                 </div>
@@ -130,8 +128,8 @@
             <EmptyState
               v-if="poetsLoaded && !filteredEnrichedPoets.length"
               icon="名"
-              message="该朝代暂无收录诗人"
-              hint="换个朝代看看"
+              message="没有找到符合条件的名士"
+              hint="清除关键词或切换朝代，再看看其他名士"
             />
 
             <!-- 折叠: 信息待考的名士(完整度<40), 默认收起 -->
@@ -148,8 +146,8 @@
                     class="poet-card-wrap card hover-lift is-marginal"
                     tabindex="0"
                     role="link"
-                    @click="$router.push(`/poets/${p.id}`)"
-                    @keydown.enter="$router.push(`/poets/${p.id}`)"
+                    @click="openPoet(p.id)"
+                    @keydown.enter="openPoet(p.id)"
                     :aria-label="`查看 ${p.name} 详情`"
                   >
                     <div class="poet-avatar-box">
@@ -160,9 +158,9 @@
                         class="poet-img"
                         loading="lazy"
                         decoding="async"
-                        @error="onAvatarError"
+                        @error="onAvatarError(p.id)"
                       />
-                      <span class="poet-avatar-stamp">{{ p.name ? p.name.charAt(0) : '文' }}</span>
+                      <span v-else class="poet-avatar-stamp">{{ p.name ? p.name.charAt(0) : '文' }}</span>
                       <span class="poet-stamp">文</span>
                     </div>
                     <div class="poet-card-body">
@@ -172,7 +170,7 @@
                       </div>
                       <p class="poet-biography poet-biography--empty">生平待考，然其诗已传。</p>
                       <div class="poet-style-box">
-                        <span class="style-lbl">传世</span>
+                        <span class="style-lbl">{{ previewMode ? '样本' : '传世' }}</span>
                         <span class="style-val">{{ p.poemCount || 0 }} 篇</span>
                       </div>
                     </div>
@@ -202,8 +200,8 @@
                 class="poet-card-wrap card hover-lift"
                 tabindex="0"
                 role="link"
-                @click="$router.push(`/poets/${p.id}?from=all`)"
-                @keydown.enter="$router.push(`/poets/${p.id}?from=all`)"
+                @click="openPoet(p.id, 'all')"
+                @keydown.enter="openPoet(p.id, 'all')"
                 :aria-label="`查看 ${p.name} 详情`"
               >
                 <div class="poet-avatar-box">
@@ -214,9 +212,9 @@
                     class="poet-img"
                     loading="lazy"
                     decoding="async"
-                    @error="onAvatarError"
+                    @error="onAvatarError(p.id)"
                   />
-                  <span class="poet-avatar-stamp">{{ p.name ? p.name.charAt(0) : '文' }}</span>
+                  <span v-else class="poet-avatar-stamp">{{ p.name ? p.name.charAt(0) : '文' }}</span>
                   <span class="poet-stamp">文</span>
                 </div>
                 <div class="poet-card-body">
@@ -231,7 +229,7 @@
                   </blockquote>
                   <p v-else class="poet-biography poet-biography--empty">生平待考，然其诗已传。</p>
                   <div class="poet-style-box">
-                    <span class="style-lbl">传世</span>
+                    <span class="style-lbl">{{ previewMode ? '样本' : '传世' }}</span>
                     <span class="style-val">{{ p.poemCount || 0 }} 篇</span>
                   </div>
                 </div>
@@ -245,6 +243,10 @@
               hint="换个朝代看看"
             />
           </section>
+        </div>
+
+        <div v-else-if="previewMode" key="graph-preview" class="graph-tab-content">
+          <EmptyState icon="谱" message="预览暂不包含关系数据" hint="可切换书卷长廊或全名录，阅读四位名士的设计样本" />
         </div>
 
         <!-- 关系图谱 (AntV G6) -->
@@ -379,6 +381,9 @@ import { useReveal } from '../composables/useReveal'
 import api from '../api'
 import { Graph } from '@antv/g6'
 import { cssVar } from '../utils/cssToken'
+import { pickSignaturePoem } from '../utils/poem'
+import PageHeading from '../components/ui/PageHeading.vue'
+import { isAtlasPreview, atlasLink, previewPoets, previewDynasties } from '../config/atlasPreview'
 import InkHero from '../components/homepage/InkHero.vue'
 import SectionHeading from '../components/homepage/SectionHeading.vue'
 import FeaturedPoetCard from '../components/homepage/FeaturedPoetCard.vue'
@@ -389,6 +394,7 @@ import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 
 const router = useRouter()
 const route = useRoute()
+const previewMode = computed(() => isAtlasPreview(route))
 const { isAnime } = useTheme()
 const { getImageUrl } = useImage()
 const { map: enrichMap, build, enrich } = usePoetEnrichment()
@@ -406,6 +412,15 @@ const DYNASTIES = [
   { id: 7, name: '明', start: 1368, end: 1644 },
   { id: 8, name: '清', start: 1644, end: 1912 },
 ]
+const dynastyReference = computed(() => previewMode.value
+  ? previewDynasties.map((dynasty) => ({ ...dynasty, start: dynasty.startYear, end: dynasty.endYear }))
+  : DYNASTIES)
+
+const openPoet = (id, from) => {
+  const target = atlasLink(`/poets/${id}`, route)
+  const destination = typeof target === 'string' ? { path: target } : target
+  return router.push({ ...destination, query: { ...destination.query, ...(from ? { from } : {}), returnTo: route.fullPath } })
+}
 
 // tab 状态与 URL 双向同步: ?view=gallery|all|graph, 刷新/直达/前进后退均保持
 const VALID_VIEWS = ['gallery', 'all', 'graph']
@@ -429,7 +444,7 @@ const selectedDynastyId = ref(null)
 // 朝代筛选与 URL 双向同步: ?dynasty=<id>, 刷新/前进后退均保持; 非法值回退"全部"
 const initDynastyFromQuery = () => {
   const q = Number(route.query.dynasty)
-  selectedDynastyId.value = DYNASTIES.some((d) => d.id === q) ? q : null
+  selectedDynastyId.value = dynastyReference.value.some((d) => d.id === q) ? q : null
 }
 initDynastyFromQuery()
 
@@ -450,7 +465,7 @@ watch(
   () => route.query.dynasty,
   () => {
     const q = Number(route.query.dynasty)
-    const next = DYNASTIES.some((d) => d.id === q) ? q : null
+    const next = dynastyReference.value.some((d) => d.id === q) ? q : null
     if (next !== selectedDynastyId.value) selectedDynastyId.value = next
   },
 )
@@ -459,14 +474,15 @@ const poetsLoaded = ref(false)
 const enrichmentLoaded = ref(false)
 const errorMsg = ref(null)
 const revealRoot = ref(null)
+let rosterRequestSeq = 0
 
 // ---- 朝代相关 ----
-const getDynastyName = (id) => DYNASTIES.find((d) => d.id === id)?.name || '古代'
+const getDynastyName = (id) => dynastyReference.value.find((d) => d.id === id)?.name || '古代'
 const countByDynasty = (id) => poets.value.filter((p) => p.dynastyId === id).length
 
 const dynastyItems = computed(() => [
   { id: null, name: '全部', poetCount: poets.value.length },
-  ...DYNASTIES.map((d) => ({
+  ...dynastyReference.value.map((d) => ({
     id: d.id,
     name: d.name,
     startYear: d.start,
@@ -481,22 +497,28 @@ const selectedDynastyName = computed(() => {
 })
 
 // ---- enrichment ----
-const enrichedPoets = computed(() => poets.value.map((p) => enrich(p)))
+const poetSearchInput = ref(typeof route.query.keyword === 'string' ? route.query.keyword : '')
+const searchPoets = () => router.replace({ query: { ...route.query, view: 'all', keyword: poetSearchInput.value.trim() || undefined } })
+const clearPoetFilters = () => { poetSearchInput.value = ''; router.replace({ query: { ...route.query, keyword: undefined, dynasty: undefined } }) }
+watch(() => route.query.keyword, value => { poetSearchInput.value = typeof value === 'string' ? value : '' })
+const enrichedPoets = computed(() => (previewMode.value ? poets.value : poets.value.map((p) => enrich(p))).filter(p => !route.query.keyword || `${p.name} ${p.zi || ''} ${p.hao || ''} ${p.biography || ''}`.includes(String(route.query.keyword))))
 const filteredEnrichedPoets = computed(() => {
   if (selectedDynastyId.value == null) return enrichedPoets.value
   return enrichedPoets.value.filter((p) => p.dynastyId === selectedDynastyId.value)
 })
 
 // 卡墙常规层(完整度 40-69): 默认展示
-const standardPoets = computed(() =>
-  filteredEnrichedPoets.value.filter((p) => {
+const standardPoets = computed(() => previewMode.value
+  ? filteredEnrichedPoets.value.filter((poet) => !featuredPoets.value.some((featured) => featured.id === poet.id))
+  : filteredEnrichedPoets.value.filter((p) => {
     const c = p.completeness ?? 0
     return c >= 40 && c < 70
   }),
 )
 // 卡墙折叠层(完整度 <40): 信息薄, 默认收起
-const marginalPoets = computed(() =>
-  filteredEnrichedPoets.value.filter((p) => (p.completeness ?? 0) < 40),
+const marginalPoets = computed(() => previewMode.value
+  ? []
+  : filteredEnrichedPoets.value.filter((p) => (p.completeness ?? 0) < 40),
 )
 const showMarginal = ref(false)
 
@@ -506,6 +528,7 @@ const featuredPoets = computed(() => {
     selectedDynastyId.value == null
       ? enrichedPoets.value
       : enrichedPoets.value.filter((p) => p.dynastyId === selectedDynastyId.value)
+  if (previewMode.value) return pool.slice(0, 2)
   const premium = [...pool]
     .filter((p) => (p.completeness ?? 0) >= 70)
     .sort((a, b) => (b.poemCount || 0) - (a.poemCount || 0))
@@ -518,28 +541,29 @@ const featuredPoets = computed(() => {
 const statsReady = computed(() => poetsLoaded.value && enrichmentLoaded.value)
 const heroStats = computed(() => {
   if (!statsReady.value) return []
-  const totalPoems = Object.values(enrichMap.value).reduce(
+  const totalPoems = (previewMode.value ? poets.value : Object.values(enrichMap.value)).reduce(
     (s, e) => s + (e.poemCount || 0),
     0,
   )
-  const dynastiesWithPoets = DYNASTIES.filter((d) => countByDynasty(d.id) > 0).length
+  const dynastiesWithPoets = dynastyReference.value.filter((d) => countByDynasty(d.id) > 0).length
   const withBio = poets.value.filter((p) => p.biography && p.biography.trim()).length
   return [
     { value: poets.value.length, suffix: '位', label: '齐鲁名士' },
     { value: dynastiesWithPoets, suffix: '朝', label: '跨越朝代' },
-    { value: totalPoems, suffix: '篇', label: '传世诗卷' },
+    { value: totalPoems, suffix: '篇', label: previewMode.value ? '样本文选' : '传世诗卷' },
     { value: withBio, suffix: '位', label: '有传可考' },
   ]
 })
 
 // ---- 头像 ----
+const failedAvatarIds = ref(new Set())
 const getPoetAvatar = (poet) => {
-  if (!poet) return ''
+  if (!poet || failedAvatarIds.value.has(String(poet.id))) return ''
   const url = poet.avatarUrl
   return url ? getImageUrl(url, isAnime.value) : ''
 }
-const onAvatarError = (e) => {
-  e.target.style.display = 'none'
+const onAvatarError = (id) => {
+  failedAvatarIds.value = new Set([...failedAvatarIds.value, String(id)])
 }
 
 // ==========================================
@@ -643,7 +667,7 @@ const dynastyFilter = computed(() =>
   selectedDynastyId.value == null ? '全部' : getDynastyName(selectedDynastyId.value),
 )
 const setGraphDynasty = (name) => {
-  const id = name === '全部' ? null : DYNASTIES.find((x) => x.name === name)?.id ?? null
+  const id = name === '全部' ? null : dynastyReference.value.find((x) => x.name === name)?.id ?? null
   selectDynasty(id)
 }
 const relationFilterOptions = ['全部', '并称', '师承', '交游', '亲属']
@@ -654,7 +678,7 @@ const graphDynastyOptions = computed(() => {
   ;(graphRawData.value.nodes || []).forEach((n) => {
     if (n.dynasty) set.add(n.dynasty)
   })
-  const ordered = DYNASTIES.map((d) => d.name).filter((name) => set.has(name))
+  const ordered = dynastyReference.value.map((d) => d.name).filter((name) => set.has(name))
   const rest = [...set].filter((name) => !ordered.includes(name))
   return ['全部', ...ordered, ...rest]
 })
@@ -707,7 +731,7 @@ const closeDrawer = () => {
 }
 const goPoetDetail = () => {
   if (drawerPoet.value?.id) {
-    router.push(`/poets/${drawerPoet.value.id}`)
+    openPoet(drawerPoet.value.id)
     closeDrawer()
   }
 }
@@ -750,7 +774,7 @@ const legendDynasties = computed(() => {
   ;(graphRawData.value.nodes || []).forEach((n) => {
     if (n.dynasty) set.add(n.dynasty)
   })
-  return DYNASTIES.map((d) => d.name).filter((name) => set.has(name))
+  return dynastyReference.value.map((d) => d.name).filter((name) => set.has(name))
 })
 const legendLineStyle = (lg) => {
   if (lg.arrow) {
@@ -773,6 +797,14 @@ const handleGraphResize = () => {
 }
 
 const initG6 = async () => {
+  if (previewMode.value) {
+    clearGraphWheel()
+    safeDestroyGraph()
+    graphRawData.value = { nodes: [], edges: [] }
+    graphStatus.value = 'empty'
+    closeDrawer()
+    return
+  }
   if (!g6Container.value) return
   clearGraphWheel()
   safeDestroyGraph()
@@ -1194,6 +1226,14 @@ const waitForGraphContainerSize = async (timeoutMs = 3000) => {
 }
 
 const enterGraphTab = async () => {
+  if (previewMode.value) {
+    clearGraphWheel()
+    safeDestroyGraph()
+    graphRawData.value = { nodes: [], edges: [] }
+    graphStatus.value = 'empty'
+    closeDrawer()
+    return
+  }
   graphStatus.value = 'loading'
   await nextTick()
   if (!(await waitForGraphContainerSize())) {
@@ -1216,16 +1256,51 @@ watch([activeTab, isAnime], () => {
 })
 
 const loadPoets = async () => {
+  const currentSeq = ++rosterRequestSeq
+  failedAvatarIds.value = new Set()
   errorMsg.value = null
+  poetsLoaded.value = false
+  enrichmentLoaded.value = false
+  if (previewMode.value) {
+    poets.value = previewPoets.map((poet) => ({
+      ...poet,
+      ...(poet.name === '杜甫' ? {
+        avatarUrl: '/media/inkwash/atlas/poet-dufu.webp',
+        avatarAnimeUrl: '/media/inkwash/atlas/poet-dufu.webp',
+      } : {}),
+      poemCount: poet.poems?.length || 0,
+      signaturePoem: pickSignaturePoem(poet.poems || []),
+    }))
+    poetsLoaded.value = true
+    enrichmentLoaded.value = true
+    return
+  }
   try {
     const { data } = await api.swrGet('/poets', { size: 200 })
+    if (currentSeq !== rosterRequestSeq) return
     poets.value = data.records || []
     poetsLoaded.value = true
+    await build()
+    if (currentSeq !== rosterRequestSeq) return
+    enrichmentLoaded.value = true
   } catch (e) {
+    if (currentSeq !== rosterRequestSeq) return
     errorMsg.value = '名士数据加载失败，请稍后重试'
     poetsLoaded.value = true
   }
 }
+
+watch(previewMode, async () => {
+  initDynastyFromQuery()
+  clearGraphWheel()
+  safeDestroyGraph()
+  closeDrawer()
+  graphRawData.value = { nodes: [], edges: [] }
+  if (activeTab.value === 'graph') enterGraphTab()
+  await loadPoets()
+  await nextTick()
+  if (revealRoot.value) reveal(revealRoot.value)
+})
 
 onMounted(async () => {
   window.addEventListener('resize', handleGraphResize)
@@ -1235,13 +1310,12 @@ onMounted(async () => {
     enterGraphTab()
   }
   await loadPoets()
-  await build()
-  enrichmentLoaded.value = true
   await nextTick()
   if (revealRoot.value) reveal(revealRoot.value)
 })
 
 onBeforeUnmount(() => {
+  rosterRequestSeq++
   window.removeEventListener('resize', handleGraphResize)
   clearGraphWheel()
   safeDestroyGraph()
@@ -1365,7 +1439,7 @@ onBeforeUnmount(() => {
   background: var(--bg-primary);
 }
 .theme-inkwash .poet-avatar-box {
-  background: #2a2520;
+  background: #f3f0e8;
 }
 .poet-img {
   position: relative;
@@ -1931,4 +2005,12 @@ onBeforeUnmount(() => {
   .graph-instructions { flex-direction: column; align-items: flex-start; gap: 8px; }
   .graph-drawer { width: 230px; padding: 14px; }
 }
+.poets-view { max-width: 1360px; padding: 32px var(--page-gutter) 0; }
+.poets-content { padding: 0 0 70px; }
+.poets-toolbar { display: flex; flex-direction: column; align-items: stretch; gap: 20px; margin: 0 0 28px; }
+.layout-toggle-group { align-self: flex-end; margin: 0; background: var(--bg-secondary); border-color: var(--border-light); }
+.layout-toggle-group .toggle-btn { min-height: 42px; background: transparent; color: var(--text-secondary); border-radius: 2px; }
+.layout-toggle-group .toggle-btn.active { background: var(--card-bg); color: var(--accent); box-shadow: none; }
+.poets-featured-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+@media(max-width:640px) { .poets-view { padding-top: 18px; } .poets-content { padding: 0 0 45px; } .poets-featured-grid { grid-template-columns: 1fr; } .layout-toggle-group { align-self: stretch; } }
 </style>

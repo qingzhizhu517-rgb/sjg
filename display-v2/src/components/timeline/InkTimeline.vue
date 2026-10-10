@@ -119,7 +119,7 @@
               <router-link
                 v-for="p in selectedPoets.slice(0, 8)"
                 :key="p.id"
-                :to="`/poets/${p.id}`"
+                :to="atlasLink(`/poets/${p.id}`, route)"
                 class="ink-timeline__panel-poet-chip"
               >{{ p.name }}</router-link>
               <span v-if="poetsOverflow > 0" class="ink-timeline__panel-overflow">共 {{ poetsOverflow + 8 }} 位</span>
@@ -136,7 +136,7 @@
               <router-link
                 v-for="pm in selectedPoems.slice(0, 5)"
                 :key="pm.id"
-                :to="`/poems/${pm.id}`"
+                :to="atlasLink(`/poems/${pm.id}`, route)"
                 class="ink-timeline__panel-poem-row"
               >
                 <span class="ink-timeline__panel-poem-title">{{ pm.title }}</span>
@@ -217,6 +217,9 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { useRoute } from 'vue-router'
+import { atlasLink } from '../../config/atlasPreview'
+const route = useRoute()
 import { useBoatJourney } from '../../composables/useBoatJourney'
 import { parseFirstUrl } from '../../composables/useImage'
 
@@ -450,7 +453,7 @@ function tryInitBoat() {
       ? props.data.findIndex((d) => String(d.dynasty.id) === String(props.initialDynastyId))
       : -1
     if (targetIdx >= 0) {
-      selectDynasty(targetIdx)
+      goToDynasty(targetIdx, { duration: 0.1 })
     } else {
       autoCruise(30)
     }
@@ -462,6 +465,15 @@ function tryInitBoat() {
 
 onMounted(tryInitBoat)
 watch(() => props.data.length, tryInitBoat)
+// Browser history and external links may change the query without remounting.
+// Restoring a selection must not emit another route change.
+watch(() => props.initialDynastyId, (id) => {
+  if (!_boatInited) return
+  const index = id == null ? 0 : props.data.findIndex(d => String(d.dynasty.id) === String(id))
+  if (index < 0) return
+  pauseCruise()
+  goToDynasty(index, { duration: prefersReduce ? 0.1 : 0.4 })
+})
 
 onBeforeUnmount(() => {
   disposeBoat()
@@ -497,23 +509,31 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
-/* 场景层 */
+/* 场景层：容器不能带 mask/opacity/transform，否则形成隔离组，
+   场景图的 multiply 混合就只能和透明背景混，纸色底会露成一块矩形 */
 .ink-timeline__scenes {
   position: absolute;
   inset: 0;
   pointer-events: none;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 5%, #000 95%, transparent 100%);
-  mask-image: linear-gradient(90deg, transparent 0, #000 5%, #000 95%, transparent 100%);
 }
 
+/* 场景图按原始比例居中完整展示；羽化遮罩加在图片自身，
+   multiply 让纸色底融进长卷底图，避免中间出现浅色硬边方块 */
 .ink-timeline__scene {
   position: absolute;
-  inset: 0;
-  width: 100%;
+  top: 0;
+  left: 50%;
+  width: auto;
+  max-width: none;
   height: 100%;
+  aspect-ratio: 1216 / 764;
   object-fit: contain;
   object-position: center;
+  transform: translateX(-50%);
+  mix-blend-mode: multiply;
+  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 55%, transparent 100%);
+  mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 55%, transparent 100%);
   opacity: 0;
   transition: opacity 1.5s ease;
 }
@@ -557,10 +577,10 @@ onBeforeUnmount(() => {
   cursor: grabbing;
 }
 
-/* 朝代节点 */
+/* 朝代节点：锚点在河道上，印章与年份整体悬于河道上方，小舟在河道下方，互不遮挡 */
 .ink-timeline__node {
   position: absolute;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, calc(-100% - 6px));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -606,15 +626,18 @@ onBeforeUnmount(() => {
 }
 
 .ink-timeline__node:hover {
-  transform: translate(-50%, -50%) scale(1.1);
+  transform: translate(-50%, calc(-100% - 6px)) scale(1.1);
 }
 
+/* 宽度随字数伸展，「魏晋南北朝」等长名不再折行溢出 */
 .ink-timeline__seal {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
+  min-width: 48px;
   height: 48px;
+  padding: 0 10px;
+  white-space: nowrap;
   background: var(--accent);
   color: var(--text-on-accent);
   font-family: var(--font-display);
@@ -633,15 +656,18 @@ onBeforeUnmount(() => {
 }
 
 .ink-timeline__node--visited .ink-timeline__seal {
-  opacity: 0.6;
+  opacity: 0.75;
 }
 
+/* 年份压在水墨画面上，加半透明纸底保证可读 */
 .ink-timeline__years {
-  font-size: 10px;
-  color: var(--text-muted);
+  font-size: 11px;
+  color: var(--text-secondary);
   letter-spacing: 1px;
   white-space: nowrap;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+  padding: 1px 6px;
+  background: color-mix(in srgb, var(--bg-primary) 82%, transparent);
+  border-radius: 2px;
 }
 
 /* 信息面板 */
@@ -1055,8 +1081,9 @@ onBeforeUnmount(() => {
   }
 
   .ink-timeline__seal {
-    width: 40px;
+    min-width: 40px;
     height: 40px;
+    padding: 0 6px;
     font-size: 16px;
   }
 

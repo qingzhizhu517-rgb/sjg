@@ -1,9 +1,10 @@
 <template>
-  <main class="learning-page">
+  <div class="learning-page">
+    <router-link :to="atlasLink('/learn', route)" class="folio-back">← 返回探究任务</router-link>
     <div v-if="loading" class="learning-state">正在打开探究任务…</div>
     <div v-else-if="error" class="learning-state error">
       <p>{{ error }}</p>
-      <button type="button" class="retry-action" @click="loadTask(route.params.taskCode)">重新加载</button>
+      <button type="button" class="retry-action folio-button" @click="loadTask(route.params.taskCode)">重新加载</button>
     </div>
     <template v-else-if="task">
       <header class="learning-header">
@@ -12,34 +13,35 @@
           <h1>{{ task.title }}</h1>
           <p v-if="task.goal">{{ task.goal }}</p>
         </div>
-        <button type="button" class="export-btn" @click="exportResult">导出成果</button>
+        <button type="button" class="export-btn folio-button" @click="exportResult">导出成果</button>
       </header>
       <section v-if="task.background" class="learning-background">{{ task.background }}</section>
       <nav class="step-nav" aria-label="学习步骤">
-        <button v-for="(item, index) in steps" :key="item.type" type="button"
-                :class="{ active: index === currentStep, done: index < currentStep }"
+        <button v-for="(item, index) in steps" :key="item.type" type="button" :disabled="saving"
+                :class="{ active: index === currentStep, done: index < currentStep }" :aria-current="index === currentStep ? 'step' : undefined"
                 @click="currentStep = index">
           <span>{{ index + 1 }}</span>{{ item.title || labels[item.type] }}
         </button>
       </nav>
       <div class="step-progress"><span :style="{ width: `${progress}%` }"></span></div>
-      <component :is="stepComponent" v-model="answers" :step="activeStep" :resources="resources"
+      <fieldset class="learning-step" :disabled="saving"><component :is="stepComponent" v-model="answers" :step="activeStep" :resources="resources"
                  :task-code="task.taskCode" :feedbacks="feedbacks"
-                 @feedback="recordFeedback" />
+                 @feedback="recordFeedback" /></fieldset>
       <footer class="learning-actions">
-        <button type="button" class="secondary-action" :disabled="currentStep === 0" @click="currentStep--">上一步</button>
-        <span class="save-state">{{ savedLabel }}</span>
-        <button v-if="currentStep < steps.length - 1" type="button" class="primary-action" @click="nextStep">下一步</button>
-        <button v-else type="button" class="primary-action" @click="finishTask">完成并保存</button>
+        <button type="button" class="secondary-action folio-button" :disabled="saving || currentStep === 0" @click="currentStep--">上一步</button>
+        <span class="save-state" role="status">{{ savedLabel }}</span>
+        <button v-if="currentStep < steps.length - 1" type="button" class="primary-action folio-button folio-button--primary" @click="nextStep">下一步</button>
+        <button v-else type="button" class="primary-action folio-button folio-button--primary" :disabled="saving" @click="finishTask">{{ saving ? '正在保存…' : '完成并保存' }}</button>
       </footer>
       <div v-if="completed" class="completion-note">本次探究已完成，可以导出成果后分享给老师或同学。</div>
     </template>
-  </main>
+  </div>
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
+import { atlasLink } from '../config/atlasPreview'
 import EvidenceStep from '../components/learning/EvidenceStep.vue'
 import CompareStep from '../components/learning/CompareStep.vue'
 import ReflectionStep from '../components/learning/ReflectionStep.vue'
@@ -63,6 +65,7 @@ const currentStep = ref(0)
 const loading = ref(true)
 const error = ref('')
 const completed = ref(false)
+const saving = ref(false)
 const feedbacks = ref({})
 const savedLabel = ref('尚未保存')
 const labels = { evidence: '证据阅读', compare: '比较分析', reflection: '反思表达' }
@@ -89,6 +92,7 @@ async function loadTask(taskCode = route.params.taskCode) {
   answers.value = {}
   currentStep.value = 0
   completed.value = false
+  saving.value = false
   feedbacks.value = {}
   savedLabel.value = '尚未保存'
   clearTimeout(saveTimer)
@@ -122,7 +126,7 @@ async function loadTask(taskCode = route.params.taskCode) {
 watch(() => route.params.taskCode, loadTask, { immediate: true })
 
 watch([answers, currentStep, completed, feedbacks], () => {
-  if (!task.value) return
+  if (!task.value || saving.value) return
   clearTimeout(saveTimer)
   saveTimer = setTimeout(() => {
     const persisted = writeLearningStorage(storageKey.value, JSON.stringify({ answers: answers.value, currentStep: currentStep.value, completed: completed.value, feedbacks: feedbacks.value }))
@@ -139,11 +143,18 @@ const recordFeedback = ({ questionId, content } = {}) => {
   feedbacks.value = { ...feedbacks.value, [questionId]: content }
 }
 const finishTask = async () => {
+  if (saving.value || !task.value) return
+  saving.value = true
+  clearTimeout(saveTimer)
   completed.value = true
   await saveRemote('submitted')
 }
 const saveRemote = async (status) => {
   if (!task.value) return
+  const sequence = loadSequence
+  const taskCode = task.value.taskCode
+  const persisted = writeLearningStorage(`sjg-learning:${taskCode}`, JSON.stringify({ answers: answers.value, currentStep: currentStep.value, completed: completed.value, feedbacks: feedbacks.value }))
+  savedLabel.value = '正在同步成果…'
   try {
     const sessionKey = readLearningStorage('sjg-learning-session')
       || globalThis.crypto?.randomUUID?.()
@@ -159,12 +170,16 @@ const saveRemote = async (status) => {
       })),
     })
     await ensureSuccessfulResponse(response)
+    if (sequence !== loadSequence) return
     savedLabel.value = '成果已同步'
   } catch {
-    const persisted = writeLearningStorage(storageKey.value, JSON.stringify({ answers: answers.value, currentStep: currentStep.value, completed: completed.value, feedbacks: feedbacks.value }))
+    if (sequence !== loadSequence) return
     savedLabel.value = persisted ? '已保存本机草稿' : '同步失败，本机也无法保存'
+  } finally {
+    if (sequence === loadSequence) saving.value = false
   }
 }
+onBeforeUnmount(() => { clearTimeout(saveTimer); loadSequence++ })
 const exportResult = () => {
   if (!task.value) return
   const markdown = buildLearningExportMarkdown({
@@ -186,6 +201,7 @@ const exportResult = () => {
 
 <style scoped>
 .learning-page { max-width: 980px; margin: 0 auto; padding: 42px 24px 80px; color: var(--text-primary); }
+.learning-step { min-width: 0; border: 0; padding: 0; margin: 0; }
 .learning-state { min-height: 50vh; display: grid; place-items: center; color: var(--text-secondary); }
 .learning-state.error { color: var(--accent); }
 .learning-header { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; border-bottom: 1px solid var(--border-light); padding-bottom: 28px; }
@@ -220,4 +236,5 @@ textarea { width: 100%; box-sizing: border-box; resize: vertical; border: 1px so
 .save-state { margin-right: auto; color: var(--text-muted); font-size: 13px; }
 .completion-note { margin-top: 18px; color: var(--text-secondary); }
 @media (max-width: 680px) { .learning-page { padding: 28px 16px 56px; } .learning-header { display: block; } .export-btn { margin-top: 16px; } .compare-grid { grid-template-columns: 1fr; } .learning-actions { flex-wrap: wrap; } .save-state { order: 3; width: 100%; } }
+.learning-page { max-width:1180px; padding:24px var(--page-gutter) 70px; } .learning-header h1 { font-family:var(--font-display); } .step-nav button { min-height:48px; border-radius:3px; } .learning-actions { position:sticky; bottom:0; background:#f5f2ebf5; z-index:20; border-top:1px solid var(--border); padding:18px 0; gap:12px; flex-wrap:wrap; } .learning-background { border-radius:3px; background:var(--bg-secondary); }
 </style>

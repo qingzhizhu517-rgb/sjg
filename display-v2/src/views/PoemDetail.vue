@@ -1,5 +1,8 @@
 <template>
-  <ErrorState v-if="errorMsg" :message="errorMsg" @retry="loadPoem" />
+  <div v-if="errorMsg" class="poem-state">
+    <ErrorState :message="errorMsg" @retry="loadPoem" />
+    <router-link :to="readingBack" class="folio-back">← 返回诗词列表</router-link>
+  </div>
 
   <!-- 诗笺骨架屏：模拟 锚点带 + 标题 + 正文行 -->
   <div v-else-if="!poem" class="poem-skeleton" aria-busy="true" aria-label="诗篇加载中">
@@ -14,7 +17,7 @@
   <!-- 横排诗笺：页面负责数据和附加内容，主视觉由组件封装 -->
   <div v-else class="poem-detail poem-detail--inkwash">
     <div class="detail-top">
-      <button class="back-link" @click="$router.back()">← 返回</button>
+      <router-link :to="readingBack" class="folio-back">← {{ route.query.returnTo ? '返回检索结果' : '返回诗词列表' }}</router-link>
     </div>
 
     <PoemManuscript
@@ -36,9 +39,15 @@
 
     <SourceList :sources="sources" class="detail-section" />
 
-    <!-- AI Analysis -->
-    <PoemAnalysis v-if="poem.id" :poem-id="poem.id" />
+    <section v-if="previewMode && poem.appreciation" class="detail-section preview-appreciation">
+      <h2 class="section-heading">诗意赏读</h2>
+      <p>{{ poem.appreciation }}</p>
+    </section>
 
+    <!-- 设计样本仅使用本地内容，实际赏析组件只挂载于正式数据页。 -->
+    <PoemAnalysis v-if="!previewMode && poem.id" :poem-id="poem.id" />
+
+    <div class="folio-detail-actions"><p>读过此篇，再寻找一种新的心境。</p><div class="folio-actions"><router-link :to="readingBack" class="folio-button">返回列表</router-link><router-link :to="atlasLink('/compose', route)" class="folio-button folio-button--primary">写一首自己的诗 →</router-link></div></div>
     <!-- Media -->
     <div v-if="parsedVideoUrl" class="detail-section">
       <h2 class="section-heading">诗词赏析视频</h2>
@@ -53,10 +62,12 @@
 import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '../api'
+import { safeReturnPath } from '../config/siteNavigation'
 import { parseTags } from '../utils/poem'
 import { adaptSpot, adaptPoem } from '../composables/themeAdapter'
 import { pickMoodBackdrop } from '../utils/moodBackdrop'
 import { parseFirstUrl } from '../composables/useImage'
+import { isAtlasPreview, atlasLink, previewPoems, previewPoets, previewDynasties, previewSpot, previewSpots } from '../config/atlasPreview'
 import PoemManuscript from '../components/poem/PoemManuscript.vue'
 import PoemAnalysis from '../components/PoemAnalysis.vue'
 import SourceList from '../components/SourceList.vue'
@@ -64,6 +75,8 @@ import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 
 const route = useRoute()
+const readingBack = computed(() => atlasLink(safeReturnPath(route.query.returnTo, '/poems'), route))
+const previewMode = computed(() => isAtlasPreview(route))
 const poem = ref(null)
 const poet = ref(null)
 const dynasty = ref(null)
@@ -71,6 +84,12 @@ const spot = ref(null)
 const sources = ref([])
 const errorMsg = ref(null)
 let loadSequence = 0
+const previewBackPath = computed(() => spot.value
+  ? `/spots/${spot.value.id}`
+  : poet.value ? `/poets/${poet.value.id}` : '/')
+const previewBackLabel = computed(() => spot.value
+  ? `返回${spot.value.name}`
+  : poet.value ? `返回${poet.value.name}` : '返回山河图志')
 
 // 意境背景：优先诗词自身配图，其次关联景点图；占位印章不算
 const moodBg = computed(() =>
@@ -93,6 +112,18 @@ const loadPoem = async () => {
   dynasty.value = null
   spot.value = null
   sources.value = []
+  if (previewMode.value) {
+    const selected = previewPoems.find((item) => String(item.id) === String(route.params.id))
+    if (!selected) {
+      errorMsg.value = '这首诗词尚未收录在水墨预览中'
+      return
+    }
+    poem.value = selected
+    poet.value = previewPoets.find((item) => item.id === selected.poetId) || null
+    dynasty.value = previewDynasties.find((item) => item.id === selected.dynastyId) || null
+    spot.value = [previewSpot, ...previewSpots].find((item) => item.id === selected.spotId) || null
+    return
+  }
   try {
     const data = await api.get(`/poems/${route.params.id}`)
     if (sequence !== loadSequence) return
@@ -109,7 +140,7 @@ const loadPoem = async () => {
 }
 
 // 同一详情组件会被 Vue Router 复用；参数变化时必须重新取数。
-watch(() => route.params.id, loadPoem, { immediate: true })
+watch(() => [route.params.id, route.query.preview], loadPoem, { immediate: true })
 </script>
 
 <style scoped>
@@ -118,6 +149,20 @@ watch(() => route.params.id, loadPoem, { immediate: true })
   margin: 0 auto;
   padding: 24px 24px 80px;
   position: relative;
+}
+
+.poem-state {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px;
+  text-align: center;
+}
+
+.preview-appreciation p {
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 2;
+  text-align: left;
 }
 
 /* Top bar */
@@ -142,6 +187,7 @@ watch(() => route.params.id, loadPoem, { immediate: true })
   transition: color 160ms cubic-bezier(0.16, 1, 0.3, 1);
   font-family: inherit;
   font-weight: 600;
+  text-decoration: none;
 }
 
 .back-link:hover {

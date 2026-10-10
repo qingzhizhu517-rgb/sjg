@@ -1,18 +1,18 @@
 <template>
   <div class="ai-chat-wrapper">
     <!-- Floating Chat Toggle Button -->
-    <button class="ai-toggle-btn" @click="isOpen = !isOpen" :title="isOpen ? '关闭小文' : '唤醒AI小文'">
+    <button ref="toggleRef" class="ai-toggle-btn" :aria-expanded="isOpen" aria-controls="reading-assistant" :aria-label="isOpen ? '关闭问答助手' : '打开问答助手小文'" @click="isOpen = !isOpen" :title="isOpen ? '关闭小文' : '唤醒AI小文'">
       <div class="bot-avatar-inner">
         <svg class="ai-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </svg>
       </div>
-      <span class="pulse-ring"></span>
+      <span class="ai-toggle-label">问小文</span>
     </button>
 
     <!-- Chat Slide-in Drawer -->
     <transition name="drawer-fade">
-      <div class="ai-chat-drawer card" v-if="isOpen">
+      <div id="reading-assistant" class="ai-chat-drawer card" v-if="isOpen" role="dialog" aria-label="问答助手小文" @keydown.esc="isOpen = false">
         <!-- Header -->
         <div class="drawer-header-ai">
           <div class="avatar-title-wrap">
@@ -24,10 +24,10 @@
             </div>
             <div class="bot-title-text">
               <h3 class="bot-name">AI 小文</h3>
-              <span class="bot-status">齐鲁文化大模型驱动</span>
+              <span class="bot-status">陪你读懂齐鲁风物</span>
             </div>
           </div>
-          <button class="close-drawer-btn" @click="isOpen = false">×</button>
+          <button class="close-drawer-btn" aria-label="关闭问答助手" @click="isOpen = false">×</button>
         </div>
 
         <!-- Predefined Quick Questions -->
@@ -46,7 +46,7 @@
         </div>
 
         <!-- Chat messages log -->
-        <div class="chat-log" ref="chatLogRef">
+        <div class="chat-log" role="log" aria-live="polite" ref="chatLogRef">
           <div
             v-for="(msg, i) in messages"
             :key="i"
@@ -112,11 +112,11 @@
             v-model="inputMsg"
             type="text"
             placeholder="探寻齐鲁文脉，问我李杜足迹..."
-            class="chat-input"
+            class="chat-input" aria-label="向小文提问"
             required
             ref="inputRef"
           />
-          <button type="submit" class="chat-send-btn" :disabled="isTyping">
+          <button type="submit" class="chat-send-btn" aria-label="发送问题" :disabled="isTyping || !inputMsg.trim()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="send-svg">
               <line x1="22" y1="2" x2="11" y2="13" />
               <polygon points="22 2 15 22 11 13 2 9 22 2" />
@@ -131,6 +131,7 @@
 <script setup>
 import { ref, nextTick, reactive, computed, watch, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { apiUrl } from '../api/url.js'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { consumeSseBuffer } from '../utils/sse.js'
@@ -152,6 +153,12 @@ const inputMsg = ref('')
 const isTyping = ref(false)
 const chatLogRef = ref(null)
 const inputRef = ref(null)
+const toggleRef = ref(null)
+watch(isOpen, async open => {
+  await nextTick()
+  if (open) inputRef.value?.focus({ preventScroll: true })
+  else toggleRef.value?.focus({ preventScroll: true })
+})
 const errorMsg = ref(null)
 
 // SSE 健壮性：AbortController
@@ -339,7 +346,7 @@ const sendMessage = async () => {
   abortController = new AbortController()
 
   try {
-    const res = await fetch('/api/public/chat', {
+    const res = await fetch(apiUrl('/api/public/chat'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
       body: JSON.stringify({ message: text, history, context: chatContext.value }),
@@ -421,7 +428,7 @@ const sendMessage = async () => {
 const sendFeedback = async (msg, feedback) => {
   if (!msg?.auditId || msg.feedback) return
   try {
-    const res = await fetch('/api/public/chat/feedback', {
+    const res = await fetch(apiUrl('/api/public/chat/feedback'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ auditId: msg.auditId, feedback }),
@@ -988,4 +995,16 @@ const retryLastMessage = () => {
     height: 400px;
   }
 }
+.ai-toggle-btn { width:auto; min-width:108px; height:46px; padding:0 16px; border-radius:4px; box-shadow:0 4px 16px #332b2214; border:1px solid #c5b7a5; background:#f5f2ebf7; color:var(--text-secondary); gap:9px; }
+.ai-toggle-btn:hover { transform:none; background:var(--card-bg); }
+.bot-avatar-inner { width:22px; height:22px; background:none; }
+.ai-icon { width:22px; height:22px; }
+.ai-toggle-label { font:14px var(--font-body); white-space:nowrap; }
+.ai-chat-drawer { border-radius:4px; box-shadow:0 10px 60px #332b2220; }
+.quick-btn-tag { min-height:40px; border-radius:3px; }
+.close-drawer-btn,.chat-send-btn { min-width:44px; min-height:44px; }
+.chat-input-form { padding:16px; gap:8px; }
+.chat-input { min-height:44px; }
+@media(max-width:768px) { .ai-chat-drawer { position:fixed; width:auto; left:12px; right:12px; bottom:82px; max-height:calc(100dvh - 100px); } }
+@media(max-width:600px) { .ai-toggle-btn { min-width:92px; height:44px; padding-inline:12px; } }
 </style>

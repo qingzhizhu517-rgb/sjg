@@ -90,6 +90,6 @@ for (const view of ['views/PoemDetail.vue', 'views/PoetDetail.vue', 'views/SpotD
     const source = await readSource(view)
     assert.match(source, /SourceList/)
     assert.match(source, /:sources="sources"/)
-    assert.match(source, /sources\.value\s*=\s*Array\.isArray\(data\.sources\)\s*\?\s*data\.sources\s*:\s*\[\]/)
+    assert.match(source, /sources\.value\s*=\s*Array\.isArray\(data\??\.sources\)\s*\?\s*data\.sources\s*:\s*\[\]/)
   })
 }

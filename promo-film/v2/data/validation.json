@@ -1,0 +1,39 @@
+{
+  "generated": "2026-10-02",
+  "province_bbox": [
+    114.819254,
+    34.377352,
+    122.715802,
+    38.401933
+  ],
+  "river_bbox": [
+    114.837576,
+    35.019802,
+    119.033214,
+    37.830634
+  ],
+  "checks": {
+    "provinceFeatureCount": 16,
+    "provinceCoordinateCount": 7153,
+    "provinceAllRingsClosed": true,
+    "cityCount": 9,
+    "riverLineCount": 1,
+    "riverCoordinateCount": 210,
+    "riverStart": [
+      114.837576,
+      35.019802
+    ],
+    "riverEnd": [
+      119.033214,
+      37.802558
+    ],
+    "riverMaximumSourceSegmentKm": 16.833,
+    "riverSourceLineLengthKm": 563.279,
+    "riverSourceLineLengthWarning": "仅为概化折线长度，不是黄河山东段官方里程。",
+    "riverSourceUpstreamGapMeters": 622.511,
+    "riverSourceUpstreamGapTreatment": "没有跨过约623米源数据缺口硬拼上游段；仅使用完整连续下游段。",
+    "terminalInsideLocalDongyingPolygon": true,
+    "furtherSimplification": "未再次几何简化：下游原始线仅210点；16市共7153坐标适合1080p矢量示意，保留共边原点可避免逐市简化产生裂缝。"
+  },
+  "map_bytes": 178825
+}

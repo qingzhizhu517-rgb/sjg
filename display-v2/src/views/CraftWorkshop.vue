@@ -2,15 +2,7 @@
 <!-- 路由页 /crafts：编排 useGlbScene + useCraftProcess + 三组件 -->
 <template>
   <div ref="rootRef" class="craft-workshop">
-    <!-- 页头 -->
-    <header class="cw-hero" data-reveal>
-      <span class="cw-hero__tag">文化长廊 · 非遗工艺</span>
-      <h1 class="cw-hero__title">匠心传承 · 器物之美</h1>
-      <p class="cw-hero__desc">
-        一把刻刀，一方葫芦；千刀万凿，方成器物。从选料到成品，跟随匠人之手，体验东昌葫芦雕刻的五道工序。
-      </p>
-    </header>
-
+    <PageHeading eyebrow="齐鲁文化 / 非遗工艺 / 专题工坊" title="一方葫芦，五道工序" description="从选料到成品，循着五道工序，体验东昌葫芦雕刻。可手动选择步骤，也可连续播放。"><template #actions><router-link :to="atlasLink('/crafts', route)" class="folio-button folio-button--quiet">全部非遗工艺 ↗</router-link></template></PageHeading>
     <!-- 主内容区：左 3D 舞台 + 右步骤条 -->
     <div class="cw-main" data-reveal>
       <!-- 3D 舞台 -->
@@ -23,7 +15,11 @@
           :step-index="currentStep"
           @ready="onStageReady"
           @error="onStageError"
-        />
+        >
+          <template #fallback="{ stepIndex }">
+            <HuluIllustration :step="stepIndex" class="cw-illustration" />
+          </template>
+        </CraftStage>
         <!-- 自由把玩提示 -->
         <Transition name="fade">
           <div v-if="isLast && !loading" class="cw-free-roam-hint">
@@ -69,6 +65,7 @@
           :key="step.key"
           class="cw-detail__card"
           :class="{ 'cw-detail__card--active': i === currentStep }"
+          role="button" tabindex="0" :aria-pressed="i === currentStep" @keydown.enter="jumpTo(i)" @keydown.space.prevent="jumpTo(i)"
           @click="jumpTo(i)"
         >
           <div class="cw-detail__card-icon">{{ step.icon }}</div>
@@ -84,18 +81,23 @@
         <h2>你已经看过东昌葫芦从生料到成品的五道工序</h2>
         <p>把工序、材料和知识点带走，作为一次可分享的非遗探索记录。</p>
       </div>
-      <button type="button" class="cw-completion__btn" @click="exportExploration">导出探索记录</button>
+      <button type="button" class="cw-completion__btn folio-button folio-button--primary" @click="exportExploration">导出探索记录</button>
     </section>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import PageHeading from '../components/ui/PageHeading.vue'
+import { useRoute } from 'vue-router'
+import { atlasLink } from '../config/atlasPreview'
+const route = useRoute()
 import { useReveal } from '../composables/useReveal'
 import { useCraftProcess } from '../composables/useCraftProcess'
 import CraftStage from '../components/craft/CraftStage.vue'
 import StepRail from '../components/craft/StepRail.vue'
 import KnowledgeCard from '../components/craft/KnowledgeCard.vue'
+import HuluIllustration from '../components/craft/HuluIllustration.vue'
 import { HULU_PROCESS } from '../content/crafts/dongchang-hulu'
 
 const { reveal } = useReveal()
@@ -123,8 +125,23 @@ const cleanupProcess = () => {
   processApi = null
 }
 
+// 降级（无 3D 模型）时的本地工序状态：插画随 currentStep 切换
+const AUTO_INTERVAL = 3200
+let autoTimer = null
+const stopLocalAuto = () => {
+  clearInterval(autoTimer)
+  autoTimer = null
+  playing.value = false
+}
+const enterLocal = (i) => {
+  const index = Math.max(0, Math.min(config.steps.length - 1, i))
+  currentStep.value = index
+  stepMeta.value = config.steps[index]
+}
+
 // 生命周期钩子必须在 setup 同步阶段注册；舞台 ready 回调可能在异步加载后触发。
 onBeforeUnmount(cleanupProcess)
+onBeforeUnmount(stopLocalAuto)
 
 const onStageReady = async (sceneApi) => {
   if (!sceneApi) {
@@ -186,10 +203,19 @@ const onStageError = () => {
   loading.value = false
 }
 
-const next = () => processApi?.next()
-const prev = () => processApi?.prev()
-const toggleAuto = () => processApi?.toggleAuto()
-const jumpTo = (i) => processApi?.enter(i)
+const next = () => processApi ? processApi.next() : (stopLocalAuto(), enterLocal(currentStep.value + 1))
+const prev = () => processApi ? processApi.prev() : (stopLocalAuto(), enterLocal(currentStep.value - 1))
+const jumpTo = (i) => processApi ? processApi.enter(i) : (stopLocalAuto(), enterLocal(i))
+const toggleAuto = () => {
+  if (processApi) return processApi.toggleAuto()
+  if (playing.value) return stopLocalAuto()
+  if (isLast.value) enterLocal(0)
+  playing.value = true
+  autoTimer = setInterval(() => {
+    if (isLast.value) return stopLocalAuto()
+    enterLocal(currentStep.value + 1)
+  }, AUTO_INTERVAL)
+}
 
 const exportExploration = () => {
   const lines = [`# ${config.title}探索记录`, '', config.subtitle, '', '## 工序', '']
@@ -262,6 +288,10 @@ onMounted(async () => {
 
 .cw-stage-wrap {
   position: relative;
+}
+
+.cw-illustration {
+  max-height: 92%;
 }
 
 .cw-free-roam-hint {
@@ -453,4 +483,5 @@ onMounted(async () => {
     grid-template-columns: 1fr;
   }
 }
+.craft-workshop { max-width:1360px; padding:32px var(--page-gutter) 70px; } .cw-detail__card { border-radius:3px; } .cw-completion { border-radius:3px; background:var(--bg-secondary); }
 </style>

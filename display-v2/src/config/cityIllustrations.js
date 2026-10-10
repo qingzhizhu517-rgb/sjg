@@ -1,5 +1,5 @@
 // 九城国画与叙事配置（沿黄河流向自西向东：入境 → 入海）
-// 供 RegionSpots（城市宣传页）与 RiverCityRail（首页沿河分布）共用
+// 供城市页、景点页与沙盘共用
 import imgHeze from '../assets/illustrations/01-city-heze.png'
 import imgJining from '../assets/illustrations/02-city-jining.png'
 import imgTaian from '../assets/illustrations/03-city-taian.png'
@@ -97,7 +97,7 @@ export const cityIllustration = (name) =>
     quoteBy: '山河图志',
   }
 
-// 城市名 -> 素材 slug（与 public/media/real/cities/ 文件命名对应，供 resolveCityHeroMedia 使用）
+// 城市名 -> 素材 slug（与 public/media/real/cities/ 文件命名对应，供城市媒体解析使用）
 export const CITY_SLUGS = {
   菏泽: 'heze',
   济宁: 'jining',

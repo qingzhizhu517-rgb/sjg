@@ -4,7 +4,7 @@ import { useImage } from './useImage'
  * themeAdapter：后端实体 -> 按当前主题投影为单一视图模型。
  * 组件消费投影后的 image / avatar 字段，不再自行挑 imageUrl/imageAnimeUrl。
  *
- * 适配范围：FeaturedPoetCard / FeaturedSpotCard（props 直接持有原始实体）。
+ * 适配范围：FeaturedPoetCard（props 直接持有原始实体）。
  * useCityEnrichment 返回的图片字段同样经过水墨字段优先级处理。
  */
 

@@ -1,9 +1,12 @@
 import { useTheme } from './useTheme'
 import { buildLocalImageCandidates, firstMediaValue } from '../utils/imageCandidates'
 
-// 构建期注册 public/images 下本地图（替代硬编码白名单）。
+// 构建期注册本地插画与媒体，避免新册页素材被误判为不存在。
 // import.meta.glob 键形如 '/public/images/poets/du_fu.jpg'，归一化为服务路径 '/images/...'。
-const _localKeys = Object.keys(import.meta.glob('/public/images/**/*.{jpg,jpeg,png,svg,webp}'))
+const _localKeys = Object.keys(import.meta.glob([
+  '/public/images/**/*.{jpg,jpeg,png,svg,webp,avif}',
+  '/public/media/**/*.{jpg,jpeg,png,svg,webp,avif}',
+]))
 const localImages = new Set(_localKeys.map(k => k.replace('/public', '')))
 
 // 从 JSON 数组字符串或单值中提取第一个 URL

@@ -67,15 +67,20 @@ export function useBoatJourney() {
 
     const delta = 0.01
     const nextPoint = _pathEl.getPointAtLength(Math.min(t + delta, 1) * totalLength)
-    const angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * (180 / Math.PI)
+    const rawAngle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * (180 / Math.PI)
+    // 限制倾角：曲线陡处原角度可达 ±40°，小舟会翻起去撞上方的朝代印章
+    const angle = Math.max(-15, Math.min(15, rawAngle))
 
     // 转百分比后应用
     const xPct = (point.x / _viewBoxW) * 100
     const yPct = (point.y / _viewBoxH) * 100
 
+    // 水平居中于河道点、船身落在河道下方（朝代印章悬于河道上方，两者不重叠）
     gsap.set(_boatEl, {
       left: `${xPct}%`,
       top: `${yPct}%`,
+      xPercent: -50,
+      yPercent: -12,
       rotation: angle,
       transformOrigin: '50% 50%',
     })

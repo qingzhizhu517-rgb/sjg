@@ -54,7 +54,7 @@ function routeRecords(source) {
 const learningRoutes = routeRecords(routerSource).filter((record) => /path:\s*['"]\/learn/.test(record))
 
 test('展示端主导航提供进入探究任务的入口', () => {
-  assert.match(appSource, /to="\/learn"/)
+  assert.match(appSource, /(?::to="atlasLink\('\/learn',\s*route\)"|to="\/learn")/)
   assert.match(appSource, /探究任务/)
 })
 

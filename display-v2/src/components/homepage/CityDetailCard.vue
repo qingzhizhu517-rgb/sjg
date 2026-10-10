@@ -55,17 +55,17 @@
 
     <!-- 三入口 -->
     <footer class="city-card__actions">
-      <button class="city-card__btn city-card__btn--primary" @click="$emit('go', `/regions/${name}`)">进入景观</button>
+      <button class="city-card__btn city-card__btn--primary folio-button folio-button--primary" @click="$emit('go', `/regions/${name}`)">浏览城市山水</button>
       <button
-        class="city-card__btn"
+        class="city-card__btn folio-button"
         :disabled="!detail || !detail.firstSpotId || loading"
         @click="onGo(`/spots/${detail?.firstSpotId}`)"
-      >名篇</button>
+      >景点诗篇</button>
       <button
-        class="city-card__btn"
+        class="city-card__btn folio-button"
         :disabled="!detail || !detail.firstPoetId || loading"
         @click="onGo(`/poets/${detail?.firstPoetId}`)"
-      >名士</button>
+      >走近名士</button>
     </footer>
   </article>
 </template>
@@ -94,7 +94,8 @@ watch(imgSrc, () => { imgOk.value = true })
 const onImgError = () => { imgOk.value = false }
 
 const spotPreview = computed(() => {
-  if (props.loading || !props.detail) return '景观加载中…'
+  if (props.loading) return '景观加载中…'
+  if (!props.detail || props.detail.ok === false) return '景观资料暂未载入，可先浏览城市册页'
   const names = props.detail.spotNames || []
   if (!names.length) return '暂无景观数据'
   const txt = names.join(' · ')
@@ -385,6 +386,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 }
 
 .city-card__actions {
+  flex-wrap: wrap;
   display: flex;
   gap: 8px;
 }

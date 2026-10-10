@@ -1,5 +1,5 @@
 // 诗词相关纯函数，跨页面复用。
-// 之前 parseTags / firstLine / signature 选取逻辑在 usePoetEnrichment、ShowcasePoetCard、
+// 之前 parseTags / firstLine / signature 选取逻辑在 usePoetEnrichment、
 // PoetDetail、PoemDetail 各有一份副本，算法漂移导致「同一诗人在不同页面显示不同代表句」。
 // 统一收敛到此模块。
 

@@ -1,6 +1,6 @@
 <template>
   <div class="timeline-page">
-    <TimelineHero :stats="heroStats" />
+    <PageHeading eyebrow="诗文名士 / 文脉长河" title="沿着时光，读见齐鲁" description="选择一个朝代，查看名士与作品。朝代选择会保留在当前网址中。"><template #actions><router-link :to="atlasLink('/poems', route)" class="folio-button folio-button--quiet">检索诗词 ↗</router-link></template></PageHeading>
 
     <div ref="revealRoot" class="timeline-content">
       <!-- 错误优先，与长卷互斥（此前 ErrorState 在长卷之后，空长卷与错误并存） -->
@@ -27,6 +27,8 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '../api'
+import PageHeading from '../components/ui/PageHeading.vue'
+import { atlasLink, isAtlasPreview, previewDynasties, previewPoets, previewPoems } from '../config/atlasPreview'
 import TimelineHero from '../components/homepage/TimelineHero.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
@@ -43,7 +45,7 @@ const errorMsg = ref(null)
 const revealRoot = ref(null)
 
 // 深链接 ?dynasty=<id>（初始值，长卷首帧定位用）
-const initialDynastyId = ref(route.query.dynasty || null)
+const initialDynastyId = computed(() => typeof route.query.dynasty === 'string' ? route.query.dynasty : null)
 
 const heroStats = computed(() => {
   if (!loaded.value || !timeline.value.length) return []
@@ -63,6 +65,7 @@ const heroStats = computed(() => {
 const loadTimeline = async () => {
   errorMsg.value = null
   loaded.value = false
+  if (isAtlasPreview(route)) { timeline.value = previewDynasties.map(dynasty => ({ dynasty, poets: previewPoets.filter(p => p.dynastyId === dynasty.id), poems: previewPoems.filter(p => p.dynastyId === dynasty.id) })); loaded.value = true; return }
   try {
     const { data } = await api.swrGet('/timeline')
     timeline.value = data
@@ -75,6 +78,7 @@ const loadTimeline = async () => {
 }
 
 const onSelectDynasty = (dynasty) => {
+  if (String(route.query.dynasty) === String(dynasty.id)) return
   // 深链接双向同步：选中朝代写回 URL，刷新可保持
   const query = { ...route.query, dynasty: dynasty.id }
   router.replace({ query }).catch(() => {})
@@ -107,4 +111,5 @@ onMounted(async () => {
 @media (max-width: 640px) {
   .timeline-content { padding: 32px 16px 64px; }
 }
+.timeline-page { max-width:1360px; padding:32px var(--page-gutter) 0; } .timeline-content { padding:0 0 70px; }
 </style>

@@ -7,7 +7,7 @@ export const CULTURAL_CATEGORIES = [
     tags: ['春节', '元宵', '牡丹盛会'],
   },
   {
-    key: 'poem', name: '古诗词', seal: '诗', route: '/poets', ready: true,
+    key: 'poem', name: '古诗词', seal: '诗', route: '/poems', ready: true,
     desc: '千古诗篇，咏叹齐鲁山河与人间悲欢。',
     tags: ['唐诗', '宋词', '咏物'],
   },

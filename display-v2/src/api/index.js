@@ -1,8 +1,9 @@
 import axios from 'axios'
+import { apiUrl } from './url.js'
 import { cacheKey, swrGet, prefetchWhenIdle } from './cache'
 
 const api = axios.create({
-  baseURL: '/api/public',
+  baseURL: apiUrl('/api/public'),
   timeout: 10000,
   headers: { 'X-Requested-With': 'XMLHttpRequest' }
 })

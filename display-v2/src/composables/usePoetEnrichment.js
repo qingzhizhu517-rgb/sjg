@@ -60,7 +60,7 @@ export function usePoetEnrichment() {
       m[pid].poems.push(pm)
     })
     Object.values(m).forEach((e) => {
-      // 统一用 pickSignaturePoem 选代表句，与 ShowcasePoetCard / PoetDetail 三处一致，
+      // 统一用 pickSignaturePoem 选代表句，与 PoetDetail 的代表句保持一致，
       // 避免同一诗人在不同页面显示不同代表句
       e.signaturePoem = pickSignaturePoem(e.poems)
       // 保留 poems 全量，供经典案例展示使用

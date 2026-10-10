@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
   trusted-proxies: ${TRUSTED_PROXIES:}
 
 spring:
@@ -40,8 +40,12 @@ llm:
   base-url: ${LLM_BASE_URL:https://api.deepseek.com}
   api-key: ${LLM_API_KEY:}
   model: ${LLM_MODEL:deepseek-v4-flash}
+  # 思考模式：disabled（默认，推荐）/ enabled / 空值表示不发送该字段（换用不认该字段的服务时用）
+  thinking: ${LLM_THINKING:disabled}
   temperature: 0.6
-  max-tokens: 1024
+  # 单次生成上限。诗词赏析的结构化 JSON 实测约 1800 tokens（9 个字段，含逐句解读与三语翻译），
+  # 1024 会被截断成非法 JSON 导致解析失败。max_tokens 是输出上限，具体输出长度以模型实际响应为准。
+  max-tokens: ${LLM_MAX_TOKENS:3072}
   timeout-seconds: 60
   system-prompt: |-
     你是「AI小文」，齐鲁文化数字人文平台的 AI 导览与创作助手，专注于齐鲁（山东）大地沿黄河一线的文学景观、历史名人、诗词名篇、人文与自然胜迹，并可为用户创作与齐鲁文化相关的诗文。

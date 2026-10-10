@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "resources": [
+    {
+      "id": "poem-dufu-lixiating",
+      "entityType": "poem",
+      "entityId": 1,
+      "title": "陪李北海宴历下亭",
+      "snippet": "杜甫在济南历下亭的宴集之作，留下「海右此亭古，济南名士多」，是「济南名士多」一说的源头。",
+      "sourceIds": [1],
+      "path": "/poems/1"
+    },
+    {
+      "id": "poem-zenggong-baotuquan",
+      "entityType": "poem",
+      "entityId": 3,
+      "title": "趵突泉·曾巩",
+      "snippet": "曾巩知齐州时所作，写趵突泉从玉水分来、润泽历山，落脚在泉水与农耕茶饮的民生之用。",
+      "sourceIds": [2],
+      "path": "/poems/3"
+    },
+    {
+      "id": "poem-yanbi-baotuquan",
+      "entityType": "poem",
+      "entityId": 4,
+      "title": "趵突泉·晏璧",
+      "snippet": "晏璧咏济南七十二名泉之作，以「趵突独称第一泉」为趵突泉定下泉群之首的位置。",
+      "sourceIds": [3],
+      "path": "/poems/4"
+    },
+    {
+      "id": "spot-baotuquan",
+      "entityType": "scenic_spot",
+      "entityId": 2,
+      "title": "趵突泉",
+      "snippet": "济南七十二名泉之首，泉水常年涌出、水温稳定，是济南「泉城」称号最直接的依据。",
+      "sourceIds": [4],
+      "path": "/spots/2"
+    }
+  ],
+  "steps": [
+    {
+      "type": "evidence",
+      "title": "证据阅读",
+      "prompt": "先从材料中找出可以核实的事实：谁在什么地方、什么场合写下了这些句子。",
+      "questions": [
+        {
+          "id": "q-evidence-1",
+          "type": "fact",
+          "prompt": "杜甫在历下亭写下「海右此亭古，济南名士多」。依据这份材料，这句话是在什么场合写下的，它说的「名士」指的是什么？",
+          "entityRefs": [{ "type": "poem", "id": 1 }],
+          "sourceIds": [1]
+        }
+      ]
+    },
+    {
+      "type": "compare",
+      "title": "比较分析",
+      "prompt": "把两份材料放在一起比较：同一条泉水，不同时代的人分别看到了什么。",
+      "questions": [
+        {
+          "id": "q-compare-1",
+          "type": "compare",
+          "prompt": "同样是写趵突泉，宋代曾巩与明代晏璧关注的重点有什么不同？请分别引用两份来源中的句子，再写出你的比较。",
+          "hint": "注意曾巩写到了泉水的实际用途，晏璧则给了它一个排名。",
+          "entityRefs": [{ "type": "poem", "id": 3 }, { "type": "poem", "id": 4 }],
+          "sourceIds": [2, 3]
+        }
+      ]
+    },
+    {
+      "type": "reflection",
+      "title": "反思表达",
+      "prompt": "用证据支持你自己的判断：把诗、泉水和人联系起来。",
+      "questions": [
+        {
+          "id": "q-reflection-1",
+          "type": "reflection",
+          "prompt": "结合趵突泉的水与历下亭的名士，你如何理解「济南名士多」这句话？请至少引用一条材料中的原句作为依据。",
+          "entityRefs": [{ "type": "poem", "id": 1 }, { "type": "scenic_spot", "id": 2 }],
+          "sourceIds": [1, 4]
+        }
+      ]
+    }
+  ]
+}

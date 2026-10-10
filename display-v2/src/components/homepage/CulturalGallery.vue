@@ -6,7 +6,7 @@
         :is="c.ready ? 'router-link' : 'div'"
         v-for="(c, i) in cards"
         :key="c.key"
-        :to="c.ready ? c.route : undefined"
+        :to="c.ready ? atlasLink(c.route, route) : undefined"
         class="cg-card"
         :class="{ disabled: !c.ready }"
         :style="{ animationDelay: `${i * 0.1}s` }"
@@ -17,7 +17,7 @@
         <div class="cg-card__image">
           <span class="cg-card__seal-char">{{ c.seal }}</span>
           <div class="cg-card__count">
-            <template v-if="c.ready">{{ countOf(c.key) }} 条收录</template>
+            <template v-if="c.ready">{{ countOf(c.key) }} {{ isAtlasPreview(route) ? '项样本' : '条收录' }}</template>
             <template v-else>筹备中</template>
           </div>
         </div>
@@ -42,6 +42,10 @@ import { ref, onMounted } from 'vue'
 import { useReveal } from '../../composables/useReveal'
 import { CULTURAL_CATEGORIES } from '../../config/culturalCategories'
 import api from '../../api'
+import { useRoute } from 'vue-router'
+import { atlasLink, isAtlasPreview } from '../../config/atlasPreview'
+import { culturePreviewItems } from '../../config/culturePreview'
+const route = useRoute()
 
 const { reveal } = useReveal()
 
@@ -52,6 +56,7 @@ const counts = ref({})
 const countOf = (key) => counts.value[key] ?? '—'
 
 const loadCounts = async () => {
+  if (isAtlasPreview(route)) { counts.value = Object.fromEntries(CULTURAL_CATEGORIES.map(c => [c.key, c.key === 'poem' ? 9 : culturePreviewItems.filter(i => i.category === c.key).length])); return }
   try {
     const stats = await api.get('/cultural/categories')
     const map = {}
@@ -244,4 +249,17 @@ onMounted(async () => {
     grid-template-columns: 1fr;
   }
 }
+.cultural-gallery { padding:0; }
+.cg-grid { grid-template-columns: repeat(5,minmax(0,1fr)); gap:16px; }
+@media (max-width: 1100px) { .cg-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media (max-width: 720px) { .cg-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+.cg-card { border-radius:3px; box-shadow:none; }
+.cg-card__image { height:140px; background: url('/media/inkwash/atlas/mountain-vignette.webp') right bottom/155px auto no-repeat; }
+.cg-card__seal-char { color:#8a755c66; background:none; }
+.cg-card__content { padding:24px; }
+.cg-card__tags { display:none; }
+.cg-card__count { background:transparent; color:var(--text-muted); }
+.cg-card__arrow { min-height:44px; display:flex; align-items:center; margin-top:12px; color:var(--reading-green); }
+@media(max-width:850px) { .cg-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:520px) { .cg-grid { grid-template-columns:1fr; } .cg-card__image { height:110px; } }
 </style>

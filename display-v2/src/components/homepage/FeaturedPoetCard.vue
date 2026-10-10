@@ -24,7 +24,7 @@
       </blockquote>
       <p v-else class="fpoet__bio fpoet__bio--empty">生平待考，然其诗已传。</p>
       <div class="fpoet__foot">
-        <span class="fpoet__count">{{ poet.poemCount || 0 }} 篇传世</span>
+        <span class="fpoet__count">{{ poet.poemCount || 0 }} {{ countSuffix }}</span>
         <span class="fpoet__arrow">查看详情 →</span>
       </div>
     </div>
@@ -32,7 +32,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { adaptPoet } from '../../composables/themeAdapter'
 import { getCuratedPresentation } from '../../config/curatedMedia'
 
@@ -40,16 +40,18 @@ const props = defineProps({
   // poet: 已 enrichment，含 signaturePoem / poemCount
   poet: { type: Object, required: true },
   dynastyName: { type: String, default: '' },
+  countSuffix: { type: String, default: '篇传世' },
 })
 defineEmits(['click'])
 
-const avatarUrl = computed(() => adaptPoet(props.poet).avatar)
+const avatarFailed = ref(false)
+const originalAvatarUrl = computed(() => adaptPoet(props.poet).avatar)
+const avatarUrl = computed(() => avatarFailed.value ? '' : originalAvatarUrl.value)
 const avatarPresentation = computed(() => getCuratedPresentation(avatarUrl.value))
+watch([() => props.poet.id, originalAvatarUrl], () => { avatarFailed.value = false })
 
-const onImgError = (e) => {
-  e.target.style.display = 'none'
-  const stamp = e.target.parentElement.querySelector('.fpoet__stamp')
-  if (stamp) stamp.style.display = 'flex'
+const onImgError = () => {
+  avatarFailed.value = true
 }
 </script>
 
@@ -80,7 +82,7 @@ const onImgError = (e) => {
   justify-content: center;
 }
 .theme-inkwash .fpoet__avatar {
-  background: linear-gradient(135deg, #2a2520, var(--text-primary));
+  background: linear-gradient(135deg, #f6f3ec, #e9e3d7);
 }
 .fpoet__avatar img {
   width: 100%;

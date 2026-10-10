@@ -27,36 +27,11 @@
       </li>
     </ol>
 
-    <!-- 控制栏 -->
-    <div class="step-rail__controls">
-      <button
-        class="step-rail__ctrl"
-        :disabled="currentStep <= 0"
-        aria-label="上一步"
-        @click="$emit('prev')"
-      >
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12 4L6 10L12 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-
-      <button
-        class="step-rail__ctrl step-rail__ctrl--play"
-        :aria-label="playing ? '暂停' : '自动播放'"
-        @click="$emit('toggleAuto')"
-      >
-        <svg v-if="!playing" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M6 4L16 10L6 16V4Z" fill="currentColor"/></svg>
-        <svg v-else width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="5" y="4" width="3" height="12" rx="1" fill="currentColor"/><rect x="12" y="4" width="3" height="12" rx="1" fill="currentColor"/></svg>
-      </button>
-
-      <button
-        class="step-rail__ctrl"
-        :disabled="currentStep >= steps.length - 1"
-        aria-label="下一步"
-        @click="$emit('next')"
-      >
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M8 4L14 10L8 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
+    <div class="step-rail__controls folio-actions">
+      <button class="folio-button" type="button" :disabled="currentStep <= 0" @click="$emit('prev')">← 上一步</button>
+      <button class="folio-button folio-button--primary" type="button" :disabled="currentStep >= steps.length - 1" @click="$emit('next')">下一步 →</button>
+      <button class="folio-button folio-button--quiet step-rail__auto" type="button" :aria-pressed="playing" @click="$emit('toggleAuto')">{{ playing ? '暂停播放' : '连续播放工序' }}</button>
     </div>
-
     <!-- 当前步骤解说 -->
     <p v-if="stepMeta" class="step-rail__desc">
       <span class="step-rail__desc-icon">{{ stepMeta.icon }}</span>
@@ -267,4 +242,5 @@ const { isAnime } = useTheme()
     font-size: 0.8125rem;
   }
 }
+.step-rail { border-radius:3px; padding:22px; } .step-rail__btn { min-height:60px; min-width:44px; } .step-rail__controls { display:flex; flex-wrap:wrap; gap:10px; justify-content:space-between; } .step-rail__auto { flex-basis:100%; }
 </style>

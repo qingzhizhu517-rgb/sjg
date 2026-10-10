@@ -1,34 +1,14 @@
 <template>
-  <div class="poem-list">
-    <header class="poem-list__hero">
-      <span class="poem-list__tag">文化长廊 · 古诗词</span>
-      <h1 class="poem-list__title">诗词长卷 · 字里山河</h1>
-      <p class="poem-list__desc">从一城风物入诗，循着标题、地域与文字，找到下一首值得细读的作品。</p>
-    </header>
-
-    <form class="poem-list__search" role="search" @submit.prevent="submitSearch">
-      <label class="sr-only" for="poem-keyword">搜索诗词</label>
-      <input
-        id="poem-keyword"
-        v-model="keywordInput"
-        type="search"
-        placeholder="搜索标题或诗句"
-        autocomplete="off"
-      />
-      <button type="submit">检索</button>
+  <div class="poem-list folio-page">
+    <PageHeading eyebrow="诗文名士 / 诗词检索" title="字里山河，循诗而行" description="检索标题与诗句，从一城风物出发，找到下一首值得细读的作品。">
+      <template #actions><router-link :to="atlasLink('/poets', route)" class="folio-button folio-button--quiet">按名士浏览 ↗</router-link></template>
+    </PageHeading>
+    <form class="folio-toolbar" role="search" @submit.prevent="submitSearch">
+      <label class="folio-field folio-field--search" for="poem-keyword">诗词关键词<input ref="searchInput" id="poem-keyword" v-model="keywordInput" class="folio-input" type="search" placeholder="搜索标题、诗句" autocomplete="off" /></label>
+      <label class="folio-field">关联城市<select class="folio-select" :value="region" @change="setRegion($event.target.value)"><option v-for="item in regionOptions" :key="item" :value="item">{{ item === '全部' ? '全部城市' : item }}</option></select></label>
+      <div class="folio-actions"><button type="submit" class="folio-button folio-button--primary">检索诗词</button><button type="button" class="folio-button folio-button--quiet" :disabled="region === '全部' && !keywordInput" @click="clearSearch">清除条件</button></div>
     </form>
-
-    <nav class="poem-list__regions" aria-label="按区域筛选">
-      <button
-        v-for="item in regionOptions"
-        :key="item"
-        type="button"
-        class="poem-list__region"
-        :class="{ active: region === item }"
-        @click="setRegion(item)"
-      >{{ item }}</button>
-    </nav>
-
+    <div class="folio-result-bar" role="status"><span>{{ !loaded ? '正在检索…' : errorMsg ? '内容暂未载入' : `本页 ${items.length} 篇${isAtlasPreview(route) ? '样本文选' : '诗词'}` }}<template v-if="region !== '全部'"> · {{ region }}</template></span><router-link :to="atlasLink('/timeline', route)">沿朝代阅读 →</router-link></div>
     <div v-if="!loaded" class="poem-list__grid" aria-busy="true" aria-label="诗词加载中">
       <SkeletonBlock v-for="i in 8" :key="i" height="210px" />
     </div>
@@ -39,7 +19,7 @@
       <router-link
         v-for="(item, index) in items"
         :key="item.id"
-        :to="`/poems/${item.id}`"
+        :to="poemLink(item)"
         class="poem-card"
         :style="{ animationDelay: `${index * 0.04}s` }"
       >
@@ -48,25 +28,26 @@
           <span>{{ item.region || (region === '全部' ? '齐鲁' : region) }}</span>
           <span v-if="item.dynastyName || item.dynasty">{{ item.dynastyName || item.dynasty }}</span>
         </div>
-        <h2 class="poem-card__title">{{ item.title || '无题' }}</h2>
+        <h2 class="poem-card__title">{{ cleanTitle(item.title) || '无题' }}</h2>
         <p class="poem-card__content">{{ excerptOf(item) }}</p>
         <span class="poem-card__link">展开诗笺 →</span>
       </router-link>
     </div>
 
-    <EmptyState
-      v-else
+    <template v-else><EmptyState
       icon="诗"
       message="暂无符合条件的诗词"
       hint="试试清空关键词或切换其他区域"
-    />
+    /><div class="folio-empty-actions"><button type="button" class="folio-button" @click="clearSearch">查看全部诗词</button></div></template>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '../api'
+import PageHeading from '../components/ui/PageHeading.vue'
+import { atlasLink, isAtlasPreview, previewPoems, previewDynasties } from '../config/atlasPreview'
 import { NINE_CITIES } from '../config/nineCities'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
@@ -82,8 +63,14 @@ const items = ref([])
 const loaded = ref(false)
 const errorMsg = ref('')
 let loadSequence = 0
+const searchInput = ref(null)
+const poemLink = (item) => { const target = atlasLink(`/poems/${item.id}`, route); return { ...(typeof target === 'string' ? { path: target } : target), query: { ...(target.query || {}), returnTo: route.fullPath } } }
+const clearSearch = () => { keywordInput.value = ''; updateQuery({ region: '全部', keyword: '' }) }
+const focusSearch = async () => { if (route.query.focus === 'search') { await nextTick(); searchInput.value?.focus({ preventScroll: true }) } }
 
-const sealOf = (item) => (item.title ? item.title.slice(0, 1) : '诗')
+// 数据里部分标题自带书名号，卡片统一去掉，印章取首个汉字
+const cleanTitle = (title) => String(title || '').replace(/^《([^》]+)》/, '$1').trim()
+const sealOf = (item) => cleanTitle(item.title).match(/[\u4e00-\u9fff]/)?.[0] || '诗'
 
 const excerptOf = (item) => {
   const content = String(item.content || item.annotation || item.background || '').replace(/\s+/g, ' ').trim()
@@ -121,6 +108,13 @@ const load = async () => {
   const sequence = ++loadSequence
   loaded.value = false
   errorMsg.value = ''
+  if (isAtlasPreview(route)) {
+    const keyword = keywordInput.value.trim()
+    items.value = previewPoems.map(poem => ({ ...poem, region: poem.spotId === 2 ? '济南' : poem.spotId === 101 ? '泰安' : '', dynastyName: previewDynasties.find(d => d.id === poem.dynastyId)?.name }))
+      .filter(poem => (region.value === '全部' || poem.region === region.value) && (!keyword || `${poem.title} ${poem.content}`.includes(keyword)))
+    loaded.value = true
+    return
+  }
   try {
     const params = { page: 1, size: 100 }
     if (region.value !== '全部') params.region = region.value
@@ -138,14 +132,16 @@ const load = async () => {
 }
 
 watch(
-  () => [route.query.region, route.query.keyword],
+  () => [route.query.region, route.query.keyword, route.query.preview],
   () => {
     syncFromRoute()
     load()
   },
 )
 
-onMounted(load)
+onMounted(() => { load(); focusSearch() })
+watch(() => route.query.focus, focusSearch)
+onBeforeUnmount(() => { loadSequence++ })
 </script>
 
 <style scoped>
@@ -333,4 +329,9 @@ onMounted(load)
   .poem-list__title { letter-spacing: 2px; }
   .poem-list__grid { grid-template-columns: 1fr; }
 }
+.poem-list { max-width: 1360px; padding: 32px var(--page-gutter) 70px; min-height: 65vh; }
+.poem-list__grid { margin-top: 20px; }
+.poem-card { box-shadow: none; }
+.poem-card__seal { background: transparent; color: #9b7560; border: 1px solid #bba58d; }
+@media(max-width:600px) { .poem-list { padding-top: 18px; } }
 </style>

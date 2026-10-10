@@ -1,6 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
+import { atlasLink } from '../src/config/atlasPreview.js'
+import { parse } from '@vue/compiler-sfc'
+import { createRouter, createMemoryHistory } from 'vue-router'
 
 const routerSource = await readFile(new URL('../src/router/index.js', import.meta.url), 'utf8')
 const citySource = await readFile(new URL('../src/views/CityCulture.vue', import.meta.url), 'utf8')
@@ -16,6 +19,15 @@ test('诗词列表路由存在且排在诗词详情动态路由之前', () => {
 })
 
 test('城市页的古诗词入口把当前城市带到可用列表页', () => {
-  assert.match(citySource, /path:\s*['"]\/poems['"]/)
-  assert.match(citySource, /query:\s*\{\s*region:\s*city\s*\}/)
+  const { descriptor } = parse(citySource)
+  const expression = descriptor.template.content.match(/:to="([^"]*\/poems\?region=[^"]*)"/)?.[1]
+  assert.ok(expression, '城市册页须提供诗词筛选入口')
+  const to = new Function('atlasLink', 'city', 'route', `return (${expression})`)
+  const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/poems', component: {} }] })
+  for (const preview of [undefined, 'inkwash']) {
+    const resolved = router.resolve(to(atlasLink, '济南', { query: { preview } }))
+    assert.equal(resolved.path, '/poems')
+    assert.equal(resolved.query.region, '济南')
+    assert.equal(resolved.query.preview, preview)
+  }
 })

@@ -277,7 +277,15 @@ public class PoemAnalysisService {
         }
     }
 
-    /** AI 赏析先作为待审核材料存在，不让生成结果自动成为 RAG 事实证据。 */
+    /**
+     * AI 赏析生成后直接以「已发布」入库。
+     *
+     * 原设计是先进 needs_review 等人工审核，但赏析是对**已经审核通过的诗词**的辅助解读，
+     * 203 首诗逐条人工过审并不现实，实际结果是「赏析每次都生成成功、前台却永远读不到」
+     * （公开端只读 published → 404 → 前端显示加载失败）。现在生成即发布，
+     * 溯源仍由 poem_id → 诗词实体本身的来源链保证。
+     * 注意：赏析会进入 AI 小文的证据检索，参见 KnowledgeRetrievalService 的发布态过滤。
+     */
     private void ensureReviewRecord(Long analysisId) {
         if (contentReviewMapper == null || analysisId == null) return;
         try {
@@ -289,8 +297,8 @@ public class PoemAnalysisService {
             ContentReview review = new ContentReview();
             review.setEntityType("poem_analysis");
             review.setEntityId(analysisId);
-            review.setStatus(ContentReview.NEEDS_REVIEW);
-            review.setReviewNote("AI 赏析默认待人工审核");
+            review.setStatus(ContentReview.PUBLISHED);
+            review.setReviewNote("AI 赏析生成后自动发布");
             review.setCreatedAt(LocalDateTime.now());
             contentReviewMapper.insert(review);
         } catch (Exception e) {
@@ -298,7 +306,7 @@ public class PoemAnalysisService {
         }
     }
 
-    /** 重新生成会改变公开内容，已有 published 审核必须失效并重新进入人工审核。 */
+    /** 重新生成会替换公开内容；自动发布策略下保持已发布，只更新备注。 */
     private void resetReviewForRegeneration(Long analysisId) {
         if (contentReviewMapper == null || analysisId == null) return;
         try {
@@ -310,15 +318,14 @@ public class PoemAnalysisService {
                 ensureReviewRecord(analysisId);
                 return;
             }
-            if (ContentReview.NEEDS_REVIEW.equals(existing.getStatus())) return;
-            existing.setStatus(ContentReview.NEEDS_REVIEW);
-            existing.setReviewerId(null);
-            existing.setReviewedAt(null);
-            existing.setReviewNote("AI 赏析内容更新，需重新审核");
+            if (!ContentReview.PUBLISHED.equals(existing.getStatus())) {
+                existing.setStatus(ContentReview.PUBLISHED);
+            }
+            existing.setReviewNote("AI 赏析内容已更新（生成后自动发布）");
             existing.setUpdatedAt(LocalDateTime.now());
             contentReviewMapper.updateById(existing);
         } catch (Exception e) {
-            log.warn("重置赏析审核记录失败: analysisId={}", analysisId, e);
+            log.warn("更新赏析审核记录失败: analysisId={}", analysisId, e);
         }
     }
 

@@ -4,6 +4,7 @@ import { resolveRouteScroll } from '../utils/routeScroll.js'
 const routes = [
   { path: '/', redirect: '/map' },
   { path: '/map', name: 'Map', component: () => import('../views/MapView.vue') },
+  { path: '/river-sandbox', name: 'RiverSandbox', component: () => import('../views/RiverSandbox.vue') },
   { path: '/poets', name: 'Poets', component: () => import('../views/PoetList.vue') },
   { path: '/poets/all', redirect: '/poets?view=all' },
   { path: '/poets/:id', name: 'PoetDetail', component: () => import('../views/PoetDetail.vue') },
@@ -14,7 +15,8 @@ const routes = [
   { path: '/culture', name: 'CultureGallery', component: () => import('../views/CultureGalleryView.vue') },
   { path: '/festivals', name: 'FestivalList', component: () => import('../views/FestivalList.vue') },
   { path: '/festivals/:id', name: 'CulturalDetailFestival', component: () => import('../views/CulturalDetail.vue') },
-  { path: '/crafts', name: 'CraftWorkshop', component: () => import('../views/CraftWorkshop.vue') },
+  { path: '/crafts', name: 'CraftList', component: () => import('../views/CraftList.vue') },
+  { path: '/crafts/workshop', name: 'CraftWorkshop', component: () => import('../views/CraftWorkshop.vue') },
   { path: '/crafts/:id', name: 'CulturalDetailCraft', component: () => import('../views/CulturalDetail.vue') },
   { path: '/regions/:region', name: 'RegionSpots', component: () => import('../views/RegionSpots.vue') },
   { path: '/cities/:region', name: 'CityCulture', component: () => import('../views/CityCulture.vue') },

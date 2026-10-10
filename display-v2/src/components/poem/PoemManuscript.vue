@@ -9,12 +9,12 @@
 
     <header class="manuscript__header">
       <span class="manuscript__seal" aria-hidden="true">{{ dynasty?.name?.charAt(0) || '诗' }}</span>
-      <p class="manuscript__eyebrow">{{ dynasty?.name || '佚代' }} · 齐鲁诗笺</p>
+      <p class="manuscript__eyebrow">{{ dynasty?.name || '佚代' }} · {{ poem.form || '齐鲁诗笺' }}</p>
       <h1 id="poem-manuscript-title">{{ poem.title }}</h1>
       <p v-if="poet || spot" class="manuscript__byline">
-        <router-link v-if="poet" :to="`/poets/${poet.id}`">{{ poet.name }}</router-link>
+        <router-link v-if="poet" :to="atlasLink(`/poets/${poet.id}`, route)">{{ poet.name }}</router-link>
         <span v-if="poet && spot" aria-hidden="true">·</span>
-        <router-link v-if="spot" :to="`/spots/${spot.id}`">{{ spot.name }}</router-link>
+        <router-link v-if="spot" :to="atlasLink(`/spots/${spot.id}`, route)">{{ spot.name }}</router-link>
       </p>
     </header>
 
@@ -49,8 +49,11 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { atlasLink } from '../../config/atlasPreview'
 import { splitPoemLines } from '../../utils/poem'
 
+const route = useRoute()
 const props = defineProps({
   poem: { type: Object, required: true },
   poet: { type: Object, default: null },
@@ -83,7 +86,9 @@ const syncAnnotation = (event) => {
   background: var(--card-bg);
   border: 1px solid var(--border);
   padding: clamp(32px, 6vw, 72px) clamp(20px, 7vw, 88px);
-  box-shadow: 0 24px 64px color-mix(in srgb, var(--text-primary) 10%, transparent);
+  box-shadow: none;
+  outline: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+  outline-offset: -7px;
 }
 
 .manuscript__wash {
@@ -92,8 +97,9 @@ const syncAnnotation = (event) => {
   z-index: 0;
   background-position: center;
   background-size: cover;
-  filter: grayscale(0.35) saturate(0.75);
-  opacity: 0.08;
+  filter: grayscale(0.2) saturate(0.65);
+  mix-blend-mode: multiply;
+  opacity: 0.1;
   pointer-events: none;
 }
 
@@ -115,10 +121,10 @@ const syncAnnotation = (event) => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 34px;
+  height: 34px;
   margin-bottom: var(--sp-3);
-  border: 2px solid var(--accent);
+  border: 1px solid var(--accent);
   color: var(--accent);
   font-family: var(--font-display);
   font-size: 24px;

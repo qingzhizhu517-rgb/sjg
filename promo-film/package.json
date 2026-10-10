@@ -1,0 +1,16 @@
+{
+  "name": "sjg-promo-film",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "《山河有迹 · 文脉有声》— SJG 齐鲁文化数字人文平台宣传片（程序化渲染，零运行时依赖）",
+  "scripts": {
+    "narration": "node scripts/narration.mjs",
+    "plan": "node src/plan.js",
+    "score": "node scripts/compose-score.mjs",
+    "capture": "node tools/capture.mjs",
+    "mix": "node scripts/mix.mjs",
+    "render": "node scripts/render.mjs",
+    "make": "node scripts/narration.mjs --force && node src/plan.js && node tools/capture.mjs && node scripts/compose-score.mjs && node scripts/render.mjs && node scripts/mix.mjs"
+  }
+}

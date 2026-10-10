@@ -56,6 +56,13 @@
 - [ ] **P2-M7** ⏸ 城市页短视频（每城 1 段，9 段）
 - [ ] **P2-M8** ⏸ 环境音 2 条（real 展馆氛围 / inkwash 流水古琴），默认静音、手动开启
 - [ ] **P2-M9** ⏸ 全部终稿素材上传 OSS + 路径切换验证（`VITE_OSS_BUCKET_URL`）
+  - ✅ **2026-10-09 素材已全部上传**：125 个文件 / 92.1 MB，独立 HEAD 复核 **125/125 返回 200**。
+    前缀分布 `images/poets` 64 · `images/spots` 41 · `images/cultural` 11 · `media/inkwash/sights` 9。
+    清单见 `output/2026-10-09-placeholder-fill/upload-manifest-all.json`，上传器 `scripts/placeholder-assets/upload_http.py`。
+  - ⏳ **仍缺「路径切换验证」**：需在生产构建下确认 `VITE_OSS_BUCKET_URL` 生效、DB 中 `/images/...`
+    相对路径能正确解析到 OSS（属部署验证，本机无生产环境）。
+  - ⚠️ 本次上传是在桶临时放开「公共读写」的条件下用**匿名 PUT** 完成的（因为 AK 不可用）。
+    对象已逐个带 `x-oss-object-acl: public-read`，**桶权限须收回「公共读」**。
 
 ### 页面改造
 

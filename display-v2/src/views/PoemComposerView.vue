@@ -1,52 +1,9 @@
-<template>
-  <div class="poem-composer-view">
-    <div class="view-header">
-      <button class="back-btn" @click="$router.back()">← 返回</button>
-      <h1 class="view-title">AI 诗人</h1>
-    </div>
-    <PoemComposer />
-  </div>
-</template>
-
+<template><div class="folio-page composer-page"><PageHeading eyebrow="研学创作 / 诗词创作" title="把眼前山河，写成一首诗" description="写下主题，选择形式，借助 AI 生成一首新作。生成内容与古典原作分开展示。"><template #actions><router-link :to="atlasLink('/poems', route)" class="folio-button folio-button--quiet">先读一首诗 ↗</router-link></template></PageHeading><PoemComposer /></div></template>
 <script setup>
+import { useRoute } from 'vue-router'
+import { atlasLink } from '../config/atlasPreview'
+import PageHeading from '../components/ui/PageHeading.vue'
 import PoemComposer from '../components/PoemComposer.vue'
+const route = useRoute()
 </script>
-
-<style scoped>
-.poem-composer-view {
-  min-height: 100vh;
-  background: var(--bg-primary);
-  padding: 20px;
-}
-
-.view-header {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 40px;
-  max-width: 800px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.back-btn {
-  padding: 8px 16px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.back-btn:hover {
-  background: var(--bg-hover);
-}
-
-.view-title {
-  font-family: var(--font-heading);
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-</style>
+<style scoped>.composer-page { max-width:1180px; }</style>

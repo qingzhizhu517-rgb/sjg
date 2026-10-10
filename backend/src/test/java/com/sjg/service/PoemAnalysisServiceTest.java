@@ -119,8 +119,8 @@ class PoemAnalysisServiceTest {
         }
 
         @Test
-        @DisplayName("首次生成的赏析自动创建待审核记录")
-        void cacheMiss_createsNeedsReviewRecord() {
+        @DisplayName("首次有效生成的赏析自动发布")
+        void cacheMiss_createsPublishedReviewRecord() {
             when(analysisMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
             when(poemMapper.selectById(1L)).thenReturn(samplePoem());
             when(llm.getModel()).thenReturn("deepseek-chat");
@@ -138,7 +138,7 @@ class PoemAnalysisServiceTest {
             verify(contentReviewMapper).insert(captor.capture());
             assertEquals("poem_analysis", captor.getValue().getEntityType());
             assertEquals(42L, captor.getValue().getEntityId());
-            assertEquals(ContentReview.NEEDS_REVIEW, captor.getValue().getStatus());
+            assertEquals(ContentReview.PUBLISHED, captor.getValue().getStatus());
         }
 
         @Test
@@ -159,8 +159,8 @@ class PoemAnalysisServiceTest {
         }
 
         @Test
-        @DisplayName("重新生成已发布赏析时降回待审核")
-        void regenerationDemotesPublishedReview() {
+        @DisplayName("重新生成已发布赏析时保持发布状态")
+        void regenerationKeepsPublishedReview() {
             PoemAnalysis old = sampleAnalysis(1L, 0);
             ContentReview published = new ContentReview();
             published.setId(88L);
@@ -176,9 +176,31 @@ class PoemAnalysisServiceTest {
             service.getOrGenerate(1L);
 
             verify(contentReviewMapper).updateById(argThat(review ->
-                    ContentReview.NEEDS_REVIEW.equals(review.getStatus())
-                            && review.getReviewerId() == null
-                            && review.getReviewedAt() == null));
+                    ContentReview.PUBLISHED.equals(review.getStatus())
+                            && review.getReviewNote().contains("自动发布")
+                            && review.getUpdatedAt() != null));
+        }
+
+        @Test
+        @DisplayName("重新生成历史待审赏析后自动发布")
+        void regenerationPublishesPreviouslyUnreviewedAnalysis() {
+            PoemAnalysis old = sampleAnalysis(1L, 0);
+            ContentReview pending = new ContentReview();
+            pending.setId(88L);
+            pending.setEntityType("poem_analysis");
+            pending.setEntityId(1L);
+            pending.setStatus(ContentReview.NEEDS_REVIEW);
+            when(analysisMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(old);
+            when(poemMapper.selectById(1L)).thenReturn(samplePoem());
+            when(llm.getModel()).thenReturn("deepseek-chat");
+            stubStreamChat(validAnalysisJson());
+            when(contentReviewMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(pending);
+
+            service.getOrGenerate(1L);
+
+            verify(contentReviewMapper).updateById(argThat(review ->
+                    ContentReview.PUBLISHED.equals(review.getStatus())
+                            && review.getUpdatedAt() != null));
         }
 
         @Test

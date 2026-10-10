@@ -1,3 +1,5 @@
+import { apiUrl } from '../api/url.js'
+
 export async function ensureSuccessfulResponse(response, fallbackMessage = '成果同步失败') {
   if (response?.ok) return response
   let message = fallbackMessage
@@ -13,7 +15,7 @@ export async function ensureSuccessfulResponse(response, fallbackMessage = '成�
 }
 
 export function publicLearningTaskUrl(taskCode) {
-  return '/api/public/learning-tasks/' + encodeURIComponent(String(taskCode))
+  return apiUrl('/api/public/learning-tasks/' + encodeURIComponent(String(taskCode)))
 }
 
 export function publicLearningSubmissionUrl(taskCode) {

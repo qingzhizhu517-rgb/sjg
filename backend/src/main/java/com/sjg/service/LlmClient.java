@@ -39,6 +39,8 @@ public class LlmClient {
     @Value("${llm.temperature:0.6}") private double temperature;
     @Value("${llm.max-tokens:1024}") private int maxTokens;
     @Value("${llm.timeout-seconds:60}") private int timeoutSeconds;
+    /** 思考模式开关，取值 enabled / disabled / 空（空=不发送该字段）。默认 disabled，见 buildBody 说明。 */
+    @Value("${llm.thinking:disabled}") private String thinking;
 
     private final ObjectMapper mapper = new ObjectMapper();
     private HttpClient http;
@@ -138,6 +140,13 @@ public class LlmClient {
         body.put("stream", stream);
         body.put("temperature", temperature);
         body.put("max_tokens", maxTokens);
+        // DeepSeek V4 系列（deepseek-v4-flash / v4-pro）默认开启思考模式，推理内容同样计入
+        // max_tokens。实测 1024 的额度会被推理全部吃满（finish_reason=length）、正文返回空串，
+        // 导致诗词赏析解析失败且按设计不落库。本项目是文化问答与诗词赏析，不需要深度推理，
+        // 故默认显式关闭。若要恢复思考模式：设 LLM_THINKING=enabled；换用不认该字段的服务时设 LLM_THINKING=（空）。
+        if (thinking != null && !thinking.isBlank()) {
+            body.putObject("thinking").put("type", thinking);
+        }
         ArrayNode arr = body.putArray("messages");
         for (ChatMessage m : messages) {
             if (m == null || m.role() == null || m.content() == null) continue;

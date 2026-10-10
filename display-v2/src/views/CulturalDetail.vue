@@ -1,7 +1,7 @@
 <template>
   <div class="cd">
     <div class="cd-back">
-      <router-link :to="backTo" class="cd-back-link">← 返回文化长廊</router-link>
+      <router-link :to="backTo" class="cd-back-link folio-back">← {{ returnLabel }}</router-link>
     </div>
 
     <div v-if="!loaded" class="cd-state">
@@ -58,6 +58,7 @@
       </section>
 
       <SourceList :sources="sources" class="cd-section" />
+      <div class="folio-detail-actions"><p>继续循着风物，了解这座城。</p><div class="folio-actions"><router-link :to="backTo" class="folio-button">返回浏览结果</router-link><router-link v-if="item.region" :to="atlasLink(`/cities/${item.region}`, route)" class="folio-button folio-button--primary">走进{{ item.region }} →</router-link></div></div>
     </div>
 
     <!-- 加载完成但无数据（item===null）: 此前整页空白只剩返回链接 -->
@@ -68,9 +69,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '../api'
+import { atlasLink, isAtlasPreview } from '../config/atlasPreview'
+import { culturePreviewItems } from '../config/culturePreview'
+import { safeReturnPath } from '../config/siteNavigation'
 import { useImage } from '../composables/useImage'
 import { getCuratedPresentation } from '../config/curatedMedia'
 import { CATEGORY_LABELS } from '../config/culturalCategories'
@@ -90,18 +94,19 @@ const loaded = ref(false)
 const errorMsg = ref('')
 
 // 详情路由统一: /festivals/:id /crafts/:id /literature/:id /food-opera/:id 共用本组件
-// 注意: /crafts 路由是「东昌葫芦雕刻」3D 专题页而非工艺列表,
-// 工艺详情返回指回文化长廊聚合页 /culture, 与链接文案「返回文化长廊」一致。
+// /crafts 是非遗工艺列表，东昌葫芦 3D/插画专题工坊在 /crafts/workshop。
 const CATEGORY_BACK = {
   '/festivals': '/festivals',
-  '/crafts': '/culture',
+  '/crafts': '/crafts',
   '/literature': '/literature',
   '/food-opera': '/food-opera',
 }
 const backTo = computed(() => {
   const prefix = Object.keys(CATEGORY_BACK).find((p) => route.path.startsWith(p))
-  return prefix ? CATEGORY_BACK[prefix] : '/literature'
+  return atlasLink(safeReturnPath(route.query.returnTo, prefix ? CATEGORY_BACK[prefix] : '/culture'), route)
 })
+
+const returnLabel = computed(() => route.query.returnTo ? '返回浏览结果' : '返回文化栏目')
 
 const CATEGORY_LABELS_LOCAL = CATEGORY_LABELS
 const categoryLabel = (c) => CATEGORY_LABELS_LOCAL[c] || c
@@ -162,24 +167,36 @@ function tagsOf(it) {
   return []
 }
 
+let loadSequence = 0
 async function load() {
+  const sequence = ++loadSequence
+  item.value = null
+  detail.value = null
   loaded.value = false
   errorMsg.value = ''
   sources.value = []
+  if (isAtlasPreview(route)) {
+    const categories = { festivals: 'festival', literature: 'literature', crafts: 'craft', 'food-opera': 'food_opera' }
+    item.value = culturePreviewItems.find(it => String(it.id) === String(route.params.id) && it.category === categories[route.path.split('/')[1]]) || null
+    loaded.value = true
+    return
+  }
   try {
     const data = await api.get(`/cultural/${route.params.id}`)
+    if (sequence !== loadSequence) return
     item.value = data.item
     detail.value = data.detail
     sources.value = Array.isArray(data.sources) ? data.sources : []
   } catch (err) {
+    if (sequence !== loadSequence) return
     console.error('加载文化详情失败:', err)
     errorMsg.value = err.message || '加载失败'
   } finally {
-    loaded.value = true
+    if (sequence === loadSequence) loaded.value = true
   }
 }
 
-onMounted(load)
+watch(() => [route.params.id, route.query.preview], load, { immediate: true })
 </script>
 
 <style scoped>
@@ -276,4 +293,5 @@ onMounted(load)
   .cd-head { flex-direction: column; align-items: flex-start; }
   .cd-field { grid-template-columns: 1fr; gap: 4px; }
 }
+.cd { max-width:1160px; padding:24px var(--page-gutter) 70px; } .cd-head { gap:36px; border-bottom:1px solid var(--border-light); padding-bottom:32px; } .cd-head-media { max-height:320px; } .cd-title { font-family:var(--font-display); font-weight:500; } .cd-category { background:transparent; color:var(--reading-green); border:0; padding-left:0; }
 </style>

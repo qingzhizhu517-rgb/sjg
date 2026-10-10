@@ -12,8 +12,10 @@
 
     <!-- 降级静态图序列 -->
     <div v-if="fallback" class="craft-stage__fallback">
+      <!-- 父组件可注入程序化插画替代静态图序列 -->
+      <slot v-if="$slots.fallback" name="fallback" :step-index="stepIndex" />
       <img
-        v-if="fallbackSrc"
+        v-else-if="fallbackSrc"
         :src="fallbackSrc"
         :alt="`${title} 第${stepIndex + 1}步`"
         class="craft-stage__fallback-img"
@@ -34,7 +36,6 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
-import { useGlbScene, canUseWebGL } from '../../composables/useGlbScene'
 
 const props = defineProps({
   title: { type: String, default: '' },
@@ -60,7 +61,24 @@ defineExpose({
   getSceneApi: () => sceneApi,
 })
 
+// 模型文件不存在时 dev server 会回落 index.html（200 + text/html），需按类型判断
+const modelAvailable = async () => {
+  if (!props.modelUrl) return false
+  try {
+    const res = await fetch(props.modelUrl, { method: 'HEAD' })
+    return res.ok && !(res.headers.get('content-type') || '').includes('text/html')
+  } catch {
+    return false
+  }
+}
+
 const initScene = async () => {
+  // 模型缺失直接走插画，不再拉取 three.js 整包
+  if (!(await modelAvailable())) {
+    activateFallback()
+    return
+  }
+  const { useGlbScene, canUseWebGL } = await import('../../composables/useGlbScene')
   if (!canUseWebGL()) {
     activateFallback()
     return
@@ -146,7 +164,9 @@ onBeforeUnmount(() => {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
-  border-radius: 12px;
+  max-height: min(560px, 68vh);
+  border: 1px solid var(--border-light);
+  border-radius: 3px;
   overflow: hidden;
   background: var(--surface-sunken);
 }
@@ -160,7 +180,10 @@ onBeforeUnmount(() => {
 
 /* 降级模式 */
 .craft-stage--fallback {
-  background: var(--craft-stage-fallback-bg, #F5F0E8);
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 55%, color-mix(in srgb, var(--bg-primary) 92%, transparent), transparent 75%),
+    url('/media/inkwash/atlas/mountain-vignette.webp') right bottom / 46% auto no-repeat,
+    var(--bg-secondary);
 }
 
 .craft-stage__fallback {

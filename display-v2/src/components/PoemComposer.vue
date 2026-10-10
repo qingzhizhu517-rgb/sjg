@@ -1,23 +1,23 @@
 <template>
   <div class="poem-composer">
-    <h2 class="composer-title">AI 诗人</h2>
-    <p class="composer-subtitle">输入主题，让 AI 为你赋诗一首</p>
+    <h2 class="composer-title">写下你的灵感</h2>
+    <p class="composer-subtitle">可以写一个地方、一种情绪，或一句想表达的话。</p>
     
     <!-- 参数表单 -->
-    <div class="composer-form">
+    <form class="composer-form" @submit.prevent="composePoem">
       <div class="form-group">
-        <label class="form-label">主题</label>
+        <label class="form-label" for="compose-theme">主题</label>
         <input 
-          v-model="form.theme" 
+          v-model="form.theme" id="compose-theme" maxlength="120" required
           type="text" 
-          class="form-input" 
+          class="form-input folio-input"
           placeholder="例如：黄河、泰山、春日、离别"
         />
       </div>
       
       <div class="form-group">
-        <label class="form-label">风格</label>
-        <select v-model="form.style" class="form-select">
+        <label class="form-label" for="compose-style">风格</label>
+        <select v-model="form.style" id="compose-style" class="form-select folio-select">
           <option value="豪放">豪放派</option>
           <option value="婉约">婉约派</option>
           <option value="浪漫">浪漫主义</option>
@@ -28,8 +28,8 @@
       </div>
       
       <div class="form-group">
-        <label class="form-label">字数</label>
-        <select v-model="form.wordCount" class="form-select">
+        <label class="form-label" for="compose-length">字数</label>
+        <select v-model="form.wordCount" id="compose-length" class="form-select folio-select">
           <option value="五言">五言</option>
           <option value="七言">七言</option>
           <option value="不限">不限</option>
@@ -37,8 +37,8 @@
       </div>
       
       <div class="form-group">
-        <label class="form-label">朝代偏好</label>
-        <select v-model="form.dynasty" class="form-select">
+        <label class="form-label" for="compose-dynasty">朝代偏好</label>
+        <select v-model="form.dynasty" id="compose-dynasty" class="form-select folio-select">
           <option value="不限">不限</option>
           <option value="唐">唐代</option>
           <option value="宋">宋代</option>
@@ -49,14 +49,14 @@
       </div>
       
       <button 
-        class="compose-btn" 
-        :disabled="loading || !form.theme"
-        @click="composePoem"
+        type="submit" class="compose-btn folio-button folio-button--primary"
+        :disabled="loading || !form.theme.trim()"
+
       >
-        <span v-if="loading" class="btn-spinner"></span>
+        <span v-if="loading" role="status">正在生成…</span>
         <span v-else>赋诗一首</span>
       </button>
-    </div>
+    </form>
     
     <!-- 生成结果 -->
     <div v-if="poem" class="poem-result">
@@ -67,33 +67,34 @@
       
       <!-- 毛笔书写动画区域 -->
       <div class="writing-area">
-        <div class="paper-texture">
+        <div class="paper-texture" ref="paperRef">
           <div class="ink-wash-bg"></div>
-          <div class="poem-content">
-            <div 
-              v-for="(line, lineIndex) in poem.lines" 
+          <div class="poem-content" :key="animationEpoch">
+            <div
+              v-for="(chars, lineIndex) in renderedLines"
               :key="lineIndex"
               class="poem-line"
             >
-              <div 
-                v-for="(char, charIndex) in line" 
-                :key="charIndex"
+              <div
+                v-for="item in chars"
+                :key="item.index"
                 class="char-container"
               >
-                <HanziWriterChar 
-                  v-if="isChinese(char)"
-                  :char="char"
+                <HanziWriterChar
+                  v-if="isChinese(item.char)"
+                  :key="`${item.index}-${animationEpoch}`"
+                  :char="item.char"
                   :size="charSize"
-                  :delay="(lineIndex * line.length + charIndex) * 300"
+                  :delay="item.index * charDelayMs"
                   :auto-play="animationStarted"
                   @animation-complete="onCharAnimationComplete"
                 />
-                <span 
+                <span
                   v-else
                   class="poem-char-simple"
-                  :style="{ animationDelay: `${(lineIndex * line.length + charIndex) * 0.1}s` }"
+                  :style="{ animationDelay: `${(item.index * charDelayMs) / 1000}s` }"
                 >
-                  {{ char }}
+                  {{ item.char }}
                 </span>
               </div>
             </div>
@@ -103,7 +104,7 @@
           <div 
             class="seal-stamp"
             :class="{ 'animate-stamp': animationStarted }"
-            :style="{ animationDelay: `${totalChars * 0.3 + 0.5}s` }"
+            :style="{ animationDelay: sealDelayCss }"
           >
             <span class="seal-text">AI</span>
           </div>
@@ -112,17 +113,17 @@
       
       <!-- 控制按钮 -->
       <div class="result-controls">
-        <button class="control-btn" @click="replayAnimation">
+        <button type="button" class="control-btn folio-button" @click="replayAnimation">
           <span class="btn-icon">↻</span> 重播动画
         </button>
-        <button class="control-btn" @click="downloadAsImage">
-          <span class="btn-icon">↓</span> 保存为图片
+        <button type="button" class="control-btn folio-button" :disabled="exporting" @click="downloadAsImage">
+          <span class="btn-icon">↓</span> {{ exporting ? '正在制作诗笺…' : '保存为图片' }}
         </button>
-        <button class="control-btn" @click="sharePoem">
+        <button type="button" class="control-btn folio-button" @click="sharePoem">
           <span class="btn-icon">↗</span> 分享
         </button>
       </div>
-      
+      <p v-if="actionMessage" class="composer-action-message" role="status">{{ actionMessage }}</p>
       <!-- 诗词解释 -->
       <div v-if="poem.explanation" class="poem-explanation">
         <h4 class="explanation-title">诗词赏析</h4>
@@ -131,17 +132,18 @@
     </div>
     
     <!-- 错误提示 -->
-    <div v-if="error" class="error-message">
+    <div v-if="error" class="error-message" role="alert">
       <p>{{ error }}</p>
-      <button class="retry-btn" @click="composePoem">重试</button>
+      <button type="button" class="retry-btn folio-button" :disabled="loading" @click="composePoem">重试</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import api from '../api'
 import HanziWriterChar from './HanziWriterChar.vue'
+import { createPoemCard } from '../utils/poemCard.js'
 
 const form = ref({
   theme: '',
@@ -151,14 +153,106 @@ const form = ref({
 })
 
 const loading = ref(false)
+const exporting = ref(false)
+const actionMessage = ref('')
 const error = ref(null)
 const poem = ref(null)
 const animationStarted = ref(false)
-const charSize = ref(80)
 
-const totalChars = computed(() => {
-  if (!poem.value) return 0
-  return poem.value.lines.reduce((sum, line) => sum + line.length, 0)
+/**
+ * 每轮播放的代号。重播或重新生成时自增，配合 :key 让所有字组件销毁重建。
+ * 这是保证「从一笔未写的空白字帖重新写起」最可靠的方式：复用旧实例时，
+ * delay 未到的字仍停留在上一轮的完成态，视觉上就像照着旧字又描了一遍。
+ */
+const animationEpoch = ref(0)
+
+/**
+ * 结果区字号必须自适应：此前 charSize 固定 80px，而一行 12 个字符就需要
+ * 12×(80+8)≈1056px，但纸面可用宽度只有约 640px，于是 .poem-line 的 flex-wrap
+ * 把整句拦腰折断（「渊。」被挤到下一行），版面完全散掉。
+ * 现在按「纸面实际宽度 ÷ 最长行字数」反推字号，并夹在可读区间内。
+ */
+const paperRef = ref(null)
+const paperWidth = ref(0)
+let resizeObserver = null
+
+const CHAR_GAP_RATIO = 0.07
+const MAX_CHAR_SIZE = 76
+const MIN_CHAR_SIZE = 20
+
+const longestLineLength = computed(() => {
+  const lines = poem.value?.lines || []
+  if (!lines.length) return 0
+  return Math.max(...lines.map((line) => [...line].length))
+})
+
+const charSize = computed(() => {
+  const count = longestLineLength.value
+  if (!count) return 64
+  const available = paperWidth.value || 600
+  const gap = Math.round(MAX_CHAR_SIZE * CHAR_GAP_RATIO)
+  const raw = Math.floor((available - gap * (count - 1)) / count)
+  return Math.max(MIN_CHAR_SIZE, Math.min(MAX_CHAR_SIZE, raw))
+})
+
+const charSizeCss = computed(() => `${charSize.value}px`)
+const charGapCss = computed(() => `${Math.max(2, Math.round(charSize.value * CHAR_GAP_RATIO))}px`)
+const charSimpleFontCss = computed(() => `${Math.max(12, Math.round(charSize.value * 0.6))}px`)
+
+/** 预先把每行拆成带全局序号的字，序号用于计算逐字延迟（跨行连续，不因行长不同而错位） */
+const renderedLines = computed(() => {
+  let index = 0
+  return (poem.value?.lines || []).map((line) => [...line].map((char) => ({ char, index: index++ })))
+})
+
+const totalChars = computed(() =>
+  (poem.value?.lines || []).reduce((sum, line) => sum + [...line].length, 0)
+)
+
+/**
+ * 逐字书写间隔（毫秒）。按总字数反推，把整首诗的书写时长控制在 5 秒左右：
+ * 固定 260ms 会让 4 行 56 字的诗拖到近 15 秒，印章更是迟迟不落。
+ */
+const CHAR_DELAY_TARGET_MS = 5000
+const charDelayMs = computed(() => {
+  const count = totalChars.value
+  if (!count) return 260
+  return Math.max(90, Math.min(260, Math.round(CHAR_DELAY_TARGET_MS / count)))
+})
+
+/** 印章在最后一个字落笔后随即盖上 */
+const sealDelayCss = computed(() => `${((totalChars.value * charDelayMs.value) / 1000 + 0.25).toFixed(2)}s`)
+
+function measurePaper() {
+  const el = paperRef.value
+  if (!el) return
+  const styles = window.getComputedStyle(el)
+  const padding = parseFloat(styles.paddingLeft || '0') + parseFloat(styles.paddingRight || '0')
+  const width = el.clientWidth - (Number.isFinite(padding) ? padding : 0)
+  if (width > 0) paperWidth.value = Math.floor(width)
+}
+
+function ensurePaperObserver() {
+  const el = paperRef.value
+  if (!el) return
+  if (resizeObserver) resizeObserver.disconnect()
+  measurePaper()
+  if (typeof ResizeObserver === 'undefined') return
+  resizeObserver = new ResizeObserver((entries) => {
+    const width = entries[0]?.contentRect?.width
+    if (width) paperWidth.value = Math.floor(width)
+  })
+  resizeObserver.observe(el)
+}
+
+onMounted(() => {
+  window.addEventListener('resize', measurePaper)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', measurePaper)
+  if (resizeObserver) resizeObserver.disconnect()
+  resizeObserver = null
 })
 
 function isChinese(char) {
@@ -167,42 +261,45 @@ function isChinese(char) {
 }
 
 async function composePoem() {
-  if (!form.value.theme) return
+  if (loading.value || !form.value.theme.trim()) return
+  form.value.theme = form.value.theme.trim()
+  const preferences = { ...form.value }
+  actionMessage.value = ''
   
   loading.value = true
   error.value = null
   poem.value = null
   animationStarted.value = false
+  animationEpoch.value += 1
   
   try {
     // 后端契约: POST /api/public/ai-poem/generate, 参数走 query(@RequestParam),
     // 返回 Result<AiPoem>{theme,title,content,authorAlias,model,prompt,status}
     const response = await api.post('/ai-poem/generate', null, {
       params: {
-        theme: form.value.theme,
-        style: form.value.style,
-        wordCount: form.value.wordCount,
-        dynasty: form.value.dynasty
+        ...preferences
       }
     })
 
     // 适配展示形状: 后端无 lines/style/wordCount/explanation 字段,
     // 由 content 拆行; 元信息沿用表单选择值
     const content = (response && response.content) || ''
+    if (typeof content !== 'string' || !content.trim()) throw new Error('本次未生成诗词内容，请重试。')
     poem.value = {
       title: (response && response.title) || '无题',
       content,
       lines: content.split('\n').map((l) => l.trim()).filter(Boolean),
-      style: form.value.style,
-      wordCount: form.value.wordCount,
+      style: preferences.style,
+      wordCount: preferences.wordCount,
       explanation: ''
     }
 
-    // 等待 DOM 更新后开始动画
+    // 等待 DOM 更新：先按纸面真实宽度定字号（否则会退回默认宽度，字被算得过小），再启动逐字书写
     await nextTick()
+    ensurePaperObserver()
     setTimeout(() => {
       animationStarted.value = true
-    }, 100)
+    }, 120)
   } catch (err) {
     console.error('赋诗失败:', err)
     error.value = err.message || '赋诗失败，请重试'
@@ -213,10 +310,11 @@ async function composePoem() {
 
 function replayAnimation() {
   animationStarted.value = false
+  animationEpoch.value += 1
   nextTick(() => {
     setTimeout(() => {
       animationStarted.value = true
-    }, 50)
+    }, 60)
   })
 }
 
@@ -226,8 +324,24 @@ function onCharAnimationComplete(char) {
 }
 
 async function downloadAsImage() {
-  // 实现保存为图片的功能
-  alert('保存为图片功能开发中...')
+  if (!poem.value || exporting.value) return
+  const currentPoem = { ...poem.value, lines: [...poem.value.lines] }
+  exporting.value = true
+  actionMessage.value = ''
+  try {
+    await document.fonts.ready
+    const canvas = createPoemCard(currentPoem)
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
+    if (!blob) throw new Error('图片未能生成，请重试。')
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${String(currentPoem.title || '齐鲁诗笺').replace(/[\\/:*?"<>|]/g, '').slice(0, 60)}.png`
+    link.click()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+    actionMessage.value = '诗笺图片已准备好，请在浏览器下载中查看。'
+  } catch (err) { actionMessage.value = err.message || '图片导出失败，请重试。' }
+  finally { exporting.value = false }
 }
 
 function sharePoem() {
@@ -244,12 +358,12 @@ function sharePoem() {
     // 复制到剪贴板(仅 HTTPS/localhost 下可用)
     const text = `${poem.value.title}\n\n${poem.value.lines.join('\n')}`
     navigator.clipboard.writeText(text).then(() => {
-      alert('已复制到剪贴板')
+      actionMessage.value = '诗词已复制，可以粘贴分享。'
     }).catch(() => {
-      alert('复制失败，请手动复制')
+      actionMessage.value = '复制失败，请手动选中诗词复制。'
     })
   } else {
-    alert('当前浏览器不支持分享，请手动复制')
+    actionMessage.value = '当前浏览器不支持分享，请手动选中诗词复制。'
   }
 }
 </script>
@@ -353,27 +467,26 @@ function sharePoem() {
 }
 
 .poem-result {
-  background: var(--bg-secondary);
-  border-radius: 8px;
-  padding: 32px;
-  margin-top: 40px;
+  margin-top: 35px;
 }
 
 .result-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 20px;
 }
 
 .poem-title {
-  font-family: var(--font-heading);
-  font-size: 28px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
   color: var(--text-primary);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .poem-meta {
-  font-size: 14px;
+  font-size: 12px;
+  letter-spacing: 0.18em;
   color: var(--text-muted);
 }
 
@@ -383,51 +496,58 @@ function sharePoem() {
 
 .paper-texture {
   position: relative;
-  background: linear-gradient(135deg, #f5f0e8 0%, #e8e0d0 100%);
-  border-radius: 4px;
-  padding: 40px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 3px;
+  /* 上下留白略大于左右，给逐行书写留呼吸感；底部额外留出印章位置 */
+  padding: 34px 32px 58px;
   min-height: 300px;
   overflow: hidden;
 }
 
 .ink-wash-bg {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: 
-    radial-gradient(ellipse at 20% 50%, rgba(0,0,0,0.05) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 50%, rgba(0,0,0,0.05) 0%, transparent 50%);
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 18% 40%, var(--accent-faint) 0%, transparent 55%),
+    radial-gradient(ellipse at 84% 62%, var(--accent-faint) 0%, transparent 55%);
   pointer-events: none;
 }
 
 .poem-content {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
   text-align: center;
 }
 
 .poem-line {
-  margin-bottom: 16px;
   display: flex;
   justify-content: center;
-  flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  /* 字号已按最长行反推，这里绝不能再折行，否则整句会被拦腰截断 */
+  flex-wrap: nowrap;
+  gap: v-bind(charGapCss);
 }
 
 .char-container {
-  display: inline-block;
-  width: v-bind(`${charSize}px`);
-  height: v-bind(`${charSize}px`);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: v-bind(charSizeCss);
+  height: v-bind(charSizeCss);
 }
 
 .poem-char-simple {
-  font-family: '楷体', 'KaiTi', serif;
-  font-size: 28px;
-  color: #2c2c2c;
+  font-family: var(--font-display);
+  font-size: v-bind(charSimpleFontCss);
+  color: #2f2a24;
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(10px);
   animation: writeCharSimple 0.5s ease forwards;
 }
 
@@ -448,16 +568,16 @@ function sharePoem() {
 
 .seal-stamp {
   position: absolute;
-  bottom: 30px;
-  right: 30px;
-  width: 60px;
-  height: 60px;
-  border: 3px solid #c8a45c;
-  border-radius: 4px;
+  bottom: 24px;
+  right: 26px;
+  width: 46px;
+  height: 46px;
+  border: 2px solid var(--accent);
+  border-radius: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transform: rotate(-15deg);
+  transform: rotate(-12deg);
   opacity: 0;
 }
 
@@ -468,23 +588,22 @@ function sharePoem() {
 @keyframes stamp {
   0% {
     opacity: 0;
-    transform: rotate(-15deg) scale(2);
+    transform: rotate(-12deg) scale(2);
   }
   50% {
     opacity: 0.8;
-    transform: rotate(-15deg) scale(0.9);
+    transform: rotate(-12deg) scale(0.9);
   }
   100% {
     opacity: 1;
-    transform: rotate(-15deg) scale(1);
+    transform: rotate(-12deg) scale(1);
   }
 }
 
 .seal-text {
-  font-family: '篆体', 'ZhuanTi', serif;
-  font-size: 24px;
-  color: #c8a45c;
-  font-weight: bold;
+  font-family: var(--font-display);
+  font-size: 17px;
+  color: var(--accent);
 }
 
 .result-controls {
@@ -560,20 +679,32 @@ function sharePoem() {
   .composer-form {
     grid-template-columns: 1fr;
   }
-  
-  .char-container {
-    width: 60px;
-    height: 60px;
-  }
-  
+
   .result-controls {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .control-btn {
     width: 100%;
     justify-content: center;
   }
+
+  .paper-texture {
+    padding: 24px 16px 52px;
+  }
 }
+.poem-composer { max-width:none; padding:0; background:none; }
+.composer-title { font:26px var(--font-display); text-align:left; }
+.composer-subtitle { text-align:left; font-size:14px; color:var(--text-secondary); margin:10px 0 24px; }
+.composer-form { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px; padding:28px; border:1px solid var(--border-light); background:#eee9df70; border-radius:3px; }
+.composer-form .form-group:first-child { grid-column:1/-1; }
+.form-group { margin:0; }
+.form-label { font-size:13px; margin-bottom:8px; }
+.form-input,.form-select { width:100%; }
+.compose-btn { grid-column:1/-1; justify-self:end; width:auto; min-width:170px; margin-top:5px; box-shadow:none; }
+.result-controls { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:10px; border-top:1px solid var(--border-light); padding-top:22px; }
+.char-container :deep(.hanzi-writer-char), .char-container :deep(svg) { width:100%; height:100%; }
+.poem-result { margin-top:35px; }
+@media(max-width:600px) { .composer-form { grid-template-columns:1fr; padding:22px; } .compose-btn { width:100%; } .result-controls > button { flex:1 1 45%; } }
 </style>

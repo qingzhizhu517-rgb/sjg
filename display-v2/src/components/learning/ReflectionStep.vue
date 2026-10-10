@@ -19,6 +19,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { publicLearningTaskUrl } from '../../utils/learningTaskApi.js'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { consumeSseBuffer } from '../../utils/sse.js'
@@ -47,7 +48,7 @@ const requestFeedback = async (question, answer) => {
   loading.value = true
   localFeedbacks.value = { ...localFeedbacks.value, [question.id]: '' }
   try {
-    const response = await fetch(`/api/public/learning-tasks/${encodeURIComponent(props.taskCode)}/feedback`, {
+    const response = await fetch(`${publicLearningTaskUrl(props.taskCode)}/feedback`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
       body: JSON.stringify({

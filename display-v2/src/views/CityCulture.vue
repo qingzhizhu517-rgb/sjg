@@ -7,14 +7,15 @@
         <h1 class="cc-hero__title">{{ city }}</h1>
         <p class="cc-hero__sub">{{ cityDescriptor }}</p>
         <nav class="cc-hero__nav" aria-label="上下游城市">
-          <router-link v-if="prevCity" :to="`/cities/${prevCity}`" class="cc-hero__nav-link">← {{ prevCity }}</router-link>
+          <router-link v-if="prevCity" :to="atlasLink(`/cities/${prevCity}`, route)" class="cc-hero__nav-link">← {{ prevCity }}</router-link>
           <span class="cc-hero__nav-sep">黄河东流</span>
-          <router-link v-if="nextCity" :to="`/cities/${nextCity}`" class="cc-hero__nav-link">{{ nextCity }} →</router-link>
+          <router-link v-if="nextCity" :to="atlasLink(`/cities/${nextCity}`, route)" class="cc-hero__nav-link">{{ nextCity }} →</router-link>
         </nav>
       </div>
       <div class="cc-hero__seal" aria-hidden="true">{{ city[0] }}</div>
     </header>
 
+    <div class="folio-toolbar"><label class="folio-field">切换城市<select class="folio-select" :value="city" @change="router.push(atlasLink(`/cities/${$event.target.value}`, route))"><option v-for="name in NINE_CITIES" :key="name">{{ name }}</option></select></label><div class="folio-actions"><router-link :to="atlasLink(`/regions/${city}`, route)" class="folio-button folio-button--primary">浏览{{ city }}山水 →</router-link><router-link :to="atlasLink('/culture', route)" class="folio-button folio-button--quiet">文化总览</router-link></div></div>
     <!-- 骨架 -->
     <div v-if="!loaded" class="cc-skeleton" aria-busy="true" aria-label="加载中">
       <SkeletonBlock v-for="i in 6" :key="i" height="200px" />
@@ -30,11 +31,11 @@
         <header class="cc-tile__head">
           <span class="cc-tile__seal">节</span>
           <h2 class="cc-tile__title">民俗节庆</h2>
-          <router-link class="cc-tile__more" :to="`/festivals?region=${encodeURIComponent(city)}`">更多 →</router-link>
+          <router-link class="cc-tile__more" :to="atlasLink(`/festivals?region=${encodeURIComponent(city)}`, route)">更多 →</router-link>
         </header>
         <ul v-if="groups.festival.length" class="cc-tile__list">
           <li v-for="it in groups.festival.slice(0, 4)" :key="it.id" class="cc-tile__item">
-            <router-link :to="`/festivals/${it.id}`" class="cc-tile__item-link">
+            <router-link :to="atlasLink(`/festivals/${it.id}`, route)" class="cc-tile__item-link">
               <span class="cc-tile__item-title">{{ it.title }}</span>
               <span class="cc-tile__item-desc">{{ it.summary }}</span>
             </router-link>
@@ -47,11 +48,11 @@
         <header class="cc-tile__head">
           <span class="cc-tile__seal">诗</span>
           <h2 class="cc-tile__title">古诗词</h2>
-          <router-link class="cc-tile__more" :to="{ path: '/poems', query: { region: city } }">更多 →</router-link>
+          <router-link class="cc-tile__more" :to="atlasLink(`/poems?region=${encodeURIComponent(city)}`, route)">更多 →</router-link>
         </header>
         <ul v-if="groups.poems.length" class="cc-tile__list">
           <li v-for="pm in groups.poems.slice(0, 4)" :key="pm.id" class="cc-tile__item">
-            <router-link :to="`/poems/${pm.id}`" class="cc-tile__item-link">
+            <router-link :to="atlasLink(`/poems/${pm.id}`, route)" class="cc-tile__item-link">
               <span class="cc-tile__item-title">{{ pm.title }}</span>
               <span class="cc-tile__item-desc">{{ poetNameOf(pm.poetId) }}</span>
             </router-link>
@@ -64,11 +65,11 @@
         <header class="cc-tile__head">
           <span class="cc-tile__seal">味</span>
           <h2 class="cc-tile__title">饮食戏曲</h2>
-          <router-link class="cc-tile__more" :to="`/food-opera?region=${encodeURIComponent(city)}`">更多 →</router-link>
+          <router-link class="cc-tile__more" :to="atlasLink(`/food-opera?region=${encodeURIComponent(city)}`, route)">更多 →</router-link>
         </header>
         <ul v-if="groups.food_opera.length" class="cc-tile__list">
           <li v-for="it in groups.food_opera.slice(0, 4)" :key="it.id" class="cc-tile__item">
-            <router-link :to="`/food-opera/${it.id}`" class="cc-tile__item-link">
+            <router-link :to="atlasLink(`/food-opera/${it.id}`, route)" class="cc-tile__item-link">
               <span class="cc-tile__item-title">{{ it.title }}</span>
               <span class="cc-tile__item-desc">{{ it.summary }}</span>
             </router-link>
@@ -81,11 +82,11 @@
         <header class="cc-tile__head">
           <span class="cc-tile__seal">艺</span>
           <h2 class="cc-tile__title">非遗工艺</h2>
-          <router-link class="cc-tile__more" :to="`/crafts`">更多 →</router-link>
+          <router-link class="cc-tile__more" :to="atlasLink(`/crafts`, route)">更多 →</router-link>
         </header>
         <ul v-if="groups.craft.length" class="cc-tile__list">
           <li v-for="it in groups.craft.slice(0, 3)" :key="it.id" class="cc-tile__item">
-            <router-link :to="`/crafts/${it.id}`" class="cc-tile__item-link">
+            <router-link :to="atlasLink(`/crafts/${it.id}`, route)" class="cc-tile__item-link">
               <span class="cc-tile__item-title">{{ it.title }}</span>
               <span class="cc-tile__item-desc">{{ it.summary }}</span>
             </router-link>
@@ -98,11 +99,11 @@
         <header class="cc-tile__head">
           <span class="cc-tile__seal">文</span>
           <h2 class="cc-tile__title">民间文学</h2>
-          <router-link class="cc-tile__more" :to="`/literature?region=${encodeURIComponent(city)}`">更多 →</router-link>
+          <router-link class="cc-tile__more" :to="atlasLink(`/literature?region=${encodeURIComponent(city)}`, route)">更多 →</router-link>
         </header>
         <ul v-if="groups.literature.length" class="cc-tile__list">
           <li v-for="it in groups.literature.slice(0, 3)" :key="it.id" class="cc-tile__item">
-            <router-link :to="`/literature/${it.id}`" class="cc-tile__item-link">
+            <router-link :to="atlasLink(`/literature/${it.id}`, route)" class="cc-tile__item-link">
               <span class="cc-tile__item-title">{{ it.title }}</span>
               <span class="cc-tile__item-desc">{{ it.summary }}</span>
             </router-link>
@@ -116,10 +117,10 @@
     <section v-if="loaded && spots.length" class="cc-spots">
       <SectionHeading eyebrow="山水形胜" :title="`${city} · 文学景观`" subtitle="点击进入景点详情" />
       <div class="cc-spots__rail">
-        <router-link v-for="s in spots.slice(0, 12)" :key="s.id" :to="`/spots/${s.id}`" class="cc-spots__chip">
+        <router-link v-for="s in spots.slice(0, 12)" :key="s.id" :to="atlasLink(`/spots/${s.id}`, route)" class="cc-spots__chip">
           {{ s.name }}
         </router-link>
-        <router-link :to="`/regions/${city}`" class="cc-spots__chip cc-spots__chip--all">全部景点 →</router-link>
+        <router-link :to="atlasLink(`/regions/${city}`, route)" class="cc-spots__chip cc-spots__chip--all">全部景点 →</router-link>
       </div>
     </section>
   </div>
@@ -127,14 +128,17 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import api from '../api'
+import { atlasLink, isAtlasPreview, previewPoems, previewPoets, previewSpot, previewSpots } from '../config/atlasPreview'
+import { culturePreviewItems } from '../config/culturePreview'
 import { NINE_CITIES } from '../config/nineCities'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import SectionHeading from '../components/homepage/SectionHeading.vue'
 
 const route = useRoute()
+const router = useRouter()
 const CITY_DESCRIPTORS = {
   菏泽: '黄河入鲁首站，牡丹之都，曹州古韵。',
   济宁: '运河之都，孔孟故里，太白遗风。',
@@ -166,6 +170,15 @@ async function load() {
   loaded.value = false
   errorMsg.value = ''
   partialMsg.value = ''
+  if (isAtlasPreview(route)) {
+    const selected = culturePreviewItems.filter(item => item.region === city.value)
+    groups.value = Object.fromEntries(['festival', 'craft', 'literature', 'food_opera'].map(key => [key, selected.filter(item => item.category === key)]))
+    groups.value.poems = previewPoems.filter(poem => city.value === '济南' ? poem.spotId === 2 : city.value === '泰安' && poem.spotId === 101)
+    poets.value = previewPoets
+    spots.value = city.value === '济南' ? [previewSpot] : city.value === '泰安' ? previewSpots : []
+    loaded.value = true
+    return
+  }
   try {
     const region = city.value
     const results = await Promise.allSettled([
@@ -411,4 +424,10 @@ onMounted(load)
   .cc-tile, .cc-tile--big { grid-column: span 1; }
   .cc-tile--big .cc-tile__list { grid-template-columns: 1fr; }
 }
+.city-culture { max-width:1360px; padding:28px var(--page-gutter) 70px; }
+.cc-hero { padding:18px 0 28px; margin-bottom:24px; }
+.cc-hero__title { font-family:var(--font-display); }
+.cc-hero__seal { background:transparent; color:#a0856355; box-shadow:none; }
+.cc-tile__seal { background:transparent; color:var(--reading-green); border:1px solid var(--border-light); }
+.cc-hero__nav-link, .cc-tile__more, .cc-spots__chip { min-height:44px; display:inline-flex; align-items:center; }
 </style>

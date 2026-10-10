@@ -173,10 +173,20 @@ public class KnowledgeRetrievalService {
         } catch (Exception ignored) { }
     }
 
+    /**
+     * 赏析证据的发布态过滤。与前台口径一致：只有已发布的赏析才可作为证据，
+     * 避免把未经发布的内容当作事实喂给模型。（此前这里完全没有过滤，
+     * 未审核的赏析其实一直在参与检索。）
+     */
+    private static final String PUBLISHED_ANALYSIS_SUBQUERY =
+            "SELECT entity_id FROM content_review WHERE entity_type = 'poem_analysis' AND status = 'published'";
+
     private void addAnalyses(Map<String, EvidenceSnippet> out, String keyword) {
         try {
-            List<PoemAnalysis> rows = analysisMapper.selectList(new LambdaQueryWrapper<PoemAnalysis>()
-                    .like(PoemAnalysis::getAnalysis, keyword).last("LIMIT 3"));
+            LambdaQueryWrapper<PoemAnalysis> wrapper = new LambdaQueryWrapper<PoemAnalysis>()
+                    .like(PoemAnalysis::getAnalysis, keyword).last("LIMIT 3");
+            if (reviewMapper != null) wrapper.inSql(PoemAnalysis::getId, PUBLISHED_ANALYSIS_SUBQUERY);
+            List<PoemAnalysis> rows = analysisMapper.selectList(wrapper);
             for (PoemAnalysis row : rows) add(out, row, null);
         } catch (Exception ignored) { }
     }
@@ -184,8 +194,10 @@ public class KnowledgeRetrievalService {
     private void addAnalysesForPoem(Map<String, EvidenceSnippet> out, Long poemId, EntityContext context) {
         if (poemId == null) return;
         try {
-            List<PoemAnalysis> rows = analysisMapper.selectList(new LambdaQueryWrapper<PoemAnalysis>()
-                    .eq(PoemAnalysis::getPoemId, poemId).last("LIMIT 2"));
+            LambdaQueryWrapper<PoemAnalysis> wrapper = new LambdaQueryWrapper<PoemAnalysis>()
+                    .eq(PoemAnalysis::getPoemId, poemId).last("LIMIT 2");
+            if (reviewMapper != null) wrapper.inSql(PoemAnalysis::getId, PUBLISHED_ANALYSIS_SUBQUERY);
+            List<PoemAnalysis> rows = analysisMapper.selectList(wrapper);
             for (PoemAnalysis row : rows) add(out, row, context);
         } catch (Exception ignored) { }
     }

@@ -1,149 +1,39 @@
-# 项目长期记忆 · sjg-new
+# SJG 项目长期记忆（精编 · 2026-10-10）
 
-> 本文件在 `feat-3d-sandbox-realism` 与 `feat-datav-overhaul` 两个分支上各有一份，内容一致。
+> 详版全文已归档 → `.workbuddy/memory/ARCHIVE-2026-10-09-full.md`（OSS 排障全过程、生图逐条配方、沙盘/大屏细节、promo-film 六步、Windows 机陷阱）。本文件只留跨会话必记的结论与陷阱。
 
-## 一、3D 沙盘模块结构（2026-09-10 起）
+## 仓库 / 分支
+`origin` = github.com/qingzhizhu517-rgb/sjg.git。远程只有 `master`(默认) / `auto/improve-20260814` / `feat-datav-overhaul` / `cloudflare/workers-autoconfig`，**没有 `main`**。四子项目各自独立 npm，非 monorepo；根 `package.json` 只串 `npm run verify:all`。
 
-| 文件 | 职责 |
-|---|---|
-| `display-v2/src/composables/useThreeSandbox.js` | 引擎：场景装配、光照、拾取、动画循环 |
-| `display-v2/src/utils/sandboxTerrain.js` | 纯函数：投影、高度场、分层设色、法线、多边形裁切、地形网格、黄河带状网格 |
-| `display-v2/src/utils/sandboxBuildings.js` | 纯函数：确定性 PRNG、按城市等级生成建筑布局 |
-| `display-v2/tests/sandbox{Terrain,Buildings}.test.js` | node:test 覆盖，共 34 用例 |
+## 媒体存储（2026-10-09 实测）
+历史数据走阿里云 OSS 外链；新增视觉资产打包进 `display-v2/public/`（本地）。
+- OSS bucket `shandong-lit-landscape`（cn-beijing）。唯一上传口 `POST /api/admin/upload` 会 **UUID 改名** → 无法补传库内已引用对象，批量须用 `ossutil` / `oss2` / 匿名 PUT 脚本。
+- `mediaBase.js`：**dev 恒走本地 `public/`**，prod 才拼 `VITE_OSS_BUCKET_URL`。`useImage.js` 白名单同时 glob `public/`，都不中给 SVG 印章占位。
+- ⚠️ **两套并行对象命名空间**：历史 `spots/泰山-实景-01.webp`（无前缀）vs 新素材 `images/spots/x.webp`（带 `images/`）。别混。
+- ⚠️ 凭证**永不贴进对话**，写 `~/.zshrc`。AK 报 `does not belong to you` = 属别的阿里云账号，不是被禁用。
+- ✅ 匿名 PUT 已传完 125 个 / 92.1MB（`scripts/placeholder-assets/upload_http.py`）。待办：清 `images/_anon_probe.txt`、桶权限收回「公共读」。
 
-改动沙盘时必须遵守：
+## 素材缺口与生图
+- 修复排序：① 景点主图 404 → **破图**（★★★★★）→ ② 字段全空 → 印章占位（★★★★）→ ③ 次要图 404（★★）。
+- 配方已固化：`scripts/placeholder-assets/prompt_templates.py` + `docs/design/2026-10-09-asset-prompt-spec.md`。要点：图生图 + `input_fidelity: medium` + 题款逐字写死；**题款取本人诗作原句，绝不杜撰**；规格 诗人 1086×1448 / 景点 1536×1024 / 文化 1024²；服饰按朝代。
+- ⚠️ 生图**必须串行**（并行撞秒级文件名）；裁切用 `scale=W:H:force_original_aspect_ratio=increase,crop=W:H`。
+- 进度：V31→V34 已落地，剩清代 39 位 + 文化 57 条。
+- ⚠️ 死代码 `homepage/CityHero.vue` + `utils/cityHeroMedia.js` 全仓无调用点 → 别再为它生图。
 
-1. **坐标基准**：`projectGeo` 以 lon 117.0 / lat 36.4 为原点，`LON_SCALE=3.06` / `LAT_SCALE=3.8`。
-   1 世界单位 ≈ 29km。垂直夸张约 30–40×（泰山 1532m → 约 2.2 单位），
-   因此**山体坡度必然远陡于现实**，坡上放置物体前要用 `terrainNormalAt` 判坡度。
-2. **地形网格是非索引顶点**（每格点 6 个顶点，为支持边界吸附），
-   不能用 `computeVertexNormals()`——会退化成面法线。必须用解析法线 `terrainNormalAt`。
-3. **绕序固定为 a→c→b / a→d→c**（法线朝 +Y）。写反会导致整片地形被背面剔除，
-   表现为「只看到深色底板」，且控制台无任何报错。
-4. **贴地物体用 `terrainGroundY(x, z, r)` 而非 `getTerrainHeight`**：
-   网格按 0.2 间距采样，山峰处解析高程比插值网面高 0.15+，直接用会悬空。
-5. **噪声频率上限 ≈ 3.3**（波长不低于 0.4 单位），否则在 0.2 网格上走样。
-6. 性能预算：地形构建现为 ~100ms。加大精度前先测这个数。
-7. 沙盘相关逻辑**一律抽成 `src/utils/` 下的纯 `.js` 模块**再写 `node:test`——
-   `.vue` SFC 与 three.js 场景在测试环境跑不了（项目既有约定）。
+## 3D 沙盘 / 数据大屏
+详见归档。必记：沙盘地形是非索引顶点 → 必须用解析法线 `terrainNormalAt`，绕序写反会「只见深色底板且无报错」，贴地用 `terrainGroundY`；逻辑一律抽纯 `.js` 再 `node:test`。大屏卡片必须显式 `flex: N 1 0`；地图 `size` 相对容器**短边** → 用 `min(boxW, boxH*GEO_ASPECT)`，`aspectScale=0.805`；**改配色只改 `styles/global.css` 的 `:root` token**。
 
-黄河河道实测走向（19 点）在 `sandboxTerrain.js` 的 `YELLOW_RIVER_GEO`，
-**数据大屏要画真实河道时直接复用这份数据，别再造一条**。
+## 本机环境（macOS）
+- PATH 被 shim 污染 → 一律绝对路径（`/usr/bin/head`、`/usr/sbin/lsof`、`/usr/bin/nc`…）；⚠️ BSD grep **不支持 `\b` 词边界**（会静默零匹配、把「全部文件」误判成死代码），做引用排查要用 Grep 工具或去掉 `\b`。
+- ⚠️ WorkBuddy 注入 `SERVER__PORT/HOST` 会被 Spring 吃成 `server.port` → 启后端前 **`unset SERVER__PORT SERVER__HOST`** + 显式 `--server.port=8080`。
+- 有效库 **`sjg01`**（`sjg` 是近乎空的旧库）；导出必须加 `--default-character-set=utf8mb4`。**无 Flyway**，迁移靠 `scripts/apply_migration.py`（需系统 `/usr/bin/python3` 的 pymysql），已到 **V34**。
+- 访问 OSS 必须 `--noproxy '*'`（走代理 TLS 失败返 000）。
+- 视觉类改动**必须实测截图**（`~/.local/bin/ego-browser`；本机无 playwright 包）。
 
-## 二、数据大屏（sjg-datav）改造要点
+## 后端 AI / 内容治理
+- 必需环境变量：`LLM_API_KEY`、`JWT_SECRET`(≥32B)、`SPRING_DATASOURCE_PASSWORD`。管理端默认 `admin` / `123456`。
+- ⚠️ `LlmClient` 必须显式发 `thinking:{type:disabled}`，**去掉会让赏析/AI 创作全线失败**；`max-tokens` 默认 3072（赏析 JSON 实测约 1800，1024 必截断）。
+- 实体发布前须 ≥1 条来源关联，否则 409；**例外：AI 赏析生成即 `published`** → RAG 检索**必须过滤 published**。
 
-> 2026-09-10 已按「三栏 + 底部时间轴」重构，当前结构见下。
-
-### 版式骨架
-- 设计稿 1920×1080，`AutoFit` + `useAutoFit` 走 contain 居中缩放（已实测正确，别动）。
-- 顶栏 92 / 三栏 `340 + 1fr + 340` / 底部通栏时间轴 148；左右各三张**等高**卡。
-- **卡片必须显式声明 flex（`flex: N 1 0`）**。父级是 `height:100%` 的 column flex，
-  子项不写 flex 就会被 flex-shrink 按内容比例压扁——右栏曾因此把 8 行榜单裁成 5 行。
-- **组件不要写死自身尺寸**（`SentimentCloud` 的 `width=400/height=300` 曾溢出 324px 宽的卡片）。
-
-### 地图（最容易踩的地方）
-`echarts/lib/coord/geo/geoCreator.js` 里：
-```js
-size = parsePercent(layoutSize, Math.min(容器宽, 容器高))
-if (aspect > 1) { viewRect.width = size; viewRect.height = size / aspect }
-```
-**百分比 layoutSize 相对容器短边，且 size 是地图的长边。**
-写 `'96%'` 在宽扁容器里只会吃到短边，横向空间全浪费（地图曾因此只占中央栏约四成宽）。
-正确做法：按长边显式算绝对像素 —— `fitted = min(boxW, boxH * GEO_ASPECT)`，
-`GEO_ASPECT` 由 GeoJSON 实际经纬跨度 × `aspectScale` 现算。
-`aspectScale` 用 0.805（cos 36.4°）做地理比例修正，ECharts 默认 0.75。
-
-### 数据与筛选
-- 已有但**曾长期零消费**的公开接口：`/api/public/events`、`/dynasties`、`/poet-relations`。
-  加卡片优先考虑它们。**刻意不用 `/timeline`**——每朝代 4 次查询且返回全量不分页。
-- **poets 表没有 region 字段**。城市维度只能走「诗 → `poem.spotId` → `spot.region`」归属；
-  诗人的城市归属 = 其诗所在城市。
-- **文化条目表（`cultural_item`）有 `region` 列**（NULL = 全域性内容）但**没有朝代字段**，
-  所以五脉文华只能按城市下钻、不随朝代变化，卡片标注要如实写明口径。
-- **九城顺序的权威来源是 `/api/public/spots/regions`**（后端按上游→下游返回），
-  前端 `FALLBACK_REGION_ORDER` 仅作接口不可达时的兜底。加城市只改后端。
-- 筛选状态支持 `?region=济南&dynasty=4` 深链预置（挂大屏可固定专题，也便于回归验证）。
-- 五脉的下钻 SWR key 是 `cultural-categories:<region|all>`，各城市独立缓存。
-
-### 主题与字体
-- 主题 token 在 `src/styles/global.css` 的 `:root`。ECharts option 读不到 CSS 变量，
-  统一由 `src/theme/chartTheme.ts` 在模块加载时读取并回落默认值；**改配色只改 CSS 即可**。
-- ECharts 按需注册集中在 `src/theme/echartsSetup.ts`，加图表类型只改那里。
-- 字体分两套栈：标题用 `--dv-serif`（`DvSerif` = Noto Serif SC 子集，354KB 本地托管于
-  `public/fonts/dv-serif.woff2`），正文/数字用 `--dv-sans`。
-  **字重只用 400**——CJK 合成粗体会糊，层级靠字号/字距/颜色。
-  字体子集按「源码 + 后端种子 SQL」抽字，改了大量文案后可重新子集化。
-- `Chart.tsx` 实例只初始化一次、option 变化走 `setOption`、尺寸监听用 `ResizeObserver`。
-  **父组件仍须 `useMemo` 稳定 option**，否则每次渲染都会重放图表动画。
-
-### 三态
-后端不通时不再静默显示 0/`—`：`PanelKit.tsx` 提供 `SkeletonBlock` / `ErrorState` / `EmptyState`，
-`useDashboardData` 的 `hasData` 用于区分「加载中」与「真的没数据」。
-
-### 已删除的死代码（勿再引用）
-`src/pages/DataV/map/*`、`test.tsx`~`test8.tsx`、`components/TimelineChart.tsx`、
-`pages/DataV/stores/index.ts`、`src/types/geojson.d.ts`；
-依赖已移除 `three`、`@react-three/fiber`、`@react-three/drei`、`zustand`、`autofit.js`、`gsap`。
-⚠️ **CLAUDE.md 说 `map/` 目录不存在，是错的**——它曾存在且是死代码，现已删除。
-
-## 三、本机环境限制（影响所有分支操作）
-
-- **无法新建 `feat/xxx` 这类带斜杠的分支**（`cannot lock ref`）。改用扁平名，
-  如 `feat-3d-sandbox-realism`、`feat-datav-overhaul`。
-- `git checkout -b` 在受限时会**静默切到未出生分支**（退出码 0、无提交），
-  随后 `git status` 把 index 里全部文件显示为 `A`。判别：`git rev-parse HEAD`
-  报 `Not a valid object name`。恢复：`git symbolic-ref HEAD refs/heads/master`。
-- ⚠️ **`git checkout` 可能静默删掉工作区文件**（实测一次丢了 96 个）。
-  index 与 HEAD 完好，`git restore --source=HEAD --worktree .` 可无损还原。
-  **每次切分支后必须立刻 `git status --short` 复核，见到 `D` 马上 restore。**
-- 提交后 git 后台 `geometric-repack` 可能报 `renaming pack ... File exists`，
-  用 `git -c gc.auto=0 -c maintenance.auto=false <cmd>` 规避；不影响提交对象。
-- 后端 8080 未运行时系统代理会返回 502；`curl` 用 `localhost` 会命中代理，
-  需用 `127.0.0.1` 并加 `--noproxy '*'`。vite 需显式 `--host 127.0.0.1`。
-- 本会话出现过 **PATH 被清空**（`dirname/grep/head: command not found`），
-  命令开头显式 `export PATH=...` 即可恢复。
-- **托管 node 目录版本号会变**（`22.22.2-2` → `22.22.2-3`），写死路径前先
-  `ls -d .../node/versions/*/`。
-
-## 四、数据库与素材（本机）
-
-- 本机 MySQL 在跑，客户端在 **`/d/app/mysql/install/bin/mysql.exe`**（不在 PATH）。
-  连接参数取环境变量 `MYSQL_HOST/PORT/USER/PASSWORD`（与后端 `SPRING_DATASOURCE_*` 同一套库）。
-- ⚠️ **有效库是 `sjg01`**。`sjg` 是近乎空的旧测试库，别看错。
-- ⚠️ 实例数别信 `information_schema.TABLE_ROWS`（InnoDB 估算），要用 `COUNT(*)`。
-- ⚠️ **导出中文数据必须加 `--default-character-set=utf8mb4`**：
-  mysql 客户端在 Windows 下默认输出 GBK，不加会得到乱码 TSV——
-  连 URL 路径都会变成乱码，进而让远端请求全部 404，极易误判成「素材缺失」。
-  判别：读出来含 `\uFFFD` 就是编码错了。
-- 媒体字段两种形态：**OSS 外链存成 JSON 数组字符串**、**本地资产存 `/images/...` 路径**
-  （落在 `display-v2/public/`）。`[]` 空数组等同于缺失，必须解析后判断。
-- 2026-09-16 审计（`output/media-gaps.md` + `media-gaps.csv`）：
-  - 字段全空：`poem.audio_url` 203/203、`cultural_item.image_url` 63/63
-  - **OSS 实测 404：42 个文件 / 62 处引用**（水墨图 20 + 实景图 21 + 地图 1），需补传或改指本地
-  - 本地引用的 23 个路径磁盘上全部存在
-- ⚠️ **访问阿里云 OSS 必须绕过本机代理**：走系统代理 TLS 握手失败（curl 返回 `000`），
-  加 `--noproxy '*'` 直连才正常（`206`）。本机 DNS 时而 fake-ip 时而真实 IP，会随代理配置变，
-  **先探测再下结论**，不要凭一次失败判定素材缺失。
-- OSS 桶不允许公共列举（`?list-type=2` 返回 AccessDenied），无法反查已有对象清单。
-
-## 五、后端构建（本机配方）
-
-```bash
-export JAVA_HOME="D:\\app\\jdk\\17"
-export PATH="$JAVA_HOME/bin:/c/Users/Aohs/.workbuddy/binaries/PortableGit/versions/1.2.0/mingw64/bin:/c/Users/Aohs/.workbuddy/binaries/PortableGit/versions/1.2.0/usr/bin:/c/Windows/System32:/c/Windows"
-cd backend
-"/d/app/idea/IntelliJ IDEA 2026.1.2/plugins/maven/lib/maven3/bin/mvn.cmd" -o test
-```
-
-- `mvn` 不在 PATH、`mvnw` 不存在；用 IDEA 内置 Maven 的 **`mvn.cmd`**——
-  bash 的 `mvn` 脚本在 Git Bash 下会报
-  `找不到主类 org.codehaus.plexus.classworlds.launcher.Launcher`。
-- **必须用 JDK 17，不要用 IDEA 的 JBR**：JBR 是 Java 25，Lombok 注解处理不生效，
-  会在**未改动的文件**里报一堆「找不到符号 getXxx()」，极易误判成自己改坏了。
-  本机可用 JDK：`/d/app/jdk/{11,17,21}`。
-- `.m2/repository` 已存在，`-o` 离线即可；`mvn test` = 4 个测试类 21 个用例，不需要 DB。
-
-## 六、视觉类改动必须实测截图
-
-纯逻辑测试抓不到渲染层错误（绕序 bug、悬空 bug、右栏塌陷都是截图才发现的）。
-配方见用户级技能 `webgl-headless-screenshot`（3D/WebGL）与 `spa-stub-visual-review`（SPA + 数据桩）。
+## 验证习惯
+`mvn test` 全绿 ≠ 能启动（装配错误只在 `spring-boot:run` 暴露），改 service 构造器后必须真起一次。纯逻辑测试抓不到渲染层错误（绕序、悬空、右栏塌陷都是截图才发现的）。
