@@ -31,8 +31,8 @@
 
 - [x] 保存本轮 Railway/Sites 部署适配到 codex 命名分支，保留旧线上版本记录。
 - [x] 在主项目合入 API 地址、Dockerfile、端口配置和 Spring 上下文回归测试；保留新版页面与后端 LLM 配置。
-- [ ] 执行 `JAVA_HOME=/opt/homebrew/opt/openjdk@21 npm run verify:all`，全部通过后提交应用、清理与部署改动。
+- [x] 执行 `JAVA_HOME=/opt/homebrew/opt/openjdk@21 npm run verify:all`，全部通过后提交应用、清理与部署改动。
 - [x] 检查当前宣传片 JS/Python 语法；历史 original-repair 的 timeline 测试发现旧生成时间轴已被覆盖，按用户选择保留本地，不纳入主干；不调用生成 API 或写数据库。
-- [ ] 复核最终 diff 与暂存文件；记录测试、归档位置与未进行的云端新版发布。
-- [ ] 刷新远端，快进 master；普通 push 同步 auto/improve-20260814 与 master，禁止强推。
-- [ ] 比较本地/远端 SHA 与最终 git status，主目录检出 master；原有 worktree 与专题分支保留。
+- [x] 复核最终 diff 与暂存文件；记录测试、归档位置与未进行的云端新版发布。
+- [x] 刷新远端，快进 master；普通 push 同步 auto/improve-20260814 与 master，禁止强推。
+- [x] 比较本地/远端 SHA 与最终 git status，主目录检出 master；原有 worktree 与专题分支保留。
