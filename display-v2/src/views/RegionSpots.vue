@@ -396,7 +396,12 @@ watch([region, previewMode], loadSpots, { immediate: true })
 } .atlas-spot__more { display:flex; align-items:center; min-height:44px; font-size:13px; color:var(--reading-green); } .back-to-map { min-height:44px; font-size:12px; }
 /* 济南竖幅采用完整 2:3 构图，图注留在画外。 */
 .city-landscape--jinan { width: 100%; height: auto; aspect-ratio: 2 / 3; margin: 18px 0 22px !important; padding-bottom: 24px; box-sizing: content-box; }
-.city-landscape--jinan img { object-fit: contain; mask-image: none; }
+.city-landscape--jinan img {
+  object-fit: contain;
+  mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent), linear-gradient(to bottom, transparent, #000 4%, #000 96%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
 .city-landscape--jinan figcaption { top: auto; bottom: 0; right: 0; writing-mode: horizontal-tb; font-size: 10px; letter-spacing: 1px; }
 #city-spots { scroll-margin-top: 100px; }
 .city-spots-empty :deep(.empty__brush) { width: 70px; height: 28px; margin-bottom: 6px; }
