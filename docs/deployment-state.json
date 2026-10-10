@@ -9,7 +9,7 @@
     "mysql_proxy_id": "13a72fa0-1687-418e-950d-239005eab0d9",
     "mysql_proxy_host": "mainline.proxy.rlwy.net",
     "mysql_proxy_port": 58212,
-    "backend_deployment_id": "60f5e614-cf3d-4ae9-944c-caa0b7e94695",
+    "backend_deployment_id": "b81caf97-faa3-4757-8fca-95c3b61f47be",
     "status": "success",
     "bootstrap_service_id": "db374c4f-0457-4225-b079-8d51a78b2581",
     "bootstrap_deployment_id": "e70d0d4c-d081-4794-80e4-c4effa59c7db",
@@ -18,7 +18,11 @@
     "bootstrap_status": "completed_service_deleted",
     "trial_days_remaining": 30,
     "trial_credit_remaining_usd": 4.997662051125679,
-    "temporary_ssh_key_status": "removed"
+    "temporary_ssh_key_status": "removed",
+    "asset_migration_service_id": "4e462f88-ea95-4b36-a3a1-ffda2de7d4f9",
+    "asset_migration_deployment_id": "0d343e82-b1b3-415c-9153-92c3fa198207",
+    "asset_migration_service_status": "completed_service_deleted",
+    "trial_state_observed_at": "initial_deployment_2026-10-10"
   },
   "sites": {
     "display-v2": {
@@ -26,54 +30,77 @@
       "expected_url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
       "checkout_path": "/Users/a1/.codex/worktrees/ba33/sjg/.local/sites/display-v2",
       "status": "succeeded_private",
-      "commit_sha": "04b215f0ab6710d9a7ac9535d7025ff1b6eb4b59",
-      "deployment_id": "appgdep_6aca2b3d6ae08191a1c24ea3a734c889",
-      "version_id": "appgprj_6aca26e375b081919acfa874a379028d~appgver_4f272aed66088191839d1fe2960b7541",
-      "url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site"
+      "commit_sha": "3027046e2c857d4c4533937abfe34e45e4f4a3f6",
+      "deployment_id": "appgdep_6aca41f0c54c81919a510149ea7022e1",
+      "version_id": "appgprj_6aca26e375b081919acfa874a379028d~appgver_494f14d7ab288191967d9a373a419c6e",
+      "url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
+      "repository_revision": "f67c2c609b4119c299cd0d3cb3e371d35412c9d7"
     },
     "admin-frontend": {
       "project_id": "appgprj_6aca26f42d9081918bc7545e1b373f99",
       "expected_url": "https://qilu-wenmai-admin-qzzhu.noisyamber1.chatgpt.site",
       "checkout_path": "/Users/a1/.codex/worktrees/ba33/sjg/.local/sites/admin-frontend",
       "status": "succeeded_private",
-      "commit_sha": "da9fe78604535461f9d16e598030b81e7c9ad2ae",
-      "deployment_id": "appgdep_6aca2aeaa6408191b6a1b6f2f45da1c4",
-      "version_id": "appgprj_6aca26f42d9081918bc7545e1b373f99~appgver_75b906d031108191b5bb9725d407c817",
-      "url": "https://qilu-wenmai-admin-qzzhu.noisyamber1.chatgpt.site"
+      "commit_sha": "d0773468f72c0320a0b4a1a53ca4e6a66351965d",
+      "deployment_id": "appgdep_6aca415bf7f0819191bb625c13c60fb6",
+      "version_id": "appgprj_6aca26f42d9081918bc7545e1b373f99~appgver_8c9bb86c360081919c6cd3a31fb7cd89",
+      "url": "https://qilu-wenmai-admin-qzzhu.noisyamber1.chatgpt.site",
+      "repository_revision": "f67c2c609b4119c299cd0d3cb3e371d35412c9d7"
     },
     "sjg-datav": {
       "project_id": "appgprj_6aca26caccb0819188666ef76e25ea68",
       "expected_url": "https://qilu-wenmai-datav-qzzhu.noisyamber1.chatgpt.site",
       "checkout_path": "/Users/a1/.codex/worktrees/ba33/sjg/.local/sites/sjg-datav",
       "status": "succeeded_private",
-      "commit_sha": "109d7cc086654cfb9682540648cf92afa205b4c8",
-      "deployment_id": "appgdep_6aca2ad714ac819185797fb2e6517a15",
-      "version_id": "appgprj_6aca26caccb0819188666ef76e25ea68~appgver_7f94fdef9618819183db1e6e387621f0",
-      "url": "https://qilu-wenmai-datav-qzzhu.noisyamber1.chatgpt.site"
+      "commit_sha": "3f087650d0a0c8ff3bdfc68d8cd75c018c25fa4f",
+      "deployment_id": "appgdep_6aca42503ba081918aeb3737405d2357",
+      "version_id": "appgprj_6aca26caccb0819188666ef76e25ea68~appgver_26afdb1d80f481919c6c30e4f49f69b6",
+      "url": "https://qilu-wenmai-datav-qzzhu.noisyamber1.chatgpt.site",
+      "repository_revision": "f67c2c609b4119c299cd0d3cb3e371d35412c9d7"
     }
   },
   "validation": {
-    "backend_tests": 138,
-    "display_tests": 124,
+    "backend_tests": 139,
+    "display_tests": 153,
     "frontend_builds": [
       "display-v2",
       "admin-frontend",
       "sjg-datav"
     ],
     "database_import": "snapshot_and_25_migrations_completed",
-    "browser": "private_login_gate_verified; content_pages_require_owner_login",
+    "browser": "private_login_gate_verified_in_initial_deployment; authenticated_browser_QA_not_run; owner_scoped_HTTP_static_checks_passed",
     "llm": "not_configured",
     "admin_login": "not_verified",
     "oss_upload": "not_verified",
-    "public_api": "6_endpoints_HTTP200_business200_empty_published_content",
+    "public_api": "six_valid_endpoints_HTTP200_business200",
     "cors": "three_site_origins_OPTIONS200_exact_allow_origin",
     "admin_anonymous": "HTTP401",
     "learning_task_absent": "HTTP404",
-    "ai_sse": "error_event_explicitly_reports_missing_LLM_API_KEY"
+    "ai_sse": "error_event_explicitly_reports_missing_LLM_API_KEY",
+    "static_site_content": "three_sites_provenance_f67c2c6_and_14_assets_match_built_artifacts",
+    "database_asset_migrations": {
+      "updated_entities": 78,
+      "verified_entities": 78,
+      "backup_table": "_sjg_asset_backup_20261010",
+      "backup_records": 78,
+      "migration_tracker_records": 30,
+      "completed": [
+        "V32__spot_asset_repair_backfill.sql",
+        "V33__poet_portrait_backfill_p2.sql",
+        "V34__poet_portrait_backfill_p3a.sql"
+      ],
+      "partial": {
+        "filename": "V31__placeholder_asset_backfill.sql",
+        "applied": "poet id133",
+        "tracker_marker": "V31__placeholder_asset_backfill.sql:poet_only",
+        "skipped": "cultural_item local id33 (潍坊风筝制作技艺); exact title absent in cloud; cloud id33 is 孟姜女传说（淄博）"
+      },
+      "content_review": "494 needs_review; no status changes"
+    }
   },
   "repository": {
-    "online_base_sha": "c01773fba580b0a7c15964d2c3a3b03fadffd30d",
-    "online_latest_local_redesign": false,
+    "online_base_sha": "f67c2c609b4119c299cd0d3cb3e371d35412c9d7",
+    "online_latest_local_redesign": true,
     "publication_mode": "manual_upload_and_independent_sites_source_repositories",
     "master_updates_do_not_auto_deploy": true
   }
