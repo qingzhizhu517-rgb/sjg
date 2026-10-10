@@ -87,7 +87,7 @@ test('体验组件响应城市切换，主推荐保持原生页内锚点', async
   const props = reactive({ region: '济南', cityImage: '/jinan.webp', pending: true })
   const page = await setupPage('components/CityExperiences.vue', { cityExperiences: config.cityExperiences, atlasLink: atlas.atlasLink, useRoute: () => ({ query: { preview: 'inkwash' } }) }, props)
   t.after(page.dispose)
-  assert.equal(page.state.experiences.value.primary.title, '泉水慢游')
+  assert.equal(page.state.experiences.value.primary.title, '泉畔漫游')
   assert.match(page.template, /<a[^>]*:href="experiences\.primary\.href"/)
   props.region = '东营'; props.cityImage = '/dongying.webp'; await settle()
   assert.equal(page.state.experiences.value.primary.image, '/dongying.webp')
