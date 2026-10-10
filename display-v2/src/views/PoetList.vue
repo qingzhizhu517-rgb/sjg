@@ -1,13 +1,14 @@
 <template>
   <div class="poets-view">
-    <PageHeading eyebrow="诗文名士 / 齐鲁名士" title="山河之间，遇见故人" description="按姓名与朝代寻找名士，读生平、品诗文，也可从关系图谱展开探索。">
+    <PageHeading eyebrow="诗文名士 / 齐鲁名士" :title="region ? `${region}名士，循文脉而行` : '山河之间，遇见故人'" description="按姓名与朝代寻找名士，读生平、品诗文，也可从关系图谱展开探索。">
       <template #actions><router-link :to="atlasLink('/poems', route)" class="folio-button folio-button--quiet">检索诗词 ↗</router-link></template>
     </PageHeading>
     <div ref="revealRoot" class="poets-content">
       <form class="folio-toolbar" role="search" @submit.prevent="searchPoets">
         <label class="folio-field folio-field--search">查找名士<input v-model="poetSearchInput" class="folio-input" type="search" placeholder="输入姓名、字号或生平关键词" /></label>
-        <div class="folio-actions"><button type="submit" class="folio-button folio-button--primary">查找名士</button><button type="button" class="folio-button folio-button--quiet" :disabled="!poetSearchInput && selectedDynastyId == null" @click="clearPoetFilters">清除条件</button></div>
+        <div class="folio-actions"><button type="submit" class="folio-button folio-button--primary">查找名士</button><button type="button" class="folio-button folio-button--quiet" :disabled="!poetSearchInput && selectedDynastyId == null && !region" @click="clearPoetFilters">清除条件</button></div>
       </form>
+      <p v-if="region" class="poets-region-note">当前城市 · {{ region }} <button type="button" class="folio-button folio-button--quiet" @click="clearRegion">查看全部城市</button></p>
       <section class="poets-toolbar" aria-label="名士浏览方式">
         <DynastyRail
           :dynasties="dynastyItems"
@@ -239,8 +240,8 @@
             <EmptyState
               v-if="poetsLoaded && !filteredEnrichedPoets.length"
               icon="名"
-              message="该朝代暂无收录诗人"
-              hint="换个朝代看看"
+              :message="previewMode ? '暂无符合条件的名士预览样本' : region ? `${region}暂无符合条件的已发布名士` : '该朝代暂无收录诗人'"
+              hint="可更换朝代或清除条件"
             />
           </section>
         </div>
@@ -395,6 +396,8 @@ import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 const router = useRouter()
 const route = useRoute()
 const previewMode = computed(() => isAtlasPreview(route))
+const region = computed(() => typeof route.query.region === 'string' ? route.query.region.trim().replace(/市$/, '') : '')
+const clearRegion = () => router.replace({ query: { ...route.query, region: undefined } })
 const { isAnime } = useTheme()
 const { getImageUrl } = useImage()
 const { map: enrichMap, build, enrich } = usePoetEnrichment()
@@ -492,14 +495,15 @@ const dynastyItems = computed(() => [
 ])
 
 const selectedDynastyName = computed(() => {
-  if (selectedDynastyId.value == null) return '全部名士'
-  return getDynastyName(selectedDynastyId.value) + '名士'
+  const city = region.value ? `${region.value} · ` : ''
+  if (selectedDynastyId.value == null) return city + '全部名士'
+  return city + getDynastyName(selectedDynastyId.value) + '名士'
 })
 
 // ---- enrichment ----
 const poetSearchInput = ref(typeof route.query.keyword === 'string' ? route.query.keyword : '')
 const searchPoets = () => router.replace({ query: { ...route.query, view: 'all', keyword: poetSearchInput.value.trim() || undefined } })
-const clearPoetFilters = () => { poetSearchInput.value = ''; router.replace({ query: { ...route.query, keyword: undefined, dynasty: undefined } }) }
+const clearPoetFilters = () => { poetSearchInput.value = ''; router.replace({ query: { ...route.query, keyword: undefined, dynasty: undefined, region: undefined } }) }
 watch(() => route.query.keyword, value => { poetSearchInput.value = typeof value === 'string' ? value : '' })
 const enrichedPoets = computed(() => (previewMode.value ? poets.value : poets.value.map((p) => enrich(p))).filter(p => !route.query.keyword || `${p.name} ${p.zi || ''} ${p.hao || ''} ${p.biography || ''}`.includes(String(route.query.keyword))))
 const filteredEnrichedPoets = computed(() => {
@@ -1167,7 +1171,8 @@ const applyGraphFilter = () => {
     if (!derivedVisible.value && e.origin === 'derived') return false
     return true
   }
-  const dynOK = (n) => dynastyFilter.value === '全部' || n.dynasty === dynastyFilter.value
+  const regionIds = new Set(poets.value.map(poet => String(poet.id)))
+  const dynOK = (n) => (!region.value || regionIds.has(String(n.poetId ?? n.id))) && (dynastyFilter.value === '全部' || n.dynasty === dynastyFilter.value)
   const dynOkIds = new Set(nodes.filter(dynOK).map((n) => n.id))
   const visibleEdges = edges.filter((e) => relOK(e) && dynOkIds.has(e.source) && dynOkIds.has(e.target))
   const touched = new Set()
@@ -1261,8 +1266,9 @@ const loadPoets = async () => {
   errorMsg.value = null
   poetsLoaded.value = false
   enrichmentLoaded.value = false
+  poets.value = []
   if (previewMode.value) {
-    poets.value = previewPoets.map((poet) => ({
+    poets.value = previewPoets.filter((poet) => !region.value || `${poet.birthplace || ''} ${poet.biography || ''}`.includes(region.value)).map((poet) => ({
       ...poet,
       ...(poet.name === '杜甫' ? {
         avatarUrl: '/media/inkwash/atlas/poet-dufu.webp',
@@ -1276,13 +1282,14 @@ const loadPoets = async () => {
     return
   }
   try {
-    const { data } = await api.swrGet('/poets', { size: 200 })
+    const { data } = await api.swrGet('/poets', { size: 200, ...(region.value ? { region: region.value } : {}) })
     if (currentSeq !== rosterRequestSeq) return
     poets.value = data.records || []
     poetsLoaded.value = true
     await build()
     if (currentSeq !== rosterRequestSeq) return
     enrichmentLoaded.value = true
+    applyGraphFilter()
   } catch (e) {
     if (currentSeq !== rosterRequestSeq) return
     errorMsg.value = '名士数据加载失败，请稍后重试'
@@ -1290,7 +1297,7 @@ const loadPoets = async () => {
   }
 }
 
-watch(previewMode, async () => {
+watch([previewMode, region], async () => {
   initDynastyFromQuery()
   clearGraphWheel()
   safeDestroyGraph()
@@ -1323,6 +1330,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.poets-region-note { display: flex; align-items: center; gap: 16px; color: var(--text-secondary); font-size: 13px; margin: 16px 0; }
 .poets-view {
   max-width: 1440px;
   margin: 0 auto;

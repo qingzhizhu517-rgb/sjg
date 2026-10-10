@@ -11,9 +11,9 @@
         <p class="city-heading__subtitle">{{ cityData.subtitle }}</p>
       </header>
 
-      <figure class="city-landscape">
+      <figure class="city-landscape" :class="{ 'city-landscape--jinan': region === '济南' }">
         <img :src="cityImage" :alt="`${region}山水意象插画`" decoding="async" fetchpriority="high" />
-        <figcaption>{{ region === '泰安' ? '五岳独尊' : illustrationData.reach }}</figcaption>
+        <figcaption>{{ region === '济南' ? 'AI生成 · 济南山水意象' : region === '泰安' ? '五岳独尊' : illustrationData.reach }}</figcaption>
       </figure>
 
       <section class="city-profile" aria-labelledby="city-introduction">
@@ -46,7 +46,7 @@
         </div>
         <router-link :to="atlasLink(`/cities/${region}`, route)" class="city-switch__culture">读{{ region }}文化 <span aria-hidden="true">↗</span></router-link>
       </nav>
-      <header class="atlas-section-header">
+      <header id="city-spots" class="atlas-section-header">
         <h2>经典景点 <img class="atlas-heading-vignette" src="/media/inkwash/atlas/mountain-vignette.webp" alt="" aria-hidden="true" /></h2>
         <router-link :to="atlasLink('/', route)" class="back-to-map">
           <span>阅览其他区域<br />返回地图</span>
@@ -88,22 +88,14 @@
         </router-link>
       </div>
       <EmptyState
-        v-else icon="景"
-        :message="previewMode ? '此城尚无景点预览样本' : '此城景观收录中'"
-        :hint="previewMode ? '可先阅览城市资料，或前往泰安赏景' : '先去别的城市逛逛'"
+        v-else class="city-spots-empty" icon="景"
+        :message="previewMode ? '此城尚无景点预览样本' : '此城景点资料待审核发布'"
+        :hint="previewMode ? '可先阅览城市资料，或前往泰安赏景' : '可先阅览城市资料，或循特色体验探访文脉'"
       >
         <router-link v-if="previewMode" :to="atlasLink('/regions/泰安', route)" class="atlas-preview-return">阅览泰安样张 <span aria-hidden="true">→</span></router-link>
       </EmptyState>
 
-      <section v-if="!errorMsg" class="city-experiences" aria-labelledby="city-experiences-heading">
-        <h2 id="city-experiences-heading" class="atlas-subheading">特色体验 <img class="atlas-heading-vignette" src="/media/inkwash/atlas/mountain-vignette.webp" alt="" aria-hidden="true" loading="lazy" /></h2>
-        <div class="city-experiences__items">
-          <div v-for="experience in experiences" :key="experience.name" class="city-experience">
-            <div class="city-experience__art"><img :src="experience.image" alt="" loading="lazy" /></div>
-            <div><h3>{{ experience.name }}</h3><p>{{ experience.text }}</p></div>
-          </div>
-        </div>
-      </section>
+      <CityExperiences v-if="!errorMsg" :region="region" :city-image="cityImage" :pending="loaded && !spots.length" :preview="previewMode" />
 
       <SourceList v-if="sources.length" :sources="sources" class="city-sources" />
       <footer class="city-atlas__footer">
@@ -127,6 +119,7 @@ import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
 import SourceList from '../components/SourceList.vue'
+import CityExperiences from '../components/CityExperiences.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -138,7 +131,9 @@ const sources = ref([])
 const loaded = ref(false)
 const errorMsg = ref(null)
 const illustrationData = computed(() => cityIllustration(region.value))
-const cityImage = computed(() => region.value === '泰安' ? '/media/inkwash/atlas/taian-landscape.webp' : illustrationData.value.img)
+const cityImage = computed(() => region.value === '济南'
+  ? '/media/inkwash/city-experiences/jinan-portrait-v1.webp'
+  : region.value === '泰安' ? '/media/inkwash/atlas/taian-landscape.webp' : illustrationData.value.img)
 const nextCity = computed(() => nextCityOf(region.value))
 const cityData = computed(() => {
   if (previewMode.value && region.value === '泰安') return {
@@ -193,17 +188,6 @@ const excerpt = (value, limit) => {
   const text = String(value || '').replace(/\s+/g, ' ').trim()
   return text.length > limit ? `${text.slice(0, limit).replace(/[，、；：]$/, '')}…` : text
 }
-const experiences = computed(() => region.value === '泰安' ? [
-  { name: '泰山日出', text: '清晨登顶，观红日破云，云海翻腾。', image: '/media/inkwash/atlas/spot-yuhuangding.webp' },
-  { name: '泰山石刻', text: '循御道访摩崖，品读山石间的千年笔墨。', image: '/media/inkwash/atlas/spot-taishan.webp' },
-  { name: '泰山美食', text: '寻一席风味，尝泰山豆腐与乡土时鲜。', image: '/media/inkwash/atlas/spot-daimiao.webp' },
-  { name: '民俗文化', text: '寻访东岳庙会，感受泰山脚下的烟火人间。', image: '/media/inkwash/atlas/spot-hongmen.webp' },
-] : [
-  { name: '山水漫游', text: '沿山水徐行，读一城自然风光。', image: illustrationData.value.img },
-  { name: '文脉寻踪', text: '寻访古迹，在街巷间走近往昔。', image: illustrationData.value.img },
-  { name: '诗意栖居', text: '伴一卷诗书，慢赏齐鲁山河。', image: illustrationData.value.img },
-  { name: '市井风物', text: '走街串巷，感受当地生活。', image: illustrationData.value.img },
-])
 
 let requestVersion = 0
 const loadSpots = async () => {
@@ -311,14 +295,6 @@ watch([region, previewMode], loadSpots, { immediate: true })
 .atlas-spot__more > span { display: inline-block; transition: transform .25s ease; }
 .atlas-spot:hover .atlas-spot__more > span { transform: translate(2px, -2px); }
 .atlas-spot:focus-visible, .back-to-map:focus-visible, .atlas-preview-return:focus-visible, .city-atlas__footer a:focus-visible { outline: 2px solid #977951; outline-offset: 5px; }
-.city-experiences { margin-top: 22px; }
-.city-experiences .atlas-subheading { padding-bottom: 7px; border-bottom: none; }
-.city-experiences__items { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; padding-top: 9px; }
-.city-experience { display: flex; gap: 10px; align-items: flex-start; }
-.city-experience__art { flex-shrink: 0; width: 61px; height: 61px; border: 1px solid #c0b49f; border-radius: 50%; overflow: hidden; padding: 4px; }
-.city-experience__art img { width: 100%; height: 100%; object-fit: cover; mix-blend-mode: multiply; filter: saturate(.55); }
-.city-experience h3 { font-size: 12px; letter-spacing: .5px; line-height: 1.8; font-weight: 600; }
-.city-experience p { color: var(--atlas-body); font-size: 11px; line-height: 1.6; }
 .city-sources { margin-top: 36px; }
 .city-atlas__footer { display: flex; justify-content: space-between; align-items: center; gap: 20px; border-top: 1px solid var(--atlas-rule); margin-top: 33px; padding-top: 17px; color: var(--atlas-muted); font-size: 10px; letter-spacing: 2px; }
 .city-atlas__footer a { color: var(--atlas-body); text-decoration: none; }
@@ -337,7 +313,6 @@ watch([region, previewMode], loadSpots, { immediate: true })
   .atlas-spot__number { font-size: 21px; }
   .atlas-spot__tag { font-size: 10px; margin-left: 0; }
   .atlas-spot__inscription > span { font-size: 12px; letter-spacing: 1.5px; }
-  .city-experiences__items { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 25px; }
 }
 @media (max-width: 900px) {
   .city-atlas { grid-template-columns: 1fr; }
@@ -389,15 +364,11 @@ watch([region, previewMode], loadSpots, { immediate: true })
   .atlas-spot__tag { font-size: 11px; margin-left: 5px; }
   .atlas-spot__art { height: 205px; margin-top: 7px !important; }
   .atlas-spot__notes { font-size: 13px; line-height: 1.9; gap: 6px; }
-  .city-experiences__items { gap: 20px 14px; }
-  .city-experience { gap: 7px; }
-  .city-experience__art { width: 48px; height: 48px; padding: 2px; }
-  .city-experience h3 { font-size: 11px; }
-  .city-experience p { font-size: 10px; }
   .city-atlas__footer { letter-spacing: 1px; gap: 10px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .atlas-spot__art img, .atlas-spot__more > span { transition: none; }
+  .atlas-spot:hover .atlas-spot__art img, .atlas-spot:hover .atlas-spot__more > span { transform: none; }
 }
 /* 城市切换：九城横排小签，替代空旷的下拉工具栏 */
 .city-switch { display: flex; align-items: center; gap: 18px; padding: 0 0 18px; margin-bottom: 22px; border-bottom: 1px solid var(--atlas-rule); }
@@ -423,4 +394,17 @@ watch([region, previewMode], loadSpots, { immediate: true })
   .atlas-spot:last-child:nth-child(odd) .atlas-spot__art { grid-row: 2 / 4; margin-bottom: 0 !important; }
   .atlas-spot:last-child:nth-child(odd) .atlas-spot__notes { align-self: center; }
 } .atlas-spot__more { display:flex; align-items:center; min-height:44px; font-size:13px; color:var(--reading-green); } .back-to-map { min-height:44px; font-size:12px; }
+/* 济南竖幅采用完整 2:3 构图，图注留在画外。 */
+.city-landscape--jinan { width: 100%; height: auto; aspect-ratio: 2 / 3; margin: 18px 0 22px !important; padding-bottom: 24px; box-sizing: content-box; }
+.city-landscape--jinan img { object-fit: contain; mask-image: none; }
+.city-landscape--jinan figcaption { top: auto; bottom: 0; right: 0; writing-mode: horizontal-tb; font-size: 10px; letter-spacing: 1px; }
+#city-spots { scroll-margin-top: 100px; }
+.city-spots-empty :deep(.empty__brush) { width: 70px; height: 28px; margin-bottom: 6px; }
+.city-spots-empty :deep(.empty__icon) { font-size: 25px; margin-bottom: 8px; }
+.city-atlas__pages :deep(.city-spots-empty) { padding: 24px 16px; }
+.city-switch a:focus-visible { outline: 2px solid var(--reading-green); outline-offset: 3px; }
+@media (max-width: 560px) {
+  .city-atlas__portrait:has(.city-landscape--jinan) .city-heading { min-height: auto; max-width: 100%; }
+  .city-landscape--jinan { position: relative; top: auto; right: auto; width: min(100%, 300px); height: auto; margin: 20px auto 25px !important; opacity: 1; }
+}
 </style>
