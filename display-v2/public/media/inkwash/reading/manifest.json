@@ -1,0 +1,20 @@
+{
+  "provider": "built-in image_gen",
+  "created_at": "2026-10-11",
+  "asset": {
+    "filename": "reading-landscape-v1.webp",
+    "width": 1440,
+    "height": 480,
+    "bytes": 81850,
+    "sha256": "1aa0a70914bfbce1e4a88a8962588c9fcdc4937fda316195fa17a5db8444c7bb",
+    "original_dimensions": [
+      2172,
+      724
+    ],
+    "original_sha256": "621574204fa57a71f79c2f53a971412b3c0a26177ae52f34bc5b8a30b576b33d",
+    "original_filename": "exec-14df04fe-ef2d-49b1-b710-e3b7a95990b0.png"
+  },
+  "prompt": "Use case: illustration-story. Create a premium original raster Chinese ink-wash illustration for a Shandong literary comparative-reading website, horizontal 3:1 panoramic canvas. Warm ivory xuan paper #f5f1e8, soft translucent jade and blue-green mountain washes, fine ink brushwork, understated cinnabar only as a small closed book ribbon. Left third: elegant distant Taishan-like rocky mountain peaks drifting through pale clouds; right third: Jinan-inspired willow branches, still lotus lake and very small pavilion softened into paper; foreground at far right: one open traditional stitched poetry book, blank pages with absolutely NO writing, beside a writing brush and inkstone. The entire central 55% is very calm warm paper negative space with only faint mist so real website headings can sit there. Art edges dissolve organically into paper with no hard rectangular boundaries. Scholarly, gentle, inviting, consistent with traditional Chinese blue-green landscape painting and modern editorial web art. Landscape is an artistic impression, no map coordinates, no literal reconstruction. No text anywhere, no calligraphy, no visible glyphs, no logos, no seals, no watermark, no UI, no border, no frame, no generated diagrams. Keep no letters or fake handwriting even on the book. Richly detailed art at the sides, clean central reading area.",
+  "encoding": "cwebp -q 82 -m 6 -resize 1440 0",
+  "purpose": "AI对读页山水书卷意象横幅；不作为精确地图或实景复原"
+}
