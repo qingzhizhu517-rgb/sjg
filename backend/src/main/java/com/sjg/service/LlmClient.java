@@ -80,6 +80,17 @@ public class LlmClient {
     public void streamChat(List<ChatMessage> messages,
                            Consumer<String> onDelta,
                            Consumer<String> onError) {
+        streamChat(messages, onDelta, onError, null);
+    }
+
+    /**
+     * 带明确完成信号的流式通路。上游普通EOF不代表完整生成；length等异常终止也不回调完成。
+     * 旧三参数调用保留原有EOF行为，新调用方可用onComplete区分完整与中断响应。
+     */
+    public void streamChat(List<ChatMessage> messages,
+                           Consumer<String> onDelta,
+                           Consumer<String> onError,
+                           Runnable onComplete) {
         if (!isConfigured()) {
             onError.accept("AI 服务未配置（缺少 LLM_API_KEY / LLM_BASE_URL）");
             return;
@@ -112,12 +123,28 @@ public class LlmClient {
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(resp.body(), StandardCharsets.UTF_8))) {
                 String line;
+                boolean terminal = false;
+                boolean incomplete = false;
                 while ((line = reader.readLine()) != null) {
                     if (!line.startsWith("data:")) continue;
                     String data = line.substring(5).trim();
-                    if (data.isEmpty() || "[DONE]".equals(data)) continue;
+                    if (data.isEmpty()) continue;
+                    if ("[DONE]".equals(data)) {
+                        terminal = true;
+                        if (onComplete != null) break;
+                        continue;
+                    }
                     try {
                         JsonNode node = mapper.readTree(data);
+                        if (onComplete != null && node.hasNonNull("error")) {
+                            onError.accept("大模型响应出错");
+                            return;
+                        }
+                        JsonNode finish = node.path("choices").path(0).path("finish_reason");
+                        if (finish.isTextual()) {
+                            if ("stop".equals(finish.asText())) terminal = true;
+                            else incomplete = true;
+                        }
                         JsonNode delta = node.path("choices").path(0).path("delta").path("content");
                         if (!delta.isMissingNode() && !delta.isNull()) {
                             String text = delta.asText();
@@ -126,7 +153,9 @@ public class LlmClient {
                     } catch (Exception parseEx) {
                         // 跳过格式异常的单个 chunk，不影响后续
                     }
+                    if (onComplete != null && terminal && !incomplete) break;
                 }
+                if (onComplete != null && terminal && !incomplete) onComplete.run();
             }
         } catch (Exception e) {
             onError.accept("调用大模型失败：" + e.getMessage());
