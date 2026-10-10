@@ -118,3 +118,15 @@ SPRING_DATASOURCE_PASSWORD=${{MySQL.MYSQLPASSWORD}}
 - 一次性素材迁移容器执行成功后删除服务；数据库备份表保留，原有 MySQL 与后端服务继续运行。
 
 线上代码 SHA、各 Sites 独立源码 SHA、版本/部署 ID 及迁移例外记录于 `docs/deployment-state.json`。主干提交仍不会自动触发线上更新。
+
+## 城市册页更新（2026-10-10，展示站代码基线 94d546f）
+
+展示站已发布主干 `94d546fd402117544801f326e66df10a0ee2b480` 的城市页改版。济南侧栏采用新的2:3山水竖幅，特色体验改为一主三辅、不同配图与可点击入口；名士列表支持当前城市筛选，空态明确说明资料待审核发布。五张内置 imagegen 配图的网页 WebP 合计614692字节，完整提示词、尺寸、来源及校验和见 `display-v2/public/media/inkwash/city-experiences/manifest.json`。
+
+- 原主站 Sites 第3版部署 `appgdep_6aca53167b8c8191b11f85496934a86d` 返回 `succeeded`；独立 Sites 源码提交为 `740fedfd46001b420fd2d057f9aa265a71e742fd`。原 owner-private 访问范围保持不变。
+- 展示前端163项测试、构建和主干 GitHub CI run38061047934均通过。1440px桌面、390px手机、本城入口、空态、键盘焦点及减少动态效果经过本地浏览器验收，使用真实云端公开 API。
+- 站点专属授权 HTTP 验证济南路由与版本标记，页面入口、城市/名士脚本及全部五张新图共11个资源与发布包逐字节一致。线上登录后浏览器视觉验收尚未执行。
+- 本轮只重新发布展示站。管理后台、数据大屏和后端仍运行此前 `f67c2c6` 的对应源码，未更改数据库或内容审核状态。各组件代码基线分别记录于部署状态文件。
+- 应用代码已同步 master 与 auto/improve-20260814；后续部署记录提交只有文档变更，不需要重新发布应用。
+
+访问城市页：https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site/regions/%E6%B5%8E%E5%8D%97

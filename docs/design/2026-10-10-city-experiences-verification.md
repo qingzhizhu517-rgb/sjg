@@ -8,3 +8,6 @@
 - 名士入口实际跳转 /poets?region=济南 并展示当前城市提示；经典景点链接使用本页真实锚点，保留查询参数。
 - 浏览器截图保存在 Git 忽略的 .local/city-desktop-final.png、.local/city-mobile-top-final.png、.local/city-mobile-experience-final.png。截图原件供本地验收，不作为长期应用依赖。
 - 当前改动只影响展示站，后端和数据库审核状态保持原有结果；线上发布结果另行记录于 deployment-state.json。
+
+- 发布验收：原主站 Sites 第3版部署 succeeded，应用基线94d546f；站点专属授权 HTTP 核对济南路由、版本标记及11个资源（含全部5张新图），资源与构建包逐字节一致。线上登录后浏览器视觉检查尚未执行，本地浏览器已用真实云端 API 验收。主干 CI run38061047934 success。
+- 验收浏览器 TaskSpace5 已完成关闭，临时本地 Vite 预览已停止；原站点访问范围保持 owner-private。

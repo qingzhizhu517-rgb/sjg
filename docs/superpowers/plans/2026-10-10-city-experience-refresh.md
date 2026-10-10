@@ -13,7 +13,7 @@
 ### Task 1: 配图（主代理负责）
 - [x] 使用五次内置 imagegen 独立生成：`jinan-portrait-v1`（2:3，暖纸水墨湖岸）、`jinan-springs-v1`（3:2，泉水柳岸）、`jinan-scholars-v1`（方形，书案卷轴）、`jinan-poetry-v1`（方形，荷叶书页）、`jinan-oldtown-v1`（方形，泉城街巷）。后面三个保留透明背景。
 - [x] 逐张检查主体、无意外文字、边缘和风格；生成文件复制到 `.local/generated/city-experiences/`，最终版本化 WebP 保存 `display-v2/public/media/inkwash/city-experiences/`。
-- [x] 用 sips/ffmpeg 只缩放和编码，主画宽度 >=1024、体验横幅 >=1024、小景 >=512；五张网页资源合计 <1MB，记录 SHA256、尺寸、提示词、生成方式与用途到同目录 `manifest.json` 和 README。
+- [x] 用 cwebp 只缩放和编码，主画宽度 >=1024、体验横幅 >=1024、小景 >=512；五张网页资源合计 <1MB，记录 SHA256、尺寸、提示词、生成方式与用途到同目录 `manifest.json` 和 README。
 
 ### Task 2: 页面与导航（实现代理负责）
 **Files:** `display-v2/src/views/RegionSpots.vue`、`src/components/CityExperiences.vue`、`src/config/cityExperiences.js`、名士列表的必要 region 筛选；`tests/cityExperiences.test.js`。
@@ -25,6 +25,6 @@
 
 ### Task 3: 验证与发布（主代理负责）
 - [x] 规格审查与代码质量审查分别执行；在现有工作区预览检查济南、泰安、空态、错误态、真实链接、1440/390px和键盘焦点，保留验证截图。无已登录线上浏览器时通过受支持的站点专属 HTTP 访问验证最新HTML与资源。
-- [ ] 合入 master，main 与 auto/improve 分支保持可快进。推送前 `git diff --check`、测试和构建必须通过。
-- [ ] Sites 原项目 `appgprj_6aca26e375b081919acfa874a379028d` 用 source helper 先打开、再同步已提交的源码，保留 manifest、生产公开环境变量与访问范围。官方构建打包后以精确源码 SHA 发布 owner-private。
-- [ ] 核对最终部署 succeeded 与线上新图片；写入 deployment-state、deployment-railway，记录主站更新而其他服务代码基线不变。清理临时预览进程，交付网站链接、图片与提示词清单。
+- [x] 合入 master，main 与 auto/improve 分支保持可快进。推送前 `git diff --check`、测试和构建必须通过。
+- [x] Sites 原项目 `appgprj_6aca26e375b081919acfa874a379028d` 用 source helper 先打开、再同步已提交的源码，保留 manifest、生产公开环境变量与访问范围。官方构建打包后以精确源码 SHA 发布 owner-private。
+- [x] 核对最终部署 succeeded 与线上新图片；写入 deployment-state、deployment-railway，记录主站更新而其他服务代码基线不变。清理临时预览进程，交付网站链接、图片与提示词清单。

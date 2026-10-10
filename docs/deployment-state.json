@@ -22,7 +22,8 @@
     "asset_migration_service_id": "4e462f88-ea95-4b36-a3a1-ffda2de7d4f9",
     "asset_migration_deployment_id": "0d343e82-b1b3-415c-9153-92c3fa198207",
     "asset_migration_service_status": "completed_service_deleted",
-    "trial_state_observed_at": "initial_deployment_2026-10-10"
+    "trial_state_observed_at": "initial_deployment_2026-10-10",
+    "repository_revision": "f67c2c609b4119c299cd0d3cb3e371d35412c9d7"
   },
   "sites": {
     "display-v2": {
@@ -30,11 +31,13 @@
       "expected_url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
       "checkout_path": "/Users/a1/.codex/worktrees/ba33/sjg/.local/sites/display-v2",
       "status": "succeeded_private",
-      "commit_sha": "3027046e2c857d4c4533937abfe34e45e4f4a3f6",
-      "deployment_id": "appgdep_6aca41f0c54c81919a510149ea7022e1",
-      "version_id": "appgprj_6aca26e375b081919acfa874a379028d~appgver_494f14d7ab288191967d9a373a419c6e",
+      "commit_sha": "740fedfd46001b420fd2d057f9aa265a71e742fd",
+      "deployment_id": "appgdep_6aca53167b8c8191b11f85496934a86d",
+      "version_id": "appgprj_6aca26e375b081919acfa874a379028d~appgver_b0718f94fcf0819197e49e121f176c32",
       "url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
-      "repository_revision": "f67c2c609b4119c299cd0d3cb3e371d35412c9d7"
+      "repository_revision": "94d546fd402117544801f326e66df10a0ee2b480",
+      "version_number": 3,
+      "published_at": "2026-10-10T15:01:12.177411+00:00"
     },
     "admin-frontend": {
       "project_id": "appgprj_6aca26f42d9081918bc7545e1b373f99",
@@ -61,14 +64,14 @@
   },
   "validation": {
     "backend_tests": 139,
-    "display_tests": 153,
+    "display_tests": 163,
     "frontend_builds": [
       "display-v2",
       "admin-frontend",
       "sjg-datav"
     ],
     "database_import": "snapshot_and_25_migrations_completed",
-    "browser": "private_login_gate_verified_in_initial_deployment; authenticated_browser_QA_not_run; owner_scoped_HTTP_static_checks_passed",
+    "browser": "city_refresh_local_real_cloud_API_QA_passed_at_1440_and_390px; focus_and_reduced_motion_passed; production_authenticated_browser_QA_not_run; owner_scoped_HTTP_checks_passed",
     "llm": "not_configured",
     "admin_login": "not_verified",
     "oss_upload": "not_verified",
@@ -77,7 +80,7 @@
     "admin_anonymous": "HTTP401",
     "learning_task_absent": "HTTP404",
     "ai_sse": "error_event_explicitly_reports_missing_LLM_API_KEY",
-    "static_site_content": "three_sites_provenance_f67c2c6_and_14_assets_match_built_artifacts",
+    "static_site_content": "display_revision_94d546f_and_11_resources_including_all_five_new_images_match_built_artifacts; admin_and_datav_previous_f67c2c6_checks_unchanged",
     "database_asset_migrations": {
       "updated_entities": 78,
       "verified_entities": 78,
@@ -96,12 +99,30 @@
         "skipped": "cultural_item local id33 (潍坊风筝制作技艺); exact title absent in cloud; cloud id33 is 孟姜女传说（淄博）"
       },
       "content_review": "494 needs_review; no status changes"
+    },
+    "city_refresh": {
+      "generated_images": 5,
+      "webp_bytes": 614692,
+      "unit_tests": 163,
+      "build": "passed",
+      "master_ci": "success",
+      "master_ci_url": "https://github.com/qingzhizhu517-rgb/sjg/actions/runs/38061047934",
+      "published_services": [
+        "display-v2"
+      ],
+      "database_changes": false
     }
   },
   "repository": {
-    "online_base_sha": "f67c2c609b4119c299cd0d3cb3e371d35412c9d7",
+    "online_base_sha": "94d546fd402117544801f326e66df10a0ee2b480",
     "online_latest_local_redesign": true,
     "publication_mode": "manual_upload_and_independent_sites_source_repositories",
-    "master_updates_do_not_auto_deploy": true
+    "master_updates_do_not_auto_deploy": true,
+    "online_component_revisions": {
+      "display-v2": "94d546fd402117544801f326e66df10a0ee2b480",
+      "admin-frontend": "f67c2c609b4119c299cd0d3cb3e371d35412c9d7",
+      "sjg-datav": "f67c2c609b4119c299cd0d3cb3e371d35412c9d7",
+      "backend": "f67c2c609b4119c299cd0d3cb3e371d35412c9d7"
+    }
   }
 }
