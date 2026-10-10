@@ -1,0 +1,114 @@
+{
+  "generation": "built-in image_gen",
+  "created_at": "2026-10-10",
+  "assets": [
+    {
+      "slug": "jinan-portrait-v1",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset: a NEW fine Chinese ink and light mineral-pigment painting for the narrow left sidebar of a Jinan cultural atlas website. Vertical portrait 2:3 composition, high detail, 1024x1536 or higher equivalent. Scene: an evocative Daming Lake willow shore in Jinan, China, not a documentary map. Slender willow branches cascade from upper left, spacious lake and soft reflections at center, modest traditional lakeside pavilion in middle distance, lotus leaves and a few pale pink flowers foreground, faint distant hills. Medium: delicate gongbi linework combined with loose ink wash and restrained pale celadon. Palette: warm ivory paper #f5f2eb, misty sage green, muted lake blue, fine charcoal outlines, subtle ochre. Atmospheric and poetic, NOT photorealistic or cartoon. Upper quarter airy negative space; whole picture edges especially top and bottom dissolve gently into near-ivory unpainted paper so it can blend into a website. Avoid harsh rectangular frame, heavy border, overly saturated greens, elaborate palace, waterfalls. No people. No text, calligraphy, labels, seals, logos, signatures, watermark. This is only an original landscape asset, NOT a screenshot or interface.",
+      "generated_original": "exec-9ebfa1e0-f1cc-4524-a3d0-11bd36278073.png",
+      "file": "jinan-portrait-v1.webp",
+      "original_local_copy": ".local/generated/city-experiences/jinan-portrait-v1.png",
+      "original_sha256": "80a932ae88789248f4ac3eb0ac0cdcf5c0538768ca5ac43d43877eb459d6c26f",
+      "sha256": "300a8709d1377964845f3d1bb5e3a1e6df7110e2e5d49a696a6b89e3a4013bc9",
+      "bytes": 220010,
+      "original_image_info": {
+        "width": 1024,
+        "height": 1536,
+        "pix_fmt": "rgb24"
+      },
+      "width": 1024,
+      "height": 1536,
+      "has_alpha": false
+    },
+    {
+      "slug": "jinan-springs-v1",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset: a NEW horizontal 3:2 ink-wash illustration for the main '泉畔漫游' experience card on a Jinan cultural atlas. Traditional Jinan spring-side setting: shallow clear spring water gently welling up among limestone edging, old willow tree on bank, understated tiled-roof garden pavilion and low stone bridge in mid-distance. Quiet inviting walking path; no figures. This is an artistic spring-city impression, not a scientifically accurate reconstruction of a named monument. Delicate gongbi outlines, layered soft Chinese ink wash, light mineral pigments, very restrained celadon sage and blue-gray on warm ivory paper #f5f2eb. Keep spring water and path in lower center with an airy upper-third composition. Wide comfortable framing, finely textured water reflections, soft mist. Edges fade gracefully into warm blank paper, maintain legible landscape at thumbnail scale. Visually distinct from the portrait Daming Lake scene while belonging to same illustration series. No text, no calligraphy, seals, labels, signatures, logos, watermark. NOT a UI mockup or photo.",
+      "generated_original": "exec-39398210-682c-43fb-b0eb-15a9f9838f89.png",
+      "file": "jinan-springs-v1.webp",
+      "original_local_copy": ".local/generated/city-experiences/jinan-springs-v1.png",
+      "original_sha256": "2ff66a6f815f374a28d6179d55608ddd21261d7a1f8d80bbddab295e23097b6b",
+      "sha256": "6dfc4946c4fa85f5d9a206b86748748e591ccabf105225fc7252229869fbc740",
+      "bytes": 156836,
+      "original_image_info": {
+        "width": 1536,
+        "height": 1024,
+        "pix_fmt": "rgb24"
+      },
+      "width": 1024,
+      "height": 683,
+      "has_alpha": false
+    },
+    {
+      "slug": "jinan-scholars-v1",
+      "transparent": true,
+      "prompt": "Use case: stylized-concept. Asset: one original isolated small Chinese ink-wash vignette for a '名士寻踪' navigation row, square composition with generous empty space and truly transparent background. Subject: a simple antique scholar's wooden writing desk with a rolled scroll, closed stitched book, inkstone and upright brush holder, a single small bamboo sprig. No person or portrait. Elegant traditional gongbi linework with diffuse ink edges and pale celadon and ochre accents, muted ivory objects, matching a warm Chinese cultural atlas. Compact readable central silhouette, detailed yet calm, irregular organically fading boundaries. Transparent background with real alpha, no paper rectangle, no cast black backdrop. NO readable writing or Chinese characters on books or scrolls, no seals, signature, logos, watermark. Not a vector icon, not a circular badge, not a UI screenshot.",
+      "generated_original": "exec-7d509b58-a8f5-442b-983a-fe70018b8548.png",
+      "file": "jinan-scholars-v1.webp",
+      "original_local_copy": ".local/generated/city-experiences/jinan-scholars-v1.png",
+      "original_sha256": "d229df06118e80d12a3f52f71cf4bb32d8f9016cc713aac38ce141c776737ed7",
+      "sha256": "3f57ddf7cc605c87283836fcb34e6432374f3e53ce97aeee7781750d1ad56452",
+      "bytes": 73612,
+      "original_image_info": {
+        "width": 1254,
+        "height": 1254,
+        "pix_fmt": "rgba"
+      },
+      "width": 512,
+      "height": 512,
+      "has_alpha": true,
+      "alpha_extrema": [
+        0,
+        254
+      ]
+    },
+    {
+      "slug": "jinan-poetry-v1",
+      "transparent": true,
+      "prompt": "Use case: stylized-concept. Asset: one original isolated Chinese ink-wash vignette for a '湖山诗词' navigation row, square canvas, truly transparent background. A half-unrolled blank poetry scroll beside a slim elegant lotus stem with a pale pink bloom, two muted green leaves, and a small hint of lakeshore rock and watery ink wash. Composition is an airy poetic botanical still life, no person. Refined gongbi lines and soft spreading ink edges with restrained mineral pigments: celadon sage, warm pale ivory, blue-gray and faint blush. Designed to remain clear at small thumbnail scale; generous transparent margins, compact central composition, irregular feathered brush boundaries. Real alpha transparency, no rectangular paper background. No text or calligraphy anywhere on scroll, no inscriptions, seals, logos, signature or watermark. NOT a badge, cartoon or interface.",
+      "generated_original": "exec-9cdbc3b3-4bd3-4139-85f8-1cf8fe85c967.png",
+      "file": "jinan-poetry-v1.webp",
+      "original_local_copy": ".local/generated/city-experiences/jinan-poetry-v1.png",
+      "original_sha256": "17ad48b0ac20e376c9629c49dc18e91f36787332e3d70dc30cbe656fe1397b94",
+      "sha256": "5f3d885c361ca5ee9263a5af80e906f6bb1d8986f67952fa1cba79bbe160c71f",
+      "bytes": 53130,
+      "original_image_info": {
+        "width": 1254,
+        "height": 1254,
+        "pix_fmt": "rgba"
+      },
+      "width": 512,
+      "height": 512,
+      "has_alpha": true,
+      "alpha_extrema": [
+        0,
+        254
+      ]
+    },
+    {
+      "slug": "jinan-oldtown-v1",
+      "transparent": true,
+      "prompt": "Use case: stylized-concept. Asset: an original isolated Chinese ink-wash vignette for a Jinan '老城风物' navigation row. Square composition, genuinely transparent background. A short old spring-city alley framed by modest gray tiled courtyard houses and one willow branch, shallow clear water channel along stone paving, small traditional doorway and a tiny muted terracotta hanging lantern without characters. An evocative view into local everyday heritage, not an invented named historical reconstruction. No people, no modern signage. Delicate traditional gongbi brush linework, loose atmospheric ink wash, warm ivory, muted sage, blue-gray roof tiles, restrained ochre details. Small architectural cluster readable at thumbnail scale, organic edges softly dissolving into alpha, generous transparent margins. No painted paper rectangle, no black background, no frame or circular badge. No text, characters, seals, signatures, logos, watermark, no UI.",
+      "generated_original": "exec-6e3400ac-cc75-4e8b-a245-cf9aa124c7e9.png",
+      "file": "jinan-oldtown-v1.webp",
+      "original_local_copy": ".local/generated/city-experiences/jinan-oldtown-v1.png",
+      "original_sha256": "cfcc05cc63d5d830ac0ea86d9ee6cd5d5d7a181b352a4c1997a8a29e2dcf1bc0",
+      "sha256": "a676d6c9cdda560dd924dded26c3f5ac7c2cc972120d04616871282cec296975",
+      "bytes": 111104,
+      "original_image_info": {
+        "width": 1254,
+        "height": 1254,
+        "pix_fmt": "rgba"
+      },
+      "width": 512,
+      "height": 512,
+      "has_alpha": true,
+      "alpha_extrema": [
+        0,
+        253
+      ]
+    }
+  ],
+  "web_asset_total_bytes": 614692
+}
