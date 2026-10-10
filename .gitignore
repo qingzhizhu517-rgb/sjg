@@ -64,3 +64,23 @@ else/
 
 # TypeScript build cache
 *.tsbuildinfo
+
+# promo film build output and render intermediates
+# 带斜杠的模式会锚定到本文件所在目录，只有用 **/ 才能匹配嵌套的 .build/
+# （promo-film/v2/.build/、promo-film/original-repair/.build/）
+promo-film/**/.build/
+promo-film/dist/
+# 渲染帧序列与质检产物，跑 v2/capture.mjs 可重建，不入库
+promo-film/v2/capture/
+promo-film/v2/capture-smooth/
+promo-film/v2/quality/
+promo-film/original-repair/quality/
+
+# Local Codex settings, environments and deployment staging
+.codex/
+.venv/
+.local/
+.env.production
+
+# Historical delivered repair project remains local (user decision 2026-10-10)
+promo-film/original-repair/
