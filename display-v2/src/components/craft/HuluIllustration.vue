@@ -1,6 +1,6 @@
 <!-- display-v2/src/components/craft/HuluIllustration.vue -->
 <!-- 东昌葫芦五道工序的程序化水墨插画（零素材成本，GLB 缺失时的主舞台）。
-     各图层按 step 叠加/淡出：青皮 → 去皮晾晒 → 墨线画稿 → 刀刻 → 彩绘系绳。 -->
+     各图层按 step 叠加/淡出：青皮 → 干坯 → 画稿 → 刻线 → 凹槽留色。 -->
 <template>
   <svg
     class="hulu"
@@ -73,15 +73,15 @@
         </g>
       </g>
 
-      <!-- 彩绘：朱梅、石绿叶、泥金祥云 -->
-      <g class="hulu__layer" :class="{ on: step >= 4 }">
-        <path :d="PATTERN[0]" fill="none" stroke="#4a2f1a" stroke-width="3.4" stroke-linecap="round" />
-        <path v-for="(l, i) in LEAVES" :key="'l' + i" :d="l" fill="#5f8a63" opacity=".9" />
+      <!-- 擦去浮色后，深色只在刻线中留存 -->
+      <g class="hulu__layer" :class="{ on: step >= 4 }" fill="none" stroke="#3c3024" stroke-width="1.8">
+        <path v-for="(d, i) in PATTERN" :key="'p' + i" :d="d" stroke-linecap="round" />
+        <path v-for="(l, i) in LEAVES" :key="'l' + i" :d="l" />
         <g v-for="(b, i) in BLOSSOMS" :key="'pb' + i">
-          <circle v-for="(p, j) in petals(b)" :key="j" :cx="p[0]" :cy="p[1]" r="5.4" fill="#c23b22" opacity=".92" />
-          <circle :cx="b[0]" :cy="b[1]" r="2.6" fill="#e9b949" />
+          <circle v-for="(p, j) in petals(b)" :key="j" :cx="p[0]" :cy="p[1]" r="5.4" />
+          <circle :cx="b[0]" :cy="b[1]" r="2.6" />
         </g>
-        <path :d="CLOUD" fill="#d8a93e" opacity=".55" />
+        <path :d="CLOUD" opacity=".55" />
       </g>
 
       <!-- 高光与暗部，统一体积感 -->

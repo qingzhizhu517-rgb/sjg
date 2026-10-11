@@ -1,5 +1,5 @@
 <template>
-  <header class="folio-heading">
+  <header class="folio-heading" :class="{ 'folio-heading--compact': compact }">
     <img v-if="image" class="folio-heading__art" :src="image" alt="" aria-hidden="true" />
     <router-link v-if="backTo" :to="backTo" class="folio-back">← {{ backLabel }}</router-link>
     <p v-if="eyebrow" class="folio-eyebrow">{{ eyebrow }}</p>
@@ -10,5 +10,5 @@
   </header>
 </template>
 <script setup>
-defineProps({ eyebrow: String, title: { type: String, required: true }, description: String, image: { type: String, default: '/media/inkwash/atlas/mountain-vignette.webp' }, backTo: [String, Object], backLabel: { type: String, default: '返回上一级' } })
+defineProps({ eyebrow: String, title: { type: String, required: true }, description: String, compact: Boolean, image: { type: String, default: '/media/inkwash/atlas/mountain-vignette.webp' }, backTo: [String, Object], backLabel: { type: String, default: '返回上一级' } })
 </script>

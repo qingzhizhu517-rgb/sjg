@@ -1,132 +1,92 @@
-// display-v2/src/composables/useCraftProcess.js
 import { ref, computed } from 'vue'
 import { gsap } from 'gsap'
-import {
-  nextStep, prevStep, isLastStep,
-  resolveStepVisible, findStepConflicts,
-} from '../utils/craftProcess'
+import { nextStep, prevStep, isLastStep, resolveStepVisible } from '../utils/craftProcess.js'
 
-const prefersReduce = () =>
-  typeof window !== 'undefined' &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches
+const prefersReduce = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
-/** 部件基准位姿快照（target name → position/rotation/scale clone），保证 enter 幂等 */
-const baseline = new Map()
-
-/** 首次见到该 target 时记录基准位姿 */
-const _snapshot = (target, obj) => {
-  if (!baseline.has(target)) {
-    baseline.set(target, {
-      position: obj.position.clone(),
-      rotation: obj.rotation.clone(),
-      scale: obj.scale.clone(),
-    })
-  }
-}
-
-/**
- * 工序状态机：读 step config → 驱动 useGlbScene（显隐/部件动画/相机）。
- *
- *   const proc = useCraftProcess(config, sceneApi)
- *   await proc.enter(0)          // 进入某步（应用显隐+动画+机位）
- *   proc.next() / proc.prev() / proc.toggleAuto()
- *
- * sceneApi 需要的方法：setVisible / getObject / applyCameraPose / setFreeRoam
- */
+/** 工序实例拥有位姿与动画；切步先停止旧动画再恢复基准，不影响其他工坊。 */
 export function useCraftProcess(config, sceneApi) {
-  const currentStep = ref(0)
-  const playing = ref(false)
-  let partNames = []
-  let autoTimeline = null
-
+  const currentStep = ref(0), playing = ref(false)
+  const baseline = new Map(), animations = new Set()
+  let partNames = [], autoTimeline = null, cameraTween = null, disposed = false
   const steps = config.steps
   const stepMeta = computed(() => steps[currentStep.value])
   const isLast = computed(() => isLastStep(currentStep.value, steps.length))
-
-  /** 由页面在模型加载后注入部件清单 */
-  const setPartNames = (names) => { partNames = names }
-
-  /** 执行单条动画指令（GSAP）。fadeIn/fadeOut 走 opacity，需材质 transparent */
-  const _runAnimation = (anim) => {
-    const obj = sceneApi.getObject(anim.target)
-    if (!obj) { console.warn('[craft] 部件缺失:', anim.target); return null }
-    _snapshot(anim.target, obj)
-    // 先恢复基准位姿再跑动画，避免重复 enter 时 += 相对量累积漂移
-    const base = baseline.get(anim.target)
-    obj.position.copy(base.position)
-    obj.rotation.copy(base.rotation)
-    obj.scale.copy(base.scale)
-    const d = anim.duration ?? 1
-    const props = { duration: d, ease: 'power2.inOut' }
-    if (anim.delay) props.delay = anim.delay
-    const tl = gsap.timeline()
-    if (anim.rotateY != null) tl.to(obj.rotation, { y: `+=${anim.rotateY}`, ...props }, 0)
-    if (anim.rotateX != null) tl.to(obj.rotation, { x: `+=${anim.rotateX}`, ...props }, 0)
-    if (anim.moveX != null) tl.to(obj.position, { x: `+=${anim.moveX}`, ...props }, 0)
-    if (anim.moveY != null) tl.to(obj.position, { y: `+=${anim.moveY}`, ...props }, 0)
-    if (anim.moveZ != null) tl.to(obj.position, { z: `+=${anim.moveZ}`, ...props }, 0)
-    if (anim.scale != null) tl.to(obj.scale, { x: anim.scale, y: anim.scale, z: anim.scale, ...props }, 0)
-    if (anim.fadeOut) tl.to(obj, { ...props, onStart: () => { obj.visible = true }, onComplete: () => { obj.visible = false } }, 0)
-    if (anim.fadeIn) tl.fromTo(obj.scale, { x: 0.001, y: 0.001, z: 0.001 }, { x: 1, y: 1, z: 1, ...props, onStart: () => { obj.visible = true } }, 0)
-    return tl
+  const materialEntries = obj => {
+    const materials = new Set()
+    const collect = node => [].concat(node.material || []).forEach(m => materials.add(m))
+    if (obj.traverse) obj.traverse(collect); else collect(obj)
+    return [...materials]
   }
-
-  /** 进入第 i 步：显隐 → 动画 → 相机 */
-  const enter = (i) => {
-    const step = steps[i]
-    if (!step) return
-    currentStep.value = i
-
-    for (const c of findStepConflicts(step, partNames)) {
-      console.warn('[craft] 步骤冲突（fadeOut 目标仍在 visible）:', c)
+  const snapshot = name => {
+    const obj = sceneApi.getObject(name)
+    if (obj && !baseline.has(name)) baseline.set(name, {
+      obj, position: obj.position.clone(), rotation: obj.rotation.clone(), scale: obj.scale.clone(),
+      materials: materialEntries(obj).map(material => ({ material, opacity: material.opacity, transparent: material.transparent })),
+    })
+  }
+  const setPartNames = names => { partNames = [...names]; partNames.forEach(snapshot) }
+  const cancelAnimations = () => {
+    animations.forEach(t => t.kill()); animations.clear(); cameraTween?.kill?.(); cameraTween = null
+  }
+  const restore = () => baseline.forEach(base => {
+    base.obj.position.copy(base.position); base.obj.rotation.copy(base.rotation); base.obj.scale.copy(base.scale)
+    base.materials.forEach(({ material, opacity, transparent }) => { material.opacity = opacity; material.transparent = transparent; material.needsUpdate = true })
+  })
+  const runAnimation = anim => {
+    snapshot(anim.target)
+    const base = baseline.get(anim.target)
+    if (!base) return
+    const obj = base.obj, props = { duration: anim.duration ?? 1, delay: anim.delay || 0, ease: 'power2.inOut' }
+    const tl = gsap.timeline(); animations.add(tl)
+    for (const [key, axis, target] of [['rotateY', 'y', obj.rotation], ['rotateX', 'x', obj.rotation], ['moveX', 'x', obj.position], ['moveY', 'y', obj.position], ['moveZ', 'z', obj.position]]) {
+      if (anim[key] != null) tl.to(target, { [axis]: `+=${anim[key]}`, ...props }, 0)
     }
-
+    if (anim.scale != null) tl.to(obj.scale, { x: base.scale.x * anim.scale, y: base.scale.y * anim.scale, z: base.scale.z * anim.scale, ...props }, 0)
+    if (anim.fadeIn || anim.fadeOut) {
+      obj.visible = true
+      base.materials.forEach(({ material, opacity }) => {
+        material.transparent = true; material.needsUpdate = true
+        const end = { ...props, opacity: anim.fadeOut ? 0 : opacity }
+        if (anim.fadeIn) tl.fromTo(material, { opacity: 0 }, end, 0); else tl.to(material, end, 0)
+      })
+      tl.to({}, { ...props, onComplete: () => { obj.visible = !anim.fadeOut } }, 0)
+    }
+  }
+  const stopAuto = () => { playing.value = false; autoTimeline?.kill(); autoTimeline = null }
+  const applyStep = i => {
+    if (disposed || !steps[i]) return
+    const step = steps[i], reduced = prefersReduce()
+    cancelAnimations(); (step.animations || []).forEach(a => snapshot(a.target)); restore()
+    currentStep.value = i
     sceneApi.setVisible(resolveStepVisible(step, partNames))
     sceneApi.setFreeRoam(isLastStep(i, steps.length))
-
-    if (!prefersReduce()) {
-      for (const anim of step.animations || []) _runAnimation(anim)
-    } else {
-      // reduced-motion：直接应用终态（fadeOut → 隐藏，fadeIn → 显示）
-      for (const anim of step.animations || []) {
-        const obj = sceneApi.getObject(anim.target)
-        if (!obj) continue
-        if (anim.fadeOut) obj.visible = false
-        if (anim.fadeIn) obj.visible = true
-      }
-    }
-    sceneApi.applyCameraPose(step.camera)
-  }
-
-  const next = () => { stopAuto(); enter(nextStep(currentStep.value, steps.length)) }
-  const prev = () => { stopAuto(); enter(prevStep(currentStep.value, steps.length)) }
-
-  const stopAuto = () => {
-    playing.value = false
-    autoTimeline?.kill()
-    autoTimeline = null
-  }
-
-  /** 自动播放：从当前步顺序走到末步 */
-  const toggleAuto = () => {
-    if (playing.value) { stopAuto(); return }
-    if (prefersReduce()) { enter(steps.length - 1); return }
-    playing.value = true
-    autoTimeline = gsap.timeline({
-      onComplete: () => { playing.value = false },
+    if (!reduced) (step.animations || []).forEach(runAnimation)
+    else (step.animations || []).forEach(anim => {
+      const obj = sceneApi.getObject(anim.target)
+      if (!obj) return
+      if (anim.fadeOut) obj.visible = false
+      if (anim.fadeIn) obj.visible = true
     })
+    cameraTween = sceneApi.applyCameraPose(step.camera && { ...step.camera, ...(reduced ? { duration: 0 } : {}) })
+  }
+  const enter = i => { stopAuto(); applyStep(i) }
+  const next = () => enter(nextStep(currentStep.value, steps.length))
+  const prev = () => enter(prevStep(currentStep.value, steps.length))
+  const toggleAuto = () => {
+    if (disposed) return
+    if (playing.value) return stopAuto()
+    if (prefersReduce()) { applyStep(steps.length - 1); return }
+    if (isLast.value) applyStep(0)
+    playing.value = true
+    autoTimeline = gsap.timeline({ onComplete: () => { playing.value = false; autoTimeline = null } })
     for (let i = currentStep.value; i < steps.length; i++) {
-      const idx = i
-      autoTimeline.call(() => enter(idx), null, '+=0.2')
-      const dur = (steps[idx].animations || []).reduce((m, a) => Math.max(m, (a.duration ?? 1) + (a.delay ?? 0)), 0)
-      autoTimeline.to({}, { duration: Math.max(dur, 1.5) })  // 每步驻留
+      const index = i
+      autoTimeline.call(() => applyStep(index), null, '+=0.2')
+      const duration = (steps[index].animations || []).reduce((max, a) => Math.max(max, (a.duration ?? 1) + (a.delay || 0)), 0)
+      autoTimeline.to({}, { duration: Math.max(duration, 1.5) })
     }
   }
-
-  const dispose = () => {
-    stopAuto()
-    baseline.clear()
-  }
-
+  const dispose = () => { disposed = true; stopAuto(); cancelAnimations(); restore(); baseline.clear() }
   return { currentStep, stepMeta, isLast, playing, setPartNames, enter, next, prev, toggleAuto, stopAuto, dispose }
 }

@@ -6,9 +6,9 @@
         <div class="craft-feature__art"><HuluIllustration :step="4" :animated="false" /></div>
         <div class="craft-feature__body">
           <p class="folio-eyebrow">专题工坊 · 聊城 · 国家级非遗</p>
-          <h2>东昌葫芦雕刻 · 五道工序</h2>
-          <p>选料、去皮晾晒、画稿、雕刻、上色——一步步看一只生葫芦如何变成刻绘精美的器物。</p>
-          <span class="craft-feature__go">进入工坊 <i aria-hidden="true">↗</i></span>
+          <h2>东昌葫芦雕刻 · 立体工坊</h2>
+          <p>先看匠人实录，再选坯布纹、亲手描刻、敷色擦色。转动器物近看刻痕，保存属于自己的葫芦作品。</p>
+          <span class="craft-feature__go">看视频，试制作 <i aria-hidden="true">↗</i></span>
         </div>
       </router-link>
     </template>

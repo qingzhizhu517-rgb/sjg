@@ -40,6 +40,10 @@
   justify-content: flex-end;
   padding-top: var(--sp-2);
 }
+/* 操作型页面复用紧凑页头，将更多首屏空间交给舞台和工具。 */
+.app-root .route-page .folio-heading--compact { padding-bottom: var(--sp-5); margin-bottom: var(--sp-5); }
+.app-root .route-page .folio-heading--compact h1 { font-size: clamp(28px, 3vw, 38px); margin: var(--sp-2) 0; }
+.app-root .route-page .folio-heading--compact .folio-heading__description { font-size: var(--fs-body-sm); margin: var(--sp-2) 0 0; }
 .app-root .route-page .folio-toolbar {
   gap: var(--sp-4) var(--sp-5);
   padding: var(--sp-5);

@@ -55,6 +55,8 @@ const fallbackSrc = ref('')
 
 let sceneApi = null
 let io = null
+let disposed = false
+const requestController = new AbortController()
 
 /** 暴露 sceneApi 给父组件 */
 defineExpose({
@@ -65,7 +67,7 @@ defineExpose({
 const modelAvailable = async () => {
   if (!props.modelUrl) return false
   try {
-    const res = await fetch(props.modelUrl, { method: 'HEAD' })
+    const res = await fetch(props.modelUrl, { method: 'HEAD', signal: requestController.signal })
     return res.ok && !(res.headers.get('content-type') || '').includes('text/html')
   } catch {
     return false
@@ -75,10 +77,12 @@ const modelAvailable = async () => {
 const initScene = async () => {
   // 模型缺失直接走插画，不再拉取 three.js 整包
   if (!(await modelAvailable())) {
+    if (disposed) return
     activateFallback()
     return
   }
   const { useGlbScene, canUseWebGL } = await import('../../composables/useGlbScene')
+  if (disposed) return
   if (!canUseWebGL()) {
     activateFallback()
     return
@@ -92,7 +96,6 @@ const initScene = async () => {
 
   try {
     await sceneApi.init(canvasRef.value)
-    emit('ready', sceneApi)
   } catch (e) {
     console.warn('[CraftStage] init failed:', e)
     activateFallback()
@@ -101,6 +104,9 @@ const initScene = async () => {
 }
 
 const activateFallback = () => {
+  if (disposed) return
+  sceneApi?.dispose()
+  sceneApi = null
   fallback.value = true
   updateFallbackImage()
   loading.value = false
@@ -113,7 +119,10 @@ const loadModel = async () => {
   progress.value = 0
   try {
     const { partNames } = await sceneApi.load(props.modelUrl)
+    if (disposed) return
+    sceneApi.partNames = partNames
     loading.value = false
+    emit('ready', sceneApi)
     return partNames
   } catch (e) {
     console.warn('[CraftStage] GLB load failed, fallback:', e)
@@ -140,8 +149,10 @@ const setupIO = () => {
 
 onMounted(async () => {
   await initScene()
+  if (disposed) return
   if (!fallback.value) {
     await loadModel()
+    if (disposed) return
     setupIO()
   } else {
     updateFallbackImage()
@@ -154,6 +165,8 @@ watch(() => props.stepIndex, () => {
 })
 
 onBeforeUnmount(() => {
+  disposed = true
+  requestController.abort()
   io?.disconnect()
   sceneApi?.dispose()
 })

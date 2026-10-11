@@ -30,6 +30,10 @@ export function useGlbScene() {
   let hoverCb = null
   let onProgress = null
   let downPos = null
+  let disposed = false
+  let resizeObserver = null
+  let cameraTimeline = null
+  const decoders = new Set()
   const originalMaterials = new Map()  // mesh.uuid -> material（toon 还原用）
 
   const init = async (canvas) => {
@@ -66,6 +70,7 @@ export function useGlbScene() {
     }
     resize()
     window.addEventListener('resize', resize)
+    if (typeof ResizeObserver !== 'undefined') { resizeObserver = new ResizeObserver(resize); resizeObserver.observe(canvas) }
     init._resize = resize
 
     canvas.addEventListener('pointermove', _handlePointer)
@@ -84,7 +89,8 @@ export function useGlbScene() {
   const load = (source) =>
     new Promise((resolve, reject) => {
       const onLoaded = (obj) => {
-        if (root) scene.remove(root)
+        if (disposed) { disposeObject(obj); resolve({ partNames: [] }); return }
+        if (root) { scene.remove(root); disposeObject(root); originalMaterials.clear() }
         root = obj
         scene.add(root)
         root.traverse((m) => {
@@ -94,14 +100,15 @@ export function useGlbScene() {
       }
       if (typeof source !== 'string') { onLoaded(source); return }
       const draco = new DRACOLoader()
+      decoders.add(draco)
       draco.setDecoderPath('/draco/gltf/')
       const loader = new GLTFLoader()
       loader.setDRACOLoader(draco)
       loader.load(
         source,
-        (gltf) => onLoaded(gltf.scene),
+        (gltf) => { draco.dispose(); decoders.delete(draco); onLoaded(gltf.scene) },
         (ev) => { if (onProgress && ev.total) onProgress(ev.loaded / ev.total) },
-        (err) => reject(err),
+        (err) => { draco.dispose(); decoders.delete(draco); reject(err) },
       )
     })
 
@@ -118,16 +125,24 @@ export function useGlbScene() {
     if (!root) return
     const set = names instanceof Set ? names : new Set(names)
     root.traverse((n) => {
-      if (n.name && !n.isScene) n.visible = set.has(n.name)
+      if (n === root) return
+      if (n.name && !n.isScene) {
+        let keep = set.has(n.name)
+        if (!keep && n.children.length) n.traverse(child => { if (set.has(child.name)) keep = true })
+        n.visible = keep
+      }
     })
   }
 
   /** 相机机位 tween（GSAP）。pose = { pos: [x,y,z], target: [x,y,z], duration? } */
   const applyCameraPose = (pose) => {
     if (!camera || !pose) return
+    cameraTimeline?.kill()
     const d = pose.duration ?? 1.2
-    gsap.to(camera.position, { x: pose.pos[0], y: pose.pos[1], z: pose.pos[2], duration: d, ease: 'power2.inOut', overwrite: 'auto' })
-    gsap.to(controls.target, { x: pose.target[0], y: pose.target[1], z: pose.target[2], duration: d, ease: 'power2.inOut', overwrite: 'auto' })
+    cameraTimeline = gsap.timeline()
+    cameraTimeline.to(camera.position, { x: pose.pos[0], y: pose.pos[1], z: pose.pos[2], duration: d, ease: 'power2.inOut' }, 0)
+    cameraTimeline.to(controls.target, { x: pose.target[0], y: pose.target[1], z: pose.target[2], duration: d, ease: 'power2.inOut' }, 0)
+    return cameraTimeline
   }
 
   const _pick = (ev) => {
@@ -139,8 +154,9 @@ export function useGlbScene() {
     )
     raycaster.setFromCamera(ndc, camera)
     const hits = raycaster.intersectObjects(root.children, true)
-    const hit = hits.find((h) => h.object.visible && _named(h.object))
-    return hit ? { name: _named(hit.object), point: hit.point } : null
+    const visible = obj => { for (let p = obj; p; p = p.parent) if (!p.visible) return false; return true }
+    const hit = hits.find((h) => visible(h.object) && _named(h.object))
+    return hit ? { name: _named(hit.object), point: hit.point, uv: hit.uv } : null
   }
 
   /** 向上找最近的有名祖先（纹样层可能挂在本体下） */
@@ -183,15 +199,23 @@ export function useGlbScene() {
   const getRoot = () => root
   const getOriginalMaterials = () => originalMaterials
 
+  const disposeObject = obj => {
+    const materials = new Set(), textures = new Set(), geometries = new Set()
+    obj?.traverse(m => { if (m.isMesh) { geometries.add(m.geometry); [].concat(m.material).forEach(mt => { if (!mt) return; materials.add(mt); Object.values(mt).forEach(value => { if (value?.isTexture) textures.add(value) }) }) } })
+    textures.forEach(t => t.dispose()); materials.forEach(m => m.dispose()); geometries.forEach(g => g?.dispose())
+  }
+
   const dispose = () => {
+    disposed = true
     pause()
+    cameraTimeline?.kill(); resizeObserver?.disconnect(); decoders.forEach(d => d.dispose()); decoders.clear()
     window.removeEventListener('resize', init._resize)
     const canvas = renderer?.domElement
     canvas?.removeEventListener('pointermove', _handlePointer)
     canvas?.removeEventListener('pointerdown', _handleDown)
     canvas?.removeEventListener('pointerup', _handleClick)
     controls?.dispose()
-    root?.traverse((m) => { if (m.isMesh) { m.geometry?.dispose(); [].concat(m.material).forEach((mt) => mt?.dispose?.()) } })
+    disposeObject(root)
     renderer?.dispose()
     renderer = scene = camera = controls = root = raycaster = null
     clickCb = hoverCb = onProgress = null
@@ -206,14 +230,14 @@ export function useGlbScene() {
   }
 }
 
-/** 低端机 / WebGL 不可用判定（降级静态图用） */
+/** 能力探测仅依据 WebGL；CPU/内存字段缺失不直接排除设备。 */
 export const canUseWebGL = () => {
   try {
     const c = document.createElement('canvas')
-    if (!(c.getContext('webgl2') || c.getContext('webgl'))) return false
-    const cores = navigator.hardwareConcurrency || 4
-    const mem = navigator.deviceMemory || 4
-    return cores >= 4 && mem >= 4
+    const context = c.getContext('webgl2')
+    if (!context) return false
+    context.getExtension('WEBGL_lose_context')?.loseContext()
+    return true
   } catch {
     return false
   }
