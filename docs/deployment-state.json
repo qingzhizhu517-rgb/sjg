@@ -31,13 +31,13 @@
       "expected_url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
       "checkout_path": "/Users/a1/.codex/worktrees/ba33/sjg/.local/sites/display-v2",
       "status": "succeeded_private",
-      "commit_sha": "58162be96f1a4e115ad54da364a3cf51be859dfa",
-      "deployment_id": "appgdep_6acaf8fa94e88191ad727604b80a765a",
-      "version_id": "appgprj_6aca26e375b081919acfa874a379028d~appgver_b9ba6e88082c8191833ff8c30e03a8fc",
+      "commit_sha": "84cc29ccac45188346af516d8f25cde83a2e440d",
+      "deployment_id": "appgdep_6acb03d9fcb081918433b35cb89cb092",
+      "version_id": "appgprj_6aca26e375b081919acfa874a379028d~appgver_c275da42b2bc8191ac3a1f0137485e0b",
       "url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
-      "repository_revision": "32974f55d31d80137e420ab5b30fa142a4490380",
-      "version_number": 5,
-      "published_at": "2026-10-11T02:48:38.959285+00:00"
+      "repository_revision": "8912721b81f96bd8fc3de47940c9503db01592a8",
+      "version_number": 6,
+      "published_at": "2026-10-11T03:34:58.748303+00:00"
     },
     "admin-frontend": {
       "project_id": "appgprj_6aca26f42d9081918bc7545e1b373f99",
@@ -71,16 +71,16 @@
       "sjg-datav"
     ],
     "database_import": "snapshot_and_25_migrations_completed",
-    "browser": "AI_reading_local_QA_passed_at_1440_and_390px_with_real_cloud_API_empty_state_and_status; preview_selection_reference_draft_export_passed; reduced_motion_and_alias_routes_passed; production_authenticated_DOM_QA_not_run; owner_scoped_HTTP_artifact_checks_passed",
+    "browser": "local_browser_real_cloud_API_passed_Jinan_region_spot_detail_and_reading_pair; no_preview; no_overflow; production_authenticated_DOM_QA_not_run",
     "llm": "not_configured_user_requested_UI_and_samples_first",
-    "admin_login": "not_verified",
+    "admin_login": "verified_existing_admin_account",
     "oss_upload": "not_verified",
-    "public_api": "six_valid_endpoints_HTTP200_business200",
+    "public_api": "53_endpoints_verified; nine_cities_each_have_real_spot_and_poem; published_details_have_sources",
     "cors": "three_site_origins_OPTIONS200_exact_allow_origin",
     "admin_anonymous": "HTTP401",
     "learning_task_absent": "HTTP404",
     "ai_sse": "error_event_explicitly_reports_missing_LLM_API_KEY",
-    "static_site_content": "display_revision_32974f5_and_10_resources_including_homepage_JS_CSS_AI_reading_JS_and_three_new_WebP_match_built_artifacts; other_services_preserved",
+    "static_site_content": "display_revision_8912721_and_6_resources_match_built_artifacts; HTML_entry_matches; other_services_preserved",
     "database_asset_migrations": {
       "updated_entities": 78,
       "verified_entities": 78,
@@ -155,15 +155,44 @@
         "display-v2"
       ],
       "database_changes": false
+    },
+    "content_publication": {
+      "application_revision": "8912721b81f96bd8fc3de47940c9503db01592a8",
+      "published_entities": 32,
+      "public_counts": {
+        "spots": 11,
+        "poems": 9,
+        "poets": 8,
+        "dynasties": 4
+      },
+      "remaining_needs_review": 462,
+      "source_documents": 32,
+      "source_links": 34,
+      "held_poem_ids": [
+        97,
+        161,
+        182
+      ],
+      "display_tests": 214,
+      "display_build": "passed",
+      "master_ci": "success",
+      "master_ci_url": "https://github.com/qingzhizhu517-rgb/sjg/actions/runs/38108742683",
+      "audit_file": "docs/content-publication/2026-10-11-nine-cities.json",
+      "published_services": [
+        "display-v2"
+      ],
+      "database_changes": true,
+      "hosted_resources_verified": 6,
+      "production_authenticated_DOM_QA": "not_run"
     }
   },
   "repository": {
-    "online_base_sha": "32974f55d31d80137e420ab5b30fa142a4490380",
+    "online_base_sha": "8912721b81f96bd8fc3de47940c9503db01592a8",
     "online_latest_local_redesign": true,
     "publication_mode": "manual_upload_and_independent_sites_source_repositories",
     "master_updates_do_not_auto_deploy": true,
     "online_component_revisions": {
-      "display-v2": "32974f55d31d80137e420ab5b30fa142a4490380",
+      "display-v2": "8912721b81f96bd8fc3de47940c9503db01592a8",
       "admin-frontend": "f67c2c609b4119c299cd0d3cb3e371d35412c9d7",
       "sjg-datav": "f67c2c609b4119c299cd0d3cb3e371d35412c9d7",
       "backend": "3c5c46a49102f404004cb05a8fa4ddf8637b9381"

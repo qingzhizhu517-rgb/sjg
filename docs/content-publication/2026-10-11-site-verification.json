@@ -1,0 +1,33 @@
+{
+  "sourceRevision": "8912721b81f96bd8fc3de47940c9503db01592a8",
+  "url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
+  "htmlEntryMatches": true,
+  "matchedResources": [
+    {
+      "path": "/deployment-info.json",
+      "sha256": "57e5cfad3e4962326086e2f870756f20fde307c761482d771297dd6d7ee23d2d"
+    },
+    {
+      "path": "/assets/index-Tk7__y6D.js",
+      "sha256": "a0a3e5ee189e295de47fdaf273093b32ad90b58b0d47fd384a3b059dd9f294c8"
+    },
+    {
+      "path": "/assets/MapView-C8VH-TIM.js",
+      "sha256": "9c74de437f0b3ac4aa02d12643585a55c19780251d3b4272800d9aae4c8f0f37"
+    },
+    {
+      "path": "/assets/RegionSpots-Bf0nxCPd.js",
+      "sha256": "14abe3367c208b9c83bf5fa550906b48ef80eef555c5779a9e865498bb8d23e7"
+    },
+    {
+      "path": "/assets/ReadingWorkspace--n9LxgQy.js",
+      "sha256": "3b42908414cc1b45a46aeadf7e42e3eb4cd95c259bb56139b5c305c39eaeedcb"
+    },
+    {
+      "path": "/assets/api-BzcvzfGq.js",
+      "sha256": "7ab78df4167d7053cb8ff26ab8f6375d90ad190b51a7f1b32188712e651a57f1"
+    }
+  ],
+  "onlineDomVerified": false,
+  "localBrowserUsesRealCloudApi": true
+}
