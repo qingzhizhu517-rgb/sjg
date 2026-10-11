@@ -31,13 +31,13 @@
       "expected_url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
       "checkout_path": "/Users/a1/.codex/worktrees/ba33/sjg/.local/sites/display-v2",
       "status": "succeeded_private",
-      "commit_sha": "84cc29ccac45188346af516d8f25cde83a2e440d",
-      "deployment_id": "appgdep_6acb03d9fcb081918433b35cb89cb092",
-      "version_id": "appgprj_6aca26e375b081919acfa874a379028d~appgver_c275da42b2bc8191ac3a1f0137485e0b",
+      "commit_sha": "da51d0803f84085287ee679d49e9e19850196afc",
+      "deployment_id": "appgdep_6acb079f13d08191900716914427f4b2",
+      "version_id": "appgprj_6aca26e375b081919acfa874a379028d~appgver_d0d4bbe029548191aef7ba655928128d",
       "url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
-      "repository_revision": "8912721b81f96bd8fc3de47940c9503db01592a8",
-      "version_number": 6,
-      "published_at": "2026-10-11T03:34:58.748303+00:00"
+      "repository_revision": "2cffd1ada306bdcce010878d2522999c7b9319d5",
+      "version_number": 7,
+      "published_at": "2026-10-11T03:51:05.552453+00:00"
     },
     "admin-frontend": {
       "project_id": "appgprj_6aca26f42d9081918bc7545e1b373f99",
@@ -71,7 +71,7 @@
       "sjg-datav"
     ],
     "database_import": "snapshot_and_25_migrations_completed",
-    "browser": "local_browser_real_cloud_API_passed_Jinan_region_spot_detail_and_reading_pair; no_preview; no_overflow; production_authenticated_DOM_QA_not_run",
+    "browser": "local_browser_real_cloud_API_passed_Jinan_region_spot_detail_and_reading_pair; Taian_HD_DPR2_desktop_and_mobile_passed; no_preview; no_overflow; production_authenticated_DOM_QA_not_run",
     "llm": "not_configured_user_requested_UI_and_samples_first",
     "admin_login": "verified_existing_admin_account",
     "oss_upload": "not_verified",
@@ -80,7 +80,7 @@
     "admin_anonymous": "HTTP401",
     "learning_task_absent": "HTTP404",
     "ai_sse": "error_event_explicitly_reports_missing_LLM_API_KEY",
-    "static_site_content": "display_revision_8912721_and_6_resources_match_built_artifacts; HTML_entry_matches; other_services_preserved",
+    "static_site_content": "display_revision_2cffd1a_and_9_resources_match_built_artifacts_including_3_HD_images; HTML_entry_matches; other_services_preserved",
     "database_asset_migrations": {
       "updated_entities": 78,
       "verified_entities": 78,
