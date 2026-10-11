@@ -133,7 +133,7 @@ const errorMsg = ref(null)
 const illustrationData = computed(() => cityIllustration(region.value))
 const cityImage = computed(() => region.value === '济南'
   ? '/media/inkwash/city-experiences/jinan-portrait-v1.webp'
-  : region.value === '泰安' ? '/media/inkwash/atlas/taian-landscape.webp' : illustrationData.value.img)
+  : region.value === '泰安' ? '/media/inkwash/atlas/taian-landscape-v2.webp' : illustrationData.value.img)
 const nextCity = computed(() => nextCityOf(region.value))
 const cityData = computed(() => {
   if (previewMode.value && region.value === '泰安') return {
@@ -177,7 +177,7 @@ const getInscription = (name) => {
     .filter(Boolean).map((line) => line.slice(0, 10))
 }
 const ownImage = (spot) => atlasImages[spot.name]
-  ? `/media/inkwash/atlas/spot-${atlasImages[spot.name]}.webp`
+  ? `/media/inkwash/atlas/spot-${atlasImages[spot.name]}${['taishan', 'yuhuangding'].includes(atlasImages[spot.name]) ? '-v2' : ''}.webp`
   : resolveFirstImage([spot.imageAnimeUrl, spot.imageUrl], '景', { placeholder: false })
 // 远程图可能已失效（OSS 404），加载失败同样回落
 const failedImages = ref(new Set())

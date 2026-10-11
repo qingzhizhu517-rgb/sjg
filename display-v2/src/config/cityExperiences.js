@@ -9,7 +9,7 @@ export function cityExperiences(region, cityImage) {
     primary: {
       title: jinan ? '泉畔漫游' : taian ? '泰山日出' : '山水漫游',
       text: jinan ? '沿泉而行，从清流与柳影间读一城山水。' : taian ? '循山道登临，读日出云海与岱宗风光。' : `沿山水徐行，阅览${city}的自然景观与人文遗迹。`,
-      image: jinan ? jinanArt('springs') : taian ? '/media/inkwash/atlas/spot-yuhuangding.webp' : cityImage,
+      image: jinan ? jinanArt('springs') : taian ? '/media/inkwash/atlas/spot-yuhuangding-v2.webp' : cityImage,
       imageAlt: jinan ? '济南泉水、垂柳与湖亭的水墨意象' : `${city}山水意象插画`,
       href: '#city-spots',
       action: '阅览经典景点',
