@@ -1,3 +1,4 @@
+import { unwrapResult } from '@sjg/shared'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import router from '../router'
@@ -18,18 +19,13 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
   response => {
     const res = response.data
-    // 兼容统一 Result 封装：如果包含 code 和 message 且 code == 200，则提取 data
-    if (res && typeof res === 'object' && 'code' in res && 'message' in res) {
-      if (res.code === 200) {
-        return res.data !== undefined ? res.data : res
-      } else {
-        ElMessage.error(res.message || '操作失败')
-        const handledError = new Error(res.message || '操作失败')
-        handledError.__sjgHandled = true
-        return Promise.reject(handledError)
-      }
+    try {
+      return unwrapResult(res)
+    } catch (handledError) {
+      ElMessage.error(handledError.message)
+      handledError.__sjgHandled = true
+      return Promise.reject(handledError)
     }
-    return res
   },
   error => {
     if (error?.__sjgHandled) return Promise.reject(error)

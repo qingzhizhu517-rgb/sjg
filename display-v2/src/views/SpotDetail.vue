@@ -123,7 +123,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import * as echarts from 'echarts'
+import echarts from '../charts/spotEcharts.js'
 import api from '../api'
 import { useImage } from '../composables/useImage'
 import { cityIllustration } from '../config/cityIllustrations'

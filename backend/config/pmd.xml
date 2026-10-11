@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<ruleset name="SJG complexity and correctness" xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.github.io/schema/ruleset_2_0_0.xsd">
+ <description>Measured complexity ceiling; reject empty catches in new boundary classes.</description>
+ <rule ref="category/java/design.xml/CyclomaticComplexity">
+  <properties><property name="methodReportLevel" value="60"/><property name="classReportLevel" value="300"/></properties>
+ </rule>
+ <rule ref="category/java/errorprone.xml/BrokenNullCheck"/>
+ <rule ref="category/java/errorprone.xml/ReturnFromFinallyBlock"/>
+</ruleset>

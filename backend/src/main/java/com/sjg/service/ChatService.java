@@ -126,26 +126,29 @@ public class ChatService {
                 List<ChatMessage> messages = new ArrayList<>();
                 messages.add(new ChatMessage("system", sys));
                 if (req.history() != null) {
-                    for (ChatMessage m : req.history()) {
-                        if (m != null && m.role() != null && m.content() != null) {
+                    for (ChatMessage m : req.history().subList(Math.max(0, req.history().size()-20), req.history().size())) {
+                        if (m != null && ("user".equals(m.role()) || "assistant".equals(m.role())) && m.content() != null && m.content().length() <= 4000) {
                             messages.add(m);
                         }
                     }
                 }
                 messages.add(new ChatMessage("user", req.message()));
 
+                StreamingOutputBoundary output = new StreamingOutputBoundary(delta -> sendEvent(emitter, "delta", Map.of("delta", delta)));
                 llm.streamChat(messages,
-                        delta -> sendEvent(emitter, "delta", Map.of("delta", delta)),
+                        output::accept,
                         err -> {
                             errorRef.set(err);
-                            sendEvent(emitter, "error", Map.of("error", err));
+                            sendEvent(emitter, "error", Map.of("error", "AI服务暂时不可用，请稍后重试"));
                         });
+                if (errorRef.get() == null) output.finish();
                 sendEvent(emitter, "done", Map.of("done", true));
                 if (audit != null) audit.complete(auditLog, evidence, llm.getModel(), errorRef.get());
                 emitter.complete();
             } catch (Exception e) {
                 errorRef.set(e.getClass().getSimpleName());
-                sendEvent(emitter, "error", Map.of("error", "生成失败：" + e.getMessage()));
+                log.warn("AI生成失败: {}", e.getClass().getSimpleName());
+                sendEvent(emitter, "error", Map.of("error", "AI生成失败，请稍后重试"));
                 if (audit != null) audit.complete(auditLog, List.of(), llm.getModel(), errorRef.get());
                 emitter.complete();
             }

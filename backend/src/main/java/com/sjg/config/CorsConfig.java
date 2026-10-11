@@ -27,14 +27,12 @@ public class CorsConfig {
 
         // 解析允许的域名列表
         List<String> origins = Arrays.asList(allowedOrigins.split(","));
-        origins.forEach(origin -> config.addAllowedOrigin(origin.trim()));
-
-        // 也支持 allowedOriginPattern 用于通配符匹配（如 http://localhost:*）
-        config.addAllowedOriginPattern("http://localhost:*");
+        origins.stream().map(String::trim).filter(origin -> !origin.isEmpty()).forEach(config::addAllowedOrigin);
 
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowCredentials(true);
+        // Stateless Bearer API: no ambient cookie credential or CSRF authentication.
+        config.setAllowCredentials(false);
         config.setMaxAge(3600L); // 预检请求缓存1小时
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

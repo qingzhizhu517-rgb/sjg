@@ -26,6 +26,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/public/learning-tasks")
 public class PublicLearningTaskController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PublicLearningTaskController.class);
     private final LearningTaskService taskService;
     private final ChatService chatService;
     private final ClientIpResolver clientIpResolver;
@@ -69,7 +70,8 @@ public class PublicLearningTaskController {
         LearningTask task = taskService.getPublishedByCode(taskCode);
         if (task == null) {
             SseEmitter emitter = new SseEmitter(5000L);
-            try { emitter.send(SseEmitter.event().name("error").data(Map.of("error", "学习任务不存在"))); } catch (Exception ignored) { }
+            try { emitter.send(SseEmitter.event().name("error").data(Map.of("error", "学习任务不存在"))); }
+            catch (Exception e) { log.debug("学习任务SSE错误事件发送失败", e); }
             emitter.complete();
             return emitter;
         }
@@ -93,7 +95,8 @@ public class PublicLearningTaskController {
 
     private SseEmitter errorEmitter(String message) {
         SseEmitter emitter = new SseEmitter(5000L);
-        try { emitter.send(SseEmitter.event().name("error").data(Map.of("error", message))); } catch (Exception ignored) { }
+        try { emitter.send(SseEmitter.event().name("error").data(Map.of("error", message))); }
+        catch (Exception e) { log.debug("学习任务SSE错误事件发送失败", e); }
         emitter.complete();
         return emitter;
     }

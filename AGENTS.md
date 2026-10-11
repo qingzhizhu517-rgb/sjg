@@ -14,7 +14,7 @@ This is the shared project guidance for coding agents.
 
 | 目录 | 技术栈 | 端口 | 说明 |
 |---|---|---|---|
-| `backend/` | Spring Boot 3.2.5 + Java 17 + MyBatis-Plus 3.5.5 + MySQL | 8080 | 后端 API |
+| `backend/` | Spring Boot 4.1.1 + Java 17 + MyBatis-Plus 3.5.17 + MySQL | 8080 | 后端 API |
 | `admin-frontend/` | Vue 3 + Vite + Element Plus + axios | 5173 | 后台管理 |
 | `display-v2/` | Vue 3 + Vite + ECharts + AntV G6 v5 + Three.js + GSAP | 5175 | 展示前端（主力） |
 | `sjg-datav/` | React 19 + TS + Vite + ECharts + SWR | 5180 | 数据大屏（display-v2 导航栏外链入口） |
@@ -22,30 +22,30 @@ This is the shared project guidance for coding agents.
 | `docs/` | - | - | 接口规范、计划、DB 搭建说明 |
 | 工作区外归档 | - | - | 历史素材、旧备份与废弃生成流程，不参与构建 |
 
-四个项目彼此独立，**不是 monorepo/workspace**（各自独立 `npm install`）。但**根目录现有一个 `package.json`**（`sjg-human-ai-platform`），它不含依赖、不聚合子项目，只是一层 npm scripts 门面，把各子项目的 build/test 与仓库级质量关卡（AI 评测、迁移校验、治理契约测试等）串成 `npm run verify:all`（见「质量关卡」）。
+四个项目彼此独立，**不是 monorepo/workspace**（各自独立 `npm install`）。但**根目录现有一个 `package.json`**（`sjg-human-ai-platform`），它含仓库级 ESLint/Prettier/jscpd/Playwright 质量工具，不聚合子项目，仍通过 npm scripts 门面，把各子项目的 build/test 与仓库级质量关卡（AI 评测、迁移校验、治理契约测试等）串成 `npm run verify:all`（见「质量关卡」）。
 
 ## 常用命令
 
 ### 后端（backend/）
-**没有 Maven wrapper**（`mvnw` 不存在）。macOS 开发机用 Homebrew `mvn`（`/opt/homebrew/bin/mvn`，JDK 21 运行、`pom.xml` 目标 Java 17，CI 用 17）；Windows 机可用 IDEA 内置 Maven（`D:\app\idea\IntelliJ IDEA */plugins/maven/lib/maven3/bin/mvn`）。命令本体：
+**已有 Maven Wrapper**（backend/mvnw、mvnw.cmd，固定 Maven 3.9.16）。推荐 Java 17（CI 同版本）；目标 Java 17。后端目录运行 `./mvnw test`，完整验收为 `./mvnw -Pintegration,quality verify`（Docker 必须可用，不静默跳过集成测试）。原 mvn 命令仍可用：
 ```bash
 mvn spring-boot:run                      # 启动（需本地 MySQL 已起 + SPRING_DATASOURCE_PASSWORD）
 mvn test                                 # 纯 Mockito/JUnit5，不需要 DB
 mvn test -Dtest=PoemAnalysisServiceTest   # 单个测试类
 mvn package -DskipTests
 ```
-测试类 ~30 个，**零个 `@SpringBootTest`**：全是 `MockitoExtension` 或纯手工注入。`ApiSmokeTest` 只是把所有 controller/service 用 Mockito mock 出来验证依赖能装配，不起 Spring 上下文、不连 DB。
+默认 `mvn test` 运行不依赖数据库的单元测试与真实 WebMvcTest 切片；`-Pintegration verify` 另起 Testcontainers MySQL 8.4 和完整 SpringBootTest + 嵌入式 Tomcat，验证认证、发布门禁、Actuator/OpenAPI、迁移幂等性及小数据集性能预算。
 
 ⚠️ **因此 `mvn test` 全绿 ≠ 能启动**。Spring 装配错误只在 `spring-boot:run` 时暴露——实例：`CulturalItemService` 曾有两个 `@Autowired` 构造器，此前测试 137/137 通过但启动即 `Invalid autowire-marked constructor`。治理层给多个 service 加了「无治理依赖的旧构造器（供测试）+ 带治理依赖的新构造器」重载，**一个类只能有一个 `@Autowired` 构造器**。新增 `CulturalItemServiceContextTest` 使用真实 Spring 容器检查该构造器装配；改 service 构造器后仍须验证真实启动。
 
-启动必需环境变量：`SPRING_DATASOURCE_PASSWORD`（`application.yml` 里密码无默认值；URL/用户名默认已指向 `127.0.0.1:3306/sjg01` + `root`）。登录相关还需要 `JWT_SECRET`（≥32 字节，`JwtUtil` 用 `Keys.hmacShaKeyFor`，空值时签发 token 会抛 `WeakKeyException`，但公开接口不受影响）。AI 功能需要 `LLM_API_KEY`（缺失只 WARN）。
+启动必需环境变量：`SPRING_DATASOURCE_PASSWORD`（`application.yml` 里密码无默认值；URL/用户名默认已指向 `127.0.0.1:3306/sjg01` + `root`）。登录相关还需要 `JWT_SECRET`（≥32 字节，缺失或过短时启动失败）。AI 功能需要 `LLM_API_KEY`（缺失只 WARN）。
 
 ### 前端
 ```bash
 cd <project-dir> && npm install
 npm run dev / npm run build / npm run preview
 ```
-`sjg-datav` 的 `build` 是 `tsc -b && vite build`（`strict` + `noUnusedLocals` + `noUnusedParameters`，`tsconfig.app.json` 的 `include` 是整个 `src`），**类型错误会阻断构建**。`admin-frontend` 与 `display-v2` 无任何类型/lint 关卡。
+`sjg-datav` 的 `build` 是 `tsc -b && vite build`（`strict` + `noUnusedLocals` + `noUnusedParameters`，`tsconfig.app.json` 的 `include` 是整个 `src`），**类型错误会阻断构建**。三前端已有仓库级 ESLint 安全与复杂度关卡；`admin-frontend` 与 `display-v2` 仍无类型检查。
 
 ### display-v2 测试
 用 **Node 内置 test runner**（非 Vitest），`tests/` 下 ~35 个测试文件（另有 `tests/helpers/`）：
@@ -57,42 +57,42 @@ node --test tests/mediaBase.test.js   # 单文件
 纯工具函数直接由 Node 测试；`tests/helpers/componentSetup.js` 使用 Vue compiler 执行真实 SFC setup，并注入网络、路由及 window 事件边界。它可以覆盖表单、请求状态和路由逻辑，但不代替真实浏览器的 DOM、Canvas 或视觉验收。
 
 ### 质量关卡
-**现有 CI**（`.github/workflows/ci.yml`，push 到 `master`/`codex/**`/`auto/**` 及所有 PR 触发）与**根 `package.json` 的 `npm run verify:all`**（`scripts/verify-all.sh`）。CI 与 verify:all 跑同一批门禁：三前端 `npm ci` → 仓库级 node `--test` 契约测试（`test:ai-eval` / `test:learning-task` / `test:admin-contract` / `test:migrations` / `check:migrations` / `test:content-ledger` / `test:ci-contract`）→ `apply_migration_test.py` → display-v2 单测 → 三前端 build → `mvn test` → `git diff --check` 空白检查。
+**CI**（`.github/workflows/ci.yml`）与根目录 `npm run verify:all` 执行同一批门禁：根目录及三前端 `npm ci` → 依赖扫描 → 仓库契约与迁移测试 → lint/格式/重复率 → display-v2 覆盖率 → 三前端构建 → Maven Wrapper 的单元/真实 MySQL 集成/静态分析 → 四页面无障碍 → 空白检查。
 
-仍然**没有 ESLint/Prettier/Checkstyle**，任何目录都没有 `lint` 脚本；`sjg-datav` 的 `tsc -b` 仍是唯一的类型关卡。这些 node `--test` 契约测试是**纯 `.mjs`/`.js` 断言**（校验 SQL 文本、脚本行为、前端源码字符串），不起后端、不连 DB。本地快速自检：改后端跑 `mvn test`，改前端跑对应 `npm run build` / `test:unit`，改迁移或治理逻辑跑 `npm run test:migrations` / `test:content-ledger` / `check:migrations`。
+新增门禁：根 npm ci、npm/OSV 成分扫描（真实 Maven SBOM）、ESLint、共享代码 Prettier、jscpd 重复率≤3%、display-v2 已加载源码行覆盖率≥60%、后端 Checkstyle/PMD/SpotBugs、Testcontainers 集成测试和四页面 axe 无障碍检查。`npm run verify:all` 全部执行；需要 Node≥22.13、Java 17、Docker、OSV-Scanner 2.4.0 和浏览器。报告在 `.local/quality` / `backend/target`，不提交。契约测试仍是纯断言；完整上下文/SQL/HTTP 由集成测试验证。
 
 ## 后端架构
 
 ### 分层与鉴权
 - `controller/pub/`（**12 个**）- 公开只读 `/api/public/**`，permitAll。三个展示前端全部走这里；含 `PublicDynastyController`、`PublicEventController`、`PublicPoetRelationController`、`PublicLearningTaskController`（一城一课学习任务，`task_code` 短 ID 分享）。⚠️ **公开列表现已强制「只返回已发布内容」**（见下文治理层）——`PoemService`/`CulturalItemService` 等的 `listInternal(..., publishedOnly=true)` 会用 `content_review.status='published'` 子查询过滤，未发布实体在前台不可见。
-- `controller/admin/`（12 个）- `/api/admin/**`。**GET 只需任意登录用户（含 `user` 角色），非 GET 才需要 `admin`**（`SecurityConfig.java:49-50`）。新增 `ContentReviewController`（内容审核工作台）、`AiMetricsController`（AI 指标）、`LearningTaskAdminController`、`PoemAnalysisAdminController`。`AuthController` 虽在 admin 包下，但路径是 `/api/auth`（register/login permitAll）。
+- `controller/admin/`（12 个）- `/api/admin/**`。**全部请求（含 GET）都要求 admin**。新增 `ContentReviewController`（内容审核工作台）、`AiMetricsController`（AI 指标）、`LearningTaskAdminController`、`PoemAnalysisAdminController`。`AuthController` 虽在 admin 包下，但路径是 `/api/auth`（register/login permitAll）。
 - `service/`（22 个）- 只有 `AiPoemService` 用了 MyBatis-Plus `ServiceImpl`，其余全是手写 mapper 调用。新增治理/审计/学习/检索一族：`ContentReviewService`、`ContentGovernanceCleanupService`、`AiAuditService`、`AiMetricsService`、`LearningTaskService`、`KnowledgeRetrievalService`、`ClientIpResolver`、`RateLimitService`+`InMemoryRateLimitService`。
-- `mapper/`（21 个）- **全部是空的 `extends BaseMapper<T>`，没有一行注解 SQL，也没有任何 XML**。所有查询靠 `LambdaQueryWrapper`（治理层的 `publishedOnly` 子查询用 `.inSql(...)` 拼原生 SELECT）。`application.yml:17` 的 `mapper-locations: classpath:mapper/*.xml` 指向不存在的目录，是死配置。
+- `mapper/`：大部分继承 `BaseMapper<T>`；`AiAuditLogMapper` 使用参数化 `@Select` 聚合。没有 mapper XML，已删除不存在目录的 `mapper-locations` 配置。常规查询使用 `LambdaQueryWrapper`，发布过滤使用固定 `.inSql(...)` 子查询。
 - `dto/`（10 个）有 `Result`/`PageResult`/各种 Request；**没有 `vo/` 包**，公开接口大量直接返回手拼的 `Map<String,Object>`（`PublicSpotController:67,97`、`PublicPoemController:63`、`PublicPoetController:72`、`PublicTimelineController:46` 等）。
-- `util/`：`JwtUtil`（jjwt 0.12 API）、`PoetCompletenessCalculator`（诗人资料完整度 0-100 评分）。
+- `util/`：`JwtUtil`（jjwt 0.13 API）、`PoetCompletenessCalculator`（诗人资料完整度 0-100 评分）。
 
-鉴权细节：authority 是 DB 里的裸 `role` 字符串（JWT filter 直接 `new SimpleGrantedAuthority(user.getRole())`），用 `hasAuthority("admin")` 而**不是** `hasRole`（没有 `ROLE_` 前缀）。JWT filter 每个请求都查一次 `UserMapper`，且**不校验 `user.status`**——账号被禁用后 token 仍有效到过期。401 响应体是硬编码 JSON，不走 `Result`。
+鉴权细节：authority 是 DB 里的裸 `role` 字符串（JWT filter 直接 `new SimpleGrantedAuthority(user.getRole())`），用 `hasAuthority("admin")` 而**不是** `hasRole`（没有 `ROLE_` 前缀）。JWT filter 每个请求都查一次 `UserMapper`，校验 `user.status=approved`、身份/密码哈希/角色/状态与 `credential_version` 的 HMAC 绑定；改密、重置、禁用/重新启用都会使旧 token 失效。V35 必须在部署新后端前应用。401 响应体是硬编码 JSON，不走 `Result`。
 
 ### 统一返回与异常
 `Result<T>` = `{ code, message, data }`，`error(String)` 默认 code 500。Controller 返回 `ResponseEntity<Result<>>`，HTTP status 与 `Result.code` 是两处独立设置，会漂移。
 
-`GlobalExceptionHandler`（在 `config/` 包下）：`DataIntegrityViolationException` / `SQLIntegrityConstraintViolationException` → 400，靠字符串匹配外键报错里的表名列名给出中文提示；**`RuntimeException` → 400 并原样返回 `e.getMessage()`，这是本项目事实上的业务异常通道**——service 里到处 `throw new RuntimeException("用户名已存在")` 就是靠它把中文透出去，别"修正"成 500。
+`GlobalExceptionHandler`（在 `config/` 包下）：`DataIntegrityViolationException` / `SQLIntegrityConstraintViolationException` → 400，靠字符串匹配外键报错里的表名列名给出中文提示；**明确的 `BusinessException` → 400 中文业务提示；其他 RuntimeException → 500 固定文案+日志**。Auth/User service 的已知业务错误已迁入专用类型，不得恢复通用异常消息透传。
 
 兜底的 `Exception` handler 已从暴露 `e.getMessage()` 改成固定文案「服务器内部错误，请稍后重试」+ `log.error` 打完整栈；两个 DataIntegrity handler 也有 `log.warn`。别把这个安全处理当 bug 回滚。
 
-`spring-boot-starter-validation` 在 classpath 但**全项目零个 `@Valid`**，校验全是 service 里手写的。
+认证入口已使用 `@Valid` + DTO 字段边界，业务层仍保留密码规则。注册/改密/管理员重置统一至少15字符、常见弱口令拦截、BCrypt 72字节上限；旧密码登录不强制重设。登录与注册按 IP 和规范化用户名双维度限制5次/分钟，429 携 Retry-After；当前仍为单实例内存态。
 
-### 前端三处独立实现同一个 Result 解包
+### 前端适配器共用 Result 解包
 - `display-v2/src/api/index.js` - axios 响应拦截器：`code===200` 就 **`return res.data`**，所以 `api.get()` 拿到的是 payload 本体，没有 `.data`。业务错误转 rejected `Error`（带 `.code`）。文件唯一导出是 `export default api`，**没有按域封装的 API 函数**，各组件直接 `api.get('/poets')`。
 - 同文件挂了两个额外方法：`api.swrGet()` 返回的是 **`{ data, isStale }`**（与 `api.get` 形状不同，最容易搞错），`api.prefetch()` 是 fire-and-forget。底层是 `src/api/cache.js`（60s TTL + 请求去重 + idle 预取），**cache key 带 theme 后缀**（主题已锁死，故实际恒定）。
-- `admin-frontend/src/api/index.js` - 同样解包；请求拦截器注入 `Bearer`；**401 或 403 都会清 token 并跳登录**（所以真正的权限不足会看起来像会话过期）。
-- `sjg-datav/src/api/index.ts` - 用原生 `fetch` 手写第三份解包（`:6-20`），附带 `fetchAllPaginated` 分页累加（`maxPages=50` 兜底，`:26-55`）。三份实现无共享模块。工作区已把 `getPoets`/`getPoems`/`getSpots` 从单次 `?size=200` 改成走 `fetchAllPaginated`。
+- `admin-frontend/src/api/index.js` - 同样解包；请求拦截器注入 `Bearer`；**401 清 token 并跳登录；403 保留会话并提示无权访问**。
+- `sjg-datav/src/api/index.ts` - 原生 `fetch` 适配器使用共享 `unwrapResult`，附带 `fetchAllPaginated` 分页累加（`maxPages=50` 兜底）。三工程通过独立的 `file:../shared` 本地包复用 Result 解包，不引入 npm workspace。`getPoets`/`getPoems`/`getSpots` 走分页累加。
 
 ### AI 相关（两条独立的 LLM 通路）
 - `LlmClient` 用 JDK 自带 `java.net.http.HttpClient`（刻意不引新依赖）。`streamChat` 是**阻塞式**的（`http.send(...)` 同步，在调用线程上逐行读 SSE）。`llm.api-key` 为空时启动只 WARN 不失败——聊天返回 error 事件、赏析返回 fallback。
-- `ChatService`：`SseEmitter` + `newCachedThreadPool`；事件 payload 是 `{"delta":"..."}` / `{"error":"..."}`，**没有命名事件类型（无 `.name(...)`）也没有向客户端发 `[DONE]`**（`[DONE]` 只出现在 `LlmClient` 消费上游 SSE 那一侧），前端靠 emitter 关闭判断结束。system prompt 里 `{rag_context}` 占位符缺失时会 WARN 并把 RAG 追加到末尾（`ChatServicePromptTest` 锁定了这个行为）。
+- `ChatService`：`SseEmitter` + `newCachedThreadPool`；发送命名事件 `delta` / `evidence` / `error` / `done`。上游 `[DONE]` 由 `LlmClient` 消费，前端按事件与连接关闭处理完成。客户端历史只允许 user/assistant，限制条数与长度；所有 LLM 输出经过跨 chunk 凭据泄露过滤，但不等于语义内容审核。system prompt 缺少 `{rag_context}` 时会 WARN 并追加资料（测试锁定该行为）。
 - **限流已抽成 `RateLimitService` 接口**（唯一实现 `InMemoryRateLimitService`），`ChatService` 与 `AiPoemService` 各自注入一个实例（默认构造走 `new InMemoryRateLimitService()`），仍是内存滑动窗口 60s/10 次、重启清零。客户端标识不再直读可伪造的 `X-Forwarded-For`，而是经 `ClientIpResolver` 统一解析。旧文档「两份独立 `rateMap` 拷贝」已过时。
-- **两套 RAG 检索并存**：老的 `RagRetrievalService` 仍是 SQL `LIKE` 关键词检索（`extractKeywords` 整串 + 全部 2-gram 最多 8 个，`CONCAT(IFNULL(...)) LIKE '%kw%'` OR，用不上索引、全表扫 poet/poem/scenic_spot）。新增 `KnowledgeRetrievalService` 是**带来源的证据检索**：返回 `EvidenceSnippet`（携 `content_source_link` 溯源），`ChatService` 现会把证据/来源随对话下发（`display-v2` 的 `SourceList.vue` + `utils/source.js` 消费）。改检索行为要分清动的是哪一套。
+- **两套 RAG 检索并存**：V36 建立 ngram 索引后可设置 `RAG_FULLTEXT_ENABLED=true`，两条检索通路使用参数化全文检索；默认 false 保持旧库兼容。老的 `RagRetrievalService` 默认仍是 SQL `LIKE` 关键词检索（`extractKeywords` 整串 + 全部 2-gram 最多 8 个，`CONCAT(IFNULL(...)) LIKE '%kw%'` OR，用不上索引、全表扫 poet/poem/scenic_spot）。新增 `KnowledgeRetrievalService` 是**带来源的证据检索**：返回 `EvidenceSnippet`（携 `content_source_link` 溯源），`ChatService` 现会把证据/来源随对话下发（`display-v2` 的 `SourceList.vue` + `utils/source.js` 消费）。改检索行为要分清动的是哪一套。
 - `PoemAnalysisService`：以 `poem_analysis` 表为缓存（`poem_id` UNIQUE，查询 `.last("LIMIT 1")`），`CURRENT_VERSION = 2`（`:40`）——**改这个常量等于让全部 ~195 首重新走付费生成**。fallback JSON（含 `raw` 字段）永不落库（`:143-146`），避免缺 key 时污染缓存。
 
 **AI 赏析自动发布（2026-10-10 用户确认）**：只有已发布诗词才能触发公开赏析生成。有效生成结果缓存后，赏析审核记录直接为 `published`；重新生成也自动发布。缺密钥、错误或非法 JSON 返回 fallback，绝不落库；证据检索只使用 published 赏析。AI 生成身份与原诗来源须保持可见，不把模型解读冒充原始文献。其他文化内容与学习任务继续遵循人工审核规则。
@@ -117,7 +117,7 @@ node --test tests/mediaBase.test.js   # 单文件
 `SjgApplication.clearProxySystemProperties()` 在 `SpringApplication.run` **之前**（`:14-15`）清掉 socks/http/https 六个 proxy 系统属性并设 `java.net.useSystemProxies=false`。原因：MySQL 的 `StandardSocketFactory` 会读 `socksProxyHost`，Clash 类工具或 IDE 注入的代理会让 MySQL 和 LLM 连接全挂。真正需要走代理的东西必须在自己的 client 上配，别指望系统属性。
 
 ### CORS
-CORS 是独立的 `CorsFilter` bean（不是 `http.cors()`）：读 `@Value("${cors.allowed-origins:...}")` 逐个 `addAllowedOrigin`，**外加恒定的 `http://localhost:*` pattern**（`CorsConfig.java:33`），方法收窄到 `GET/POST/PUT/DELETE/OPTIONS`，加了 `setMaxAge(3600)`。`allowCredentials(true)` 保留。所以：配置项对非 localhost 源生效，但任意 localhost 端口在生产环境也仍然放行。
+CORS 是独立的 `CorsFilter` bean（不是 `http.cors()`）：读 `@Value("${cors.allowed-origins:...}")` 逐个 `addAllowedOrigin`，**仅精确域名白名单，无 localhost 通配符**，方法收窄到 `GET/POST/PUT/DELETE/OPTIONS`，加了 `setMaxAge(3600)`。`allowCredentials(false)`，认证仅 Bearer header，不采用浏览器自动附带的 Cookie。prod profile 校验 HTTPS CORS、MySQL VERIFY_IDENTITY 与数据库凭据；Swagger 生产默认关闭，启用时也仅 admin 可访问。
 
 ## display-v2 架构
 
@@ -152,7 +152,7 @@ CORS 是独立的 `CorsFilter` bean（不是 `http.cors()`）：读 `@Value("${c
 仍存活的双轨**基础设施**（不是页面分支，暂勿清理）：`themes/manifest.js` 的 `resolveAsset(key, theme)` 与 `MEDIA_PREF = { real: 'video-first', inkwash: 'image-first' }`（`:53,70`）、`src/content/{real,inkwash}/` 双语文案（经 `resolveContent(scope, key, theme)`，`RiverSandbox`/`RegionSpots` 在用）。
 
 ### 样式与 token
-`src/styles/`（`interactions.css` 在工作树中新增、尚未提交，以 `git status` 为准）：
+`src/styles/`（`interactions.css` 已存在于基线，修改以 `git status` 为准）：
 - `variables.css`（`main.js:5` 加载）—— **全部 token 都在 `:root`，已不存在 `.theme-inkwash` 覆盖块**（单主题后无需覆盖）。约 13 个派生 token 用 `color-mix(in srgb, var(--accent) …)` 构建（`:38,42-54`），硬依赖 `color-mix()`，无 fallback。
 - `theme.css`（`App.vue` import）—— **纯装饰性全局规则，按其文件头声明不定义任何 token**：纸纹 `body::before`、`.card` 朱红内环、`.divider` 印章字、`.section-heading` 笔刷下划线、`.hover-lift`、`prefers-reduced-motion` 兜底。
 - `interactions.css`（`App.vue` import）—— 共享阅读/交互层（控件高度、页边距等少量 token + 通用交互规则），装饰性绘制仍留在页面组件内。
@@ -172,7 +172,7 @@ CORS 是独立的 `CorsFilter` bean（不是 `http.cors()`）：读 `@Value("${c
 - `components/homepage/` 名不副实——`ErrorState`、`SkeletonBlock`、`EmptyState` 这三个复用最广的基元就在里面，全站都在用。
 - `components/InkPlaceholder.vue`：纯 CSS/SVG 程序化水墨占位图，按 `seed + kind` 哈希出墨渍位置，朱红印章字按 kind 取 `节/诗/艺/文/味/景`。零素材成本，用来替代缺图。
 - `src/config/nineCities.js` 导出 `NINE_CITIES`（上游→下游九市），**已被 5 个视图引用**（`CultureGalleryView`、`CityCulture`、`FestivalList`、`LiteratureList`、`FoodOperaList`），不是死代码。
-- 重可视化各自只有一个引用方：ECharts 只在 `SpotDetail.vue`（`import * as echarts` 全量包），G6 只在 `PoetList.vue`（`?view=graph` tab），Three.js 在 `RiverSandbox.vue`（`useThreeSandbox.js` 沙盘）与 `CraftWorkshop.vue`/`craft/CraftStage.vue`（`useGlbScene.js` + DRACO）。`vite.config.js:23-32` 的 `manualChunks` 把 echarts/g6/three 拆成独立 vendor chunk（`chunkSizeWarningLimit: 1500` 就是为了压住它们的告警），改可视化模块时别把三者打进同一个 chunk。
+- 重可视化各自只有一个引用方：ECharts 只在 `SpotDetail.vue`（经 `charts/spotEcharts.js` 按需注册折线图），G6 只在 `PoetList.vue`（`?view=graph` tab），Three.js 在 `RiverSandbox.vue`（`useThreeSandbox.js` 沙盘）与 `CraftWorkshop.vue`/`craft/CraftStage.vue`（`useGlbScene.js` + DRACO）。`vite.config.js:23-32` 的 `manualChunks` 把 echarts/g6/three 拆成独立 vendor chunk（`chunkSizeWarningLimit: 1500` 就是为了压住它们的告警），改可视化模块时别把三者打进同一个 chunk。
 - G6 是 v5 API（`import { Graph }`、`node`/`edge` 而非 `defaultNode`、`behaviors` 而非 `modes`、`setSize` 而非 `changeSize`）。**Canvas 渲染读不到 CSS 变量，所以 `graphTheme` 必须写字面量 hex。**
 - `AiChatBox.vue` 绕过 axios 直接用 `fetch` + `ReadableStream` 解 SSE（axios 不支持流），输出经 `marked` + `DOMPurify.sanitize`。它挂在 `App.vue` 全局。
 - `src/config/mockDetailData.js` 是**在用**的客户端文案补充（按中文景点名索引，补后端没有的 `verticalText`/`history`/`play`），不是网络降级 mock；景点改名就静默失效（`'泰山'` 和 `'泰山风景区'` 两条重复条目就是这么来的）。曾被提到的 `mockFallbackDb.js` **不存在**。
@@ -197,7 +197,7 @@ CORS 是独立的 `CorsFilter` bean（不是 `http.cors()`）：读 `@Value("${c
 - Pinia 已装且 `main.js:12` 的 `app.use(createPinia())` 已跑，但**零个 `defineStore`、没有 `stores/` 目录**，认证状态是 `Layout.vue:82-83` 里裸读 localStorage 的 `computed()`（不响应 storage 变化）。别以为已经接好了。
 - CRUD 靠三个组合组件而非 composables（本项目**零个 composable、无 `composables/` 目录**）：`DataTable.vue`（自管分页/搜索，调**作为 prop 传入**的 `fetchFn`——不是 `inject()`，期望 `{records, total}`，`defineExpose({fetch})` 供父组件刷新）、`FormDialog.vue`、`ImportDialog.vue`（xlsx 导入）。
 - **图片上传到 OSS**：`MultiImageUpload.vue` 的 `v-model` 是 **`string[]`**（`modelValue: Array`），`VideoUpload.vue` 的 `v-model` 是 **JSON 字符串**（emit 前 `JSON.stringify`）——互换会静默损坏数据。两者都 `POST /api/admin/upload`（FormData 带 `file` + `directory`），`OssService` 回 `{url}`。directory 是按实体的约定字符串：`poets`/`spots`/`spots/anime`/`spots/videos`/`events`。
-- **DB 里 `avatarUrl`/`imageUrl`/`imageAnimeUrl`/`videoUrl` 存的是 JSON 数组字符串**，所以 `getFirstImage()`/`parseImageUrls()` 被复制了 **3 份**（`PoetList.vue:77,98`、`EventList.vue:65,86`、`SpotList.vue:84,110`，`PoemList`/`CulturalList` 里没有）+ `VideoUpload` 里第四个变体。修解析 bug 要改多处，尚未抽公共工具。
+- **DB 里 `avatarUrl`/`imageUrl`/`imageAnimeUrl`/`videoUrl` 存的是 JSON 数组字符串**，`PoetList` / `EventList` / `SpotList` / `VideoUpload` 已共用 `@sjg/shared` 的 `parseMediaUrls` / `firstMediaUrl`。修改解析规则只改共享包，并保留图片组件数组、视频组件 JSON 字符串的 v-model 契约。
 - 五个列表页 `CulturalList`/`EventList`/`PoemList`/`PoetList`/`SpotList` 的 `handleDelete` 都有完整 `ElMessageBox.confirm` 二次确认（含 try/catch 吞掉取消）。`PoetList` 已删掉 `avatarAnimeUrl`/`avatarAnimeUrlArray` 表单项与序列化，label 为「头像」。
 - 朝代选项来自 `GET /api/public/timeline` 映射 `t.dynasty`（`PoetList:176-177`、`EventList:161`、`PoemList:140`）——**即便新的 `PublicDynastyController` 已加，admin 端仍未改用 `/api/public/dynasties`**。
 - Element Plus 图标全局注册在 `main.js`，模板里直接用 `<el-icon><User /></el-icon>` 无需 import。
@@ -270,3 +270,14 @@ CORS 是独立的 `CorsFilter` bean（不是 `http.cors()`）：读 `@Value("${c
 - `AGENTS.md` 是项目指导的唯一完整来源；`CLAUDE.md` 引用它，避免重复维护。
 - 清理执行记录见 `docs/workspace-maintenance.md`；评测 CLI、文化 seed 生成器、原始交付材料、数据库导出和宣传片工程均有用途，勿仅凭零 import 删除。
 - Sites/Railway 部署记录见 `docs/deployment-railway.md` 与 `docs/deployment-state.json`。主干更新不会自动更新当前通过独立 Sites 源码库及 Railway 上传发布的线上版本。
+
+## 2026-10-11 ISO整改运行约束
+
+- V35 用户凭据版本必须先迁移后发布；V36 全文索引可幂等执行，确认 ngram_token_size=2 后设置 RAG_FULLTEXT_ENABLED=true。默认保留 LIKE 兼容路径；JSON赏析和关系检索仍走原过滤逻辑。
+- Maven/MyBatis升级使用 Boot4 starter，ServiceImpl 位于 mybatisplus.spring 包；Jackson3 在 tools.jackson 下，annotation 包仍为 com.fasterxml.jackson.annotation。
+- 每周 Dependabot；npm run check:security 检查四份 npm 锁文件及 Maven SBOM；不得通过关闭扫描或全局豁免掩盖失败。
+- 完整整改状态与尚待线上接入的备份、告警、TLS、发布见 docs/2026-10-11-iso-remediation-results.md 和 docs/security-operations.md。不宣称ISO认证。
+
+## 统一发布
+
+目标与依赖以 `ops/release.json` 为准。根 `npm run release -- <阶段>` 按MySQL备份/TLS→受限V35/V36 pre-deploy→后端健康/同SHA→Sites大屏/后台/主站发布。Sites独立源码内打包shared副本；公开配置、版本标记与journal统一，详情见 `docs/unified-deployment.md`。禁止把Actions artifact当成上线；密钥保留平台变量。历史DB迁移仍需逐环境审核，pre-deploy不会重放V31等素材或内容发布迁移。

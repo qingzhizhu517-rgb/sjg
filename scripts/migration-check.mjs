@@ -8,6 +8,7 @@ const REQUIRED_TABLES = new Map([
 ])
 
 const DATA_ONLY_MIGRATIONS = new Set([30])
+const GUARDED_SCHEMA_MIGRATIONS = new Set([35, 36])
 
 function versionFromFilename(filename) {
   const match = /^V(\d+)__[^/]+\.sql$/i.exec(filename)
@@ -22,7 +23,12 @@ export function inspectMigrationText(filename, text, requiredTables = [], option
   if (version === null) errors.push(`文件名不是 Flyway V{n}__*.sql：${filename}`)
   const hasIdempotentTable = /CREATE\s+TABLE\s+IF\s+NOT\s+EXISTS/i.test(text)
   const hasIdempotentData = /INSERT[\s\S]*ON\s+DUPLICATE\s+KEY\s+UPDATE/i.test(text)
-  if (!hasIdempotentTable && !(allowDataOnly && hasIdempotentData)) {
+  const hasGuardedSchema = GUARDED_SCHEMA_MIGRATIONS.has(version)
+    && /information_schema\.(?:columns|statistics)/i.test(text)
+    && /SET\s+@\w+\s*=\s*IF\s*\(/i.test(text)
+    && /PREPARE\s+\w+\s+FROM\s+@\w+/i.test(text)
+    && /DEALLOCATE\s+PREPARE/i.test(text)
+  if (!hasIdempotentTable && !hasGuardedSchema && !(allowDataOnly && hasIdempotentData)) {
     errors.push(`${filename} 缺少 CREATE TABLE IF NOT EXISTS`)
   }
   if (allowDataOnly && !hasIdempotentTable && !hasIdempotentData) {
@@ -41,7 +47,7 @@ export function inspectMigrationText(filename, text, requiredTables = [], option
   return { filename, version, errors }
 }
 
-export async function inspectMigrationSet(directory, targetVersions = [27, 28, 29, 30]) {
+export async function inspectMigrationSet(directory, targetVersions = [27, 28, 29, 30, 35, 36]) {
   const entries = await fs.readdir(directory)
   const files = entries.filter((entry) => /^V\d+__.*\.sql$/i.test(entry)).sort()
   const byVersion = new Map()

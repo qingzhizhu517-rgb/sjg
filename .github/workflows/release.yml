@@ -1,0 +1,58 @@
+name: Verified unified release bundle
+on:
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: 'Full commit SHA to verify and prepare for Railway + Sites'
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: sjg-production-release
+  cancel-in-progress: false
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.revision }}
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: actions/setup-go@v5
+        with: { go-version: stable, cache: false }
+      - name: Load the single public release configuration
+        env:
+          RELEASE_REVISION: ${{ inputs.revision }}
+        run: |
+          [[ "$RELEASE_REVISION" =~ ^[a-fA-F0-9]{40}$ ]]
+          node --input-type=module <<'JS'
+          import fs from 'node:fs'
+          import {validateReleaseConfig,frontendEnvironment} from './scripts/release-lib.mjs'
+          const config=validateReleaseConfig(JSON.parse(fs.readFileSync('ops/release.json')))
+          fs.appendFileSync(process.env.GITHUB_ENV,Object.entries(frontendEnvironment(config)).map(([k,v])=>`${k}=${v}`).join('\n')+'\n')
+          JS
+      - name: Prepare validation tools
+        run: |
+          go install github.com/google/osv-scanner/v2/cmd/osv-scanner@v2.4.0
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Verify all services and prepare an immutable source snapshot
+        run: |
+          npm run verify:all
+          npm run release -- prepare
+      - name: Save exact source and frontend distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: sjg-unified-${{ inputs.revision }}
+          include-hidden-files: true
+          path: |
+            .local/releases/
+            display-v2/dist/
+            admin-frontend/dist/
+            sjg-datav/dist/
+      # Publication resumes this journal with backup, Railway health/SHA
+      # and native Sites operations; artifact upload is not publication.

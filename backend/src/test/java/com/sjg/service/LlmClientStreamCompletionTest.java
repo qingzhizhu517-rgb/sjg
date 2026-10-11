@@ -86,6 +86,15 @@ class LlmClientStreamCompletionTest {
         assertFalse(completed.get());
     }
 
+    @Test
+    void providerCredentialLeakIsRejectedBeforeAnyDeltaIsReleased() throws Exception {
+        upstream(delta("sk-1234567890abcdefghijklmnop") + "data: [DONE]\n\n");
+        List<String> output = new ArrayList<>(); List<String> errors = new ArrayList<>();
+        llm.streamChat(List.of(new ChatMessage("user", "测试")), output::add, errors::add);
+        assertTrue(output.isEmpty());
+        assertFalse(errors.isEmpty());
+    }
+
     @SuppressWarnings("unchecked")
     private void upstream(String body) throws Exception {
         HttpResponse<InputStream> response = mock(HttpResponse.class);

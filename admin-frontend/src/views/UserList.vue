@@ -63,7 +63,7 @@
           <el-input :value="resetForm.username" disabled />
         </el-form-item>
         <el-form-item label="新密码" required>
-          <el-input v-model="resetForm.newPassword" type="password" placeholder="请输入新密码" show-password />
+          <el-input v-model="resetForm.newPassword" type="password" placeholder="至少15个字符，建议使用长短语" show-password />
         </el-form-item>
       </el-form>
       <template #footer>

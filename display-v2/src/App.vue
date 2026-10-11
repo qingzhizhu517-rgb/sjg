@@ -121,7 +121,7 @@ onUnmounted(() => {
 .site-footer p { color: var(--text-muted); font-size: 12px; margin-top: 10px; }
 .site-footer nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; font-size: 13px; }
 .site-footer nav a { padding-block: 10px; white-space: nowrap; }
-.site-footer small { grid-column: 1/-1; color: #988c7b; font: 9px Georgia,serif; letter-spacing: 2px; }
+.site-footer small { grid-column: 1/-1; color: var(--text-secondary); font: 9px Georgia,serif; letter-spacing: 2px; }
 .atlas-preview-bar { position: fixed; z-index: 190; left: 16px; bottom: 12px; display: flex; gap: 14px; align-items: center; border: 1px solid var(--border); padding: 7px 12px; background: #f5f2ebf0; border-radius: 3px; font-size: 11px; color: var(--text-muted); backdrop-filter: blur(8px); }
 .atlas-preview-bar a { color: var(--accent); padding-block: 4px; }
 @media(max-width:700px) { .site-footer { grid-template-columns: 1fr; padding-bottom: 85px; } .site-footer nav { gap: 20px; } .atlas-preview-bar { left: 8px; bottom: 8px; font-size: 10px; } }

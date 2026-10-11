@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "description": "齐鲁文脉人文 AI 平台统一开发入口",
   "scripts": {
+    "release": "node scripts/release.mjs",
+    "test:release": "node --test scripts/release-contract.test.mjs",
+    "check:security": "bash scripts/security-scan.sh",
     "verify:all": "bash scripts/verify-all.sh",
     "test:unit": "npm --prefix display-v2 run test:unit",
     "build:display": "npm --prefix display-v2 run build",
@@ -16,9 +19,30 @@
     "test:migrations": "node --test scripts/migration-check.test.mjs",
     "check:migrations": "node scripts/check-migrations.mjs",
     "test:content-ledger": "node --test scripts/content-ledger-check.test.mjs",
-    "test:ci-contract": "node --test scripts/ci-contract.test.mjs"
+    "test:ci-contract": "node --test scripts/ci-contract.test.mjs",
+    "lint": "eslint display-v2/src admin-frontend/src sjg-datav/src shared scripts",
+    "check:format": "prettier --check shared scripts/a11y-check.mjs scripts/shared-contract.test.mjs eslint.config.mjs .prettierrc.json .jscpd.json package.json",
+    "check:duplicates": "jscpd --config .jscpd.json",
+    "test:shared": "node --test scripts/shared-contract.test.mjs",
+    "test:a11y": "node scripts/a11y-check.mjs",
+    "test:integration": "cd backend && ./mvnw -B -Pintegration verify",
+    "check:backend": "cd backend && ./mvnw -B -Pquality verify",
+    "test:coverage": "npm --prefix display-v2 run test:coverage"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.0",
+    "@typescript-eslint/parser": "^8.71.1",
+    "eslint": "^10.12.0",
+    "jscpd": "^5.4.1",
+    "prettier": "^3.9.10",
+    "vue-eslint-parser": "^10.4.1"
+  },
+  "dependencies": {
+    "railway": "^3.13.1"
   }
 }

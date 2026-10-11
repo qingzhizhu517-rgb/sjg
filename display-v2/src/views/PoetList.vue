@@ -1526,7 +1526,7 @@ onBeforeUnmount(() => {
 .poet-dynasty-badge {
   font-size: 11px;
   font-weight: 700;
-  color: var(--accent);
+  color: var(--accent-dark);
   letter-spacing: 1px;
   padding: 2px 8px;
   background: color-mix(in srgb, var(--accent) 8%, transparent);

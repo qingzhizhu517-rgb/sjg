@@ -1,6 +1,6 @@
 package com.sjg.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.sjg.dto.LearningSubmissionRequest;
 import com.sjg.dto.LearningFeedbackContext;
 import com.sjg.entity.LearningSubmission;
@@ -413,7 +413,7 @@ class LearningTaskServiceTest {
         service.create(incoming);
 
         assertEquals(LearningTask.DRAFT, incoming.getStatus());
-        verify(taskMapper).insert(argThat(saved -> LearningTask.DRAFT.equals(saved.getStatus())));
+        verify(taskMapper).insert(argThat((com.sjg.entity.LearningTask saved) -> LearningTask.DRAFT.equals(saved.getStatus())));
     }
 
     @Test
@@ -428,7 +428,7 @@ class LearningTaskServiceTest {
         LearningTask updated = service.update(12L, incoming);
 
         assertEquals(LearningTask.DRAFT, updated.getStatus());
-        verify(taskMapper).updateById(argThat(saved -> LearningTask.DRAFT.equals(saved.getStatus())));
+        verify(taskMapper).updateById(argThat((com.sjg.entity.LearningTask saved) -> LearningTask.DRAFT.equals(saved.getStatus())));
     }
 
     @Test

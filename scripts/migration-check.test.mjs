@@ -33,7 +33,7 @@ test('inspectMigrationSet validates the repository target migrations', async () 
   const result = await inspectMigrationSet('backend/src/main/resources/db/migration')
 
   assert.deepEqual(result.errors, [])
-  assert.deepEqual(result.versions, [27, 28, 29, 30])
+  assert.deepEqual(result.versions, [27, 28, 29, 30, 35, 36])
 })
 
 test('V27 initializes review records for every public historical entity domain', async () => {

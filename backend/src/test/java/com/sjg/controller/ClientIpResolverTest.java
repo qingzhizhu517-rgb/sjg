@@ -23,6 +23,12 @@ class ClientIpResolverTest {
         assertEquals("203.0.113.9", new ClientIpResolver("10.0.0.8").resolve(request));
     }
 
+    @Test
+    void attackerCannotPrependAnAddressToAProxyAppendedChain() {
+        MockHttpServletRequest request = request("10.0.0.8", "1.2.3.4, 203.0.113.9");
+        assertEquals("203.0.113.9", new ClientIpResolver("10.0.0.8").resolve(request));
+    }
+
     private MockHttpServletRequest request(String remote, String forwarded) {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRemoteAddr(remote);

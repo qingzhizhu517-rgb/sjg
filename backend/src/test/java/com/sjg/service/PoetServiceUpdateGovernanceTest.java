@@ -20,7 +20,7 @@ class PoetServiceUpdateGovernanceTest {
 
         assertThrows(IllegalArgumentException.class, () -> service.update(404L, new Poet()));
 
-        verify(poetMapper, never()).updateById(any());
+        verify(poetMapper, never()).updateById(any(com.sjg.entity.Poet.class));
         verifyNoInteractions(cleanup);
     }
 }

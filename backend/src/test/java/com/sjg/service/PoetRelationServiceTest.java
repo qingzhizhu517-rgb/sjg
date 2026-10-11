@@ -22,6 +22,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class PoetRelationServiceTest {
+    @org.junit.jupiter.api.BeforeAll
+    static void initializeMybatisMetadata() {
+        var config = new com.baomidou.mybatisplus.core.MybatisConfiguration();
+        var assistant = new org.apache.ibatis.builder.MapperBuilderAssistant(config, "test");
+        for (Class<?> type : java.util.List.of(com.sjg.entity.ContentReview.class,
+                com.sjg.entity.ContentSourceLink.class, com.sjg.entity.PoemAnalysis.class,
+                com.sjg.entity.Event.class, com.sjg.entity.Poet.class, com.sjg.entity.Poem.class)) {
+            com.baomidou.mybatisplus.core.metadata.TableInfoHelper.initTableInfo(assistant, type);
+        }
+    }
+
 
     @Test
     void publicGraphOnlyIncludesPublishedRelationsBetweenPublishedPoets() {

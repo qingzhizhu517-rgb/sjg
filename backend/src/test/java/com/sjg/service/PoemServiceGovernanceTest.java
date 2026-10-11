@@ -41,7 +41,7 @@ class PoemServiceGovernanceTest {
         assertThrows(IllegalArgumentException.class,
                 () -> service.update(404L, new com.sjg.entity.Poem()));
 
-        verify(poemMapper, never()).updateById(any());
+        verify(poemMapper, never()).updateById(any(com.sjg.entity.Poem.class));
         verifyNoInteractions(cleanup);
     }
 

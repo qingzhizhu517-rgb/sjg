@@ -44,23 +44,28 @@ public class PublicTimelineController {
                     "SELECT entity_id FROM content_review WHERE entity_type = 'dynasty' AND status = 'published'")
                     .orderByAsc(Dynasty::getStartYear));
 
+        if (dynasties.isEmpty()) return ResponseEntity.ok(Result.success(List.of()));
+        List<Long> ids = dynasties.stream().map(Dynasty::getId).toList();
+        Map<Long, List<Event>> events = eventMapper.selectList(new LambdaQueryWrapper<Event>()
+                .in(Event::getDynastyId, ids).inSql(Event::getId,
+                "SELECT entity_id FROM content_review WHERE entity_type = 'event' AND status = 'published'"))
+                .stream().collect(Collectors.groupingBy(Event::getDynastyId));
+        Map<Long, List<Poet>> poets = poetMapper.selectList(new LambdaQueryWrapper<Poet>()
+                .in(Poet::getDynastyId, ids).inSql(Poet::getId,
+                "SELECT entity_id FROM content_review WHERE entity_type = 'poet' AND status = 'published'"))
+                .stream().collect(Collectors.groupingBy(Poet::getDynastyId));
+        Map<Long, List<Poem>> poems = poemMapper.selectList(new LambdaQueryWrapper<Poem>()
+                .in(Poem::getDynastyId, ids).inSql(Poem::getId,
+                "SELECT entity_id FROM content_review WHERE entity_type = 'poem' AND status = 'published'"))
+                .stream().collect(Collectors.groupingBy(Poem::getDynastyId));
         List<Map<String, Object>> timeline = dynasties.stream().map(dynasty -> {
             Map<String, Object> item = new HashMap<>();
             item.put("dynasty", dynasty);
-            item.put("events", eventMapper.selectList(
-                new LambdaQueryWrapper<Event>().eq(Event::getDynastyId, dynasty.getId())
-                        .inSql(Event::getId,
-                                "SELECT entity_id FROM content_review WHERE entity_type = 'event' AND status = 'published'")));
-            item.put("poets", poetMapper.selectList(
-                new LambdaQueryWrapper<Poet>().eq(Poet::getDynastyId, dynasty.getId())
-                        .inSql(Poet::getId,
-                                "SELECT entity_id FROM content_review WHERE entity_type = 'poet' AND status = 'published'")));
-            item.put("poems", poemMapper.selectList(
-                new LambdaQueryWrapper<Poem>().eq(Poem::getDynastyId, dynasty.getId())
-                        .inSql(Poem::getId,
-                                "SELECT entity_id FROM content_review WHERE entity_type = 'poem' AND status = 'published'")));
+            item.put("events", events.getOrDefault(dynasty.getId(), List.of()));
+            item.put("poets", poets.getOrDefault(dynasty.getId(), List.of()));
+            item.put("poems", poems.getOrDefault(dynasty.getId(), List.of()));
             return item;
-        }).collect(Collectors.toList());
+        }).toList();
 
         return ResponseEntity.ok(Result.success(timeline));
     }

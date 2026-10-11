@@ -18,7 +18,7 @@ class SpotServiceUpdateGovernanceTest {
 
         assertThrows(IllegalArgumentException.class, () -> service.update(404L, new ScenicSpot()));
 
-        verify(spotMapper, never()).updateById(any());
+        verify(spotMapper, never()).updateById(any(com.sjg.entity.ScenicSpot.class));
         verifyNoInteractions(cleanup);
     }
 }

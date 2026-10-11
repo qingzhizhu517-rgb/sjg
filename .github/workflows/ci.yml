@@ -18,9 +18,10 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: |
+            package-lock.json
             display-v2/package-lock.json
             admin-frontend/package-lock.json
             sjg-datav/package-lock.json
@@ -34,9 +35,22 @@ jobs:
 
       - name: Install frontend dependencies
         run: |
+          npm ci
           npm ci --prefix display-v2
           npm ci --prefix admin-frontend
           npm ci --prefix sjg-datav
+
+      - name: Setup security scanner runtime
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: false
+
+      - name: Install OSV scanner
+        run: go install github.com/google/osv-scanner/v2/cmd/osv-scanner@v2.4.0
+
+      - name: Scan dependencies
+        run: npm run check:security
 
       - name: Test platform quality gates
         run: |
@@ -49,8 +63,16 @@ jobs:
           npm run test:ci-contract
           PYTHONDONTWRITEBYTECODE=1 python3 scripts/apply_migration_test.py
 
+      - name: Check static quality and shared contracts
+        run: |
+          npm run test:shared
+          npm run test:release
+          npm run lint
+          npm run check:format
+          npm run check:duplicates
+
       - name: Test display-v2
-        run: npm --prefix display-v2 run test:unit
+        run: npm run test:coverage
 
       - name: Build frontends
         run: |
@@ -59,7 +81,24 @@ jobs:
           npm --prefix sjg-datav run build
 
       - name: Test backend
-        run: mvn -B -f backend/pom.xml test
+        run: cd backend && ./mvnw -B -Pintegration,quality verify
+
+      - name: Check accessibility
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:a11y
+
+      - name: Preserve quality reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-reports
+          path: |
+            .local/quality/
+            backend/target/*-reports/
+            backend/target/pmd.xml
+            backend/target/spotbugsXml.xml
+            backend/target/bom.json
 
       - name: Check whitespace
         run: git diff --check

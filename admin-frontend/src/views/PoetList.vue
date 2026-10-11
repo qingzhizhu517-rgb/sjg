@@ -59,6 +59,7 @@
 </template>
 
 <script setup>
+import { firstMediaUrl as getFirstImage, parseMediaUrls as parseImageUrls } from '@sjg/shared'
 import { ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../api'
@@ -74,48 +75,9 @@ const currentPoet = ref({})
 const showImport = ref(false)
 const dynasties = ref([])
 
-const getFirstImage = (json) => {
-  if (!json) return ''
-  try {
-    const arr = JSON.parse(json)
-    if (Array.isArray(arr)) {
-      return arr.length > 0 ? arr[0] : ''
-    }
-    if (typeof arr === 'string' && arr.trim() !== '' && arr !== '[]') {
-      return arr
-    }
-    return ''
-  } catch {
-    if (typeof json === 'string') {
-      const trimmed = json.trim()
-      if (trimmed === '[]' || trimmed === '') return ''
-      return trimmed
-    }
-    return ''
-  }
-}
 
-const parseImageUrls = (json) => {
-  if (!json) return []
-  if (Array.isArray(json)) return json
-  try {
-    const arr = JSON.parse(json)
-    if (Array.isArray(arr)) {
-      return arr.filter(url => typeof url === 'string' && url.trim() !== '')
-    }
-    if (typeof arr === 'string' && arr.trim() !== '') {
-      return [arr.trim()]
-    }
-    return []
-  } catch {
-    if (typeof json === 'string') {
-      const trimmed = json.trim()
-      if (trimmed === '' || trimmed === '[]') return []
-      return [trimmed]
-    }
-    return []
-  }
-}
+
+
 
 const fetchPoets = (page, size, keyword) =>
   api.get('/admin/poets', { params: { page, size, keyword } })

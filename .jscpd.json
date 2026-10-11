@@ -1,0 +1,9 @@
+{
+  "path": ["backend/src/main/java", "display-v2/src", "admin-frontend/src", "sjg-datav/src", "shared"],
+  "ignore": ["**/assets/**"],
+  "minLines": 10,
+  "minTokens": 100,
+  "reporters": ["json"],
+  "output": ".local/quality/duplication",
+  "threshold": 3
+}

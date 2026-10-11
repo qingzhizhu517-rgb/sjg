@@ -1,16 +1,16 @@
 package com.sjg.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.deser.std.StdDeserializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
-import java.io.IOException;
+
 
 /** 客户端只能选择材料与阅读方向，原文、来源和模型指令始终由服务端构造。 */
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -27,9 +27,9 @@ public record PoemComparisonRequest(
         public NumericIdDeserializer() { super(Long.class); }
 
         @Override
-        public Long deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+        public Long deserialize(JsonParser parser, DeserializationContext context) {
             if (!parser.hasToken(JsonToken.VALUE_NUMBER_INT)) {
-                throw JsonMappingException.from(parser, "诗词ID必须为整数数字");
+                throw DatabindException.from(parser, "诗词ID必须为整数数字");
             }
             return parser.getLongValue();
         }

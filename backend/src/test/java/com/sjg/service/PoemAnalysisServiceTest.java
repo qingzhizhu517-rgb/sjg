@@ -1,7 +1,7 @@
 package com.sjg.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.sjg.dto.ChatMessage;
 import com.sjg.entity.Poem;
 import com.sjg.entity.PoemAnalysis;
@@ -175,7 +175,7 @@ class PoemAnalysisServiceTest {
 
             service.getOrGenerate(1L);
 
-            verify(contentReviewMapper).updateById(argThat(review ->
+            verify(contentReviewMapper).updateById(argThat((com.sjg.entity.ContentReview review) ->
                     ContentReview.PUBLISHED.equals(review.getStatus())
                             && review.getReviewNote().contains("自动发布")
                             && review.getUpdatedAt() != null));
@@ -198,7 +198,7 @@ class PoemAnalysisServiceTest {
 
             service.getOrGenerate(1L);
 
-            verify(contentReviewMapper).updateById(argThat(review ->
+            verify(contentReviewMapper).updateById(argThat((com.sjg.entity.ContentReview review) ->
                     ContentReview.PUBLISHED.equals(review.getStatus())
                             && review.getUpdatedAt() != null));
         }

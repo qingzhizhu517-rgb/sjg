@@ -1,9 +1,9 @@
 package com.sjg.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 import com.sjg.dto.ChatMessage;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -95,6 +95,7 @@ public class LlmClient {
             onError.accept("AI 服务未配置（缺少 LLM_API_KEY / LLM_BASE_URL）");
             return;
         }
+        StreamingOutputBoundary output = new StreamingOutputBoundary(onDelta);
         try {
             ObjectNode body = buildBody(messages, true);
 
@@ -111,12 +112,10 @@ public class LlmClient {
             HttpResponse<InputStream> resp = http.send(req, HttpResponse.BodyHandlers.ofInputStream());
             int code = resp.statusCode();
             if (code != 200) {
-                String errText;
                 try (InputStream is = resp.body()) {
-                    byte[] b = is.readAllBytes();
-                    errText = new String(b, StandardCharsets.UTF_8);
+                    is.readNBytes(1024);
                 }
-                onError.accept("大模型接口返回 " + code + " [URL=" + url + "]：" + truncate(errText, 300));
+                onError.accept("大模型接口暂时不可用（HTTP " + code + "）");
                 return;
             }
 
@@ -137,6 +136,7 @@ public class LlmClient {
                     try {
                         JsonNode node = mapper.readTree(data);
                         if (onComplete != null && node.hasNonNull("error")) {
+                            output.finish();
                             onError.accept("大模型响应出错");
                             return;
                         }
@@ -148,17 +148,20 @@ public class LlmClient {
                         JsonNode delta = node.path("choices").path(0).path("delta").path("content");
                         if (!delta.isMissingNode() && !delta.isNull()) {
                             String text = delta.asText();
-                            if (text != null && !text.isEmpty()) onDelta.accept(text);
+                            if (text != null && !text.isEmpty()) output.accept(text);
                         }
-                    } catch (Exception parseEx) {
-                        // 跳过格式异常的单个 chunk，不影响后续
+                    } catch (tools.jackson.core.JacksonException parseEx) {
+                        onError.accept("大模型响应格式异常");
+                        return;
                     }
                     if (onComplete != null && terminal && !incomplete) break;
                 }
+                output.finish();
                 if (onComplete != null && terminal && !incomplete) onComplete.run();
             }
         } catch (Exception e) {
-            onError.accept("调用大模型失败：" + e.getMessage());
+            log.warn("大模型调用失败: {}", e.getClass().getSimpleName());
+            onError.accept("调用大模型失败，请稍后重试");
         }
     }
 
@@ -211,12 +214,15 @@ public class LlmClient {
                     .build();
             HttpResponse<String> resp = http.send(req, HttpResponse.BodyHandlers.ofString());
             if (resp.statusCode() != 200) {
-                throw new IllegalStateException("大模型接口返回 " + resp.statusCode()
-                        + " [URL=" + url + "]：" + truncate(resp.body(), 300));
+                throw new IllegalStateException("大模型接口暂时不可用（HTTP " + resp.statusCode() + "）");
             }
             JsonNode node = mapper.readTree(resp.body());
             JsonNode content = node.path("choices").path(0).path("message").path("content");
-            return content.isMissingNode() || content.isNull() ? "" : content.asText();
+            String text = content.isMissingNode() || content.isNull() ? "" : content.asText();
+            StringBuilder safe = new StringBuilder();
+            StreamingOutputBoundary boundary = new StreamingOutputBoundary(safe::append);
+            boundary.accept(text); boundary.finish();
+            return safe.toString();
         } catch (IllegalStateException e) {
             throw e;
         } catch (Exception e) {

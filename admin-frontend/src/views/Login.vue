@@ -54,7 +54,7 @@
                 <el-input
                   v-model="registerForm.password"
                   type="password"
-                  placeholder="请输入密码"
+                  placeholder="至少15个字符，建议使用长短语"
                   prefix-icon="Lock"
                   show-password
                   size="large"

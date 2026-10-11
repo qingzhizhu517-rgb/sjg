@@ -9,6 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.Map;
+import java.security.Principal;
+import com.sjg.exception.BusinessException;
+import org.slf4j.LoggerFactory;
 
 /**
  * 文件上传控制器（管理员）
@@ -32,12 +35,15 @@ public class UploadController {
     @PostMapping("/upload")
     public ResponseEntity<Result<Map<String, String>>> upload(
             @Parameter(description = "上传的文件", required = true) @RequestParam("file") MultipartFile file,
-            @Parameter(description = "OSS存储目录", example = "images") @RequestParam(defaultValue = "images") String directory) {
+            @Parameter(description = "OSS存储目录", example = "images") @RequestParam(defaultValue = "images") String directory, Principal principal) {
         try {
-            String url = ossService.upload(file, directory);
+            String url = ossService.upload(file, directory, principal.getName());
             return ResponseEntity.ok(Result.success(Map.of("url", url)));
+        } catch (BusinessException e) {
+            return ResponseEntity.badRequest().body(Result.error(400, e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Result.error(400, "上传失败: " + e.getMessage()));
+            LoggerFactory.getLogger(UploadController.class).error("文件上传失败", e);
+            return ResponseEntity.internalServerError().body(Result.error(500, "上传失败，请稍后重试"));
         }
     }
 }

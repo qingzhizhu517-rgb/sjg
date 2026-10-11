@@ -64,6 +64,8 @@ else/
 
 # TypeScript build cache
 *.tsbuildinfo
+__pycache__/
+*.pyc
 
 # promo film build output and render intermediates
 # 带斜杠的模式会锚定到本文件所在目录，只有用 **/ 才能匹配嵌套的 .build/

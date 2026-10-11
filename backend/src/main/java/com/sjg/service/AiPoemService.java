@@ -1,6 +1,6 @@
 package com.sjg.service;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.sjg.entity.AiPoem;
 import com.sjg.mapper.AiPoemMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -128,8 +128,8 @@ public class AiPoemService extends ServiceImpl<AiPoemMapper, AiPoem> {
 
         // 1. 优先整体 JSON 解析
         try {
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(candidate);
+            tools.jackson.databind.ObjectMapper mapper = new tools.jackson.databind.ObjectMapper();
+            tools.jackson.databind.JsonNode root = mapper.readTree(candidate);
             if (root.isObject()) {
                 if (root.hasNonNull("title")) {
                     result.put("title", root.get("title").asText().trim());

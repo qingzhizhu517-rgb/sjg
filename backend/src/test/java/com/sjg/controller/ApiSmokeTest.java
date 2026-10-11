@@ -44,8 +44,8 @@ import com.sjg.service.PoemService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Bean;
@@ -116,56 +116,56 @@ class ApiSmokeTest {
     @Autowired
     MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     PoemService poemService;
 
-    @MockBean
+    @MockitoBean
     CulturalItemService culturalItemService;
 
-    @MockBean
+    @MockitoBean
     ContentReviewService contentReviewService;
 
-    @MockBean
+    @MockitoBean
     ChatService chatService;
 
-    @MockBean
+    @MockitoBean
     AiAuditService aiAuditService;
 
-    @MockBean
+    @MockitoBean
     LearningTaskService learningTaskService;
 
-    @MockBean
+    @MockitoBean
     AiMetricsService aiMetricsService;
 
-    @MockBean
+    @MockitoBean
     PoetMapper poetMapper;
 
-    @MockBean
+    @MockitoBean
     DynastyMapper dynastyMapper;
 
-    @MockBean
+    @MockitoBean
     ScenicSpotMapper spotMapper;
 
-    @MockBean AiPoemMapper aiPoemMapper;
-    @MockBean CraftDetailMapper craftDetailMapper;
-    @MockBean CulturalItemMapper culturalItemMapper;
-    @MockBean EventMapper eventMapper;
-    @MockBean FestivalDetailMapper festivalDetailMapper;
-    @MockBean FoodOperaDetailMapper foodOperaDetailMapper;
-    @MockBean LiteratureDetailMapper literatureDetailMapper;
-    @MockBean PoemAnalysisMapper poemAnalysisMapper;
-    @MockBean PoemEventMapper poemEventMapper;
-    @MockBean PoemMapper poemMapper;
-    @MockBean PoetRelationMapper poetRelationMapper;
-    @MockBean UserMapper userMapper;
-    @MockBean ContentReviewMapper contentReviewMapper;
-    @MockBean ContentSourceLinkMapper contentSourceLinkMapper;
-    @MockBean SourceDocumentMapper sourceDocumentMapper;
-    @MockBean AiAuditLogMapper aiAuditLogMapper;
-    @MockBean LearningSubmissionMapper learningSubmissionMapper;
-    @MockBean LearningTaskMapper learningTaskMapper;
+    @MockitoBean AiPoemMapper aiPoemMapper;
+    @MockitoBean CraftDetailMapper craftDetailMapper;
+    @MockitoBean CulturalItemMapper culturalItemMapper;
+    @MockitoBean EventMapper eventMapper;
+    @MockitoBean FestivalDetailMapper festivalDetailMapper;
+    @MockitoBean FoodOperaDetailMapper foodOperaDetailMapper;
+    @MockitoBean LiteratureDetailMapper literatureDetailMapper;
+    @MockitoBean PoemAnalysisMapper poemAnalysisMapper;
+    @MockitoBean PoemEventMapper poemEventMapper;
+    @MockitoBean PoemMapper poemMapper;
+    @MockitoBean PoetRelationMapper poetRelationMapper;
+    @MockitoBean UserMapper userMapper;
+    @MockitoBean ContentReviewMapper contentReviewMapper;
+    @MockitoBean ContentSourceLinkMapper contentSourceLinkMapper;
+    @MockitoBean SourceDocumentMapper sourceDocumentMapper;
+    @MockitoBean AiAuditLogMapper aiAuditLogMapper;
+    @MockitoBean LearningSubmissionMapper learningSubmissionMapper;
+    @MockitoBean LearningTaskMapper learningTaskMapper;
 
-    @MockBean
+    @MockitoBean
     com.sjg.util.JwtUtil jwtUtil;
 
     @Test
@@ -293,6 +293,7 @@ class ApiSmokeTest {
         user.setRole("user");
         user.setStatus("approved");
         when(jwtUtil.validateToken("user-token")).thenReturn(true);
+        when(jwtUtil.matchesUser(eq("user-token"), any())).thenReturn(true);
         when(jwtUtil.getUsernameFromToken("user-token")).thenReturn("reader");
         when(userMapper.selectOne(any())).thenReturn(user);
 
@@ -312,6 +313,7 @@ class ApiSmokeTest {
         admin.setRole("admin");
         admin.setStatus("approved");
         when(jwtUtil.validateToken("admin-token")).thenReturn(true);
+        when(jwtUtil.matchesUser(eq("admin-token"), any())).thenReturn(true);
         when(jwtUtil.getUsernameFromToken("admin-token")).thenReturn("admin");
         when(userMapper.selectOne(any())).thenReturn(admin);
         when(aiMetricsService.summary(24)).thenReturn(java.util.Map.of("totalRequests", 0));

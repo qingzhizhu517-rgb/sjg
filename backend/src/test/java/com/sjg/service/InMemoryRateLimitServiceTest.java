@@ -21,13 +21,22 @@ class InMemoryRateLimitServiceTest {
     }
 
     @Test
-    void evictsOldKeysWhenBoundIsReached() {
+    void rejectsNewKeysAtCapacityWithoutResettingExistingLimits() {
         InMemoryRateLimitService service = new InMemoryRateLimitService(2, 60_000);
 
         assertTrue(service.tryAcquire("one", 1, Duration.ofMinutes(1)));
         assertTrue(service.tryAcquire("two", 1, Duration.ofMinutes(1)));
-        assertTrue(service.tryAcquire("three", 1, Duration.ofMinutes(1)));
+        assertFalse(service.tryAcquire("three", 1, Duration.ofMinutes(1)));
+        assertFalse(service.tryAcquire("one", 1, Duration.ofMinutes(1)));
 
         assertTrue(service.sizeForTest() <= 2);
+    }
+
+    @Test
+    void cleanupDoesNotExpireAnActiveLongerWindow() throws InterruptedException {
+        InMemoryRateLimitService service = new InMemoryRateLimitService(100, 10);
+        assertTrue(service.tryAcquire("client", 1, Duration.ofMinutes(1)));
+        Thread.sleep(20);
+        assertFalse(service.tryAcquire("client", 1, Duration.ofMinutes(1)));
     }
 }

@@ -1,7 +1,7 @@
 package com.sjg.controller.pub;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.sjg.dto.Result;
 import com.sjg.entity.PoemAnalysis;
 import com.sjg.entity.ContentReview;

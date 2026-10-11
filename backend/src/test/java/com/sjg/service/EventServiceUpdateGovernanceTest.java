@@ -18,7 +18,7 @@ class EventServiceUpdateGovernanceTest {
 
         assertThrows(IllegalArgumentException.class, () -> service.update(404L, new Event()));
 
-        verify(eventMapper, never()).updateById(any());
+        verify(eventMapper, never()).updateById(any(com.sjg.entity.Event.class));
         verifyNoInteractions(cleanup);
     }
 }

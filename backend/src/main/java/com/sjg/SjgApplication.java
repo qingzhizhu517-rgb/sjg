@@ -7,11 +7,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 @MapperScan("com.sjg.mapper")
 public class SjgApplication {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         // 清除可能被 IDE / 环境误注入的代理系统属性，避免 MySQL(StandardSocketFactory 读
         // socksProxyHost) 与 LLM HttpClient 走已失效的 SOCKS 代理导致 "Can't connect to SOCKS proxy"。
         // 本项目 DB 在阿里云、国产大模型直连，均不需要代理；如某外呼确需代理，请在对应 client 内单独配置。
         clearProxySystemProperties();
+        com.sjg.ops.DatabaseTls.configureFromEnvironment();
         SpringApplication.run(SjgApplication.class, args);
     }
 

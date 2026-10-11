@@ -1,6 +1,8 @@
 package com.sjg.config;
 
 import com.sjg.dto.Result;
+import com.sjg.exception.BusinessException;
+import com.sjg.exception.TooManyRequestsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -69,9 +71,23 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Result<Void>> handleRuntimeException(RuntimeException e) {
-        // RuntimeException 通常是业务逻辑异常，消息是安全的
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Result.error(400, e.getMessage()));
+        return handleException(e);
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<Result<Void>> handleBusinessException(BusinessException e) {
+        return ResponseEntity.badRequest().body(Result.error(400, e.getMessage()));
+    }
+
+    @ExceptionHandler(TooManyRequestsException.class)
+    public ResponseEntity<Result<Void>> handleRateLimit(TooManyRequestsException e) {
+        return ResponseEntity.status(429).header("Retry-After", "60").body(Result.error(429, e.getMessage()));
+    }
+
+    @ExceptionHandler({org.springframework.web.bind.MethodArgumentNotValidException.class,
+            org.springframework.http.converter.HttpMessageNotReadableException.class})
+    public ResponseEntity<Result<Void>> handleInvalidRequest(Exception e) {
+        return ResponseEntity.badRequest().body(Result.error(400, "请求参数错误，请检查必填项与字段长度"));
     }
 
     @ExceptionHandler(Exception.class)

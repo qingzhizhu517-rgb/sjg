@@ -30,6 +30,8 @@ public class RagRetrievalService {
     private final PoemMapper poemMapper;
     private final ScenicSpotMapper spotMapper;
 
+    @Value("${llm.rag.fulltext-enabled:false}") private boolean fulltextEnabled;
+
     @Value("${llm.rag.max-results:3}") private int perCategory;
 
     /** 各表搜索字段拼接为单列，便于一次 LIKE 匹配 */
@@ -63,7 +65,8 @@ public class RagRetrievalService {
     private void appendPoets(StringBuilder sb, List<String> keywords) {
         try {
             LambdaQueryWrapper<Poet> w = new LambdaQueryWrapper<>();
-            w.and(q -> orApply(q, keywords, POET_CLAUSE));
+            if (fulltextEnabled && keywords.get(0).length() >= 2) FullTextSearch.apply(w, "poet", keywords.get(0));
+            else w.and(q -> orApply(q, keywords, POET_CLAUSE));
             w.last("LIMIT " + perCategory);
             List<Poet> poets = poetMapper.selectList(w);
             if (poets.isEmpty()) return;
@@ -85,7 +88,8 @@ public class RagRetrievalService {
     private void appendPoems(StringBuilder sb, List<String> keywords) {
         try {
             LambdaQueryWrapper<Poem> w = new LambdaQueryWrapper<>();
-            w.and(q -> orApply(q, keywords, POEM_CLAUSE));
+            if (fulltextEnabled && keywords.get(0).length() >= 2) FullTextSearch.apply(w, "poem", keywords.get(0));
+            else w.and(q -> orApply(q, keywords, POEM_CLAUSE));
             w.last("LIMIT " + perCategory);
             List<Poem> poems = poemMapper.selectList(w);
             if (poems.isEmpty()) return;
@@ -107,7 +111,8 @@ public class RagRetrievalService {
     private void appendSpots(StringBuilder sb, List<String> keywords) {
         try {
             LambdaQueryWrapper<ScenicSpot> w = new LambdaQueryWrapper<>();
-            w.and(q -> orApply(q, keywords, SPOT_CLAUSE));
+            if (fulltextEnabled && keywords.get(0).length() >= 2) FullTextSearch.apply(w, "scenic_spot", keywords.get(0));
+            else w.and(q -> orApply(q, keywords, SPOT_CLAUSE));
             w.last("LIMIT " + perCategory);
             List<ScenicSpot> spots = spotMapper.selectList(w);
             if (spots.isEmpty()) return;

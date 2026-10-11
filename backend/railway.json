@@ -5,7 +5,9 @@
     "dockerfilePath": "Dockerfile"
   },
   "deploy": {
-    "healthcheckPath": "/api/public/dynasties",
+    "preDeployCommand": ["java -Dloader.main=com.sjg.ops.ReleaseMigrationRunner -cp /app/app.jar org.springframework.boot.loader.launch.PropertiesLauncher"],
+    "preDeployTimeoutSeconds": 180,
+    "healthcheckPath": "/actuator/health",
     "healthcheckTimeout": 180,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3

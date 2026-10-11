@@ -1,5 +1,7 @@
 # SJG 数字人文平台 - 数据接口设计文档 (API Interfaces)
 
+> 2026-10-11：本文保留人工设计说明，部分字段与路径属于早期方案。当前接口以运行中后端的 `/v3/api-docs` 为准（仅管理员，生产默认关闭），可用 `node scripts/export-openapi.mjs` 导出。兼容性规则与认证边界见 [安全运行基线](security-operations.md)，本轮真实 HTTP/SQL 验收见 [整改结果](2026-10-11-iso-remediation-results.md)。不得仅凭本文件推断当前权限、审核状态或接口已上线。
+
 本文档整理并规范了 **展示端 (display-frontend)** 和 **管理端 (admin-frontend)** 开发所需的全部数据接口，包括公开展示接口、后台管理接口以及核心实体数据结构设计。
 
 ---

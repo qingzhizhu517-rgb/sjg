@@ -45,7 +45,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").hasAuthority("admin")
                 .requestMatchers("/api/admin/**").hasAuthority("admin")
                 .requestMatchers("/api/auth/**").authenticated()
                 .anyRequest().authenticated()
@@ -85,7 +86,7 @@ public class SecurityConfig {
                                 new LambdaQueryWrapper<User>().eq(User::getUsername, username));
                         // Token 本身未携带实时账号状态；每次请求都要求账号仍处于已审批状态，
                         // 这样禁用/拒绝账号的旧 token 会立即失效。
-                        if (user != null && "approved".equalsIgnoreCase(user.getStatus())) {
+                        if (user != null && "approved".equalsIgnoreCase(user.getStatus()) && jwtUtil.matchesUser(token, user)) {
                             var auth = new UsernamePasswordAuthenticationToken(
                                     username, null,
                                     List.of(new SimpleGrantedAuthority(user.getRole())));

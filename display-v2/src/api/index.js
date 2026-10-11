@@ -1,3 +1,4 @@
+import { unwrapResult } from '@sjg/shared'
 import axios from 'axios'
 import { apiUrl } from './url.js'
 import { cacheKey, swrGet, prefetchWhenIdle } from './cache'
@@ -41,16 +42,7 @@ const getErrorMessage = (error) => {
 api.interceptors.response.use(
   (response) => {
     const res = response.data
-    if (res && typeof res === 'object' && 'code' in res) {
-      if (res.code === 200) {
-        return res.data !== undefined ? res.data : res
-      }
-      // Backend returned business error — throw with message so callers can catch
-      const err = new Error(res.message || '服务器返回错误')
-      err.code = res.code
-      return Promise.reject(err)
-    }
-    return res
+    return unwrapResult(res)
   },
   (error) => {
     const message = getErrorMessage(error)

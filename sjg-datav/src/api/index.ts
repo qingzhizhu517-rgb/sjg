@@ -1,3 +1,4 @@
+import { unwrapResult } from '@sjg/shared'
 import useSWR from 'swr'
 
 const BASE_URL = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/+$/, '') + '/api/public'
@@ -58,14 +59,8 @@ const fetcher = async (url: string) => {
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`)
   }
-  const data = await response.json()
-  if (data.code !== 200) {
-    throw new Error(data.message || '请求失败')
-  }
-  if (data.data && data.data.records) {
-    return data.data.records
-  }
-  return data.data
+  const data = unwrapResult<any>(await response.json())
+  return data?.records ?? data
 }
 
 /** 分页全量拉取：循环取到 total 为止（maxPages 兜底防死循环） */
@@ -75,10 +70,9 @@ const fetchAllPaginated = async (baseUrl: string, pageSize = 200) => {
   for (let page = 1; page <= maxPages; page++) {
     const response = await fetch(`${baseUrl}?page=${page}&size=${pageSize}`)
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    const data = await response.json()
-    if (data.code !== 200) throw new Error(data.message || '请求失败')
-    const records = data.data?.records || []
-    const total = data.data?.total || 0
+    const data = unwrapResult<{ records?: unknown[]; total?: number }>(await response.json())
+    const records = data?.records || []
+    const total = data?.total || 0
     all.push(...records)
     if (records.length === 0 || all.length >= total) break
   }

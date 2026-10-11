@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sjg.dto.PageResult;
 import com.sjg.dto.ResetPasswordRequest;
 import com.sjg.entity.User;
+import com.sjg.exception.BusinessException;
 import com.sjg.mapper.UserMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -52,20 +53,23 @@ public class UserService {
     }
 
     public void resetPassword(Long id, ResetPasswordRequest request) {
+        PasswordPolicy.validate(request.getNewPassword());
         User user = userMapper.selectById(id);
         if (user == null) {
-            throw new RuntimeException("用户不存在");
+            throw new BusinessException("用户不存在");
         }
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setCredentialVersion(user.getCredentialVersion() == null ? 1L : user.getCredentialVersion() + 1);
         userMapper.updateById(user);
     }
 
     private void updateStatus(Long id, String status) {
         User user = userMapper.selectById(id);
         if (user == null) {
-            throw new RuntimeException("用户不存在");
+            throw new BusinessException("用户不存在");
         }
         user.setStatus(status);
+        user.setCredentialVersion(user.getCredentialVersion() == null ? 1L : user.getCredentialVersion() + 1);
         userMapper.updateById(user);
     }
 }

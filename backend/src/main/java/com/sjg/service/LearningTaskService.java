@@ -2,8 +2,8 @@ package com.sjg.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.sjg.dto.LearningSubmissionRequest;
 import com.sjg.dto.LearningFeedbackContext;
 import com.sjg.dto.PageResult;
@@ -575,7 +575,7 @@ public class LearningTaskService {
     private boolean containsPlaceholder(JsonNode node) {
         if (node == null) return false;
         if (node.isTextual()) return PLACEHOLDER_PATTERN.matcher(node.asText()).find();
-        if (!node.isContainerNode()) return false;
+        if (!(node.isObject() || node.isArray())) return false;
         for (JsonNode child : node) {
             if (containsPlaceholder(child)) return true;
         }

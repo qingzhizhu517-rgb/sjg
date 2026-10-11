@@ -36,6 +36,8 @@ public class KnowledgeRetrievalService {
     private static final int MAX_SNIPPETS = 6;
 
     private final PoetMapper poetMapper;
+    @org.springframework.beans.factory.annotation.Value("${llm.rag.fulltext-enabled:false}")
+    private boolean fulltextEnabled;
     private final PoemMapper poemMapper;
     private final ScenicSpotMapper spotMapper;
     private final CulturalItemMapper culturalMapper;
@@ -130,45 +132,55 @@ public class KnowledgeRetrievalService {
 
     private void addPoems(Map<String, EvidenceSnippet> out, String keyword) {
         try {
-            List<Poem> rows = poemMapper.selectList(new LambdaQueryWrapper<Poem>()
-                    .like(Poem::getTitle, keyword).or().like(Poem::getContent, keyword)
-                    .or().like(Poem::getBackground, keyword).last("LIMIT 3"));
+            LambdaQueryWrapper<Poem> wrapper = new LambdaQueryWrapper<>();
+            if (fulltextEnabled && keyword.length() >= 2) FullTextSearch.apply(wrapper, "poem", keyword);
+            else wrapper.like(Poem::getTitle, keyword).or().like(Poem::getContent, keyword)
+                    .or().like(Poem::getBackground, keyword);
+            List<Poem> rows = poemMapper.selectList(wrapper.last("LIMIT 3"));
             for (Poem row : rows) add(out, row, null);
         } catch (Exception ignored) { }
     }
 
     private void addPoets(Map<String, EvidenceSnippet> out, String keyword) {
         try {
-            List<Poet> rows = poetMapper.selectList(new LambdaQueryWrapper<Poet>()
-                    .like(Poet::getName, keyword).or().like(Poet::getBiography, keyword)
-                    .or().like(Poet::getBirthplace, keyword).last("LIMIT 3"));
+            LambdaQueryWrapper<Poet> wrapper = new LambdaQueryWrapper<>();
+            if (fulltextEnabled && keyword.length() >= 2) FullTextSearch.apply(wrapper, "poet", keyword);
+            else wrapper.like(Poet::getName, keyword).or().like(Poet::getBiography, keyword)
+                    .or().like(Poet::getBirthplace, keyword);
+            List<Poet> rows = poetMapper.selectList(wrapper.last("LIMIT 3"));
             for (Poet row : rows) add(out, row, null);
         } catch (Exception ignored) { }
     }
 
     private void addSpots(Map<String, EvidenceSnippet> out, String keyword) {
         try {
-            List<ScenicSpot> rows = spotMapper.selectList(new LambdaQueryWrapper<ScenicSpot>()
-                    .like(ScenicSpot::getName, keyword).or().like(ScenicSpot::getDescription, keyword)
-                    .or().like(ScenicSpot::getRegion, keyword).last("LIMIT 3"));
+            LambdaQueryWrapper<ScenicSpot> wrapper = new LambdaQueryWrapper<>();
+            if (fulltextEnabled && keyword.length() >= 2) FullTextSearch.apply(wrapper, "scenic_spot", keyword);
+            else wrapper.like(ScenicSpot::getName, keyword).or().like(ScenicSpot::getDescription, keyword)
+                    .or().like(ScenicSpot::getRegion, keyword);
+            List<ScenicSpot> rows = spotMapper.selectList(wrapper.last("LIMIT 3"));
             for (ScenicSpot row : rows) add(out, row, null);
         } catch (Exception ignored) { }
     }
 
     private void addCulturalItems(Map<String, EvidenceSnippet> out, String keyword) {
         try {
-            List<CulturalItem> rows = culturalMapper.selectList(new LambdaQueryWrapper<CulturalItem>()
-                    .like(CulturalItem::getTitle, keyword).or().like(CulturalItem::getSummary, keyword)
-                    .or().like(CulturalItem::getContent, keyword).last("LIMIT 3"));
+            LambdaQueryWrapper<CulturalItem> wrapper = new LambdaQueryWrapper<>();
+            if (fulltextEnabled && keyword.length() >= 2) FullTextSearch.apply(wrapper, "cultural_item", keyword);
+            else wrapper.like(CulturalItem::getTitle, keyword).or().like(CulturalItem::getSummary, keyword)
+                    .or().like(CulturalItem::getContent, keyword);
+            List<CulturalItem> rows = culturalMapper.selectList(wrapper.last("LIMIT 3"));
             for (CulturalItem row : rows) add(out, row, null);
         } catch (Exception ignored) { }
     }
 
     private void addEvents(Map<String, EvidenceSnippet> out, String keyword) {
         try {
-            List<Event> rows = eventMapper.selectList(new LambdaQueryWrapper<Event>()
-                    .like(Event::getTitle, keyword).or().like(Event::getDescription, keyword)
-                    .or().like(Event::getSignificance, keyword).last("LIMIT 3"));
+            LambdaQueryWrapper<Event> wrapper = new LambdaQueryWrapper<>();
+            if (fulltextEnabled && keyword.length() >= 2) FullTextSearch.apply(wrapper, "event", keyword);
+            else wrapper.like(Event::getTitle, keyword).or().like(Event::getDescription, keyword)
+                    .or().like(Event::getSignificance, keyword);
+            List<Event> rows = eventMapper.selectList(wrapper.last("LIMIT 3"));
             for (Event row : rows) add(out, row, null);
         } catch (Exception ignored) { }
     }

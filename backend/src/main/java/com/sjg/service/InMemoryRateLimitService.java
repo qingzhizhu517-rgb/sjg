@@ -40,7 +40,7 @@ public class InMemoryRateLimitService implements RateLimitService {
             cleanup(now);
             Window current = windows.get(normalizedKey);
             if (current == null) {
-                evictIfFull();
+                if (windows.size() >= maxKeys) return false;
                 current = new Window();
                 windows.put(normalizedKey, current);
             }
@@ -51,6 +51,7 @@ public class InMemoryRateLimitService implements RateLimitService {
             }
             current.timestamps.addLast(now);
             current.lastTouched = now;
+            current.expiresAt = Math.max(current.expiresAt, now + windowMillis);
             return true;
         }
     }
@@ -64,7 +65,7 @@ public class InMemoryRateLimitService implements RateLimitService {
     private void cleanup(long now) {
         if (now - lastCleanupMillis < cleanupIntervalMillis) return;
         windows.entrySet().removeIf(entry -> entry.getValue().timestamps.isEmpty()
-                || now - entry.getValue().lastTouched >= cleanupIntervalMillis);
+                || now >= entry.getValue().expiresAt);
         lastCleanupMillis = now;
     }
 
@@ -84,5 +85,6 @@ public class InMemoryRateLimitService implements RateLimitService {
     private static final class Window {
         private final Deque<Long> timestamps = new ArrayDeque<>();
         private long lastTouched = System.currentTimeMillis();
+        private long expiresAt;
     }
 }

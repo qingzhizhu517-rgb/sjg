@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "railway": {
+    "cliVersion": "5.64.2",
+    "projectId": "a20a55f3-ba67-4817-8a4e-b352e41121c8",
+    "environmentId": "6aee3bd0-22ac-4b16-b3c3-c0dbebcb14cf"
+  },
+  "publicAssetsOrigin": "",
+  "services": {
+    "mysql": {
+      "provider": "railway",
+      "serviceId": "709c2f47-8b04-47f1-81be-961fc12a880b",
+      "dependsOn": []
+    },
+    "backend": {
+      "provider": "railway",
+      "serviceId": "b1096b4d-6a47-41f9-a679-8b964666eec0",
+      "url": "https://sjg-api-production.up.railway.app",
+      "dependsOn": ["mysql"]
+    },
+    "sjg-datav": {
+      "provider": "sites",
+      "projectId": "appgprj_6aca26caccb0819188666ef76e25ea68",
+      "url": "https://qilu-wenmai-datav-qzzhu.noisyamber1.chatgpt.site",
+      "dependsOn": ["backend"]
+    },
+    "admin-frontend": {
+      "provider": "sites",
+      "projectId": "appgprj_6aca26f42d9081918bc7545e1b373f99",
+      "url": "https://qilu-wenmai-admin-qzzhu.noisyamber1.chatgpt.site",
+      "dependsOn": ["backend"]
+    },
+    "display-v2": {
+      "provider": "sites",
+      "projectId": "appgprj_6aca26e375b081919acfa874a379028d",
+      "url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
+      "dependsOn": ["backend", "sjg-datav"]
+    }
+  }
+}

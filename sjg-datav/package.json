@@ -14,7 +14,8 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "styled-components": "^6.1.19",
-    "swr": "^2.5.0"
+    "swr": "^2.5.0",
+    "@sjg/shared": "file:../shared"
   },
   "devDependencies": {
     "@types/react": "^19.1.16",
@@ -22,5 +23,8 @@
     "@vitejs/plugin-react": "^6.0.0",
     "typescript": "~5.9.3",
     "vite": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

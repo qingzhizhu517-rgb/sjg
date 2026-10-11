@@ -1,8 +1,8 @@
 package com.sjg.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.sjg.dto.ChatMessage;
 import com.sjg.entity.ContentReview;
 import com.sjg.entity.Poem;

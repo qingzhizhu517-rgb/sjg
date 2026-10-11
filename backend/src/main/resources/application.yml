@@ -3,6 +3,8 @@ server:
   trusted-proxies: ${TRUSTED_PROXIES:}
 
 spring:
+  jackson:
+    use-jackson2-defaults: true
   datasource:
     # 本地库（MySQL 8.0.46 @ 127.0.0.1:3306/sjg01，生产数据完整副本 + V7-V10 已应用）
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://127.0.0.1:3306/sjg01?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
@@ -10,20 +12,23 @@ spring:
     # 凭证必须通过环境变量提供，不在仓库保留默认口令。
     password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:}}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX:10}
+      minimum-idle: ${DB_POOL_MIN:2}
+      connection-timeout: 10000
   servlet:
     multipart:
       max-file-size: 200MB
       max-request-size: 200MB
 
 mybatis-plus:
-  mapper-locations: classpath:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true
 
 jwt:
   # 至少 32 字节的随机值，由部署环境通过 JWT_SECRET 提供。
   secret: ${JWT_SECRET:}
-  expiration: 86400000
+  expiration: ${JWT_EXPIRATION_MS:3600000}
 
 oss:
   endpoint: oss-cn-beijing.aliyuncs.com
@@ -61,6 +66,8 @@ llm:
     {rag_context}
   rag:
     max-results: 3
+    # Apply V36 first; false retains the compatible small-dataset LIKE path.
+    fulltext-enabled: ${RAG_FULLTEXT_ENABLED:false}
   rate-limit:
     window-seconds: 60
     max-requests: 10
@@ -69,4 +76,18 @@ llm:
 
 logging:
   level:
-    com.sjg: debug
+    com.sjg: info
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: sjg

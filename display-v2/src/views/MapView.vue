@@ -111,13 +111,13 @@ const experiences = [
 .atlas-hero__title span + span { color: #59674f; }
 .atlas-hero__subtitle { display: flex; align-items: center; gap: 17px; margin-top: 27px; font-size: 22px; font-weight: 600; letter-spacing: 3px; white-space: nowrap; }
 .atlas-hero__subtitle > span { font-weight: 400; }
-.atlas-seal { display: inline-flex; writing-mode: vertical-rl; font-family: var(--font-display); font-size: 10px; font-style: normal; color: #fff4e7; background: #b15e50; letter-spacing: 1px; padding: 5px 2px; outline: 1px solid #bc786a; outline-offset: 2px; line-height: 1.2; margin-left: 3px; }
+.atlas-seal { display: inline-flex; writing-mode: vertical-rl; font-family: var(--font-display); font-size: 10px; font-style: normal; color: #fff4e7; background: #a95043; letter-spacing: 1px; padding: 5px 2px; outline: 1px solid #bc786a; outline-offset: 2px; line-height: 1.2; margin-left: 3px; }
 .atlas-hero__description { margin-top: 27px; font-size: 13px; line-height: 2.05; color: #71675a; letter-spacing: .035em; }
 .atlas-categories { display: grid; grid-template-columns: 1fr 1fr; gap: 23px 18px; margin-top: 61px; width: 302px; }
 .atlas-categories a { display: flex; gap: 9px; align-items: center; color: #71614d; font-size: 12px; line-height: 1.6; }
 .atlas-categories a:hover { color: var(--accent); }
 .atlas-categories svg { width: 31px; height: 31px; flex-shrink: 0; }
-.atlas-categories small { display: block; font: 7px/1.8 Georgia, serif; letter-spacing: .04em; color: #968772; }
+.atlas-categories small { display: block; font: 7px/1.8 Georgia, serif; letter-spacing: .04em; color: var(--text-secondary); }
 .atlas-hero__painting { position: absolute; left: 22%; top: 0; right: -15px; height: 100%; container-type: size; }
 /* Stage keeps the painting's 25:16 ratio so city points stay pinned to the river at any viewport. */
 .atlas-stage { position: absolute; inset: 0; margin: auto; width: min(100cqw, 100cqh * 1.5625); aspect-ratio: 2400 / 1536; }
@@ -141,22 +141,22 @@ const experiences = [
 .atlas-heading h2 { position: relative; display: flex; align-items: center; gap: 14px; font-size: 24px; letter-spacing: 2px; font-weight: 600; }
 .atlas-heading h2::after { content: ''; position: absolute; width: 44px; height: 2px; background: #9d7d52; bottom: -14px; left: 0; }
 .atlas-heading h2 > img { width: 64px; height: 30px; object-fit: cover; opacity: .38; mix-blend-mode: multiply; }
-.atlas-heading > a { color: #8a7a65; font-size: 11px; padding: 4px 0; }
+.atlas-heading > a { color: var(--text-secondary); font-size: 11px; padding: 4px 0; }
 .atlas-heading > a > span { padding-left: 4px; }
 .atlas-sights__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 18px; }
 .atlas-sight { position: relative; min-width: 0; display: flex; flex-direction: column; padding: 17px 13px 18px; border: 1px solid #ded6c766; background: #fbf9f438; box-shadow: 3px 3px 0 #76644304; }
 .atlas-sight::before { content: ''; position: absolute; inset: 3px; border: 1px solid #e5ded442; pointer-events: none; }
 .atlas-sight__heading { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; min-height: 30px; }
-.atlas-sight__index { font: italic 19px/1.2 Georgia, serif; color: #9b907e; margin-right: 3px; }
+.atlas-sight__index { font: italic 19px/1.2 Georgia, serif; color: var(--text-secondary); margin-right: 3px; }
 .atlas-sight h3 { font-size: 19px; font-weight: 600; white-space: nowrap; }
-.atlas-sight__tag { margin-left: auto; font-size: 10px; color: #9c8061; background: #e8dcc74a; padding: 1px 4px; border-radius: 2px; white-space: nowrap; }
+.atlas-sight__tag { margin-left: auto; font-size: 10px; color: var(--text-secondary); background: #e8dcc74a; padding: 1px 4px; border-radius: 2px; white-space: nowrap; }
 .atlas-sight__image { display: block; margin: 11px -7px 7px; }
 .atlas-sight__image { aspect-ratio: 3 / 2; overflow: hidden; }
 .atlas-sight__image :deep(img) { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .45s; }
 .atlas-sight__image:hover :deep(img) { transform: translateY(-3px); }
 .atlas-sight__poetry { margin: 6px 0 0; min-height: 52px; color: #6f604b; font-family: var(--font-display); font-size: 15px; letter-spacing: 1.5px; line-height: 1.8; }
 .atlas-sight__poetry p { margin: 0; }
-.atlas-sight__poetry cite { display: block; margin-top: 4px; font: normal 11px/1.6 var(--font-body, inherit); letter-spacing: 1px; color: #9a8a72; }
+.atlas-sight__poetry cite { display: block; margin-top: 4px; font: normal 11px/1.6 var(--font-body, inherit); letter-spacing: 1px; color: var(--text-secondary); }
 .atlas-sight__description { margin-top: 8px; font-size: 12px; line-height: 1.9; color: #776b5d; padding-bottom: 22px; }
 .atlas-pill { position: relative; align-self: start; display: inline-flex; align-items: center; gap: 9px; margin-top: auto; padding: 2px 10px; border: 1px solid #9b8b72; border-radius: 20px; color: #7d6a50; font-size: 10px; line-height: 1.6; }
 .atlas-pill:hover { background: #ede5d7; }
@@ -177,14 +177,14 @@ const experiences = [
 .atlas-experience:hover .atlas-experience__arrow { transform:translate(2px,-2px); }
 .atlas-art-note { margin:10px 0 0; color:var(--text-muted); font-size:11px; text-align:right; }
 .atlas-journeys { margin-top:45px; }
-.atlas-heading__english { color:#9b8b75; font:9px Georgia,serif; letter-spacing:2px; margin-left:8px; }
+.atlas-heading__english { color:var(--text-secondary); font:9px Georgia,serif; letter-spacing:2px; margin-left:8px; }
 .atlas-journeys__hint { font-size:12px; color:var(--text-muted); letter-spacing:2px; }
 .atlas-city-rail { display:grid; grid-template-columns:repeat(9,minmax(0,1fr)); gap:12px; padding:22px 0 26px; }
 .atlas-city-rail a { min-width:0; display:block; padding:0 0 10px; border-bottom:1px solid var(--border); }
 .atlas-city-rail__art { display:block; aspect-ratio:1.35; overflow:hidden; }
 .atlas-city-rail__art img { display:block; width:100%; height:100%; object-fit:cover; mix-blend-mode:multiply; transition:transform .35s; }
 .atlas-city-rail__label { display:flex; gap:7px; align-items:baseline; margin-top:10px; }
-.atlas-city-rail small { color:#a39075; font:italic 11px Georgia,serif; }
+.atlas-city-rail small { color:var(--text-secondary); font:italic 11px Georgia,serif; }
 .atlas-city-rail strong { font-size:18px; font-family:var(--font-display); font-weight:400; letter-spacing:2px; }
 .atlas-city-rail i { margin-left:auto; color:var(--accent); font-size:13px; font-style:normal; }
 .atlas-city-rail__caption { display:block; color:var(--text-muted); margin-top:6px; font-size:11px; }

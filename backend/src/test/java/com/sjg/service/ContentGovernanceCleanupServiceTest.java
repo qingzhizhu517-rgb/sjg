@@ -15,6 +15,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 class ContentGovernanceCleanupServiceTest {
+    @org.junit.jupiter.api.BeforeAll
+    static void initializeMybatisMetadata() {
+        var config = new com.baomidou.mybatisplus.core.MybatisConfiguration();
+        var assistant = new org.apache.ibatis.builder.MapperBuilderAssistant(config, "test");
+        for (Class<?> type : java.util.List.of(com.sjg.entity.ContentReview.class,
+                com.sjg.entity.ContentSourceLink.class, com.sjg.entity.PoemAnalysis.class,
+                com.sjg.entity.Event.class, com.sjg.entity.Poet.class, com.sjg.entity.Poem.class)) {
+            com.baomidou.mybatisplus.core.metadata.TableInfoHelper.initTableInfo(assistant, type);
+        }
+    }
+
 
     @Test
     void deleteEntityReferencesRemovesLinksAndReviewRows() {
@@ -60,7 +71,7 @@ class ContentGovernanceCleanupServiceTest {
 
         org.mockito.Mockito.when(reviewMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
         service.ensureNeedsReview("poem", 7L);
-        verify(reviewMapper).insert(org.mockito.ArgumentMatchers.argThat(review ->
+        verify(reviewMapper).insert(org.mockito.ArgumentMatchers.argThat((com.sjg.entity.ContentReview review) ->
                 "poem".equals(review.getEntityType())
                         && Long.valueOf(7L).equals(review.getEntityId())
                         && ContentReview.NEEDS_REVIEW.equals(review.getStatus())));

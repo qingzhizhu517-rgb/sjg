@@ -6,6 +6,9 @@ import com.sjg.dto.LoginResponse;
 import com.sjg.dto.RegisterRequest;
 import com.sjg.dto.Result;
 import com.sjg.service.AuthService;
+import com.sjg.service.ClientIpResolver;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +27,11 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final ClientIpResolver clientIpResolver;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, ClientIpResolver clientIpResolver) {
         this.authService = authService;
+        this.clientIpResolver = clientIpResolver;
     }
 
     /**
@@ -34,8 +39,8 @@ public class AuthController {
      */
     @Operation(summary = "用户注册", description = "注册新用户账号，需等待管理员审批")
     @PostMapping("/register")
-    public ResponseEntity<Result<Map<String, String>>> register(@RequestBody RegisterRequest request) {
-        authService.register(request);
+    public ResponseEntity<Result<Map<String, String>>> register(@Valid @RequestBody RegisterRequest request, HttpServletRequest httpRequest) {
+        authService.register(request, clientIpResolver.resolve(httpRequest));
         return ResponseEntity.ok(Result.success(Map.of("message", "注册成功，等待管理员审批")));
     }
 
@@ -44,8 +49,8 @@ public class AuthController {
      */
     @Operation(summary = "用户登录", description = "用户登录获取JWT令牌，仅已审批用户可登录")
     @PostMapping("/login")
-    public ResponseEntity<Result<LoginResponse>> login(@RequestBody LoginRequest request) {
-        return ResponseEntity.ok(Result.success(authService.login(request)));
+    public ResponseEntity<Result<LoginResponse>> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(Result.success(authService.login(request, clientIpResolver.resolve(httpRequest))));
     }
 
     /**
@@ -54,7 +59,7 @@ public class AuthController {
     @Operation(summary = "修改密码", description = "登录用户修改自己的密码，需验证当前密码")
     @PutMapping("/change-password")
     public ResponseEntity<Result<Map<String, String>>> changePassword(Principal principal,
-            @RequestBody ChangePasswordRequest request) {
+            @Valid @RequestBody ChangePasswordRequest request) {
         authService.changePassword(principal.getName(), request);
         return ResponseEntity.ok(Result.success(Map.of("message", "密码修改成功")));
     }

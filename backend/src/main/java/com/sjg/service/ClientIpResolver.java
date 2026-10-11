@@ -33,9 +33,11 @@ public class ClientIpResolver {
 
     private String firstAddress(String value) {
         if (value == null) return null;
-        for (String part : value.split(",")) {
-            String candidate = trimToNull(part);
-            if (candidate != null) return candidate;
+        // Proxies append their observed peer: trust the chain from right to left.
+        String[] chain = value.split(",");
+        for (int i = chain.length - 1; i >= 0; i--) {
+            String candidate = trimToNull(chain[i]);
+            if (candidate != null && !trustedProxies.contains(candidate)) return candidate;
         }
         return null;
     }

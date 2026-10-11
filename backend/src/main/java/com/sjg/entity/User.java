@@ -27,6 +27,9 @@ public class User {
     @Schema(description = "状态（pending/approved/rejected/disabled）", example = "approved")
     private String status;
 
+    @Schema(description = "会话凭据版本", accessMode = Schema.AccessMode.READ_ONLY)
+    private Long credentialVersion;
+
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
 }

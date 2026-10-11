@@ -41,6 +41,7 @@
 </template>
 
 <script setup>
+import { parseMediaUrls as parseVideos } from '@sjg/shared'
 import { ref, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../api'
@@ -58,19 +59,7 @@ const previewVisible = ref(false)
 const previewUrl = ref('')
 const previewPlayer = ref(null)
 
-const parseVideos = (val) => {
-  if (!val || val === '[]' || val === '') return []
-  if (Array.isArray(val)) return val.filter(v => v)
-  if (typeof val === 'string') {
-    try {
-      const arr = JSON.parse(val)
-      if (Array.isArray(arr)) return arr.filter(v => v)
-    } catch {
-      return val ? [val] : []
-    }
-  }
-  return []
-}
+
 
 watch(() => props.modelValue, (val) => {
   videoList.value = parseVideos(val)

@@ -1,7 +1,7 @@
 package com.sjg.controller.pub;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.sjg.service.LlmClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -27,7 +27,7 @@ class PublicAiStatusControllerTest {
             assertEquals(200, body.path("code").asInt());
             JsonNode data = body.path("data");
             Set<String> fields = new HashSet<>();
-            data.fieldNames().forEachRemaining(fields::add);
+            data.properties().forEach(entry -> fields.add(entry.getKey()));
             assertEquals(Set.of("generationConfigured", "reason"), fields);
             assertEquals(configured, data.path("generationConfigured").asBoolean());
             assertEquals(configured ? "configured" : "not_configured", data.path("reason").asText());
