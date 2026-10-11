@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import ssl
 import tempfile
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -20,7 +21,12 @@ START = time.monotonic()
 
 
 def database(verify=False, ca=None):
-    options = {}
+    bootstrap = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    bootstrap.check_hostname = False
+    bootstrap.verify_mode = ssl.CERT_NONE
+    # Bootstrap stays on the selected private network; new application clients
+    # are not published until the newly provisioned identity is verified.
+    options = {'ssl': bootstrap}
     if verify:
         options = {'ssl_ca': ca, 'ssl_verify_cert': True, 'ssl_verify_identity': True}
     return pymysql.connect(host=os.environ['DB_HOST'], port=int(os.getenv('DB_PORT', '3306')),
@@ -65,7 +71,7 @@ def install_tls():
         subprocess.run(['openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '365',
                         '-keyout', str(key), '-out', str(cert), '-subj', '/CN=' + host,
                         '-addext', 'subjectAltName=DNS:' + host], check=True, capture_output=True)
-        prefix = '/var/lib/mysql/sjg-release-tls-' + str(int(time.time()))
+        prefix = '/var/lib/mysql/sjg-tls/sjg-release-tls-' + str(int(time.time()))
         with database() as connection, connection.cursor() as cursor:
             cursor.execute('SHOW VARIABLES WHERE Variable_name IN ("ssl_ca","ssl_cert","ssl_key")')
             previous = dict(cursor.fetchall())

@@ -2,11 +2,14 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
+import { readJournal, writeJournal } from './release-journal.mjs'
 import {
   validateReleaseConfig,
   releaseOrder,
   frontendEnvironment,
   relocateSharedLock,
+  backendUploadSpec,
+  injectBackendRuntime,
 } from './release-lib.mjs'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
@@ -62,12 +65,12 @@ async function secretInput() {
   return JSON.parse(value)
 }
 async function journal() {
-  const value = JSON.parse(await fs.readFile(journalPath))
+  const value = await readJournal(journalPath)
   if (value.repository_revision !== revision) throw new Error('Release revision mismatch')
   return value
 }
 async function save(value) {
-  await fs.writeFile(journalPath, JSON.stringify(value, null, 2) + '\n', { mode: 0o600 })
+  await writeJournal(journalPath, value)
 }
 async function backendReady() {
   const base = config.services.backend.url
@@ -79,6 +82,61 @@ async function backendReady() {
 }
 function railway(args) {
   return run('npx', ['--yes', `@railway/cli@${config.railway.cliVersion}`, ...args])
+}
+async function configureBackend(state) {
+  const directory = path.join(root, '.local/release-runtime')
+  await fs.mkdir(directory, { recursive: true })
+  const command = ['--yes', `@railway/cli@${config.railway.cliVersion}`]
+  await run('npx', [...command, 'link', ...targetArgs], { cwd: directory })
+  await run(
+    'npx',
+    [
+      ...command,
+      'config',
+      'pull',
+      '--variables',
+      'unmanaged',
+      '--environment',
+      config.railway.environmentId,
+      '--force',
+    ],
+    { cwd: directory },
+  )
+  const current = JSON.parse(
+    await run('npx', [...command, 'status', '--json'], { cwd: directory, capture: true }),
+  )
+  if (current.id !== config.railway.projectId) throw new Error('Railway project mismatch')
+  const name = current.services.edges.find((item) => item.node.id === config.services.backend.serviceId)?.node
+    .name
+  if (!name) throw new Error('Configured Railway backend does not exist')
+  const authoring = path.join(directory, '.railway/railway.ts')
+  const runtime = JSON.parse(await fs.readFile(path.join(state.source, 'backend/railway.json'))).deploy
+  await fs.writeFile(authoring, injectBackendRuntime(await fs.readFile(authoring, 'utf8'), name, runtime))
+  const plan = JSON.parse(
+    await run(
+      'npx',
+      [...command, 'config', 'plan', '--environment', config.railway.environmentId, '--json'],
+      { cwd: directory, capture: true },
+    ),
+  )
+  if (
+    !plan.ok ||
+    plan.diagnostics?.length ||
+    plan.changeSet.changes.some(
+      (change) =>
+        change.kind !== 'resource.update' ||
+        change.severity !== 'safe' ||
+        !change.summary.startsWith(`Update ${name} `),
+    )
+  )
+    throw new Error('Native runtime plan includes unexpected changes; inspect the local authoring file')
+  if (plan.changeSet.changes.length)
+    await run(
+      'npx',
+      [...command, 'config', 'apply', '--environment', config.railway.environmentId, '--yes'],
+      { cwd: directory },
+    )
+  console.log('Native Railway backend runtime matches the release configuration')
 }
 const targetArgs = [
   '--project',
@@ -130,8 +188,8 @@ if (phase === 'plan') {
   await save({ repository_revision: revision, created_at: new Date().toISOString(), services: {}, source })
   console.log(`Prepared immutable source snapshot: ${directory}`)
 } else if (phase === 'backup') {
-  const state = await journal(),
-    receipt = await secretInput()
+  const receipt = await secretInput()
+  const state = await journal()
   if (
     !receipt.sha256?.match(/^[a-f0-9]{64}$/) ||
     !receipt.completed_at ||
@@ -142,9 +200,12 @@ if (phase === 'plan') {
   state.backup = receipt
   await save(state)
   console.log('Backup receipt recorded')
+} else if (phase === 'backend-config') {
+  await configureBackend(await journal())
 } else if (phase === 'backend') {
   const state = await journal()
   if (!state.backup) throw new Error('Back up the existing database before deployment')
+  await configureBackend(state)
   const cors = frontends.map((name) => config.services[name].url).join(',')
   await railway([
     'variable',
@@ -160,24 +221,50 @@ if (phase === 'plan') {
   ])
   state.services.backend = { status: 'submitted', submitted_at: new Date().toISOString() }
   await save(state)
-  await run('npx', [
-    '--yes',
-    `@railway/cli@${config.railway.cliVersion}`,
-    'up',
-    ...targetArgs,
-    '--detach',
-    '--path-as-root',
-    '--message',
-    `SJG unified release ${revision}`,
-    path.join(state.source, 'backend'),
-  ])
+  const upload = backendUploadSpec(state.source)
+  await run(
+    'npx',
+    [
+      '--yes',
+      `@railway/cli@${config.railway.cliVersion}`,
+      'up',
+      upload.path,
+      ...targetArgs,
+      '--detach',
+      ...upload.flags,
+      '--message',
+      `SJG unified release ${revision}`,
+    ],
+    { cwd: upload.cwd },
+  )
   console.log('Backend submitted; run backend-check after Railway reports SUCCESS')
 } else if (phase === 'backend-check') {
   await backendReady()
+  const current = JSON.parse(
+    await run('npx', ['--yes', `@railway/cli@${config.railway.cliVersion}`, 'status', '--json'], {
+      capture: true,
+    }),
+  )
+  const environment = current.environments.edges.find(
+    (item) => item.node.id === config.railway.environmentId,
+  )?.node
+  const deployment = environment?.serviceInstances.edges.find(
+    (item) => item.node.serviceId === config.services.backend.serviceId,
+  )?.node.latestDeployment
+  const runtime = deployment?.meta?.serviceManifest?.deploy
+  if (
+    deployment?.status !== 'SUCCESS' ||
+    runtime?.healthcheckPath !== '/actuator/health' ||
+    !runtime?.preDeployCommand?.some((command) => command.includes('ReleaseMigrationRunner')) ||
+    runtime?.preDeployTimeoutSeconds !== 180
+  )
+    throw new Error('Live backend lacks the successful native migration gate')
   const state = await journal()
   state.services.backend = {
     ...state.services.backend,
     status: 'succeeded',
+    deployment_id: deployment.id,
+    native_migration_gate: true,
     verified_at: new Date().toISOString(),
   }
   await save(state)
@@ -187,6 +274,8 @@ if (phase === 'plan') {
   await backendReady()
   const state = await journal(),
     service = config.services[selected]
+  if (state.services.backend?.status !== 'succeeded' || !state.services.backend?.native_migration_gate)
+    throw new Error('Verify the native backend migration gate before preparing frontends')
   for (const dependency of service.dependsOn)
     if (
       config.services[dependency].provider === 'sites' &&
@@ -296,8 +385,8 @@ if (phase === 'plan') {
   )
 } else if (phase === 'record') {
   if (!frontends.includes(selected)) throw new Error('Select a configured frontend')
-  const state = await journal(),
-    receipt = await secretInput()
+  const receipt = await secretInput()
+  const state = await journal()
   if (
     receipt.project_id !== config.services[selected].projectId ||
     receipt.status !== 'succeeded' ||
@@ -355,4 +444,6 @@ if (phase === 'plan') {
   await save(state)
   console.log('Unified release HTTP verification passed')
 } else
-  throw new Error('Use plan, prepare, backup, backend, backend-check, sites NAME, record NAME, or verify')
+  throw new Error(
+    'Use plan, prepare, backup, backend-config, backend, backend-check, sites NAME, record NAME, or verify',
+  )

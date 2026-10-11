@@ -1,6 +1,6 @@
 # ISO 差距整改实施与验收台账
 
-日期：2026-10-11。对应 [原评估报告](2026-10-11-iso-standards-compliance-assessment.md)，按 P0 → P1 → P2 实施。工作区为 `codex/iso-remediation`，基线提交 `6f12508`；本轮修改尚未提交、合并或部署。
+日期：2026-10-11。对应 [原评估报告](2026-10-11-iso-standards-compliance-assessment.md)，按 P0 → P1 → P2 实施。工作区为 `codex/iso-remediation`，基线提交 `6f12508`；仓库代码已合并部署，更新结果见 [统一发布验收](2026-10-12-unified-release-results.md)。本台账下面保留初次仓库验收时的状态，线上更新以发布验收记录为准。
 
 本台账区分仓库内已验证的实现与生产环境待验收条件。完整 `npm run verify:all` 于本日通过；结果不能替代线上运行证据或组织级 ISO 认证。
 

@@ -6,9 +6,39 @@ import {
   validateReleaseConfig,
   frontendEnvironment,
   relocateSharedLock,
+  backendUploadSpec,
+  injectBackendRuntime,
 } from './release-lib.mjs'
 
 const config = JSON.parse(await fs.readFile(new URL('../ops/release.json', import.meta.url)))
+test('native Railway runtime injection preserves imported database and secret policy', () => {
+  const source =
+    'export default function() {\n const MySQL = mysql("MySQL", {});\n const api = service("sjg-api", {healthcheck:"/old"});\n return {variables:{managed:false},resources:[MySQL,api]};\n}'
+  const runtime = {
+    healthcheckPath: '/actuator/health',
+    preDeployCommand: ['java migration'],
+    preDeployTimeoutSeconds: 180,
+  }
+  const generated = injectBackendRuntime(source, 'sjg-api', runtime)
+  assert.ok(generated.includes('MySQL = mysql("MySQL", {})'))
+  assert.ok(generated.includes('variables:{managed:false}'))
+  assert.ok(generated.includes('api.deploy ='))
+  assert.ok(generated.includes('"preDeployCommand":["java migration"]'))
+  assert.throws(() => injectBackendRuntime(source, 'wrong-service', runtime), /not found/)
+})
+test('native SDK project-return imports retain their wrapper after injection', () => {
+  const source =
+    'export default defineRailway(() => {\n const api = service("sjg-api", {});\n return project("sjg", {variables:{managed:false},resources:[api]});\n});'
+  const value = injectBackendRuntime(source, 'sjg-api', { healthcheckPath: '/actuator/health' })
+  assert.ok(value.includes('return project("sjg",'))
+  assert.ok(value.includes('api.deploy ='))
+})
+test('Railway discovers railway.json from the backend snapshot directory', () => {
+  const upload = backendUploadSpec('/isolated/source')
+  assert.equal(upload.cwd, '/isolated/source/backend')
+  assert.equal(upload.path, '.')
+  assert.ok(upload.flags.includes('--no-gitignore'))
+})
 test('dependency order places the database before backend and display after datav', () => {
   assert.deepEqual(releaseOrder(config), ['mysql', 'backend', 'sjg-datav', 'admin-frontend', 'display-v2'])
   const cycle = structuredClone(config)

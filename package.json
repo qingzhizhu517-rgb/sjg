@@ -5,7 +5,7 @@
   "description": "齐鲁文脉人文 AI 平台统一开发入口",
   "scripts": {
     "release": "node scripts/release.mjs",
-    "test:release": "node --test scripts/release-contract.test.mjs",
+    "test:release": "node --test scripts/release-*.test.mjs",
     "check:security": "bash scripts/security-scan.sh",
     "verify:all": "bash scripts/verify-all.sh",
     "test:unit": "npm --prefix display-v2 run test:unit",

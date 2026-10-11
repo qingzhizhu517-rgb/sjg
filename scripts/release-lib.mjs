@@ -1,3 +1,18 @@
+export function backendUploadSpec(source) {
+  return { cwd: `${source}/backend`, path: '.', flags: ['--path-as-root', '--no-gitignore'] }
+}
+
+export function injectBackendRuntime(source, name, deploy) {
+  const declarations = [...source.matchAll(/const\s+(\w+)\s*=\s*service\("([^"]+)",/g)]
+  const variable = declarations.find((match) => match[2] === name)?.[1]
+  if (!variable || !/\n\s*return\s+/.test(source)) throw new Error('Imported backend service not found')
+  return source.replace(
+    /\n(\s*)return\s+/,
+    (_, indent) =>
+      `\n${indent}${variable}.deploy = {...${variable}.deploy, ...${JSON.stringify(deploy)}};\n${indent}return `,
+  )
+}
+
 export function releaseOrder(config) {
   const order = [],
     active = new Set(),

@@ -9,11 +9,11 @@
     "mysql_proxy_id": "13a72fa0-1687-418e-950d-239005eab0d9",
     "mysql_proxy_host": "mainline.proxy.rlwy.net",
     "mysql_proxy_port": 58212,
-    "backend_deployment_id": "fb29d6a0-8d2f-424e-8caf-a6adafbf67e4",
+    "backend_deployment_id": "f6eaf91c-75c7-4fda-a540-0af6dd888146",
     "status": "success",
     "bootstrap_service_id": "db374c4f-0457-4225-b079-8d51a78b2581",
     "bootstrap_deployment_id": "e70d0d4c-d081-4794-80e4-c4effa59c7db",
-    "mysql_deployment_id": "cee5a030-d650-46ad-a6c3-4afdeac32ad4",
+    "mysql_deployment_id": "da89eb30-be7e-44d6-a5f2-0f53d3ca2d8a",
     "mysql_proxy_status": "deleted",
     "bootstrap_status": "completed_service_deleted",
     "trial_days_remaining": 30,
@@ -23,43 +23,48 @@
     "asset_migration_deployment_id": "0d343e82-b1b3-415c-9153-92c3fa198207",
     "asset_migration_service_status": "completed_service_deleted",
     "trial_state_observed_at": "initial_deployment_2026-10-10",
-    "repository_revision": "3c5c46a49102f404004cb05a8fa4ddf8637b9381"
+    "repository_revision": "752604f289ac89572ad5e3603cbf6026f9c838ff",
+    "production_profile": "prod",
+    "database_tls": "VERIFY_IDENTITY",
+    "maintenance_service_status": "completed_service_deleted"
   },
   "sites": {
     "display-v2": {
       "project_id": "appgprj_6aca26e375b081919acfa874a379028d",
       "expected_url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
-      "checkout_path": "/Users/a1/.codex/worktrees/ba33/sjg/.local/sites/display-v2",
+      "checkout_path": "/Users/a1/.codex/worktrees/0b70/sjg/.local/releases/752604f289ac89572ad5e3603cbf6026f9c838ff/sites/display-v2",
       "status": "succeeded_private",
-      "commit_sha": "da51d0803f84085287ee679d49e9e19850196afc",
-      "deployment_id": "appgdep_6acb079f13d08191900716914427f4b2",
-      "version_id": "appgprj_6aca26e375b081919acfa874a379028d~appgver_d0d4bbe029548191aef7ba655928128d",
+      "commit_sha": "167450ca21ee896b4d729013788ebfeefb718dae",
+      "deployment_id": "appgdep_6acbbd39bbc88191945642909455b4c9",
+      "version_id": "appgprj_6aca26e375b081919acfa874a379028d~appgver_22804689aa788191b85875b529d5f22f",
       "url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
-      "repository_revision": "2cffd1ada306bdcce010878d2522999c7b9319d5",
-      "version_number": 7,
+      "repository_revision": "752604f289ac89572ad5e3603cbf6026f9c838ff",
+      "version_number": 8,
       "published_at": "2026-10-11T03:51:05.552453+00:00"
     },
     "admin-frontend": {
       "project_id": "appgprj_6aca26f42d9081918bc7545e1b373f99",
       "expected_url": "https://qilu-wenmai-admin-qzzhu.noisyamber1.chatgpt.site",
-      "checkout_path": "/Users/a1/.codex/worktrees/ba33/sjg/.local/sites/admin-frontend",
+      "checkout_path": "/Users/a1/.codex/worktrees/0b70/sjg/.local/releases/752604f289ac89572ad5e3603cbf6026f9c838ff/sites/admin-frontend",
       "status": "succeeded_private",
-      "commit_sha": "d0773468f72c0320a0b4a1a53ca4e6a66351965d",
-      "deployment_id": "appgdep_6aca415bf7f0819191bb625c13c60fb6",
-      "version_id": "appgprj_6aca26f42d9081918bc7545e1b373f99~appgver_8c9bb86c360081919c6cd3a31fb7cd89",
+      "commit_sha": "cd9ffe22b1a5a97714dacd90f5e8756e6352447e",
+      "deployment_id": "appgdep_6acbbb2df1148191ae246ab6235cbab1",
+      "version_id": "appgprj_6aca26f42d9081918bc7545e1b373f99~appgver_faf7f386ce7081918ed3a8553aeb662d",
       "url": "https://qilu-wenmai-admin-qzzhu.noisyamber1.chatgpt.site",
-      "repository_revision": "f67c2c609b4119c299cd0d3cb3e371d35412c9d7"
+      "repository_revision": "752604f289ac89572ad5e3603cbf6026f9c838ff",
+      "version_number": 3
     },
     "sjg-datav": {
       "project_id": "appgprj_6aca26caccb0819188666ef76e25ea68",
       "expected_url": "https://qilu-wenmai-datav-qzzhu.noisyamber1.chatgpt.site",
-      "checkout_path": "/Users/a1/.codex/worktrees/ba33/sjg/.local/sites/sjg-datav",
+      "checkout_path": "/Users/a1/.codex/worktrees/0b70/sjg/.local/releases/752604f289ac89572ad5e3603cbf6026f9c838ff/sites/sjg-datav",
       "status": "succeeded_private",
-      "commit_sha": "3f087650d0a0c8ff3bdfc68d8cd75c018c25fa4f",
-      "deployment_id": "appgdep_6aca42503ba081918aeb3737405d2357",
-      "version_id": "appgprj_6aca26caccb0819188666ef76e25ea68~appgver_26afdb1d80f481919c6c30e4f49f69b6",
+      "commit_sha": "dcb8667bb8a994f9d455341256aa0a6d2cf57006",
+      "deployment_id": "appgdep_6acbb9fc3fe88191ba04c49663901996",
+      "version_id": "appgprj_6aca26caccb0819188666ef76e25ea68~appgver_f21609d40cac819193615f75331c46bc",
       "url": "https://qilu-wenmai-datav-qzzhu.noisyamber1.chatgpt.site",
-      "repository_revision": "f67c2c609b4119c299cd0d3cb3e371d35412c9d7"
+      "repository_revision": "752604f289ac89572ad5e3603cbf6026f9c838ff",
+      "version_number": 3
     }
   },
   "validation": {
@@ -184,18 +189,63 @@
       "database_changes": true,
       "hosted_resources_verified": 6,
       "production_authenticated_DOM_QA": "not_run"
+    },
+    "unified_release": {
+      "application_revision": "752604f289ac89572ad5e3603cbf6026f9c838ff",
+      "date": "2026-10-11T16:55:59.176782+00:00",
+      "backend_deployment_id": "f6eaf91c-75c7-4fda-a540-0af6dd888146",
+      "native_predeploy": [
+        "V35__user_credential_version.sql",
+        "V36__rag_fulltext_indexes.sql"
+      ],
+      "native_predeploy_timeout_seconds": 180,
+      "healthcheck": "/actuator/health",
+      "database_tls": {
+        "mode": "VERIFY_IDENTITY",
+        "cipher": "TLS_AES_128_GCM_SHA256",
+        "certificate_expiry": "notAfter=Oct 11 16:16:32 2027 GMT",
+        "certificate_directory": "/var/lib/mysql/sjg-tls",
+        "directory_mode": "700"
+      },
+      "backup": {
+        "sha256": "1d348bdc04a6ab2a565540a4561c1da2670ff7e26ea4df69d622fbe7384dd4d8",
+        "tables": 28,
+        "isolated_restore_counts_match": true
+      },
+      "verification": {
+        "completed_at": "2026-10-11T16:47:44.784Z",
+        "frontend_revisions": [
+          "sjg-datav",
+          "admin-frontend",
+          "display-v2"
+        ],
+        "backend_revision": "752604f289ac89572ad5e3603cbf6026f9c838ff",
+        "cors": "passed",
+        "anonymous_admin": 401
+      },
+      "static_assets_matched": 10,
+      "sites_access": "owner-private_preserved",
+      "local_verify_all": "passed_188_unit_5_integration_250_display_8_release_tests",
+      "ci_url": "https://github.com/qingzhizhu517-rgb/sjg/actions/runs/38154731847",
+      "temporary_cloud_service_deleted": true,
+      "temporary_ssh_key_revoked": true,
+      "llm_provider_configured": false,
+      "oss_upload_acceptance": "not_run",
+      "production_owner_browser_dom": "not_run",
+      "scheduled_backup_and_alert_receiver": "not_connected",
+      "local_restore_container": "stopped; deletion blocked by local PreToolUse guard"
     }
   },
   "repository": {
-    "online_base_sha": "8912721b81f96bd8fc3de47940c9503db01592a8",
+    "online_base_sha": "752604f289ac89572ad5e3603cbf6026f9c838ff",
     "online_latest_local_redesign": true,
-    "publication_mode": "manual_upload_and_independent_sites_source_repositories",
+    "publication_mode": "unified_release_journal_Railway_IaC_and_native_Sites",
     "master_updates_do_not_auto_deploy": true,
     "online_component_revisions": {
-      "display-v2": "8912721b81f96bd8fc3de47940c9503db01592a8",
-      "admin-frontend": "f67c2c609b4119c299cd0d3cb3e371d35412c9d7",
-      "sjg-datav": "f67c2c609b4119c299cd0d3cb3e371d35412c9d7",
-      "backend": "3c5c46a49102f404004cb05a8fa4ddf8637b9381"
+      "backend": "752604f289ac89572ad5e3603cbf6026f9c838ff",
+      "display-v2": "752604f289ac89572ad5e3603cbf6026f9c838ff",
+      "admin-frontend": "752604f289ac89572ad5e3603cbf6026f9c838ff",
+      "sjg-datav": "752604f289ac89572ad5e3603cbf6026f9c838ff"
     }
   }
 }
