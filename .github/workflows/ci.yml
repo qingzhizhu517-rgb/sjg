@@ -41,7 +41,7 @@ jobs:
           npm ci --prefix sjg-datav
 
       - name: Setup security scanner runtime
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version: stable
           cache: false
