@@ -30,6 +30,14 @@
           <button class="close-drawer-btn" aria-label="关闭问答助手" @click="isOpen = false">×</button>
         </div>
 
+        <div class="assistant-tools">
+          <router-link class="reading-entry" :to="readingLink" @click="isOpen = false">进入 AI 对照阅读 <span aria-hidden="true">↗</span></router-link>
+          <div class="generation-notice" role="status">
+            <p>{{ generationNotice }}</p>
+            <button v-if="!isPreview && ['unknown', 'not_configured'].includes(generationStatus)" type="button" @click="checkGenerationStatus">重新检查</button>
+          </div>
+        </div>
+
         <!-- Predefined Quick Questions -->
         <div class="quick-questions" v-if="messages.length <= 1">
           <span class="quick-lbl">您可以这样问我：</span>
@@ -38,6 +46,7 @@
               v-for="q in quickList"
               :key="q"
               class="quick-btn-tag"
+              :disabled="!canGenerate"
               @click="askQuick(q)"
             >
               {{ q }}
@@ -81,9 +90,10 @@
               </details>
               <div v-if="msg.role === 'assistant' && msg.auditId && msg.content && !msg.feedback" class="feedback-row">
                 <span class="feedback-label">这条回答对你有帮助吗？</span>
-                <button type="button" class="feedback-btn" @click="sendFeedback(msg, 'helpful')">有帮助</button>
-                <button type="button" class="feedback-btn" @click="sendFeedback(msg, 'unhelpful')">没帮助</button>
-                <button type="button" class="feedback-btn" @click="sendFeedback(msg, 'factual_error')">事实有误</button>
+                <button type="button" class="feedback-btn" :disabled="isPreview || msg.feedbackSending" @click="sendFeedback(msg, 'helpful')">有帮助</button>
+                <button type="button" class="feedback-btn" :disabled="isPreview || msg.feedbackSending" @click="sendFeedback(msg, 'unhelpful')">没帮助</button>
+                <button type="button" class="feedback-btn" :disabled="isPreview || msg.feedbackSending" @click="sendFeedback(msg, 'factual_error')">事实有误</button>
+                <span v-if="msg.feedbackError" class="feedback-error" role="status">{{ msg.feedbackError }}</span>
               </div>
               <div v-if="msg.role === 'assistant' && msg.feedback" class="feedback-thanks">感谢反馈</div>
             </div>
@@ -100,7 +110,7 @@
 
           <!-- 错误重试 -->
           <div v-if="errorMsg && !isTyping" class="retry-row">
-            <button class="retry-btn" @click="retryLastMessage">
+            <button class="retry-btn" :disabled="!canGenerate" @click="retryLastMessage">
               ↻ 重新发送
             </button>
           </div>
@@ -113,10 +123,11 @@
             type="text"
             placeholder="探寻齐鲁文脉，问我李杜足迹..."
             class="chat-input" aria-label="向小文提问"
+            :disabled="!canGenerate && !isTyping"
             required
             ref="inputRef"
           />
-          <button type="submit" class="chat-send-btn" aria-label="发送问题" :disabled="isTyping || !inputMsg.trim()">
+          <button type="submit" class="chat-send-btn" aria-label="发送问题" :disabled="!canGenerate || !inputMsg.trim()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="send-svg">
               <line x1="22" y1="2" x2="11" y2="13" />
               <polygon points="22 2 15 22 11 13 2 9 22 2" />
@@ -135,6 +146,8 @@ import { apiUrl } from '../api/url.js'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { consumeSseBuffer } from '../utils/sse.js'
+import { atlasLink, isAtlasPreview } from '../config/atlasPreview.js'
+import { buildReadingLink } from '../utils/readingLink.js'
 
 // Markdown 渲染：breaks(单换行-><br>) + gfm(表格/删除线)
 marked.setOptions({ breaks: true, gfm: true })
@@ -154,19 +167,58 @@ const isTyping = ref(false)
 const chatLogRef = ref(null)
 const inputRef = ref(null)
 const toggleRef = ref(null)
-watch(isOpen, async open => {
-  await nextTick()
-  if (open) inputRef.value?.focus({ preventScroll: true })
-  else toggleRef.value?.focus({ preventScroll: true })
-})
 const errorMsg = ref(null)
 
 // SSE 健壮性：AbortController
 let abortController = null
+let activeAssistant = null
+let chatRequestId = 0
+let statusController = null
+let statusRequestId = 0
+const feedbackRequests = new Map()
+let disposed = false
 
 // ===== 上下文感知 =====
 const route = useRoute()
 const router = useRouter()
+const isPreview = computed(() => isAtlasPreview(route))
+const generationStatus = ref('idle')
+const canGenerate = computed(() => !isPreview.value && !isTyping.value && !['checking', 'not_configured'].includes(generationStatus.value))
+const generationNotice = computed(() => {
+  if (isPreview.value) return '设计预览仅展示样本，不发送提问或反馈。'
+  if (generationStatus.value === 'checking') return '正在检查 AI 生成服务…'
+  if (generationStatus.value === 'not_configured') return '当前未配置 AI 生成服务。您仍可查阅诗词、来源与对照阅读资料。'
+  if (generationStatus.value === 'unknown') return '暂时无法确认 AI 生成服务状态。您可以重新检查，或尝试提问。'
+  if (generationStatus.value === 'configured') return 'AI 回答为生成内容，请结合原文与来源核实。'
+  return '打开后检查 AI 生成服务；资料导航随时可用。'
+})
+
+async function checkGenerationStatus() {
+  if (isPreview.value || disposed || generationStatus.value === 'checking') return
+  const requestId = ++statusRequestId
+  const controller = new AbortController()
+  statusController = controller
+  generationStatus.value = 'checking'
+  try {
+    const response = await fetch(apiUrl('/api/public/ai/status'), { signal: controller.signal })
+    if (!response.ok) throw new Error('status unavailable')
+    const result = await response.json()
+    if (result?.code !== 200 || typeof result?.data?.generationConfigured !== 'boolean') throw new Error('invalid status')
+    if (requestId !== statusRequestId || controller.signal.aborted || isPreview.value || disposed) return
+    generationStatus.value = result.data.generationConfigured ? 'configured' : 'not_configured'
+  } catch {
+    if (requestId === statusRequestId && !controller.signal.aborted && !isPreview.value && !disposed) generationStatus.value = 'unknown'
+  } finally {
+    if (requestId === statusRequestId) statusController = null
+  }
+}
+
+watch(isOpen, async open => {
+  if (open && generationStatus.value === 'idle') checkGenerationStatus()
+  await nextTick()
+  if (open) inputRef.value?.focus({ preventScroll: true })
+  else toggleRef.value?.focus({ preventScroll: true })
+})
 
 // 导航 action 解析
 const NAV_PATTERNS = [
@@ -199,11 +251,11 @@ function extractNavAction(text) {
 
 function navigateTo(action) {
   if (action.route) {
-    router.push(action.route)
+    router.push(atlasLink(action.route, route))
     isOpen.value = false
   } else {
     // 非城市目标：跳转到地图页让用户自行探索
-    router.push('/map')
+    router.push(atlasLink('/map', route))
     isOpen.value = false
   }
 }
@@ -235,6 +287,13 @@ const chatContext = computed(() => {
   }
   return ctx
 })
+
+const readingLink = computed(() => buildReadingLink({
+  poem: chatContext.value.poemId,
+  spot: chatContext.value.spotId,
+  region: chatContext.value.city || route.query.region || (route.name === 'CityCulture' ? route.params.region : undefined),
+  returnTo: route.fullPath,
+}, route))
 
 const quickList = computed(() => {
   const ctx = chatContext.value
@@ -278,7 +337,7 @@ const quickList = computed(() => {
   return [
     '李白与杜甫在山东同游过哪些地方？',
     '大明湖有哪些经典诗词？',
-    '齐鲁文化大模型包含什么？',
+    '如何核实诗词中的地理与历史信息？',
     '沿黄九城各有什么文学特色？',
   ]
 })
@@ -286,7 +345,7 @@ const quickList = computed(() => {
 const messages = ref([
   {
     role: 'assistant',
-    content: '您好！我是 AI 小文。已为您接入齐鲁文化大模型，集合了历史名人、文化典籍、自然地理景观等六大板块。请问有什么可以帮您？'
+    content: '您好！我是 AI 小文。可以围绕本页资料陪您探寻齐鲁文脉，也可以进入 AI 对照阅读，结合诗词原文与来源一起读。'
   }
 ])
 
@@ -295,20 +354,37 @@ const askQuick = (q) => {
   sendMessage()
 }
 
-// 路由切换时中断流式请求
-watch(() => route.path, () => {
-  if (abortController) {
-    abortController.abort()
-    abortController = null
+function cancelActiveRequests() {
+  // 先使旧回调失效，再中断网络；旧 catch/finally 不能改动新请求状态。
+  chatRequestId += 1
+  abortController?.abort()
+  abortController = null
+  if (activeAssistant && !activeAssistant.content) {
+    const index = messages.value.indexOf(activeAssistant)
+    if (index !== -1) messages.value.splice(index, 1)
   }
+  activeAssistant = null
+  isTyping.value = false
+  errorMsg.value = null
+  statusRequestId += 1
+  statusController?.abort()
+  statusController = null
+  if (generationStatus.value === 'checking') generationStatus.value = 'idle'
+  for (const [msg, controller] of feedbackRequests) {
+    controller.abort()
+    msg.feedbackSending = false
+  }
+  feedbackRequests.clear()
+}
+
+watch(() => [route.path, isPreview.value], () => {
+  cancelActiveRequests()
+  if (isOpen.value && generationStatus.value === 'idle') checkGenerationStatus()
 })
 
-// 组件卸载时清理
 onBeforeUnmount(() => {
-  if (abortController) {
-    abortController.abort()
-    abortController = null
-  }
+  disposed = true
+  cancelActiveRequests()
 })
 
 const scrollToBottom = () => {
@@ -325,7 +401,9 @@ const scrollToBottom = () => {
  */
 const sendMessage = async () => {
   const text = inputMsg.value.trim()
-  if (!text || isTyping.value) return
+  if (!text || !canGenerate.value || disposed) return
+  if (generationStatus.value === 'idle') await checkGenerationStatus()
+  if (!canGenerate.value || disposed) return
 
   errorMsg.value = null
   messages.value.push({ role: 'user', content: text })
@@ -335,25 +413,25 @@ const sendMessage = async () => {
   scrollToBottom()
 
   isTyping.value = true
-  const assistantMsg = reactive({ role: 'assistant', content: '', evidence: [], auditId: null, feedback: null })
+  const assistantMsg = reactive({ role: 'assistant', content: '', evidence: [], auditId: null, feedback: null, feedbackSending: false, feedbackError: '' })
   messages.value.push(assistantMsg)
   scrollToBottom()
 
-  // 终止旧流
-  if (abortController) {
-    abortController.abort()
-  }
-  abortController = new AbortController()
+  const requestId = ++chatRequestId
+  const controller = new AbortController()
+  abortController = controller
+  activeAssistant = assistantMsg
+  const isCurrent = () => requestId === chatRequestId && !controller.signal.aborted && !disposed
 
   try {
     const res = await fetch(apiUrl('/api/public/chat'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
       body: JSON.stringify({ message: text, history, context: chatContext.value }),
-      signal: abortController.signal,
+      signal: controller.signal,
     })
+    if (!isCurrent()) return
     if (!res.ok || !res.body) {
-      isTyping.value = false
       assistantMsg.content = '（服务暂不可用，请稍后再试）'
       errorMsg.value = '服务暂不可用'
       return
@@ -362,21 +440,18 @@ const sendMessage = async () => {
     const reader = res.body.getReader()
     const decoder = new TextDecoder('utf-8')
     let buffer = ''
-    let firstDelta = true
 
     const handleSseEvent = (payload) => {
-      if (!payload || payload === '[DONE]') return
+      if (!isCurrent() || !payload || payload === '[DONE]') return
       try {
         const obj = JSON.parse(payload)
         if (obj.delta) {
-          if (firstDelta) { isTyping.value = false; firstDelta = false }
           assistantMsg.content += obj.delta
           scrollToBottom()
         } else if (Array.isArray(obj.items)) {
           assistantMsg.evidence = obj.items
           if (obj.auditId) assistantMsg.auditId = obj.auditId
         } else if (obj.error) {
-          isTyping.value = false
           assistantMsg.content += (assistantMsg.content ? '\n' : '') + '⚠ ' + obj.error
           errorMsg.value = obj.error
           scrollToBottom()
@@ -388,6 +463,7 @@ const sendMessage = async () => {
 
     while (true) {
       const { done, value } = await reader.read()
+      if (!isCurrent()) return
       if (done) {
         buffer += decoder.decode()
         consumeSseBuffer(buffer, true).events.forEach(handleSseEvent)
@@ -399,9 +475,9 @@ const sendMessage = async () => {
       buffer = parsed.rest
     }
 
-    isTyping.value = false
     if (!assistantMsg.content) {
       assistantMsg.content = '（未收到回复，请重试）'
+      errorMsg.value = '未收到回复'
     } else {
       // 提取导航 action
       const navAction = extractNavAction(assistantMsg.content)
@@ -410,32 +486,50 @@ const sendMessage = async () => {
       }
     }
   } catch (e) {
+    if (!isCurrent()) return
     // AbortError 是用户主动取消，移除空 assistant 消息
     if (e.name === 'AbortError') {
-      isTyping.value = false
       const lastIdx = messages.value.length - 1
       if (lastIdx >= 0 && messages.value[lastIdx] === assistantMsg && !assistantMsg.content) {
         messages.value.splice(lastIdx, 1)
       }
       return
     }
-    isTyping.value = false
     assistantMsg.content = '（网络异常，请稍后再试）'
     errorMsg.value = '网络异常'
+  } finally {
+    if (requestId === chatRequestId) {
+      isTyping.value = false
+      abortController = null
+      activeAssistant = null
+    }
   }
 }
 
 const sendFeedback = async (msg, feedback) => {
-  if (!msg?.auditId || msg.feedback) return
+  if (!msg?.auditId || msg.feedback || msg.feedbackSending || isPreview.value || disposed) return
+  const controller = new AbortController()
+  feedbackRequests.set(msg, controller)
+  msg.feedbackSending = true
+  msg.feedbackError = ''
   try {
     const res = await fetch(apiUrl('/api/public/chat/feedback'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ auditId: msg.auditId, feedback }),
+      signal: controller.signal,
     })
-    if (res.ok) msg.feedback = feedback
+    if (!res.ok) throw new Error('feedback unavailable')
+    const result = await res.json()
+    if (result?.code !== 200) throw new Error('feedback rejected')
+    if (!controller.signal.aborted && !disposed) msg.feedback = feedback
   } catch {
-    // 反馈失败不影响当前对话
+    if (!controller.signal.aborted && !disposed) msg.feedbackError = '反馈未提交，请重试。'
+  } finally {
+    if (feedbackRequests.get(msg) === controller) {
+      feedbackRequests.delete(msg)
+      msg.feedbackSending = false
+    }
   }
 }
 
@@ -443,6 +537,7 @@ const sendFeedback = async (msg, feedback) => {
  * 重试：重新发送最后一条用户消息
  */
 const retryLastMessage = () => {
+  if (!canGenerate.value || disposed) return
   const lastUserMsg = [...messages.value].reverse().find(m => m.role === 'user')
   if (lastUserMsg) {
     inputMsg.value = lastUserMsg.content
@@ -520,6 +615,7 @@ const retryLastMessage = () => {
   right: 0;
   width: 350px;
   height: 480px;
+  max-height: calc(100dvh - 130px);
   background: color-mix(in srgb, var(--bg-primary) 95%, transparent);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -532,6 +628,7 @@ const retryLastMessage = () => {
 }
 
 .drawer-header-ai {
+  flex-shrink: 0;
   padding: 14px 18px;
   border-bottom: 1px solid var(--border-light);
   display: flex;
@@ -594,6 +691,26 @@ const retryLastMessage = () => {
   color: var(--accent);
 }
 
+.assistant-tools {
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+.reading-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 40px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+}
+.generation-notice { display: flex; align-items: flex-start; gap: 8px; color: var(--text-muted); font-size: 10px; line-height: 1.5; }
+.generation-notice p { margin: 0; overflow-wrap: anywhere; }
+.generation-notice button { flex-shrink: 0; border: 0; background: transparent; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; padding: 0; }
+.quick-btn-tag:disabled,.feedback-btn:disabled { opacity: .5; cursor: not-allowed; }
+.feedback-error { flex-basis: 100%; color: var(--accent); }
+
 /* Quick Questions tags */
 .quick-questions {
   padding: 12px 16px;
@@ -608,8 +725,8 @@ const retryLastMessage = () => {
 }
 
 .quick-tags {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
   margin-top: 8px;
 }
@@ -634,6 +751,7 @@ const retryLastMessage = () => {
 /* Message log list */
 .chat-log {
   flex: 1;
+  min-height: 0;
   padding: 16px;
   overflow-y: auto;
   display: flex;
@@ -826,6 +944,7 @@ const retryLastMessage = () => {
   background: var(--accent);
   color: #fff;
 }
+.retry-btn:disabled { opacity: .5; cursor: not-allowed; }
 
 /* Navigation action button */
 .nav-action-row {
@@ -925,6 +1044,7 @@ const retryLastMessage = () => {
 
 /* Input Form */
 .chat-input-form {
+  flex-shrink: 0;
   padding: 12px 16px;
   border-top: 1px solid var(--border-light);
   background: rgba(0, 0, 0, 0.01);
@@ -934,6 +1054,7 @@ const retryLastMessage = () => {
 
 .chat-input {
   flex: 1;
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: 4px;
   padding: 8px 12px;
@@ -1005,6 +1126,6 @@ const retryLastMessage = () => {
 .close-drawer-btn,.chat-send-btn { min-width:44px; min-height:44px; }
 .chat-input-form { padding:16px; gap:8px; }
 .chat-input { min-height:44px; }
-@media(max-width:768px) { .ai-chat-drawer { position:fixed; width:auto; left:12px; right:12px; bottom:82px; max-height:calc(100dvh - 100px); } }
+@media(max-width:768px) { .ai-chat-drawer { position:fixed; width:auto; left:12px; right:12px; bottom:82px; height:560px; max-height:calc(100dvh - 100px); } }
 @media(max-width:600px) { .ai-toggle-btn { min-width:92px; height:44px; padding-inline:12px; } }
 </style>

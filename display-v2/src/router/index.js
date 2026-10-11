@@ -21,6 +21,7 @@ const routes = [
   { path: '/regions/:region', name: 'RegionSpots', component: () => import('../views/RegionSpots.vue') },
   { path: '/cities/:region', name: 'CityCulture', component: () => import('../views/CityCulture.vue') },
   { path: '/compose', name: 'PoemComposer', component: () => import('../views/PoemComposerView.vue') },
+  { path: '/reading', name: 'ReadingWorkspace', component: () => import('../views/ReadingWorkspace.vue') },
   { path: '/learn', name: 'LearningTaskIndex', component: () => import('../views/LearningTaskIndex.vue') },
   { path: '/learn/:taskCode', name: 'LearningTask', component: () => import('../views/LearningTaskView.vue') },
   { path: '/literature', name: 'LiteratureList', component: () => import('../views/LiteratureList.vue') },

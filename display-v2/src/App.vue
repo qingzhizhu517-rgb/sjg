@@ -11,11 +11,11 @@
     </main>
     <footer class="site-footer">
       <div><span class="site-footer__title">山河有迹 · 文脉有声</span><p>数字人文视域下黄河流域（山东段）文学景观构建与教学应用研究</p></div>
-      <nav aria-label="页脚导航"><router-link :to="atlasLink('/poems', route)">检索诗词</router-link><router-link :to="atlasLink('/learn', route)">探究任务</router-link><router-link :to="atlasLink('/compose', route)">诗词创作</router-link></nav>
+      <nav aria-label="页脚导航"><router-link :to="atlasLink('/poems', route)">检索诗词</router-link><router-link :to="atlasLink('/reading', route)">AI对照阅读</router-link><router-link :to="atlasLink('/learn', route)">探究任务</router-link><router-link :to="atlasLink('/compose', route)">诗词创作</router-link></nav>
       <small>SHANDONG · LITERARY LANDSCAPES OF THE YELLOW RIVER</small>
     </footer>
     <div v-if="isAtlasPreview(route)" class="atlas-preview-bar" role="status"><span>设计预览 · 样本内容</span><router-link :to="{ path: route.path, query: { ...route.query, preview: undefined } }" aria-label="退出设计预览">退出预览 ↗</router-link></div>
-    <AiChatBox />
+    <AiChatBox v-if="route.name !== 'ReadingWorkspace'" />
   </div>
 </template>
 <script setup>
@@ -118,8 +118,8 @@ onUnmounted(() => {
 .site-footer { border-top: 1px solid var(--border); padding: 38px var(--page-gutter) 52px; display: grid; grid-template-columns: 1fr auto; gap: 25px; max-width: 1500px; margin: auto; }
 .site-footer__title { font: 25px var(--font-display); letter-spacing: 3px; }
 .site-footer p { color: var(--text-muted); font-size: 12px; margin-top: 10px; }
-.site-footer nav { display: flex; align-items: center; gap: 24px; font-size: 13px; }
-.site-footer nav a { padding-block: 10px; }
+.site-footer nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; font-size: 13px; }
+.site-footer nav a { padding-block: 10px; white-space: nowrap; }
 .site-footer small { grid-column: 1/-1; color: #988c7b; font: 9px Georgia,serif; letter-spacing: 2px; }
 .atlas-preview-bar { position: fixed; z-index: 190; left: 16px; bottom: 12px; display: flex; gap: 14px; align-items: center; border: 1px solid var(--border); padding: 7px 12px; background: #f5f2ebf0; border-radius: 3px; font-size: 11px; color: var(--text-muted); backdrop-filter: blur(8px); }
 .atlas-preview-bar a { color: var(--accent); padding-block: 4px; }

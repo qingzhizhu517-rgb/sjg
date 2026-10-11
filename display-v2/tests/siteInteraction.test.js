@@ -11,7 +11,7 @@ import * as emotions from '../src/utils/atlasEmotion.js'
 import { NINE_SIGHTS } from '../src/config/nineSights.js'
 
 test('各分区与详情路由定位正确，九城山水保持同一导航高亮', () => {
-  for (const [path, section] of [['/regions/济南', 'landscape'], ['/spots/2', 'landscape'], ['/poems/302', 'literary'], ['/poets', 'literary'], ['/timeline', 'literary'], ['/food-opera/805', 'culture'], ['/cities/泰安', 'culture'], ['/learn/test', 'learning'], ['/compose', 'learning']]) {
+  for (const [path, section] of [['/regions/济南', 'landscape'], ['/spots/2', 'landscape'], ['/poems/302', 'literary'], ['/poets', 'literary'], ['/timeline', 'literary'], ['/food-opera/805', 'culture'], ['/cities/泰安', 'culture'], ['/reading', 'learning'], ['/learn/test', 'learning'], ['/compose', 'learning']]) {
     assert.equal(sectionForPath(path)?.id, section)
   }
   assert.equal(sectionForPath('/poems-other'), null)
@@ -113,8 +113,11 @@ test('导航组件接入主布局且研学入口可通过分区与全站导览�
   const [app, header] = await Promise.all(['App.vue', 'components/layout/SiteHeader.vue'].map(path => readFile(new URL(`../src/${path}`, import.meta.url), 'utf8')))
   assert.match(app, /<SiteHeader\s*\/>/)
   const learning = siteSections.find(section => section.id === 'learning')
-  assert.equal(learning.path, '/learn')
+  assert.equal(learning.path, '/reading')
+  assert.equal(learning.links[0].path, '/reading')
+  assert.equal(learning.links[0].label, 'AI对照阅读')
   assert.ok(learning.links.some(link => link.path === '/learn' && link.label === '探究任务'))
+  assert.ok(learning.links.some(link => link.path === '/compose' && link.label === '诗词创作'))
   assert.match(header, /v-for="section in siteSections"/)
   assert.match(header, /v-for="link in section.links"/)
 })

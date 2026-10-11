@@ -1,6 +1,14 @@
 {
   "provider": "built-in image_gen",
   "created_at": "2026-10-11",
+  "design_reference": {
+    "filename": "reading-workspace-concept-v1.png",
+    "width": 1672,
+    "height": 941,
+    "sha256": "baa46fbe1df0d3fa7bc6eaa2c06eeae65327278d18c339affa91f231635f7823",
+    "runtime": false,
+    "purpose": "仅作布局参考；原图保留于本地 output/ai-reading/2026-10-11，不部署为界面或原文"
+  },
   "asset": {
     "filename": "reading-landscape-v1.webp",
     "width": 1440,

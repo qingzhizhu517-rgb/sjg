@@ -3,6 +3,7 @@
     <header class="city-experiences__heading">
       <span aria-hidden="true">游</span>
       <div><p>一城风物 · 循意而行</p><h2 id="city-experiences-heading">特色体验</h2></div>
+      <router-link :to="readingLink" class="folio-button folio-button--quiet city-experiences__reading">AI对照阅读 ↗</router-link>
     </header>
     <div class="city-experiences__layout">
       <a :href="experiences.primary.href" class="experience-main" :aria-label="`${experiences.primary.title}，${experiences.primary.action}`">
@@ -36,6 +37,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { cityExperiences } from '../config/cityExperiences'
 import { atlasLink } from '../config/atlasPreview'
+import { buildReadingLink } from '../utils/readingLink'
 import AtlasGlyph from './AtlasGlyph.vue'
 
 const props = defineProps({
@@ -45,13 +47,15 @@ const props = defineProps({
   preview: { type: Boolean, default: false },
 })
 const route = useRoute()
+const readingLink = computed(() => buildReadingLink({ region: props.region, returnTo: route.fullPath }, route))
 const experiences = computed(() => cityExperiences(props.region, props.cityImage))
 const experienceLink = (item) => atlasLink(item.to, route)
 </script>
 
 <style scoped>
 .city-experiences { margin-top: 28px; color: var(--atlas-ink); }
-.city-experiences__heading { display: flex; align-items: center; gap: 13px; margin-bottom: 20px; }
+.city-experiences__heading { display: flex; flex-wrap: wrap; align-items: center; gap: 13px; margin-bottom: 20px; }
+.city-experiences__reading { margin-left: auto; }
 .city-experiences__heading > span { display: grid; place-items: center; width: 34px; height: 40px; color: var(--accent); font-family: 'STKaiti', 'KaiTi', serif; font-size: 25px; border: 1px solid var(--atlas-rule); transform: rotate(-5deg); }
 .city-experiences__heading p { margin: 0 0 4px; font-size: 10px; letter-spacing: 3px; color: var(--atlas-muted); }
 .city-experiences__heading h2 { margin: 0; font-size: 23px; font-weight: 600; letter-spacing: 3px; }

@@ -47,7 +47,7 @@
     <!-- 设计样本仅使用本地内容，实际赏析组件只挂载于正式数据页。 -->
     <PoemAnalysis v-if="!previewMode && poem.id" :poem-id="poem.id" />
 
-    <div class="folio-detail-actions"><p>读过此篇，再寻找一种新的心境。</p><div class="folio-actions"><router-link :to="readingBack" class="folio-button">返回列表</router-link><router-link :to="atlasLink('/compose', route)" class="folio-button folio-button--primary">写一首自己的诗 →</router-link></div></div>
+    <div class="folio-detail-actions"><p>读过此篇，再寻找一种新的心境。</p><div class="folio-actions"><router-link :to="readingBack" class="folio-button">返回列表</router-link><router-link :to="readingLink" class="folio-button">AI对照阅读 ↗</router-link><router-link :to="atlasLink('/compose', route)" class="folio-button folio-button--primary">写一首自己的诗 →</router-link></div></div>
     <!-- Media -->
     <div v-if="parsedVideoUrl" class="detail-section">
       <h2 class="section-heading">诗词赏析视频</h2>
@@ -63,6 +63,7 @@ import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '../api'
 import { safeReturnPath } from '../config/siteNavigation'
+import { buildReadingLink } from '../utils/readingLink'
 import { parseTags } from '../utils/poem'
 import { adaptSpot, adaptPoem } from '../composables/themeAdapter'
 import { pickMoodBackdrop } from '../utils/moodBackdrop'
@@ -81,6 +82,7 @@ const poem = ref(null)
 const poet = ref(null)
 const dynasty = ref(null)
 const spot = ref(null)
+const readingLink = computed(() => buildReadingLink({ poem: poem.value?.id, returnTo: route.fullPath }, route))
 const sources = ref([])
 const errorMsg = ref(null)
 let loadSequence = 0

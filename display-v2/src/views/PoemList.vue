@@ -1,7 +1,7 @@
 <template>
   <div class="poem-list folio-page">
     <PageHeading eyebrow="诗文名士 / 诗词检索" title="字里山河，循诗而行" description="检索标题与诗句，从一城风物出发，找到下一首值得细读的作品。">
-      <template #actions><router-link :to="atlasLink('/poets', route)" class="folio-button folio-button--quiet">按名士浏览 ↗</router-link></template>
+      <template #actions><router-link :to="atlasLink('/poets', route)" class="folio-button folio-button--quiet">按名士浏览 ↗</router-link><router-link :to="readingLink" class="folio-button folio-button--quiet">AI对照阅读 ↗</router-link></template>
     </PageHeading>
     <form class="folio-toolbar" role="search" @submit.prevent="submitSearch">
       <label class="folio-field folio-field--search" for="poem-keyword">诗词关键词<input ref="searchInput" id="poem-keyword" v-model="keywordInput" class="folio-input" type="search" placeholder="搜索标题、诗句" autocomplete="off" /></label>
@@ -43,12 +43,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '../api'
 import PageHeading from '../components/ui/PageHeading.vue'
 import { atlasLink, isAtlasPreview, previewPoems, previewDynasties } from '../config/atlasPreview'
 import { NINE_CITIES } from '../config/nineCities'
+import { buildReadingLink } from '../utils/readingLink'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
@@ -58,6 +59,7 @@ const router = useRouter()
 const regionOptions = ['全部', ...NINE_CITIES]
 
 const region = ref(regionOptions.includes(route.query.region) ? route.query.region : '全部')
+const readingLink = computed(() => buildReadingLink({ region: region.value, returnTo: route.fullPath }, route))
 const keywordInput = ref(typeof route.query.keyword === 'string' ? route.query.keyword : '')
 const items = ref([])
 const loaded = ref(false)

@@ -9,7 +9,6 @@ import { computed } from 'vue'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { findReadingReference } from '../../utils/readingState.js'
-import { safeSourceUrl } from '../../utils/source.js'
 const props = defineProps({ text: { type: String, default: '' }, materials: { type: Array, default: () => [] } })
 const emit = defineEmits(['reference'])
 const html = computed(() => {
@@ -17,9 +16,8 @@ const html = computed(() => {
   const clean = DOMPurify.sanitize(marked.parse(props.text, { breaks: true }), { FORBID_TAGS: ['img', 'iframe', 'form', 'input', 'button', 'style'], FORBID_ATTR: ['style', 'id'] })
   const doc = new DOMParser().parseFromString(clean, 'text/html')
   for (const link of doc.querySelectorAll('a')) {
-    const url = safeSourceUrl(link.getAttribute('href'))
-    if (url) { link.setAttribute('href', url); link.setAttribute('target', '_blank'); link.setAttribute('rel', 'noopener noreferrer') }
-    else link.replaceWith(doc.createTextNode(link.textContent))
+    // 模型给出的链接没有来源核验；真实来源由独立资料区展示。
+    link.replaceWith(doc.createTextNode(link.textContent))
   }
   const walker = doc.createTreeWalker(doc.body, 4)
   const nodes = []

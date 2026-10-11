@@ -23,18 +23,21 @@
     <section class="task-index__note" aria-label="任务说明">
       <h2>你将完成什么</h2>
       <p>先阅读有来源的材料，再进行比较，最后写下自己的判断。每道题都会保留实体和来源线索，完成后可以导出为 Markdown。</p>
+      <router-link :to="readingLink" class="folio-button folio-button--quiet">AI对照阅读 ↗</router-link>
     </section>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import PageHeading from '../components/ui/PageHeading.vue'
 import { atlasLink } from '../config/atlasPreview'
+import { buildReadingLink } from '../utils/readingLink'
 import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
 const route = useRoute()
+const readingLink = computed(() => buildReadingLink({ returnTo: route.fullPath }, route))
 const taskCode = ref('')
 const errorMsg = ref('')
 
@@ -65,6 +68,7 @@ const openTask = () => {
 .task-index__note { max-width: 620px; margin: 32px auto 0; padding: 20px 22px; border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent) 5%, transparent); }
 .task-index__note h2 { margin: 0 0 8px; font-family: var(--font-heading); font-size: 22px; }
 .task-index__note p { margin: 0; }
+.task-index__note .folio-button { margin-top: 16px; }
 @media (max-width: 600px) { .task-index { padding: 40px 16px 72px; } .task-index__control { display: grid; grid-template-columns: 1fr; } }
 .task-index { max-width:1180px; padding:32px var(--page-gutter) 70px; }
 .learning-overview { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); list-style:none; gap:24px; margin:30px 0 35px; }

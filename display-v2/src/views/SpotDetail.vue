@@ -116,7 +116,7 @@
       </aside>
     </section>
     <SourceList :sources="sources" />
-    <div class="folio-detail-actions"><p>山水之外，仍有一城文脉。</p><div class="folio-actions"><router-link :to="atlasLink(`/cities/${spot.region || '济南'}`, route)" class="folio-button">探索城市文化</router-link><router-link :to="atlasLink(`/poems?region=${encodeURIComponent(spot.region || '')}`, route)" class="folio-button folio-button--primary">阅读更多诗词 →</router-link></div></div>
+    <div class="folio-detail-actions"><p>山水之外，仍有一城文脉。</p><div class="folio-actions"><router-link :to="atlasLink(`/cities/${spot.region || '济南'}`, route)" class="folio-button">探索城市文化</router-link><router-link :to="readingLink" class="folio-button">AI对照阅读 ↗</router-link><router-link :to="atlasLink(`/poems?region=${encodeURIComponent(spot.region || '')}`, route)" class="folio-button folio-button--primary">阅读更多诗词 →</router-link></div></div>
   </div>
 </template>
 
@@ -129,6 +129,7 @@ import { useImage } from '../composables/useImage'
 import { cityIllustration } from '../config/cityIllustrations'
 import { isAtlasPreview, atlasLink, findPreviewSpot, previewPoets, previewDynasties } from '../config/atlasPreview'
 import { parseEmotionTags, poemEmotionScore, summarizePoemEmotions } from '../utils/atlasEmotion'
+import { buildReadingLink } from '../utils/readingLink'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
@@ -179,6 +180,11 @@ const availableDynasties = computed(() => {
   return [...known, ...unknown.map((id) => ({ id, name: '朝代未录' }))]
 })
 const filteredPoems = computed(() => selectedDynasty.value === 'all' ? poems.value : poems.value.filter((poem) => String(dynastyIdOf(poem)) === selectedDynasty.value))
+const readingLink = computed(() => {
+  const ids = [...new Set(filteredPoems.value.map(poem => poem.id)
+    .filter(id => /^[1-9]\d*$/.test(String(id)) && Number.isSafeInteger(Number(id))).map(Number))]
+  return buildReadingLink({ poem: ids[0], compare: ids[1], spot: spot.value?.id, region: spot.value?.region, returnTo: route.fullPath }, route)
+})
 const heroLine = computed(() => spot.value?.name === '大明湖' ? '一城山色半城湖，泉水叮咚，诗意千年' : '山水之间，寻一脉诗意与千年回响')
 // 无专属配图（或远程图失效）时借用所在城市的山水插画；绝不把「景」字 SVG 占位铺满整栏
 const imageFailed = ref(false)
