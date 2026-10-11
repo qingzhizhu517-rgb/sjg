@@ -29,6 +29,7 @@ import { resolveNavDirection, createProgress } from './utils/routeFeedback'
 import { atlasLink, isAtlasPreview } from './config/atlasPreview'
 import './styles/theme.css'
 import './styles/interactions.css'
+import './styles/layout.css'
 const route = useRoute(), router = useRouter()
 const { themeClass } = useTheme()
 // Filter changes stay within the current page, preserving input and graph state.

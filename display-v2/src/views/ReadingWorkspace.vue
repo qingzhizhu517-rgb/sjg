@@ -1,5 +1,5 @@
 <template>
-  <main class="reading-workspace">
+  <main class="reading-workspace folio-page">
     <header class="reading-hero">
       <img class="reading-landscape" src="/media/inkwash/reading/reading-landscape-v1.webp" alt="" aria-hidden="true" />
       <router-link class="reading-back" :to="atlasLink(query.returnTo, route)">← 返回作品与山河</router-link>

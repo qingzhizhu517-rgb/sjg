@@ -1,5 +1,5 @@
 <template>
-  <div class="poets-view">
+  <div class="poets-view folio-page">
     <PageHeading eyebrow="诗文名士 / 齐鲁名士" :title="region ? `${region}名士，循文脉而行` : '山河之间，遇见故人'" description="按姓名与朝代寻找名士，读生平、品诗文，也可从关系图谱展开探索。">
       <template #actions><router-link :to="atlasLink('/poems', route)" class="folio-button folio-button--quiet">检索诗词 ↗</router-link></template>
     </PageHeading>
@@ -79,11 +79,11 @@
             </div>
 
             <!-- 名士卡墙骨架 -->
-            <div v-if="!poetsLoaded" class="cards-grid-list" aria-busy="true" aria-label="名士加载中">
+            <div v-if="!poetsLoaded" class="cards-grid-list folio-grid" aria-busy="true" aria-label="名士加载中">
               <SkeletonBlock v-for="i in 6" :key="`skel-${i}`" height="180px" />
             </div>
 
-            <div class="cards-grid-list" v-else-if="standardPoets.length">
+            <div class="cards-grid-list folio-grid" v-else-if="standardPoets.length">
               <article
                 v-for="p in standardPoets"
                 :key="p.id"
@@ -140,7 +140,7 @@
                 <span class="marginal-arrow" :class="{ open: showMarginal }">▾</span>
               </button>
               <Transition name="tab-fade">
-                <div v-show="showMarginal" class="cards-grid-list marginal-grid">
+                <div v-show="showMarginal" class="cards-grid-list marginal-grid folio-grid">
                   <article
                     v-for="p in marginalPoets"
                     :key="p.id"
@@ -190,11 +190,11 @@
               <span class="section-bar-count">{{ filteredEnrichedPoets.length }} 位</span>
             </div>
 
-            <div v-if="!poetsLoaded" class="cards-grid-list" aria-busy="true" aria-label="名士加载中">
+            <div v-if="!poetsLoaded" class="cards-grid-list folio-grid" aria-busy="true" aria-label="名士加载中">
               <SkeletonBlock v-for="i in 6" :key="`skel-${i}`" height="180px" />
             </div>
 
-            <div class="cards-grid-list" v-else-if="filteredEnrichedPoets.length">
+            <div class="cards-grid-list folio-grid" v-else-if="filteredEnrichedPoets.length">
               <article
                 v-for="p in filteredEnrichedPoets"
                 :key="p.id"

@@ -1,5 +1,5 @@
 <template>
-  <div ref="rootRef" class="culture-view">
+  <div ref="rootRef" class="culture-view folio-page">
     <PageHeading eyebrow="齐鲁文化 / 文化总览" title="风物有情，文脉相连" description="从节令、工艺、故事与乡音出发，走近黄河岸边的文化日常。">
       <template #actions><a href="#culture-cities" class="folio-button folio-button--secondary">按城市探索 ↓</a></template>
     </PageHeading>

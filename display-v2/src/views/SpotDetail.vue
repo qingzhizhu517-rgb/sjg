@@ -1,5 +1,5 @@
 <template>
-  <div v-if="loading" class="spot-skeleton" aria-busy="true" aria-label="景观加载中">
+  <div v-if="loading" class="spot-skeleton folio-page" aria-busy="true" aria-label="景观加载中">
     <SkeletonBlock height="420px" />
     <div class="spot-skeleton__rows">
       <SkeletonBlock height="34px" width="40%" />
@@ -9,8 +9,8 @@
   <ErrorState v-else-if="loadError" :message="loadError" @retry="loadSpot" />
   <EmptyState v-else-if="!spot" icon="景" message="此景观暂未收录" hint="返回山河图志，看看别处" />
 
-  <div v-else class="spot-detail atlas-spot">
-    <div class="sd-composition">
+  <div v-else class="spot-detail atlas-spot folio-page">
+    <div class="sd-composition folio-split">
       <aside class="sd-landscape" aria-labelledby="spot-name">
         <div class="sd-landscape__copy">
           <router-link :to="atlasLink(`/regions/${spot.region || '泰安'}`, route)" class="sd-back">← {{ spot.region || '齐鲁' }}山水</router-link>
@@ -19,7 +19,7 @@
             <span class="sd-seal" aria-hidden="true">山水</span>
           </div>
           <p class="sd-tagline">{{ heroLine }}</p>
-          <p class="sd-description">{{ spot.description || '此处景观介绍尚待收录。' }}</p>
+          <p class="sd-description folio-prose">{{ spot.description || '此处景观介绍尚待收录。' }}</p>
         </div>
         <div v-if="imageUrl" class="sd-landscape__art" :class="{ 'sd-landscape__art--city': usingCityArt }" aria-hidden="true">
           <img :src="imageUrl" alt="" decoding="async" @error="imageFailed = true" />
@@ -31,15 +31,15 @@
       <section class="sd-exploration" aria-labelledby="emotion-heading">
         <div class="sd-exploration__vignette" aria-hidden="true"></div>
         <header class="sd-section-heading">
-          <h2 id="emotion-heading">诗词情感曲线 <span>· 同一片山水，不同心境</span><i aria-hidden="true">◇</i></h2>
+          <h2 class="folio-section-title" id="emotion-heading">诗词情感曲线 <i aria-hidden="true">◇</i><span>同一片山水，不同心境</span></h2>
         </header>
         <div class="sd-controls">
-          <div class="sd-tabs" role="tablist" aria-label="诗词浏览方式">
+          <div class="sd-tabs folio-tabs" role="tablist" aria-label="诗词浏览方式">
             <button v-for="tab in tabs" :id="`spot-tab-${tab.id}`" :key="tab.id" type="button" role="tab" :aria-controls="`spot-panel-${tab.id}`" :aria-selected="activeTab === tab.id" :tabindex="activeTab === tab.id ? 0 : -1" @keydown="onTabKeydown($event, tab.id)" :class="{ 'is-active': activeTab === tab.id }" @click="activeTab = tab.id">{{ tab.label }}</button>
           </div>
           <label class="sd-dynasty-filter">
             <span class="sr-only">筛选朝代</span>
-            <select v-model="selectedDynasty" aria-label="筛选朝代">
+            <select class="folio-select" v-model="selectedDynasty" aria-label="筛选朝代">
               <option value="all">全部朝代</option>
               <option v-for="dynasty in availableDynasties" :key="dynasty.id" :value="String(dynasty.id)">{{ dynasty.name }}</option>
             </select>
@@ -77,9 +77,9 @@
       </section>
 
       <section class="sd-anthology" aria-labelledby="poems-heading">
-        <div class="sd-anthology__heading"><h2 id="poems-heading">代表诗词 <i aria-hidden="true">◇</i></h2><span>{{ filteredPoems.length }} 首吟咏<span v-if="filteredPoems.length > 5"> · {{ showAllPoems ? '已展示全部' : '展示前 5 首' }}</span></span></div>
+        <div class="sd-anthology__heading"><h2 class="folio-section-title" id="poems-heading">代表诗词 <i aria-hidden="true">◇</i></h2><span>{{ filteredPoems.length }} 首吟咏<span v-if="filteredPoems.length > 5"> · {{ showAllPoems ? '已展示全部' : '展示前 5 首' }}</span></span></div>
         <p v-if="poetLoadWarning" class="sd-poet-warning" role="status">{{ poetLoadWarning }}</p>
-        <div id="spot-poem-list" class="sd-poems" :class="{ 'is-expanded': showAllPoems }">
+        <div id="spot-poem-list" class="sd-poems folio-grid" :class="{ 'is-expanded': showAllPoems, 'sd-poems--single': visiblePoems.length === 1 }">
           <router-link v-for="poem in visiblePoems" :key="poem.id" :to="atlasLink(`/poems/${poem.id}`, route)" class="sd-poem">
             <h3>《{{ poem.title }}》</h3>
             <div class="sd-poem__byline"><span>{{ poem.dynastyName }} · {{ poem.poet?.name || '作者资料暂缺' }}</span><span v-if="poem.sentimentList[0]" class="sd-poem__mood" :style="{ color: tagColor(poem.sentimentList[0]) }">{{ poem.sentimentList[0] }}</span></div>
@@ -100,7 +100,7 @@
 
     <section class="sd-distribution" aria-labelledby="distribution-heading">
       <div class="sd-distribution__main">
-        <h2 id="distribution-heading">情感分布概览 <i aria-hidden="true">◇</i></h2>
+        <h2 class="folio-section-title" id="distribution-heading">情感分布概览 <i aria-hidden="true">◇</i></h2>
         <div v-if="sentimentRings.length" class="sd-rings">
           <div v-for="ring in sentimentRings" :key="ring.name" class="sd-ring">
             <svg viewBox="0 0 64 64" aria-hidden="true"><circle class="sd-ring__track" cx="32" cy="32" r="26"/><circle cx="32" cy="32" r="26" :stroke="ring.color" :stroke-dasharray="`${ring.percent * 1.6336} 163.36`" transform="rotate(-90 32 32)"/></svg>
@@ -272,12 +272,12 @@ const renderChart = async () => {
       return row ? `${row.name} · ${row.count} 首吟咏\n可映射标签：${row.taggedCount} 首\n规则均值：${row.value ?? '无'}${row.title ? `\n《${row.title}》 ${row.poet}` : ''}` : ''
     } },
     xAxis: { type: 'category', boundaryGap: rows.length === 1, data: rows.map((row) => row.name), axisTick: { show: true, length: 3, lineStyle: { color: '#c8c0b2' } }, axisLine: { show: true, lineStyle: { color: '#c8c0b2', width: 1 } }, axisLabel: { color: '#655e52', fontSize: mobile ? 11 : 13, margin: 13, interval: 0 } },
-    yAxis: { type: 'value', min: 0, max: 100, interval: 25, axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false }, axisLabel: { color: '#a2998b', fontSize: 10, formatter: (value) => ({ 0: '沉静', 25: '幽思', 50: '婉约', 75: '悠远', 100: '豪放' })[value] || '' } },
+    yAxis: { type: 'value', min: 0, max: 100, interval: 25, axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false }, axisLabel: { color: '#746B60', fontSize: 12, formatter: (value) => ({ 0: '沉静', 25: '幽思', 50: '婉约', 75: '悠远', 100: '豪放' })[value] || '' } },
     series: [{ name: '情感规则均值', type: 'line', smooth: 0.4, connectNulls: false, symbol: 'circle', symbolSize: mobile ? 8 : 11,
       data: rows.map((row) => ({ value: row.value, itemStyle: { color: '#f6f2e9', borderColor: emotionColor(row.value ?? 50), borderWidth: 2 } })),
       lineStyle: { width: 2, color: new echarts.graphic.LinearGradient(0, 0, 1, 0, stops) },
       areaStyle: { opacity: 0.21, color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#b6a17e' }, { offset: 0.55, color: '#cfccb7' }, { offset: 1, color: 'rgba(238,233,221,0)' }]) },
-      label: { show: !mobile && rows.length <= 8, position: 'top', distance: 17, color: '#776c5a', fontSize: 11, lineHeight: 17, formatter: (params) => { const row = rows[params.dataIndex]; return row.value !== null ? `${row.poet}\n${row.title.length > 10 ? row.title.slice(0, 9) + '…' : row.title}` : '' } },
+      label: { show: !mobile && rows.length <= 8, position: 'top', distance: 17, color: '#61584C', fontSize: 13, lineHeight: 20, formatter: (params) => { const row = rows[params.dataIndex]; return row.value !== null ? `${row.poet}\n${row.title.length > 10 ? row.title.slice(0, 9) + '…' : row.title}` : '' } },
       emphasis: { scale: 1.3, focus: 'series' },
     }],
   }, { notMerge: true })
@@ -336,218 +336,118 @@ onBeforeUnmount(() => { requestVersion += 1; disposeChart() })
 </script>
 
 <style scoped>
-.atlas-spot {
-  --sd-paper: #f5f2eb;
-  --sd-ink: #3e3428;
-  --sd-muted: #8b8171;
-  --sd-line: rgba(133, 116, 89, .15);
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 44px 38px 48px;
-  color: var(--sd-ink);
-  text-align: left;
-  font-family: var(--font-heading, 'Noto Serif SC', 'Songti SC', serif);
-}
-.sd-composition { display: grid; grid-template-columns: minmax(250px, 30%) minmax(0, 1fr); column-gap: 36px; position: relative; }
-.sd-landscape { grid-row: span 2; position: relative; min-width: 0; min-height: 840px; isolation: isolate; }
-.sd-landscape__copy { position: relative; z-index: 2; }
-.sd-back { display: inline-flex; gap: 8px; align-items: center; font-size: 10px; letter-spacing: 1.5px; color: #9a8b76; text-decoration: none; margin-bottom: 18px; }
-.sd-back:hover { color: #715537; }
-.sd-title-row { display: flex; gap: 16px; align-items: center; }
-.sd-title-row h1 { font-size: clamp(40px, 4.25vw, 66px); font-weight: 600; letter-spacing: 5px; line-height: 1.25; margin: 0; color: #38291e; }
-.sd-seal { font-family: 'KaiTi', 'STKaiti', serif; color: #f8eee3; background: #b76459; border: 1px solid #c3796e; outline: 1px solid #b76459; outline-offset: 2px; writing-mode: vertical-rl; font-size: 9px; letter-spacing: 3px; padding: 3px 1px 0; border-radius: 1px; transform: rotate(-3deg); }
-.sd-tagline { font-size: clamp(13px, 1.25vw, 18px); letter-spacing: 1px; margin: 15px 0 22px; line-height: 1.75; white-space: normal; }
-.sd-description { max-width: 370px; color: #776d5c; font-size: 12px; line-height: 2; letter-spacing: .4px; margin: 0; }
-.sd-landscape__art { position: absolute; z-index: -1; left: -50px; right: -42px; top: 216px; bottom: 0; overflow: hidden; mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 90%, transparent); }
-.sd-landscape__art img { width: 100%; height: 100%; object-fit: cover; object-position: center; mix-blend-mode: multiply; }
-/* 城市插画兜底：四边羽化融入纸面，裁掉底部生成水印，降低饱和以退居背景 */
-.sd-landscape__art--city { mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 78%, transparent 92%), linear-gradient(to right, #000 70%, transparent); mask-composite: intersect; -webkit-mask-composite: source-in; }
-.sd-landscape__art--city img { height: 112%; object-position: center top; opacity: .7; filter: saturate(.6); }
-.sd-landscape__blank { position: absolute; top: 48%; left: 40%; writing-mode: vertical-rl; color: #b6ad9b; font-size: 32px; letter-spacing: 15px; }
-.sd-landscape__caption { position: absolute; left: 0; right: 0; bottom: 2px; color: #8f816c; display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 1px; }
-.sd-exploration { position: relative; min-width: 0; padding-top: 27px; }
-.sd-exploration__vignette { position: absolute; top: -22px; right: -12px; width: 180px; height: 130px; pointer-events: none; background: url('/media/inkwash/atlas/mountain-vignette.webp') center / contain no-repeat; opacity: .58; mix-blend-mode: multiply; }
+.atlas-spot { color: var(--text-primary); text-align: left; }
+.sd-composition { --folio-columns: minmax(0, 1fr) minmax(0, 2fr); }
+.sd-landscape { position: relative; min-width: 0; display: flex; flex-direction: column; }
+.sd-landscape__copy { position: relative; }
+.sd-back { display: inline-flex; align-items: center; min-height: var(--control-height); font-size: var(--fs-meta); color: var(--text-muted); margin-bottom: var(--sp-3); }
+.sd-back:hover { color: var(--accent); }
+.sd-title-row { display: flex; gap: var(--sp-4); align-items: center; }
+.sd-title-row h1 { font: 600 clamp(36px, 4vw, 56px)/1.35 var(--font-display); letter-spacing: .06em; overflow-wrap: anywhere; text-wrap: balance; }
+.sd-seal { flex-shrink: 0; color: var(--text-on-accent); background: var(--accent); outline: 1px solid var(--accent-a35); outline-offset: 2px; writing-mode: vertical-rl; font: 12px/1.5 var(--font-display); letter-spacing: 2px; padding: 4px 2px; transform: rotate(-3deg); }
+.sd-tagline { font-size: var(--fs-lead); line-height: 1.7; margin: var(--sp-4) 0; text-wrap: pretty; }
+.sd-landscape__art { position: relative; width: 100%; height: 280px; margin-top: var(--sp-5); overflow: hidden; mask-image: linear-gradient(to bottom, transparent, #000 10%, #000 85%, transparent); }
+.sd-landscape__art img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+.sd-landscape__art--city img { height: 112%; object-fit: cover; object-position: center top; opacity: .7; filter: saturate(.6); }
+.sd-landscape__blank { display: grid; place-items: center; min-height: 220px; font: 28px var(--font-display); letter-spacing: .2em; color: var(--text-muted); }
+.sd-landscape__caption { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-2); padding-top: var(--sp-3); border-top: 1px solid var(--border-light); font-size: var(--fs-caption); color: var(--text-muted); }
+.sd-exploration { position: relative; min-width: 0; padding: var(--panel-padding); border: 1px solid var(--border-light); background: var(--accent-faint); }
+.sd-exploration__vignette { position: absolute; top: 0; right: 0; width: 150px; height: 110px; pointer-events: none; background: url('/media/inkwash/atlas/mountain-vignette.webp') center / contain no-repeat; opacity: .2; }
 .sd-section-heading { position: relative; }
-.sd-section-heading::after, .sd-distribution__main > h2::after { content: ''; display: block; width: 31px; height: 2px; margin-top: 14px; background: #9d8454; }
-.sd-section-heading h2 { position: relative; margin: 0; color: #493d2d; font-size: 21px; font-weight: 600; letter-spacing: 1px; line-height: 1.6; }
-.sd-section-heading h2 span { font-size: 14px; font-weight: 400; letter-spacing: 1px; }
-.sd-section-heading i, .sd-anthology i, .sd-distribution h2 i { font-size: 12px; color: #aa9274; font-style: normal; margin-left: 6px; vertical-align: middle; }
-.sd-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 22px 0 14px; position: relative; }
-.sd-tabs { display: flex; gap: 6px; }
-.sd-tabs button { min-height: 36px; padding: 5px 18px; background: transparent; border: 1px solid transparent; border-radius: 30px; color: #786c59; font-family: inherit; font-size: 12px; letter-spacing: 1px; cursor: pointer; white-space: nowrap; }
-.sd-tabs button.is-active { border-color: #c8bcab; color: #8b6b45; background: rgba(255,255,255,.16); box-shadow: inset 0 0 0 2px rgba(255,255,255,.4); }
-.sd-tabs button:hover { color: #4f3e28; }
-.sd-tabs button:focus-visible, .sd-dynasty-filter select:focus-visible, .sd-poem:focus-visible, .sd-poet-person:focus-visible, .sd-method summary:focus-visible, .sd-poems-toggle:focus-visible { outline: 2px solid #a0885e; outline-offset: 4px; }
-.sd-dynasty-filter select { max-width: 130px; border: 1px solid #d6ccbc; border-radius: 22px; padding: 7px 27px 7px 13px; font-family: inherit; color: #776a58; font-size: 11px; background: rgba(255,255,255,.12); cursor: pointer; }
-.sd-chart-intro { margin: 0; font-size: 12px; color: #928574; line-height: 1.85; }
-.sd-tab-panel { min-height: 363px; }
-.sd-chart { width: 100%; height: 338px; margin-top: 4px; }
-.sd-chart-note { display: flex; justify-content: space-between; gap: 10px; font-size: 9px; color: #a89d8b; letter-spacing: .3px; padding: 0 8px 0 44px; margin-top: -2px; }
-.sd-place-panel { display: flex; align-items: center; justify-content: center; }
-.sd-location-illustration { width: 100%; min-height: 315px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; isolation: isolate; overflow: hidden; }
+.sd-section-heading h2 span { display: block; color: var(--text-secondary); font: 400 var(--fs-body-sm)/1.8 var(--font-body); letter-spacing: .02em; margin-top: var(--sp-2); }
+.sd-section-heading i, .sd-anthology i, .sd-distribution h2 i { font-size: var(--fs-caption); color: var(--text-muted); font-style: normal; margin-left: var(--sp-2); }
+.sd-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3); padding-bottom: var(--sp-4); border-bottom: 1px solid var(--border-light); margin: var(--sp-5) 0 var(--sp-4); }
+.sd-tabs { flex-wrap: wrap; }
+.sd-tabs button { cursor: pointer; background: transparent; }
+.sd-tabs button.is-active { color: var(--accent); }
+.sd-dynasty-filter { margin-left: auto; }
+.sd-chart-intro { font-size: var(--fs-body-sm); color: var(--text-secondary); line-height: var(--lh-body); }
+.sd-tab-panel { min-width: 0; }
+.sd-chart { width: 100%; height: 280px; margin-top: var(--sp-2); }
+.sd-chart-note { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-2); font-size: var(--fs-caption); color: var(--text-muted); padding-top: var(--sp-3); border-top: 1px solid var(--border-light); }
+.sd-place-panel { display: grid; place-items: center; }
+.sd-location-illustration { width: 100%; min-height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; isolation: isolate; overflow: hidden; padding: var(--sp-5) var(--sp-4); text-align: center; }
 .sd-location-rings { position: absolute; inset: 0; z-index: -1; display: grid; place-items: center; }
-.sd-location-rings span { position: absolute; border: 1px solid rgba(143,151,123,.17); width: 230px; height: 230px; border-radius: 50%; }
-.sd-location-rings span:nth-child(2) { width: 340px; height: 340px; }
-.sd-location-rings span:nth-child(3) { width: 460px; height: 460px; }
-.sd-location-pin { width: 25px; height: 34px; color: #a58957; margin-bottom: 12px; }
-.sd-location-illustration h3 { margin: 0; font-size: 24px; font-weight: 500; letter-spacing: 5px; }
-.sd-location-illustration p { margin: 10px 0; font-size: 12px; letter-spacing: 1px; color: #938772; }
-.sd-location-illustration > span { font-size: 11px; color: #9c8b73; }
-.sd-location-illustration small { position: absolute; bottom: 16px; text-align: center; font-size: 10px; color: #a59a87; padding: 0 10px; }
-.sd-poet-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; padding: 20px 0; gap: 10px 25px; }
-.sd-poet-person { min-width: 0; display: flex; align-items: center; gap: 15px; padding: 12px 0; text-decoration: none; color: inherit; border-bottom: 1px solid var(--sd-line); }
-.sd-poet-person img { width: 80px; height: 94px; object-fit: cover; object-position: center 25%; mix-blend-mode: multiply; }
-.sd-poet-person__seal { width: 70px; height: 90px; display: grid; place-items: center; font-size: 35px; color: #b3a591; }
-.sd-poet-person__dynasty { font-size: 10px; color: #9b8d78; }
-.sd-poet-person h3 { font-size: 20px; letter-spacing: 3px; margin: 4px 0 8px; font-weight: 500; }
-.sd-poet-person p { font-size: 10px; color: #9b8d78; margin: 0; }
-.sd-poet-person__arrow { color: #b7a88f; margin-left: auto; }
-.sd-anthology { position: relative; z-index: 1; margin: 30px 0 0; min-width: 0; }
-.sd-anthology__heading { display: flex; align-items: center; justify-content: space-between; margin: 0 0 15px; }
-.sd-anthology h2, .sd-distribution h2 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: 1px; }
-.sd-anthology__heading > span { font-size: 10px; color: #a49680; }
-.sd-poet-warning { margin: -3px 0 12px; font-size: 11px; line-height: 1.7; color: #93816a; }
-.sd-poems { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; align-items: stretch; }
-.sd-poems.is-expanded { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-.sd-poems-toggle { display: block; min-height: 40px; margin: 16px auto 0; padding: 7px 18px; border: 1px solid #d2c6b3; border-radius: 22px; background: transparent; color: #8b7657; font-family: inherit; font-size: 11px; letter-spacing: 1px; cursor: pointer; }
-.sd-poems-toggle:hover { border-color: #ae9876; color: #5c4930; }
-.sd-poems-toggle span { margin-left: 8px; }
-.sd-poem { min-width: 0; min-height: 284px; position: relative; display: flex; flex-direction: column; padding: 15px 13px 12px; border: 1px solid rgba(143,124,92,.13); background: rgba(249,246,239,.65); box-shadow: inset 0 0 0 3px rgba(255,255,255,.25); text-decoration: none; color: inherit; transition: transform .2s, border-color .2s, background .2s; }
-.sd-poem:hover { transform: translateY(-4px); border-color: #c4b492; background: rgba(251,248,241,.93); }
-.sd-poem h3 { font-size: 12px; font-weight: 500; margin: 0 0 8px; line-height: 1.7; color: #665744; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 40px; }
-.sd-poem__byline { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; justify-content: space-between; font-size: 10px; color: #897c66; line-height: 1.6; }
-.sd-poem__mood { font-size: 9px; background: rgba(192,176,142,.12); padding: 0 4px; border-radius: 2px; }
-.sd-poem__picture { height: 116px; margin: 6px -4px -2px; overflow: hidden; mask-image: linear-gradient(to bottom, #000 78%, transparent); }
-.sd-poem__picture img { width: 100%; height: 100%; object-fit: cover; object-position: center 24%; mix-blend-mode: multiply; filter: saturate(.7); }
-.sd-poem__portrait-fallback { display: grid; place-items: center; height: 100%; font-size: 57px; color: #b2a38b; opacity: .5; }
-.sd-poem__verse { font-size: 11px; line-height: 1.9; white-space: pre-line; color: #736652; margin: 10px 0 12px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
-.sd-poem__read { font-size: 9px; color: #a79881; margin-top: auto; display: flex; justify-content: space-between; border-top: 1px solid rgba(143,124,92,.1); padding-top: 8px; }
-.sd-distribution { margin: 40px 0 34px; padding-top: 24px; border-top: 1px solid var(--sd-line); display: grid; grid-template-columns: minmax(0, 1fr) 235px; gap: 40px; }
-.sd-rings { display: flex; justify-content: space-between; gap: 15px; margin-top: 24px; }
-.sd-ring { display: flex; align-items: center; gap: 9px; min-width: 0; }
-.sd-ring svg { flex: 0 0 auto; width: clamp(44px, 5.2vw, 68px); height: clamp(44px, 5.2vw, 68px); fill: none; }
+.sd-location-rings span { position: absolute; border: 1px solid var(--border-light); width: 150px; height: 150px; border-radius: 50%; }
+.sd-location-rings span:nth-child(2) { width: 240px; height: 240px; }
+.sd-location-rings span:nth-child(3) { width: 330px; height: 330px; }
+.sd-location-pin { width: 25px; height: 34px; color: var(--accent); margin-bottom: var(--sp-3); }
+.sd-location-illustration h3 { font: 600 var(--fs-h3)/1.5 var(--font-display); }
+.sd-location-illustration p { font-size: var(--fs-body-sm); margin: var(--sp-3) 0; font-variant-numeric: tabular-nums; }
+.sd-location-illustration > span, .sd-location-illustration small { font-size: var(--fs-caption); color: var(--text-muted); }
+.sd-location-illustration small { margin-top: var(--sp-5); }
+.sd-poet-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); padding-top: var(--sp-5); }
+.sd-poet-person { min-width: 0; display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) 0; border-bottom: 1px solid var(--border-light); }
+.sd-poet-person img { flex: 0 0 auto; width: 64px; height: 84px; object-fit: contain; mix-blend-mode: multiply; }
+.sd-poet-person__seal { flex: 0 0 64px; height: 84px; display: grid; place-items: center; font: 36px var(--font-display); color: var(--accent); background: var(--accent-faint); }
+.sd-poet-person__dynasty, .sd-poet-person p { font-size: var(--fs-meta); color: var(--text-muted); }
+.sd-poet-person h3 { font-size: var(--fs-card-title); font-weight: 600; margin: var(--sp-1) 0; }
+.sd-poet-person__arrow { color: var(--accent); margin-left: auto; }
+.sd-anthology { grid-column: 1 / -1; min-width: 0; padding-top: var(--sp-5); border-top: 1px solid var(--border-light); }
+.sd-anthology__heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-5); }
+.sd-anthology__heading > span { font-size: var(--fs-meta); color: var(--text-muted); }
+.sd-poet-warning { font-size: var(--fs-body-sm); color: var(--text-secondary); margin-bottom: var(--sp-4); }
+.sd-poems { --folio-card-min: 220px; }
+.sd-poems-toggle { display: block; min-height: var(--control-height); padding: var(--sp-2) var(--sp-5); margin: var(--sp-5) auto 0; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-secondary); font: var(--fs-body-sm) var(--font-body); }
+.sd-poems-toggle:hover { color: var(--accent); border-color: var(--accent); }
+.sd-poems-toggle span { margin-left: var(--sp-2); }
+.sd-poem { min-width: 0; display: flex; flex-direction: column; padding: var(--sp-5); border: 1px solid var(--border-light); background: var(--card-bg); transition: border-color .2s, background .2s; }
+.sd-poem:hover { border-color: var(--accent-a35); background: var(--bg-secondary); }
+.sd-poem h3 { font: 600 var(--fs-card-title)/1.6 var(--font-heading); overflow-wrap: anywhere; margin-bottom: var(--sp-3); }
+.sd-poem__byline { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2); font-size: var(--fs-meta); line-height: 1.8; color: var(--text-secondary); }
+.sd-poem__mood { font-size: var(--fs-caption); background: var(--accent-faint); padding: 2px 6px; border-radius: var(--radius-sm); }
+.sd-poem__picture { height: 150px; margin-block: var(--sp-4); overflow: hidden; }
+.sd-poem__picture img { width: 100%; height: 100%; object-fit: contain; object-position: center; mix-blend-mode: multiply; }
+.sd-poem__portrait-fallback { display: grid; place-items: center; height: 100%; font: 56px var(--font-display); color: var(--accent-a35); }
+.sd-poem__verse { font-size: var(--fs-body); line-height: var(--lh-body); white-space: pre-line; color: var(--text-secondary); margin-bottom: var(--sp-5); }
+.sd-poem__read { margin-top: auto; padding-top: var(--sp-3); border-top: 1px solid var(--border-light); display: flex; justify-content: space-between; gap: var(--sp-3); color: var(--reading-green); font-size: var(--fs-meta); }
+/* 单首作品保持阅读行宽，画像独立成列，避免拉伸成一条横向裁切图。 */
+.app-root .route-page .sd-poems--single { grid-template-columns: minmax(0, 1fr); max-width: 760px; }
+.sd-poems--single .sd-poem { display: grid; grid-template-columns: 160px minmax(0, 1fr); column-gap: var(--sp-5); }
+.sd-poems--single .sd-poem__picture { grid-column: 1; grid-row: 1 / 5; height: 200px; margin: 0; align-self: center; }
+.sd-poems--single h3, .sd-poems--single .sd-poem__byline, .sd-poems--single .sd-poem__verse, .sd-poems--single .sd-poem__read { grid-column: 2; }
+.sd-poems--single .sd-poem__verse { margin-top: var(--sp-4); }
+.sd-distribution { margin: var(--section-gap) 0; padding-block: var(--sp-6); border-block: 1px solid var(--border-light); display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, .32fr); gap: var(--layout-gap); }
+.sd-distribution__main { min-width: 0; }
+.sd-rings { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--sp-5); margin-top: var(--sp-5); }
+.sd-ring { display: flex; align-items: center; gap: var(--sp-3); min-width: 0; }
+.sd-ring svg { flex: 0 0 56px; width: 56px; height: 56px; fill: none; }
 .sd-ring circle { stroke-width: 4; }
-.sd-ring__track { stroke: rgba(165,155,132,.15); }
-.sd-ring h3 { font-size: 12px; font-weight: 500; margin: 0 0 5px; white-space: nowrap; }
-.sd-ring p { margin: 0; font-size: 19px; color: #746047; }
-.sd-ring p span { font-size: 12px; margin-left: 1px; }
-.sd-ring small { display: block; font-size: 8px; color: #a29580; margin-top: 5px; white-space: nowrap; }
-.sd-method { border-left: 1px solid var(--sd-line); padding-left: 22px; }
-.sd-method h3 { margin: 0 0 9px; font-size: 14px; font-weight: 500; letter-spacing: 1px; }
-.sd-method p { margin: 0; font-size: 10px; line-height: 1.9; color: #93856f; }
-.sd-method summary { cursor: pointer; margin-top: 11px; color: #967955; font-size: 11px; list-style: none; }
-.sd-method summary::-webkit-details-marker { display: none; }
-.sd-method summary span { margin-left: 7px; }
-.sd-method details p { margin-top: 9px; }
-.sd-no-tags { font-size: 12px; color: #a09078; padding: 20px 0; }
+.sd-ring__track { stroke: var(--border-light); }
+.sd-ring h3 { font-size: var(--fs-body-sm); font-weight: 600; }
+.sd-ring p { font-size: var(--fs-h3); line-height: 1.5; font-variant-numeric: tabular-nums; }
+.sd-ring p span { font-size: var(--fs-body-sm); }
+.sd-ring small { font-size: var(--fs-caption); color: var(--text-muted); }
+.sd-method { border-left: 1px solid var(--border-light); padding-left: var(--sp-5); }
+.sd-method h3 { font-size: var(--fs-body); font-weight: 600; margin-bottom: var(--sp-3); }
+.sd-method p { font-size: var(--fs-body-sm); line-height: var(--lh-body); color: var(--text-secondary); }
+.sd-method summary { cursor: pointer; margin-top: var(--sp-4); color: var(--reading-green); font-size: var(--fs-body-sm); min-height: var(--control-height); }
+.sd-method details p { margin-top: var(--sp-3); }
+.sd-no-tags { font-size: var(--fs-body-sm); color: var(--text-muted); padding-top: var(--sp-5); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
-.spot-skeleton { max-width: 1320px; margin: 30px auto; padding: 0 24px; }
-.spot-skeleton__rows { padding-top: 24px; display: grid; gap: 16px; }
-@media (min-width: 1500px) {
-  .sd-landscape { min-height: 910px; }
-  .sd-chart { height: 380px; }
-  .sd-poem { min-height: 310px; }
-  .sd-poem__picture { height: 135px; }
+.spot-skeleton__rows { padding-top: var(--sp-5); display: grid; gap: var(--sp-4); }
+@media (max-width: 960px) {
+  .sd-landscape { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: var(--layout-gap); align-items: center; }
+  .sd-landscape__art { margin: 0; height: 260px; }
+  .sd-landscape__caption { grid-column: 1 / -1; margin-top: var(--sp-4); }
+  .sd-anthology { grid-column: auto; }
+  .sd-distribution { grid-template-columns: 1fr; }
+  .sd-method { border-left: 0; padding: var(--sp-5) 0 0; border-top: 1px solid var(--border-light); }
 }
-@media (max-width: 1100px) {
-  .atlas-spot { padding: 30px 24px 35px; }
-  .sd-composition { grid-template-columns: minmax(215px, 29%) minmax(0, 1fr); column-gap: 22px; }
-  .sd-section-heading h2 { font-size: 18px; }
-  .sd-section-heading h2 span { font-size: 11px; }
-  .sd-tabs button { padding: 5px 11px; font-size: 11px; }
-  .sd-poems { gap: 8px; grid-template-columns: repeat(auto-fit, minmax(115px, 1fr)); }
-  .sd-poem { padding: 12px 10px 10px; }
-  .sd-distribution { gap: 24px; grid-template-columns: minmax(0, 1fr) 190px; }
-  .sd-rings { gap: 8px; flex-wrap: wrap; justify-content: flex-start; }
-  .sd-ring { flex: 1 0 100px; }
+@media (max-width: 600px) {
+  .sd-landscape { display: flex; }
+  .sd-landscape__art { margin-top: var(--sp-4); height: 220px; }
+  .sd-landscape__caption { width: 100%; }
+  .sd-tagline { font-size: 18px; }
+  .sd-tabs { width: 100%; }
+  .sd-tabs button { flex: 1; padding-inline: 8px; font-size: var(--fs-meta); }
+  .sd-dynasty-filter { margin-left: 0; }
+  .sd-chart { height: 260px; }
+  .sd-poet-list { grid-template-columns: 1fr; }
+  .sd-poems--single .sd-poem { grid-template-columns: 88px minmax(0, 1fr); gap: var(--sp-3); padding: var(--sp-4); }
+  .sd-poems--single .sd-poem__picture { height: 150px; }
+  .sd-poems--single h3 { font-size: 18px; }
+  .sd-poems--single .sd-poem__verse { font-size: var(--fs-body-sm); }
 }
-@media (max-width: 800px) {
-  .atlas-spot { padding: 24px 22px 35px; }
-  .sd-composition { grid-template-columns: minmax(190px, 31%) minmax(0, 1fr); column-gap: 17px; }
-  .sd-landscape { min-height: 610px; grid-row: auto; }
-  .sd-title-row { gap: 11px; }
-  .sd-title-row h1 { font-size: 39px; letter-spacing: 2px; }
-  .sd-tagline { font-size: 13px; }
-  .sd-description { font-size: 11px; line-height: 1.95; }
-  .sd-landscape__art { top: 245px; left: -35px; right: -20px; }
-  .sd-exploration { padding-top: 35px; }
-  .sd-section-heading h2 span { display: block; margin-top: 5px; }
-  .sd-section-heading h2 i { display: none; }
-  .sd-controls { flex-wrap: wrap; gap: 10px; margin-top: 17px; }
-  .sd-tabs { gap: 0; }
-  .sd-tabs button { padding: 6px 11px; font-size: 11px; }
-  .sd-dynasty-filter { margin-left: auto; }
-  .sd-chart { height: 300px; }
-  .sd-chart-intro { font-size: 11px; }
-  .sd-chart-note { padding-left: 30px; font-size: 8px; }
-  .sd-tab-panel { min-height: 330px; }
-  .sd-poet-list { grid-template-columns: 1fr; max-height: 335px; overflow-y: auto; }
-  .sd-poet-person { padding: 5px 0; }
-  .sd-poet-person img { height: 60px; width: 60px; }
-  .sd-anthology { grid-column: 1 / -1; margin: 25px 0 0; }
-  .sd-poems { grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); }
-  .sd-poem__picture { height: 118px; }
-  .sd-distribution { grid-template-columns: 1fr; gap: 25px; margin-top: 32px; }
-  .sd-method { border-left: none; border-top: 1px solid var(--sd-line); padding: 18px 0 0; }
-  .sd-method p { max-width: 670px; }
-  .sd-ring { flex: 1 0 100px; }
-}
-@media (max-width: 580px) {
-  .atlas-spot { padding: 20px 20px 30px; }
-  .sd-composition { display: block; }
-  .sd-landscape { min-height: 480px; padding-top: 2px; }
-  .sd-landscape__copy { max-width: 76%; }
-  .sd-back { margin-bottom: 13px; font-size: 9px; }
-  .sd-title-row h1 { font-size: 50px; letter-spacing: 4px; }
-  .sd-tagline { font-size: 14px; margin: 12px 0 15px; max-width: 245px; }
-  .sd-description { font-size: 11px; max-width: 260px; }
-  .sd-landscape__art { left: 0; right: -20px; top: 172px; bottom: -10px; mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 82%, transparent); }
-  .sd-landscape__art img { object-position: center 55%; opacity: .84; }
-  .sd-landscape__caption { bottom: 0; font-size: 9px; }
-  .sd-exploration { padding-top: 37px; }
-  .sd-exploration__vignette { width: 108px; height: 88px; top: 13px; right: 0; opacity: .43; }
-  .sd-section-heading h2 { font-size: 20px; }
-  .sd-section-heading h2 span { font-size: 12px; }
-  .sd-controls { margin: 18px 0 10px; gap: 8px; }
-  .sd-tabs { width: 100%; gap: 6px; }
-  .sd-tabs button { flex: 1; padding: 6px 8px; font-size: 12px; }
-  .sd-dynasty-filter { margin-top: 3px; }
-  .sd-chart-intro { font-size: 10px; margin-top: -32px; max-width: 210px; min-height: 35px; padding-top: 2px; }
-  .sd-chart { height: 285px; }
-  .sd-chart-note { gap: 5px; padding: 0; font-size: 8px; }
-  .sd-tab-panel { min-height: 310px; }
-  .sd-poet-list { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .sd-poet-person { gap: 8px; flex-wrap: wrap; position: relative; }
-  .sd-poet-person img { height: 87px; width: 56px; }
-  .sd-poet-person h3 { font-size: 17px; letter-spacing: 1px; }
-  .sd-poet-person__arrow { display: none; }
-  .sd-poet-person p { font-size: 8px; }
-  .sd-anthology { margin-top: 25px; }
-  .sd-anthology__heading > span { font-size: 9px; }
-  .sd-poems, .sd-poems.is-expanded { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-  .sd-poem { min-height: 282px; padding: 12px 12px 10px; }
-  .sd-poem__picture { height: 130px; }
-  .sd-poem h3 { font-size: 11px; min-height: 38px; }
-  .sd-poem__verse { font-size: 11px; }
-  .sd-poems > .sd-poem:last-child:nth-child(odd) { grid-column: 1 / -1; min-height: 200px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 20px; }
-  .sd-poems > .sd-poem:last-child:nth-child(odd) .sd-poem__picture { grid-column: 1; grid-row: 2 / span 3; margin: 0; height: 130px; }
-  .sd-poems > .sd-poem:last-child:nth-child(odd) h3 { grid-column: 1 / -1; min-height: 0; }
-  .sd-poems > .sd-poem:last-child:nth-child(odd) .sd-poem__byline, .sd-poems > .sd-poem:last-child:nth-child(odd) .sd-poem__verse, .sd-poems > .sd-poem:last-child:nth-child(odd) .sd-poem__read { grid-column: 2; }
-  .sd-rings { gap: 22px 10px; margin-top: 22px; }
-  .sd-ring { flex: 0 0 calc(33.333% - 7px); gap: 6px; }
-  .sd-ring svg { width: 42px; height: 42px; }
-  .sd-ring h3 { font-size: 11px; }
-  .sd-ring p { font-size: 17px; }
-  .sd-ring small { font-size: 7px; }
-}
-@media (prefers-reduced-motion: reduce) { .sd-poem { transition: none; } .sd-poem:hover { transform: none; } }
-.sd-back { min-height:44px; font-size:12px; margin-bottom:10px; }
-.sd-controls { display:grid; grid-template-columns:1fr auto; align-items:center; gap:14px; padding-bottom:14px; border-bottom:1px solid var(--border-light); }
-.sd-tabs { background:var(--bg-secondary); padding:4px; border-radius:3px; width:fit-content; }
-.sd-tabs button { min-height:44px; padding:8px 14px; border-radius:2px; font-size:13px; }
-.sd-tabs button.is-active { background:var(--card-bg); border-color:var(--border); box-shadow:none; color:var(--accent); }
-.sd-dynasty-filter select { min-height:44px; border-radius:3px; font-size:13px; }
-.sd-chart-intro { margin-top:0; font-size:12px; }
-@media(max-width:800px) { .sd-controls { display:flex; flex-wrap:wrap; } .sd-tabs button { font-size:12px; padding-inline:10px; } }
-@media(max-width:580px) { .sd-controls { display:flex; } .sd-tabs { width:100%; } .sd-tabs button { flex:1; } .sd-chart-intro { margin-top:0; max-width:none; min-height:0; } }
+@media (prefers-reduced-motion: reduce) { .sd-poem { transition: none; } }
 </style>

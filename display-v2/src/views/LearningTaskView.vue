@@ -1,5 +1,5 @@
 <template>
-  <div class="learning-page">
+  <div class="learning-page folio-page">
     <router-link :to="atlasLink('/learn', route)" class="folio-back">← 返回探究任务</router-link>
     <div v-if="loading" class="learning-state">正在打开探究任务…</div>
     <div v-else-if="error" class="learning-state error">

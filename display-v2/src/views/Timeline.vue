@@ -1,5 +1,5 @@
 <template>
-  <div class="timeline-page">
+  <div class="timeline-page folio-page">
     <PageHeading eyebrow="诗文名士 / 文脉长河" title="沿着时光，读见齐鲁" description="选择一个朝代，查看名士与作品。朝代选择会保留在当前网址中。"><template #actions><router-link :to="atlasLink('/poems', route)" class="folio-button folio-button--quiet">检索诗词 ↗</router-link></template></PageHeading>
 
     <div ref="revealRoot" class="timeline-content">

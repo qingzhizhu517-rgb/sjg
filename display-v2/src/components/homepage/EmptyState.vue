@@ -1,6 +1,6 @@
 <template>
-  <div class="empty">
-    <svg class="empty__brush" viewBox="0 0 120 48" aria-hidden="true">
+  <div class="empty" :class="{ 'empty--compact': compact }" :role="compact ? 'status' : undefined">
+    <svg v-if="!compact" class="empty__brush" viewBox="0 0 120 48" aria-hidden="true">
       <!-- 单笔水墨远山: 一笔拖出两个山包, 笔锋收尾 -->
       <path
         d="M8,36 C26,18 34,20 48,30 C64,41 74,14 90,24 C100,30 108,30 116,27"
@@ -22,7 +22,7 @@
     <p class="empty__icon">{{ icon }}</p>
     <p class="empty__text">{{ message }}</p>
     <p v-if="hint" class="empty__hint">{{ hint }}</p>
-    <slot />
+    <div v-if="$slots.default" class="empty__actions"><slot /></div>
   </div>
 </template>
 
@@ -33,6 +33,7 @@ defineProps({
   icon: { type: String, default: '空' },
   message: { type: String, default: '此处暂无内容' },
   hint: { type: String, default: '' },
+  compact: { type: Boolean, default: false },
 })
 </script>
 
@@ -70,4 +71,18 @@ defineProps({
   margin: 0;
   letter-spacing: 1px;
 }
+.empty__actions { margin-top: var(--sp-4); }
+.empty--compact {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  gap: var(--sp-2) var(--sp-4);
+  align-items: center;
+  padding: var(--sp-5) 0;
+  text-align: left;
+}
+.empty--compact .empty__icon { grid-column: 1; grid-row: 1 / 3; margin: 0; font-size: 28px; font-weight: 600; opacity: .8; }
+.empty--compact .empty__text { grid-column: 2; margin: 0; font-size: var(--fs-body); letter-spacing: 0; }
+.empty--compact .empty__hint { grid-column: 2; margin: 0; font-size: var(--fs-meta); letter-spacing: 0; line-height: 1.8; }
+.empty--compact .empty__actions { grid-column: 3; grid-row: 1 / 3; margin: 0; }
+@media (max-width: 600px) { .empty--compact { grid-template-columns: 28px minmax(0, 1fr); } .empty--compact .empty__actions { grid-column: 2; grid-row: auto; } }
 </style>

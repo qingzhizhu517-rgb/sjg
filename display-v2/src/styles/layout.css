@@ -1,0 +1,109 @@
+/* 展示端阅读布局。通过显式 folio-* 类复用，不影响沙盘、Canvas 与浮层。
+   app-root + route-page 明确覆盖页面 scoped 中遗留的容器尺寸。 */
+.app-root .route-page .folio-page {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding: var(--page-top) var(--page-gutter) var(--page-bottom);
+  min-width: 0;
+}
+.app-root .site-header__row,
+.app-root .site-subnav,
+.app-root .site-footer {
+  max-width: var(--page-max);
+  padding-inline: var(--page-gutter);
+}
+.app-root .route-page .folio-heading {
+  padding: 0 0 var(--sp-6);
+  margin-bottom: var(--sp-6);
+}
+.app-root .route-page .folio-heading__row {
+  align-items: flex-start;
+  gap: var(--layout-gap);
+}
+.folio-heading__copy { min-width: 0; flex: 1; }
+.app-root .route-page .folio-heading h1 {
+  font-size: clamp(32px, 3.5vw, 48px);
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-wrap: balance;
+}
+.app-root .route-page .folio-heading__description {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  max-width: var(--measure);
+  text-wrap: pretty;
+}
+.app-root .route-page .folio-heading__row > .folio-actions {
+  flex: 0 1 auto;
+  justify-content: flex-end;
+  padding-top: var(--sp-2);
+}
+.app-root .route-page .folio-toolbar {
+  gap: var(--sp-4) var(--sp-5);
+  padding: var(--sp-5);
+  margin-bottom: var(--sp-5);
+  background: var(--accent-faint);
+}
+.app-root .route-page .folio-field,
+.app-root .route-page .folio-result-bar { font-size: var(--fs-meta); }
+.app-root .route-page .folio-tabs > button,
+.app-root .route-page .folio-tabs > a { font-size: var(--fs-body-sm); }
+.app-root .route-page .folio-panel { padding: var(--panel-padding); background: var(--card-bg); }
+
+/* 通用两栏与卡片栅格。局部只需设置 --folio-columns/--folio-card-min。 */
+.app-root .route-page .folio-split {
+  display: grid;
+  grid-template-columns: var(--folio-columns, minmax(0, 1fr) minmax(0, 2fr));
+  gap: var(--layout-gap);
+  align-items: start;
+}
+.folio-split > * { min-width: 0; }
+.app-root .route-page .folio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--folio-card-min, 280px)), 1fr));
+  gap: var(--card-gap);
+  align-items: stretch;
+}
+.app-root .route-page .folio-grid > * { min-width: 0; }
+.app-root .route-page .folio-section { margin-top: var(--section-gap); }
+.app-root .route-page .folio-section-title {
+  font-family: var(--font-heading);
+  font-size: var(--fs-section);
+  line-height: 1.5;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--text-primary);
+  text-wrap: balance;
+}
+.app-root .route-page .folio-prose {
+  max-width: var(--measure);
+  font-size: var(--fs-reading);
+  line-height: var(--lh-body);
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+  text-align: left;
+  text-wrap: pretty;
+}
+.app-root .route-page .folio-prose > p { font-size: inherit; line-height: inherit; }
+.app-root .route-page .folio-prose > p + p { margin-top: var(--sp-4); }
+.app-root .route-page .folio-detail-actions {
+  padding-block: var(--sp-5);
+  margin-block: var(--section-gap) 0;
+  gap: var(--sp-4) var(--sp-5);
+}
+.app-root .route-page .folio-detail-actions p { font-size: var(--fs-body-sm); }
+.app-root .route-page .folio-detail-actions .folio-actions { margin-left: auto; }
+
+@media (max-width: 960px) {
+  .app-root .route-page .folio-split { grid-template-columns: 1fr; }
+  .app-root .route-page .folio-heading__row { flex-wrap: wrap; }
+  .app-root .route-page .folio-heading__row > .folio-actions { justify-content: flex-start; padding-top: 0; }
+}
+@media (max-width: 600px) {
+  :root { --card-gap: 16px; }
+  .app-root .route-page .folio-heading { padding-bottom: var(--sp-5); margin-bottom: var(--sp-5); }
+  .app-root .route-page .folio-toolbar { padding: var(--sp-4); }
+  .app-root .route-page .folio-detail-actions .folio-actions { width: 100%; margin-left: 0; }
+}

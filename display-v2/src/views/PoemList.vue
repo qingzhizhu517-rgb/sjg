@@ -9,13 +9,13 @@
       <div class="folio-actions"><button type="submit" class="folio-button folio-button--primary">检索诗词</button><button type="button" class="folio-button folio-button--quiet" :disabled="region === '全部' && !keywordInput" @click="clearSearch">清除条件</button></div>
     </form>
     <div class="folio-result-bar" role="status"><span>{{ !loaded ? '正在检索…' : errorMsg ? '内容暂未载入' : `本页 ${items.length} 篇${isAtlasPreview(route) ? '样本文选' : '诗词'}` }}<template v-if="region !== '全部'"> · {{ region }}</template></span><router-link :to="atlasLink('/timeline', route)">沿朝代阅读 →</router-link></div>
-    <div v-if="!loaded" class="poem-list__grid" aria-busy="true" aria-label="诗词加载中">
+    <div v-if="!loaded" class="poem-list__grid folio-grid" aria-busy="true" aria-label="诗词加载中">
       <SkeletonBlock v-for="i in 8" :key="i" height="210px" />
     </div>
 
     <ErrorState v-else-if="errorMsg" :message="errorMsg" @retry="load" />
 
-    <div v-else-if="items.length" class="poem-list__grid">
+    <div v-else-if="items.length" class="poem-list__grid folio-grid">
       <router-link
         v-for="(item, index) in items"
         :key="item.id"

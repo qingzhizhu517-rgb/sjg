@@ -1,5 +1,5 @@
 <template>
-  <div class="city-atlas">
+  <div class="city-atlas folio-page">
     <aside class="city-atlas__portrait" aria-labelledby="city-name">
       <header class="city-heading">
         <div class="city-heading__title">
@@ -11,15 +11,15 @@
         <p class="city-heading__subtitle">{{ cityData.subtitle }}</p>
       </header>
 
-      <figure class="city-landscape" :class="{ 'city-landscape--jinan': region === '济南' }">
-        <img :src="cityImage" :alt="`${region}山水意象插画`" decoding="async" fetchpriority="high" />
-        <figcaption>{{ region === '济南' ? 'AI生成 · 济南山水意象' : region === '泰安' ? '五岳独尊' : illustrationData.reach }}</figcaption>
-      </figure>
-
       <section class="city-profile" aria-labelledby="city-introduction">
-        <h2 id="city-introduction" class="atlas-subheading">城市简介</h2>
+        <h2 id="city-introduction" class="atlas-subheading folio-section-title">城市简介</h2>
         <p>{{ cityData.desc }}</p>
       </section>
+
+      <figure class="city-landscape" :class="{ 'city-landscape--jinan': region === '济南' }">
+        <img :src="cityImage" :alt="`${region}山水意象插画`" decoding="async" fetchpriority="high" />
+        <figcaption>AI生成 · {{ region }}山水意象</figcaption>
+      </figure>
 
       <dl class="city-facts">
         <div v-for="fact in cityFacts" :key="fact.label" class="city-fact">
@@ -32,10 +32,6 @@
         </div>
       </dl>
 
-      <div class="city-colophon" aria-hidden="true">
-        <span>{{ region === '泰安' ? '泰山' : region }}</span>
-        <img src="/media/inkwash/atlas/mountain-vignette.webp" alt="" loading="lazy" />
-      </div>
     </aside>
 
     <section class="city-atlas__pages" aria-label="城市景观册页">
@@ -47,7 +43,7 @@
         <router-link :to="atlasLink(`/cities/${region}`, route)" class="city-switch__culture">读{{ region }}文化 <span aria-hidden="true">↗</span></router-link>
       </nav>
       <header id="city-spots" class="atlas-section-header">
-        <h2>经典景点 <img class="atlas-heading-vignette" src="/media/inkwash/atlas/mountain-vignette.webp" alt="" aria-hidden="true" /></h2>
+        <h2 class="folio-section-title">经典景点 <img class="atlas-heading-vignette" src="/media/inkwash/atlas/mountain-vignette.webp" alt="" aria-hidden="true" /></h2>
         <router-link :to="atlasLink('/', route)" class="back-to-map">
           <span>阅览其他区域<br />返回地图</span>
           <svg viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><circle cx="15" cy="15" r="12" /><path d="M15 7v16M15 15l-5-4M15 13l6-5M15 19l5-4" /></svg>
@@ -88,11 +84,11 @@
         </router-link>
       </div>
       <EmptyState
-        v-else class="city-spots-empty" icon="景"
-        :message="previewMode ? '此城尚无景点预览样本' : '此城景点资料待审核发布'"
-        :hint="previewMode ? '可先阅览城市资料，或前往泰安赏景' : '可先阅览城市资料，或循特色体验探访文脉'"
+        v-else compact class="city-spots-empty" icon="景"
+        :message="previewMode ? '当前预览未提供本城景点样本' : '当前暂无已发布的景点资料'"
+        :hint="previewMode ? '此提示仅说明预览样本范围，不代表正式景点收录数量。' : '可先阅读城市文化，或浏览其他城市。'"
       >
-        <router-link v-if="previewMode" :to="atlasLink('/regions/泰安', route)" class="atlas-preview-return">阅览泰安样张 <span aria-hidden="true">→</span></router-link>
+        <router-link v-if="previewMode" :to="atlasLink('/regions/泰安', route)" class="folio-button folio-button--quiet">阅览泰安样张 <span aria-hidden="true">→</span></router-link>
       </EmptyState>
 
       <CityExperiences v-if="!errorMsg" :region="region" :city-image="cityImage" :pending="loaded && !spots.length" :preview="previewMode" />
@@ -218,199 +214,98 @@ watch([region, previewMode], loadSpots, { immediate: true })
 
 <style scoped>
 .city-atlas {
-  --atlas-paper: #f5f2eb;
-  --atlas-ink: #332b21;
-  --atlas-body: #62584c;
-  --atlas-muted: #8e8170;
-  --atlas-rule: rgba(104, 87, 63, .15);
-  --atlas-gold: #9b8055;
-  width: min(100%, 1520px);
+  --atlas-paper: var(--bg-primary);
+  --atlas-ink: var(--text-primary);
+  --atlas-body: var(--text-secondary);
+  --atlas-muted: var(--text-muted);
+  --atlas-rule: var(--border-light);
+  --atlas-gold: var(--ink-wash);
   display: grid;
-  grid-template-columns: minmax(270px, 27%) minmax(0, 1fr);
-  margin: 0 auto;
-  color: var(--atlas-ink);
-  background: var(--atlas-paper);
-  font-family: 'Noto Serif SC', 'Songti SC', 'STSong', serif;
+  grid-template-columns: minmax(0, 28fr) minmax(0, 72fr);
+  gap: var(--layout-gap);
+  align-items: start;
+  color: var(--text-primary);
   text-align: left;
 }
-.city-atlas h1, .city-atlas h2, .city-atlas h3, .city-atlas p, .city-atlas figure, .city-atlas dl, .city-atlas dd { margin: 0; }
-.city-atlas__portrait {
-  position: relative;
-  min-width: 0;
-  padding: 46px 32px 0;
-  border-right: 1px solid var(--atlas-rule);
-  background: linear-gradient(100deg, rgba(213, 200, 180, .05), rgba(219, 207, 188, .14));
-}
-.city-heading__title { display: flex; gap: 12px; align-items: center; }
-.city-heading h1 { font-size: clamp(48px, 4.7vw, 72px); font-weight: 700; letter-spacing: -2px; line-height: 1.35; white-space: nowrap; }
-.city-seal { writing-mode: vertical-rl; font-size: 9px; letter-spacing: 2px; line-height: 1.2; padding: 4px 2px; color: #f7ece0; border: 1px solid #b45e52; outline: 1px solid #b45e52; outline-offset: 2px; background: #b45e52; opacity: .8; }
-.city-heading__english { font-family: Georgia, 'Times New Roman', serif; font-size: 15px; letter-spacing: 3.5px; line-height: 1.5; }
-.city-heading__stroke { display: block; width: 30px; height: 2px; margin: 19px 0 17px; background: linear-gradient(90deg, #8e704c, transparent); }
-.city-heading__subtitle { color: #524537; letter-spacing: 4px; font-weight: 600; font-size: 18px; line-height: 1.8; }
-.city-landscape { position: relative; width: calc(100% + 64px); height: clamp(320px, 32vw, 480px); margin: 12px -32px 15px !important; overflow: hidden; }
-.city-landscape img { display: block; width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; mask-image: linear-gradient(to bottom, transparent, #000 5%, #000 86%, transparent); }
-.city-landscape figcaption { position: absolute; top: 20%; right: 17%; writing-mode: vertical-rl; color: #8c7054; font-size: 11px; letter-spacing: 4px; }
-.atlas-subheading { position: relative; font-size: 20px; font-weight: 600; letter-spacing: 2px; line-height: 1.6; padding: 0 0 10px; border-bottom: 1px solid var(--atlas-rule); }
-.city-profile .atlas-subheading::after { content: ''; width: 38px; height: 2px; background: var(--atlas-gold); position: absolute; left: 0; bottom: -1px; }
-.city-profile > p { color: var(--atlas-body); font-size: 13px; line-height: 2; margin-top: 16px; text-align: justify; }
-.city-facts { display: grid; gap: 20px; margin-top: 27px !important; }
-.city-fact { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 15px; align-items: start; }
-.city-fact__icon { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid #81705c; border-radius: 50%; color: #75634e; }
-.city-fact__icon svg { width: 30px; height: 30px; }
-.city-fact dt { font-size: 13px; font-weight: 600; letter-spacing: 1px; line-height: 1.5; }
-.city-fact dd { color: var(--atlas-body); font-size: 12px; line-height: 1.6; margin-top: 3px; }
-.city-colophon { position: relative; height: 210px; margin: 34px -32px 0; overflow: hidden; }
-.city-colophon > span { position: absolute; top: 5px; left: 18%; font-family: 'STKaiti', 'KaiTi', serif; font-size: 83px; letter-spacing: -8px; color: #978e82; opacity: .22; transform: rotate(-7deg); }
-.city-colophon > img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; opacity: .42; mask-image: linear-gradient(to bottom, transparent, #000 50%, transparent); }
-.city-atlas__pages { min-width: 0; padding: 41px 38px 24px; }
-.atlas-section-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 48px; padding-bottom: 10px; border-bottom: 1px solid var(--atlas-rule); }
-.atlas-section-header h2 { font-size: 26px; font-weight: 600; letter-spacing: 3px; }
-.atlas-heading-vignette { display: inline-block; width: 48px; height: 24px; margin-left: 5px; object-fit: contain; vertical-align: middle; opacity: .4; mix-blend-mode: multiply; filter: grayscale(1); }
-.atlas-preview-return { display: inline-flex; align-items: center; gap: 18px; min-height: 44px; margin-top: 22px; padding: 8px 20px; border: 1px solid var(--atlas-rule); border-radius: 24px; color: var(--atlas-body); font-size: 13px; text-decoration: none; }
-.atlas-preview-return:hover { color: var(--atlas-gold); border-color: var(--atlas-gold); }
-.back-to-map { display: flex; align-items: center; gap: 8px; color: var(--atlas-body); text-align: right; text-decoration: none; font-size: 10px; letter-spacing: 1px; line-height: 1.5; }
-.back-to-map:hover { color: var(--atlas-gold); }
-.back-to-map svg { width: 30px; height: 30px; }
-.atlas-spots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding-top: 5px; }
-.atlas-spots--loading { gap: 24px; padding-top: 24px; }
-.atlas-spot { position: relative; min-width: 0; display: flex; flex-direction: column; color: inherit; text-decoration: none; padding: 20px 23px 23px 0; border-bottom: 1px solid var(--atlas-rule); }
-.atlas-spot:nth-child(2n) { padding: 20px 0 23px 23px; }
-.atlas-spot:nth-child(2n)::before { content: ''; position: absolute; left: 0; top: 20px; bottom: 23px; width: 1px; background: linear-gradient(transparent, var(--atlas-rule) 10%, var(--atlas-rule) 90%, transparent); }
-.atlas-spot__heading { display: flex; align-items: center; flex-wrap: wrap; gap: 5px 7px; }
-.atlas-spot__number { font-family: Georgia, 'Times New Roman', serif; font-size: 23px; }
-.atlas-spot__heading h3 { font-size: 21px; font-weight: 600; letter-spacing: 1px; }
-.atlas-spot__tag { color: #87694e; font-size: 11px; font-weight: 400; line-height: 1.4; letter-spacing: .5px; padding: 0 6px; border: 1px solid #d9cbb6; border-radius: 10px; background: rgba(239, 226, 205, .5); margin-left: 5px; }
-.atlas-spot__art { position: relative; height: clamp(180px, 15.5vw, 220px); margin: 8px 0 12px !important; overflow: hidden; }
-.atlas-spot__art img { width: 100%; height: 100%; display: block; object-fit: contain; object-position: center; mix-blend-mode: multiply; transition: transform .45s ease; mask-image: linear-gradient(to bottom, transparent, #000 7%, #000 89%, transparent); }
-.atlas-spot__art--inscribed { display: grid; grid-template-columns: minmax(0, 1fr) 45px; gap: 6px; align-items: center; }
-.atlas-spot__inscription { position: relative; display: flex; flex-direction: row-reverse; justify-content: flex-start; align-items: flex-start; gap: 6px; align-self: start; padding: 8px 0 21px; color: #4d4338; }
-.atlas-spot__inscription > span { writing-mode: vertical-rl; text-orientation: upright; font-family: 'STKaiti', 'KaiTi', 'Noto Serif SC', serif; font-size: 13px; line-height: 1.35; letter-spacing: 2px; }
-.atlas-spot__inscription > span:nth-child(2) { margin-top: 10px; }
-.atlas-spot__inscription small { position: absolute; left: 4px; bottom: 0; writing-mode: vertical-rl; color: #ab6255; border: 1px solid rgba(171,98,85,.65); font-size: 8px; line-height: 1.25; padding: 2px 1px; letter-spacing: 1px; }
-.atlas-spot:hover .atlas-spot__art img { transform: scale(1.025); }
-.atlas-spot__notes { display: grid; gap: 6px; color: var(--atlas-body); font-size: 13px; letter-spacing: .3px; line-height: 1.8; }
-.atlas-spot__notes strong { font-weight: 600; color: #514334; }
-.atlas-spot__pending { font-style: italic; color: var(--atlas-muted); }
-.atlas-spot__more { display: inline-block; color: #95816a; font-size: 10px; letter-spacing: 1px; margin-top: 8px; }
-.atlas-spot__more > span { display: inline-block; transition: transform .25s ease; }
-.atlas-spot:hover .atlas-spot__more > span { transform: translate(2px, -2px); }
-.atlas-spot:focus-visible, .back-to-map:focus-visible, .atlas-preview-return:focus-visible, .city-atlas__footer a:focus-visible { outline: 2px solid #977951; outline-offset: 5px; }
-.city-sources { margin-top: 36px; }
-.city-atlas__footer { display: flex; justify-content: space-between; align-items: center; gap: 20px; border-top: 1px solid var(--atlas-rule); margin-top: 33px; padding-top: 17px; color: var(--atlas-muted); font-size: 10px; letter-spacing: 2px; }
-.city-atlas__footer a { color: var(--atlas-body); text-decoration: none; }
-.city-atlas__footer a > span { margin-left: 8px; }
-@media (max-width: 1190px) {
-  .city-atlas { grid-template-columns: minmax(235px, 27%) minmax(0, 1fr); }
-  .city-atlas__portrait { padding: 35px 24px 0; }
-  .city-heading h1 { font-size: 50px; }
-  .city-heading__subtitle { font-size: 15px; letter-spacing: 2px; }
-  .city-landscape { width: calc(100% + 48px); margin-right: -24px !important; margin-left: -24px !important; height: 355px; }
-  .city-atlas__pages { padding: 31px 26px 24px; }
-  .atlas-spot { padding-right: 17px; }
-  .atlas-spot:nth-child(2n) { padding-left: 17px; }
-  .atlas-spot__heading { gap: 5px; }
-  .atlas-spot__heading h3 { font-size: 18px; }
-  .atlas-spot__number { font-size: 21px; }
-  .atlas-spot__tag { font-size: 10px; margin-left: 0; }
-  .atlas-spot__inscription > span { font-size: 12px; letter-spacing: 1.5px; }
-}
-@media (max-width: 900px) {
-  .city-atlas { grid-template-columns: 1fr; }
-  .city-atlas__portrait { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 15px 26px; padding: 32px 30px 27px; border-right: 0; border-bottom: 1px solid var(--atlas-rule); }
-  .city-heading { grid-column: 1; grid-row: 1; }
-  .city-heading h1 { font-size: 60px; }
-  .city-heading__subtitle { font-size: 17px; }
-  .city-landscape { grid-column: 2; grid-row: 1 / 3; width: 100%; height: 335px; margin: 0 !important; }
-  .city-profile { grid-column: 1; grid-row: 2; }
-  .city-profile > p { margin-top: 10px; }
-  .city-facts { grid-column: 1 / -1; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 17px; margin-top: 10px !important; }
-  .city-fact { grid-template-columns: 32px minmax(0, 1fr); gap: 8px; }
-  .city-fact__icon { width: 30px; height: 30px; }
-  .city-fact__icon svg { width: 24px; height: 24px; }
-  .city-fact dt { font-size: 12px; }
-  .city-fact dd { font-size: 11px; }
-  .city-colophon { display: none; }
-  .city-atlas__pages { padding: 29px 30px 25px; }
-  .atlas-spot__heading h3 { font-size: 20px; }
-  .atlas-spot__art { height: 195px; }
-}
-@media (max-width: 560px) {
-  .city-atlas__portrait { position: relative; display: block; padding: 24px 22px 25px; overflow: hidden; }
-  .city-heading { position: relative; z-index: 1; min-height: 230px; max-width: 75%; }
-  .city-heading h1 { font-size: 50px; }
-  .city-heading__title { gap: 10px; }
-  .city-heading__english { font-size: 12px; letter-spacing: 2px; }
-  .city-heading__stroke { margin: 14px 0 11px; }
-  .city-heading__subtitle { max-width: 155px; font-size: 15px; letter-spacing: 2px; }
-  .city-landscape { position: absolute; top: 67px; right: 0; width: min(240px, 62%); height: 225px; opacity: .84; }
-  .city-landscape figcaption { right: 13%; top: 23%; font-size: 9px; }
-  .city-profile { position: relative; z-index: 1; }
-  .atlas-subheading { font-size: 18px; letter-spacing: 2px; }
-  .city-profile > p { font-size: 12px; }
-  .city-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 21px !important; gap: 19px 16px; }
-  .city-fact { grid-template-columns: 31px minmax(0, 1fr); gap: 9px; }
-  .city-atlas__pages { padding: 24px 22px; }
-  .atlas-section-header { min-height: 45px; gap: 10px; }
-  .atlas-section-header h2 { font-size: 23px; letter-spacing: 2px; }
-  .atlas-heading-vignette { width: 36px; height: 20px; margin-left: 1px; }
-  .back-to-map { font-size: 9px; }
-  .back-to-map svg { width: 25px; height: 25px; }
-  .atlas-spots { grid-template-columns: 1fr; }
-  .atlas-spot, .atlas-spot:nth-child(2n) { padding: 21px 0 20px; }
-  .atlas-spot:nth-child(2n)::before { display: none; }
-  .atlas-spot__heading { gap: 8px; }
-  .atlas-spot__heading h3 { font-size: 23px; }
-  .atlas-spot__number { font-size: 24px; }
-  .atlas-spot__tag { font-size: 11px; margin-left: 5px; }
-  .atlas-spot__art { height: 205px; margin-top: 7px !important; }
-  .atlas-spot__notes { font-size: 13px; line-height: 1.9; gap: 6px; }
-  .city-atlas__footer { letter-spacing: 1px; gap: 10px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .atlas-spot__art img, .atlas-spot__more > span { transition: none; }
-  .atlas-spot:hover .atlas-spot__art img, .atlas-spot:hover .atlas-spot__more > span { transform: none; }
-}
-/* 城市切换：九城横排小签，替代空旷的下拉工具栏 */
-.city-switch { display: flex; align-items: center; gap: 18px; padding: 0 0 18px; margin-bottom: 22px; border-bottom: 1px solid var(--atlas-rule); }
-.city-switch__label { flex: none; font-size: 12px; letter-spacing: 3px; color: var(--atlas-muted); }
-.city-switch__list { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
-.city-switch__item { padding: 5px 12px; font-size: 14px; letter-spacing: 1px; color: var(--atlas-body); border: 1px solid transparent; border-radius: 2px; text-decoration: none; transition: border-color .2s, color .2s, background .2s; }
-.city-switch__item:hover { border-color: var(--atlas-rule); color: var(--atlas-ink); }
-.city-switch__item[aria-current="page"] { color: #fff; background: var(--accent); border-color: var(--accent); }
-.city-switch__culture { flex: none; font-size: 13px; letter-spacing: 1px; color: var(--reading-green); text-decoration: none; }
-.city-switch__culture:hover { color: var(--accent); }
-@media (max-width: 900px) { .city-switch { flex-wrap: wrap; gap: 10px; } .city-switch__list { flex-basis: 100%; order: 3; } }
-/* 景点卡片：配图铺满统一画框；奇数末张横向通栏，避免右侧空半格 */
-.atlas-spot__art { aspect-ratio: 16 / 9; height: auto; background: rgba(226, 216, 199, .35); border: 1px solid var(--atlas-rule); }
-.atlas-spot__art img { object-fit: cover; mask-image: none; }
-.atlas-spot__art--inscribed { grid-template-columns: minmax(0, 1fr) 52px; background: transparent; border-color: transparent; }
+.city-atlas__portrait { min-width: 0; padding-right: var(--sp-5); border-right: 1px solid var(--border-light); }
+.city-heading__title { display: flex; gap: var(--sp-3); align-items: center; }
+.city-heading h1 { font: 600 clamp(40px, 4.5vw, 60px)/1.3 var(--font-display); letter-spacing: .02em; text-wrap: balance; }
+.city-seal { flex-shrink: 0; writing-mode: vertical-rl; font: 12px/1.3 var(--font-display); letter-spacing: 2px; padding: 4px 2px; background: var(--accent); color: var(--text-on-accent); outline: 1px solid var(--accent-a35); outline-offset: 2px; }
+.city-heading__english { font: 13px/1.8 Georgia, serif; letter-spacing: .16em; margin-top: var(--sp-2); }
+.city-heading__stroke { display: block; width: 32px; height: 2px; margin: var(--sp-4) 0; background: var(--ink-wash); }
+.city-heading__subtitle { font-size: var(--fs-lead); line-height: 1.7; text-wrap: pretty; }
+.city-profile { margin-top: var(--sp-5); }
+.atlas-subheading { padding-bottom: var(--sp-3); border-bottom: 1px solid var(--border-light); }
+.city-profile > p { margin-top: var(--sp-4); font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-secondary); text-wrap: pretty; }
+.city-landscape { position: relative; width: 100%; aspect-ratio: 1; margin: var(--sp-5) 0; }
+.city-landscape img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+.city-landscape figcaption { margin-top: var(--sp-2); font-size: var(--fs-caption); line-height: 1.8; color: var(--text-muted); }
+.city-landscape--jinan { aspect-ratio: 2 / 3; }
+.city-facts { display: grid; gap: var(--sp-4); margin-top: var(--sp-6); }
+.city-fact { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: var(--sp-3); align-items: start; }
+.city-fact__icon { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 50%; color: var(--ink-wash); }
+.city-fact__icon svg { width: 28px; height: 28px; }
+.city-fact dt { font-size: var(--fs-body-sm); font-weight: 600; line-height: 1.7; }
+.city-fact dd { font-size: var(--fs-body-sm); line-height: 1.8; color: var(--text-secondary); margin-top: var(--sp-1); }
+.city-atlas__pages { min-width: 0; }
+.city-switch { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); padding-bottom: var(--sp-4); margin-bottom: var(--sp-5); border-bottom: 1px solid var(--border-light); }
+.city-switch__label { font-size: var(--fs-meta); color: var(--text-muted); }
+.city-switch__list { display: flex; flex: 1 1 100%; order: 3; gap: var(--sp-1); min-width: 0; overflow-x: auto; padding: var(--sp-1); scrollbar-width: thin; }
+.city-switch__item { display: inline-flex; justify-content: center; align-items: center; min-height: var(--control-height); flex: 0 0 auto; padding: var(--sp-2) var(--sp-3); font-size: var(--fs-body-sm); border: 1px solid transparent; border-radius: var(--radius-sm); }
+.city-switch__item:hover { border-color: var(--border); }
+.city-switch__item[aria-current="page"] { color: var(--text-on-accent); background: var(--accent); }
+.city-switch__culture { margin-left: auto; display: inline-flex; align-items: center; min-height: var(--control-height); font-size: var(--fs-body-sm); color: var(--reading-green); }
+.atlas-section-header { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-3); padding-bottom: var(--sp-3); border-bottom: 1px solid var(--border-light); }
+.atlas-section-header h2 { display: flex; align-items: center; gap: var(--sp-2); }
+.atlas-heading-vignette { width: 48px; height: 32px; object-fit: contain; opacity: .5; }
+.back-to-map { display: flex; align-items: center; gap: var(--sp-2); min-height: var(--control-height); font-size: var(--fs-meta); color: var(--text-secondary); line-height: 1.7; }
+.back-to-map svg { width: 28px; height: 28px; }
+.atlas-spots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--card-gap); margin-top: var(--sp-5); }
+.atlas-spot { min-width: 0; position: relative; display: flex; flex-direction: column; padding-bottom: var(--sp-5); border-bottom: 1px solid var(--border-light); }
+.atlas-spot__heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2); }
+.atlas-spot__number { font: 20px/1.5 Georgia, serif; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.atlas-spot__heading h3 { font-size: var(--fs-card-title); line-height: 1.5; font-weight: 600; }
+.atlas-spot__tag { padding: 2px 6px; font-size: var(--fs-caption); line-height: 1.8; color: var(--text-secondary); border: 1px solid var(--border-light); border-radius: var(--radius-sm); }
+.atlas-spot__art { position: relative; aspect-ratio: 16 / 9; margin: var(--sp-4) 0; min-width: 0; background: var(--accent-faint); overflow: hidden; }
+.atlas-spot__art img { width: 100%; height: 100%; object-fit: cover; mix-blend-mode: multiply; }
+.atlas-spot__art--inscribed { display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: var(--sp-2); background: transparent; }
 .atlas-spot__art--inscribed img { object-fit: contain; }
-.atlas-spot__art--fallback img { opacity: .55; filter: grayscale(.35); }
-.atlas-spot__art--fallback::after { content: '景'; position: absolute; right: 12px; bottom: 12px; padding: 2px 5px; font-size: 13px; color: #b45e52; border: 1px solid rgba(180, 94, 82, .6); background: rgba(245, 242, 235, .8); }
-.atlas-spot__pending { font-style: normal; font-size: 12px; letter-spacing: 1px; }
-@media (min-width: 561px) {
-  .atlas-spot:last-child:nth-child(odd) { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-rows: auto 1fr auto; column-gap: 28px; padding-right: 0; }
-  .atlas-spot:last-child:nth-child(odd) .atlas-spot__heading { grid-column: 1 / -1; }
-  .atlas-spot:last-child:nth-child(odd) .atlas-spot__art { grid-row: 2 / 4; margin-bottom: 0 !important; }
-  .atlas-spot:last-child:nth-child(odd) .atlas-spot__notes { align-self: center; }
-} .atlas-spot__more { display:flex; align-items:center; min-height:44px; font-size:13px; color:var(--reading-green); } .back-to-map { min-height:44px; font-size:12px; }
-/* 济南竖幅采用完整 2:3 构图，图注留在画外。 */
-.city-landscape--jinan { width: 100%; height: auto; aspect-ratio: 2 / 3; margin: 18px 0 22px !important; padding-bottom: 24px; box-sizing: content-box; }
-.city-landscape--jinan img {
-  object-fit: contain;
-  mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent), linear-gradient(to bottom, transparent, #000 4%, #000 96%, transparent);
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
-}
-.city-landscape--jinan figcaption { top: auto; bottom: 0; right: 0; writing-mode: horizontal-tb; font-size: 10px; letter-spacing: 1px; }
-/* 主导航与分区导航合计约 130px，锚点另留 20px 阅读间距。 */
+.atlas-spot__inscription { position: relative; display: flex; flex-direction: row-reverse; gap: var(--sp-1); align-self: start; padding: var(--sp-2) 0 var(--sp-5); }
+.atlas-spot__inscription > span { writing-mode: vertical-rl; font: 14px/1.5 var(--font-display); letter-spacing: 2px; }
+.atlas-spot__inscription > span:nth-child(2) { margin-top: var(--sp-2); }
+.atlas-spot__inscription small { position: absolute; bottom: 0; left: 0; writing-mode: vertical-rl; color: var(--accent); font-size: var(--fs-caption); }
+.atlas-spot__art--fallback img { opacity: .55; }
+.atlas-spot__art--fallback::after { content: '景'; position: absolute; right: var(--sp-3); bottom: var(--sp-3); color: var(--accent); background: var(--glass-bg); font: 14px var(--font-display); padding: 4px 6px; }
+.atlas-spot__notes { display: grid; gap: var(--sp-2); font-size: var(--fs-body-sm); line-height: var(--lh-body); color: var(--text-secondary); }
+.atlas-spot__notes strong { font-weight: 600; color: var(--text-primary); }
+.atlas-spot__pending { font-style: normal; color: var(--text-muted); }
+.atlas-spot__more { display: flex; align-items: center; justify-content: space-between; min-height: var(--control-height); margin-top: auto; padding-top: var(--sp-4); color: var(--reading-green); font-size: var(--fs-body-sm); }
+.city-sources { margin-top: var(--section-gap); }
+.city-atlas__footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3); border-top: 1px solid var(--border-light); margin-top: var(--sp-6); padding-top: var(--sp-4); font-size: var(--fs-meta); color: var(--text-muted); }
+.city-atlas__footer a { display: inline-flex; align-items: center; min-height: var(--control-height); color: var(--reading-green); }
 #city-spots { scroll-margin-top: 150px; }
-.city-spots-empty :deep(.empty__brush) { width: 70px; height: 28px; margin-bottom: 6px; }
-.city-spots-empty :deep(.empty__icon) { font-size: 25px; margin-bottom: 8px; }
-.city-atlas__pages :deep(.city-spots-empty) { padding: 24px 16px; }
-.city-switch a:focus-visible { outline: 2px solid var(--reading-green); outline-offset: 3px; }
-@media (max-width: 560px) {
-  .city-atlas__portrait:has(.city-landscape--jinan) .city-heading { min-height: auto; max-width: 100%; }
-  .city-landscape--jinan { position: relative; top: auto; right: auto; width: min(100%, 300px); height: auto; margin: 20px auto 25px !important; opacity: 1; }
+@media (min-width: 768px) {
+  .atlas-spot:last-child:nth-child(odd) { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); column-gap: var(--sp-5); }
+  .atlas-spot:last-child:nth-child(odd) .atlas-spot__heading { grid-column: 1 / -1; }
+  .atlas-spot:last-child:nth-child(odd) .atlas-spot__art { grid-row: 2 / 4; }
+  .atlas-spot:last-child:nth-child(odd) .atlas-spot__notes { align-self: center; }
+}
+@media (max-width: 1199px) {
+  .city-atlas { grid-template-columns: 1fr; }
+  .city-atlas__portrait { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--sp-5) var(--layout-gap); border-right: 0; border-bottom: 1px solid var(--border-light); padding: 0 0 var(--sp-6); }
+  .city-heading { grid-column: 1; grid-row: 1; }
+  .city-profile { grid-column: 1; grid-row: 2; margin: 0; }
+  .city-landscape { grid-column: 2; grid-row: 1 / 3; width: 100%; height: 280px; aspect-ratio: auto; margin: 0; align-self: start; }
+  .city-facts { grid-column: 1 / -1; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: var(--sp-4); }
+}
+@media (max-width: 767px) {
+  .city-atlas__portrait { display: flex; flex-direction: column; gap: var(--sp-5); }
+  .city-heading h1 { font-size: 44px; }
+  .city-profile { margin: 0; }
+  .city-landscape { height: 240px; margin-bottom: var(--sp-5); }
+  .city-landscape--jinan { height: 360px; }
+  .city-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0; }
+  .city-switch__list { order: 3; }
+  .atlas-spots { grid-template-columns: 1fr; }
 }
 </style>

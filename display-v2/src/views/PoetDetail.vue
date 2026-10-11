@@ -1,5 +1,5 @@
 <template>
-  <div class="pd pd--inkwash">
+  <div class="pd pd--inkwash folio-page">
     <template v-if="poet">
       <div class="pd-back">
         <router-link :to="backTo" class="pd-back-link folio-back">← 返回名士</router-link>
@@ -50,15 +50,15 @@
             </dl>
           </header>
 
-          <section class="pd-section pd-section--bio" aria-labelledby="poet-biography">
-            <div class="pd-section-heading"><h2 id="poet-biography">诗人简介</h2><span aria-hidden="true">◇</span></div>
-            <div class="pd-bio">
+          <section class="pd-section folio-section pd-section--bio" aria-labelledby="poet-biography">
+            <div class="pd-section-heading"><h2 class="folio-section-title" id="poet-biography">诗人简介</h2><span aria-hidden="true">◇</span></div>
+            <div class="pd-bio folio-prose">
               <p v-for="(paragraph, index) in biographyParagraphs" :key="index">{{ paragraph }}</p>
             </div>
           </section>
 
-          <section v-if="milestones.length" class="pd-section pd-section--life" aria-labelledby="poet-life">
-            <div class="pd-section-heading"><h2 id="poet-life">生平经历</h2><span aria-hidden="true">◇</span></div>
+          <section v-if="milestones.length" class="pd-section folio-section pd-section--life" aria-labelledby="poet-life">
+            <div class="pd-section-heading"><h2 class="folio-section-title" id="poet-life">生平经历</h2><span aria-hidden="true">◇</span></div>
             <ol class="pd-timeline" :style="{ '--milestone-count': Math.min(milestones.length, 5) }">
               <li v-for="(milestone, index) in milestones" :key="`${milestone.year}-${index}`" class="pd-milestone">
                 <div class="pd-milestone__painting" aria-hidden="true">
@@ -71,14 +71,14 @@
             </ol>
           </section>
 
-          <section class="pd-section pd-section--works" aria-labelledby="poet-works">
+          <section class="pd-section folio-section pd-section--works" aria-labelledby="poet-works">
             <div class="pd-section-heading pd-section-heading--works">
-              <h2 id="poet-works">代表作品</h2>
+              <h2 class="folio-section-title" id="poet-works">代表作品</h2>
               <button v-if="poems.length > 4" class="pd-all-works folio-button folio-button--quiet" @click="showAllPoems = !showAllPoems" :aria-expanded="showAllPoems">
                 {{ showAllPoems ? '收起作品' : `全部 ${poems.length} 首` }} <span aria-hidden="true">{{ showAllPoems ? '−' : '→' }}</span>
               </button>
             </div>
-            <div v-if="poems.length" class="pd-poems-grid">
+            <div v-if="poems.length" class="pd-poems-grid folio-grid">
               <router-link
                 v-for="pm in visiblePoems"
                 :key="pm.id"
@@ -93,9 +93,9 @@
             <p v-else class="pd-empty-poems">暂无诗篇录入，敬请期待。</p>
           </section>
 
-          <section v-if="historicalImpact" class="pd-section pd-section--impact" aria-labelledby="poet-impact">
-            <div class="pd-section-heading"><h2 id="poet-impact">历史影响</h2><span aria-hidden="true">◇</span></div>
-            <p>{{ historicalImpact }}</p>
+          <section v-if="historicalImpact" class="pd-section folio-section pd-section--impact" aria-labelledby="poet-impact">
+            <div class="pd-section-heading"><h2 class="folio-section-title" id="poet-impact">历史影响</h2><span aria-hidden="true">◇</span></div>
+            <p class="folio-prose">{{ historicalImpact }}</p>
             <img class="pd-impact-painting" src="/media/inkwash/atlas/mountain-vignette.webp" alt="" aria-hidden="true" loading="lazy" />
           </section>
 
@@ -410,4 +410,12 @@ watch(() => [route.params.id, route.query.preview], loadDetail, { immediate: tru
   .pd-section--impact { padding-bottom: 60px; }
 }
 @media (prefers-reduced-motion: reduce) { .pd-poem-card, .pd-poem-card__arrow { transition: none; } }
+/* 内容列沿用共享节奏；插画保留独立构图。 */
+.pd-back { padding: 0; margin-bottom: var(--sp-4); }
+.pd-main { padding: 0 0 0 var(--layout-gap); }
+.pd-poems-grid { --folio-card-min: 200px; }
+.pd-poem-card { padding: var(--sp-4); }
+.pd-poem-card h3 { font-size: var(--fs-body); }
+.pd-poem-card p { font-size: var(--fs-body-sm); }
+@media (max-width: 800px) { .pd-main { padding: var(--sp-5) 0 0; } }
 </style>

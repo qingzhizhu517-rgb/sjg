@@ -3,7 +3,7 @@
     <header class="source-list__heading">
       <span class="source-list__seal" aria-hidden="true">据</span>
       <div>
-        <h2 id="source-list-heading">来源资料</h2>
+        <h2 id="source-list-heading" class="folio-section-title">来源资料</h2>
         <p>本页内容所据文献及原文定位</p>
       </div>
     </header>
@@ -89,6 +89,7 @@ const normalizedSources = computed(() => normalizeSourceEntries(props.sources))
 .source-list {
   width: 100%;
   text-align: left;
+  container-type: inline-size;
 }
 
 .source-list__heading {
@@ -139,8 +140,8 @@ const normalizedSources = computed(() => normalizeSourceEntries(props.sources))
 
 .source-list__entry {
   display: grid;
-  grid-template-columns: minmax(220px, 0.38fr) minmax(0, 1fr);
-  gap: var(--sp-6);
+  grid-template-columns: minmax(180px, 0.32fr) minmax(0, 1fr);
+  gap: var(--layout-gap);
   padding: var(--sp-5) 0;
   border-bottom: 1px solid var(--border-light);
 }
@@ -205,14 +206,14 @@ const normalizedSources = computed(() => normalizeSourceEntries(props.sources))
   gap: var(--sp-2);
   margin: var(--sp-2) 0 0;
   color: var(--text-muted);
-  font-size: var(--fs-caption);
+  font-size: var(--fs-meta);
   line-height: var(--lh-body);
 }
 
 .source-list__evidence {
   min-width: 0;
   color: var(--text-secondary);
-  font-size: var(--fs-body-sm);
+  font-size: var(--fs-reading);
   line-height: var(--lh-body);
 }
 
@@ -238,9 +239,8 @@ const normalizedSources = computed(() => normalizeSourceEntries(props.sources))
 }
 
 .source-list__details {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-2) var(--sp-6);
+  display: grid;
+  gap: var(--sp-3);
   margin: 0;
 }
 
@@ -248,7 +248,6 @@ const normalizedSources = computed(() => normalizeSourceEntries(props.sources))
   display: grid;
   grid-template-columns: 76px minmax(0, 1fr);
   gap: var(--sp-3);
-  flex: 1 1 240px;
 }
 
 .source-list__details dd {
@@ -273,7 +272,8 @@ const normalizedSources = computed(() => normalizeSourceEntries(props.sources))
   overflow-wrap: anywhere;
 }
 
-@media (max-width: 720px) {
+/* 依据组件实际列宽折叠，适配名士侧栏、对照阅读等窄容器。 */
+@container (max-width: 720px) {
   .source-list__entry {
     grid-template-columns: 1fr;
     gap: var(--sp-4);

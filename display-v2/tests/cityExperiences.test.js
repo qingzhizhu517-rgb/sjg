@@ -88,10 +88,38 @@ test('体验组件响应城市切换，主推荐保持原生页内锚点', async
   const page = await setupPage('components/CityExperiences.vue', { cityExperiences: config.cityExperiences, atlasLink: atlas.atlasLink, useRoute: () => ({ query: { preview: 'inkwash' } }) }, props)
   t.after(page.dispose)
   assert.equal(page.state.experiences.value.primary.title, '泉畔漫游')
-  assert.match(page.template, /<a[^>]*:href="experiences\.primary\.href"/)
+  assert.equal(page.state.experiences.value.primary.href, '#city-spots')
   props.region = '东营'; props.cityImage = '/dongying.webp'; await settle()
   assert.equal(page.state.experiences.value.primary.image, '/dongying.webp')
   assert.equal(router.resolve(page.state.experienceLink(page.state.experiences.value.secondary[0])).query.region, '东营')
+})
+
+test('体验主图与城市画像相同时只保留一次，独立场景图仍展示', async t => {
+  const props = reactive({ region: '菏泽', cityImage: '/heze.webp', pending: false })
+  const page = await setupPage('components/CityExperiences.vue', {
+    cityExperiences: config.cityExperiences, atlasLink: atlas.atlasLink,
+    useRoute: () => ({ query: { preview: 'inkwash' } }),
+  }, props)
+  t.after(page.dispose)
+  assert.equal(page.state.showPrimaryImage?.value, false, '同一牡丹图不应重复出现')
+  props.region = '济南'; props.cityImage = '/jinan-portrait.webp'; await settle()
+  assert.equal(page.state.showPrimaryImage.value, true, '独立泉水场景应保留')
+})
+
+test('空景点主入口进入本城文化并保留预览，有内容时恢复景点锚点', async t => {
+  const props = reactive({ region: '菏泽', cityImage: '/heze.webp', pending: true })
+  const page = await setupPage('components/CityExperiences.vue', {
+    cityExperiences: config.cityExperiences, atlasLink: atlas.atlasLink,
+    useRoute: () => ({ query: { preview: 'inkwash' } }),
+  }, props)
+  t.after(page.dispose)
+  assert.equal(page.state.primaryAction?.value, '走进城市文化')
+  const destination = router.resolve(page.state.cityCultureLink.value)
+  assert.equal(destination.params.region, '菏泽')
+  assert.equal(destination.query.preview, 'inkwash')
+  props.pending = false; await settle()
+  assert.equal(page.state.primaryAction.value, '阅览经典景点')
+  assert.equal(page.state.experiences.value.primary.href, '#city-spots')
 })
 
 async function openCity({ query = {}, get } = {}) {

@@ -1,5 +1,5 @@
 /* Shared reading and action system. Decorative painting stays in page components. */
-:root { --control-height: 44px; --page-gutter: clamp(20px, 4vw, 56px); --reading-green: #657764; }
+:root { --control-height: 44px; --reading-green: #657764; }
 html { scroll-padding-top: 140px; }
 .folio-page { max-width: 1360px; padding: 36px var(--page-gutter) 80px; margin-inline: auto; min-height: 60vh; }
 .folio-heading { position: relative; isolation: isolate; padding: 22px 0 32px; margin-bottom: 24px; border-bottom: 1px solid var(--border-light); }

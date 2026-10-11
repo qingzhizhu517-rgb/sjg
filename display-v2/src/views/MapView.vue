@@ -1,5 +1,5 @@
 <template>
-  <div class="river-atlas">
+  <div class="river-atlas folio-page">
     <section class="atlas-hero" aria-labelledby="atlas-title">
       <div class="atlas-hero__copy">
         <h1 id="atlas-title" class="atlas-hero__title"><span>山东揽胜</span><span>黄河入海</span></h1>

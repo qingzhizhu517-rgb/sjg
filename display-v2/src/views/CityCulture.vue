@@ -1,5 +1,5 @@
 <template>
-  <div class="city-culture">
+  <div class="city-culture folio-page">
     <!-- 页头 -->
     <header class="cc-hero">
       <div class="cc-hero__main">

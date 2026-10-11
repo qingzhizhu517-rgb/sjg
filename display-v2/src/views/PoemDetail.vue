@@ -1,11 +1,11 @@
 <template>
-  <div v-if="errorMsg" class="poem-state">
+  <div v-if="errorMsg" class="poem-state folio-page">
     <ErrorState :message="errorMsg" @retry="loadPoem" />
     <router-link :to="readingBack" class="folio-back">← 返回诗词列表</router-link>
   </div>
 
   <!-- 诗笺骨架屏：模拟 锚点带 + 标题 + 正文行 -->
-  <div v-else-if="!poem" class="poem-skeleton" aria-busy="true" aria-label="诗篇加载中">
+  <div v-else-if="!poem" class="poem-skeleton folio-page" aria-busy="true" aria-label="诗篇加载中">
     <SkeletonBlock height="38vh" />
     <div class="poem-skeleton__body">
       <SkeletonBlock height="34px" width="42%" />
@@ -15,7 +15,7 @@
   </div>
 
   <!-- 横排诗笺：页面负责数据和附加内容，主视觉由组件封装 -->
-  <div v-else class="poem-detail poem-detail--inkwash">
+  <div v-else class="poem-detail poem-detail--inkwash folio-page">
     <div class="detail-top">
       <router-link :to="readingBack" class="folio-back">← {{ route.query.returnTo ? '返回检索结果' : '返回诗词列表' }}</router-link>
     </div>
@@ -30,18 +30,18 @@
     />
 
     <!-- Background -->
-    <div v-if="poem.background" class="detail-section">
-      <h2 class="section-heading">创作背景</h2>
+    <div v-if="poem.background" class="folio-section detail-section">
+      <h2 class="section-heading folio-section-title">创作背景</h2>
       <div class="background-content">
-        <p>{{ poem.background }}</p>
+        <p class="folio-prose">{{ poem.background }}</p>
       </div>
     </div>
 
-    <SourceList :sources="sources" class="detail-section" />
+    <SourceList :sources="sources" class="folio-section detail-section" />
 
-    <section v-if="previewMode && poem.appreciation" class="detail-section preview-appreciation">
-      <h2 class="section-heading">诗意赏读</h2>
-      <p>{{ poem.appreciation }}</p>
+    <section v-if="previewMode && poem.appreciation" class="folio-section detail-section preview-appreciation">
+      <h2 class="section-heading folio-section-title">诗意赏读</h2>
+      <p class="folio-prose">{{ poem.appreciation }}</p>
     </section>
 
     <!-- 设计样本仅使用本地内容，实际赏析组件只挂载于正式数据页。 -->
@@ -49,8 +49,8 @@
 
     <div class="folio-detail-actions"><p>读过此篇，再寻找一种新的心境。</p><div class="folio-actions"><router-link :to="readingBack" class="folio-button">返回列表</router-link><router-link :to="readingLink" class="folio-button">AI对照阅读 ↗</router-link><router-link :to="atlasLink('/compose', route)" class="folio-button folio-button--primary">写一首自己的诗 →</router-link></div></div>
     <!-- Media -->
-    <div v-if="parsedVideoUrl" class="detail-section">
-      <h2 class="section-heading">诗词赏析视频</h2>
+    <div v-if="parsedVideoUrl" class="folio-section detail-section">
+      <h2 class="section-heading folio-section-title">诗词赏析视频</h2>
       <div class="media-wrap">
         <video :src="parsedVideoUrl" controls preload="none" class="video-player" />
       </div>

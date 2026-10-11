@@ -1,7 +1,7 @@
 <!-- display-v2/src/views/CraftWorkshop.vue -->
 <!-- 路由页 /crafts：编排 useGlbScene + useCraftProcess + 三组件 -->
 <template>
-  <div ref="rootRef" class="craft-workshop">
+  <div ref="rootRef" class="craft-workshop folio-page">
     <PageHeading eyebrow="齐鲁文化 / 非遗工艺 / 专题工坊" title="一方葫芦，五道工序" description="从选料到成品，循着五道工序，体验东昌葫芦雕刻。可手动选择步骤，也可连续播放。"><template #actions><router-link :to="atlasLink('/crafts', route)" class="folio-button folio-button--quiet">全部非遗工艺 ↗</router-link></template></PageHeading>
     <!-- 主内容区：左 3D 舞台 + 右步骤条 -->
     <div class="cw-main" data-reveal>

@@ -10,9 +10,9 @@
       <div class="folio-actions"><button type="submit" class="folio-button folio-button--primary">查找内容</button><button type="button" class="folio-button folio-button--quiet" :disabled="!region && !keyword && !draft" @click="reset">清除条件</button></div>
     </form>
     <div class="folio-result-bar" role="status"><span>{{ loading ? '正在整理册页…' : error ? '内容暂未载入' : `本页 ${filtered.length} 条${isAtlasPreview(route) ? '设计样本' : '内容'}` }}<template v-if="region"> · {{ region }}</template><template v-if="keyword"> · “{{ keyword }}”</template></span><span>选择条目，展开阅读</span></div>
-    <div v-if="loading" class="collection-grid" aria-busy="true"><SkeletonBlock v-for="n in 3" :key="n" height="250px" /></div>
+    <div v-if="loading" class="collection-grid folio-grid" aria-busy="true"><SkeletonBlock v-for="n in 3" :key="n" height="250px" /></div>
     <ErrorState v-else-if="error" :message="error" @retry="load" />
-    <div v-else-if="filtered.length" class="collection-grid">
+    <div v-else-if="filtered.length" class="collection-grid folio-grid">
       <router-link v-for="(item, i) in filtered" :key="item.id" :to="detailLink(item)" class="collection-card">
         <div class="collection-card__art"><img v-if="imageOf(item) && !failedImages.has(item.id)" :src="imageOf(item)" :alt="item.title" loading="lazy" @error="failedImages.add(item.id)" /><span v-else aria-hidden="true">{{ item.title?.charAt(0) || meta.seal }}</span><small>{{ String(i + 1).padStart(2, '0') }}</small></div>
         <div class="collection-card__body"><p class="folio-eyebrow">{{ item.region || '齐鲁' }} · {{ meta.label }}</p><h2>{{ item.title }}</h2><p class="collection-card__summary">{{ item.summary || '走进这则文化记录，继续阅读。' }}</p><span class="collection-card__read">展开阅读 <i aria-hidden="true">↗</i></span></div>

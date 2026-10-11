@@ -1,5 +1,5 @@
 <template>
-  <div class="cd">
+  <div class="cd folio-page">
     <div class="cd-back">
       <router-link :to="backTo" class="cd-back-link folio-back">← {{ returnLabel }}</router-link>
     </div>
@@ -35,13 +35,13 @@
         </div>
       </header>
 
-      <section v-if="item.content" class="cd-section">
-        <h2 class="cd-section-title">详细介绍</h2>
-        <p class="cd-text">{{ item.content }}</p>
+      <section v-if="item.content" class="cd-section folio-section">
+        <h2 class="cd-section-title folio-section-title">详细介绍</h2>
+        <p class="cd-text folio-prose">{{ item.content }}</p>
       </section>
 
-      <section v-if="detailFields.length" class="cd-section">
-        <h2 class="cd-section-title">详情档案</h2>
+      <section v-if="detailFields.length" class="cd-section folio-section">
+        <h2 class="cd-section-title folio-section-title">详情档案</h2>
         <dl class="cd-fields">
           <div v-for="f in detailFields" :key="f.label" class="cd-field">
             <dt class="cd-field-label">{{ f.label }}</dt>
@@ -50,14 +50,14 @@
         </dl>
       </section>
 
-      <section v-if="tagsOf(item).length" class="cd-section">
-        <h2 class="cd-section-title">标签</h2>
+      <section v-if="tagsOf(item).length" class="cd-section folio-section">
+        <h2 class="cd-section-title folio-section-title">标签</h2>
         <div class="cd-tags">
           <span v-for="t in tagsOf(item)" :key="t" class="cd-tag">{{ t }}</span>
         </div>
       </section>
 
-      <SourceList :sources="sources" class="cd-section" />
+      <SourceList :sources="sources" class="cd-section folio-section" />
       <div class="folio-detail-actions"><p>继续循着风物，了解这座城。</p><div class="folio-actions"><router-link :to="backTo" class="folio-button">返回浏览结果</router-link><router-link v-if="item.region" :to="atlasLink(`/cities/${item.region}`, route)" class="folio-button folio-button--primary">走进{{ item.region }} →</router-link></div></div>
     </div>
 
