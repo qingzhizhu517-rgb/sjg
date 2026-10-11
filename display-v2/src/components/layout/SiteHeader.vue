@@ -14,7 +14,7 @@
     </div>
     <div v-if="currentSection" class="site-subnav">
       <span class="site-subnav__label">{{ currentSection.label }}<i aria-hidden="true">／</i></span>
-      <nav aria-label="分区导航"><router-link v-for="link in currentSection.links" :key="link.path" :to="atlasLink(link.path, route)" :aria-current="isSectionLinkActive(route.path, link) ? 'page' : undefined">{{ link.label }}</router-link></nav>
+      <nav aria-label="分区导航" @focusin="revealSubnavFocus"><router-link v-for="link in currentSection.links" :key="link.path" :to="atlasLink(link.path, route)" :aria-current="isSectionLinkActive(route.path, link) ? 'page' : undefined">{{ link.label }}</router-link></nav>
     </div>
     <Teleport to="body">
       <div v-if="open" class="site-guide-mask" @click.self="closeGuide">
@@ -41,6 +41,16 @@ const open = ref(false), trigger = ref(null), dialog = ref(null)
 let savedOverflow = ''
 async function openGuide() { savedOverflow = document.body.style.overflow; open.value = true; document.body.style.overflow = 'hidden'; await nextTick(); dialog.value?.querySelector('button')?.focus() }
 function closeGuide() { if (!open.value) return; open.value = false; document.body.style.overflow = savedOverflow; nextTick(() => trigger.value?.focus()) }
+function revealSubnavFocus(event) {
+  const nav = event.currentTarget
+  const link = event.target.closest('a')
+  if (!link || nav.scrollWidth <= nav.clientWidth) return
+  const viewport = nav.getBoundingClientRect()
+  const item = link.getBoundingClientRect()
+  // 只滚动横向导航，保留焦点环边距，不改变正文滚动位置。
+  if (item.left < viewport.left + 4) nav.scrollLeft += item.left - viewport.left - 4
+  else if (item.right > viewport.right - 4) nav.scrollLeft += item.right - viewport.right + 4
+}
 function onDialogKeydown(event) {
   if (event.key === 'Escape') { event.preventDefault(); closeGuide(); return }
   if (event.key !== 'Tab') return
@@ -98,5 +108,10 @@ onBeforeUnmount(() => { if (open.value) document.body.style.overflow = savedOver
 .site-search, .site-guide-trigger { min-width: 44px; justify-content: center; }
 @media(max-width:1150px) { .site-navigation { gap: 18px; } .site-search span { display: none; } .site-header__row { gap: 18px; padding-inline: 25px; } }
 @media(max-width:960px) { .site-navigation { display: none; } .site-header__actions { margin-left: auto; } .site-header__row { min-height: 74px; } }
+@media(max-width:767px) {
+  .site-subnav { min-width: 0; }
+  .site-subnav nav { min-width: 0; flex: 1; flex-wrap: nowrap; overflow-x: auto; padding: 4px; scrollbar-width: thin; }
+  .site-subnav nav a { flex: 0 0 auto; white-space: nowrap; }
+}
 @media(max-width:600px) { .site-header__row { padding-inline: 20px; } .site-wordmark b { font-size: 22px; } .site-wordmark small { font-size: 7px; } .site-header__actions { gap: 12px; } .site-guide-trigger { border: 0; padding: 0; } .site-guide-trigger > span:last-child { display: none; } .site-guide-trigger__icon { font-size: 23px; width: 32px; } .site-subnav { padding-inline: 12px; gap: 0; } .site-subnav__label { display: none; } .site-subnav nav { gap: 0; } .site-subnav a { font-size: 12px; padding-inline: 10px; } .site-guide { padding: 24px; } .site-guide__header h2 { font-size: 24px; } .site-guide__groups { grid-template-columns: 1fr; gap: 24px; } }
 </style>

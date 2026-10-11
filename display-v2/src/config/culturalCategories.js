@@ -3,26 +3,31 @@
 export const CULTURAL_CATEGORIES = [
   {
     key: 'festival', name: '民俗节庆', seal: '节', route: '/festivals', ready: true,
+    glyph: 'festival',
     desc: '爆竹声里，灯影桨声；一方节俗，一方人情。',
     tags: ['春节', '元宵', '牡丹盛会'],
   },
   {
     key: 'poem', name: '古诗词', seal: '诗', route: '/poems', ready: true,
+    glyph: 'poetry',
     desc: '千古诗篇，咏叹齐鲁山河与人间悲欢。',
     tags: ['唐诗', '宋词', '咏物'],
   },
   {
     key: 'craft', name: '非遗工艺', seal: '艺', route: '/crafts', ready: true,
+    glyph: 'craft',
     desc: '百工之艺，指尖传承，器物之中见匠心。',
     tags: ['东昌葫芦', '剪纸', '年画'],
   },
   {
     key: 'literature', name: '民间文学', seal: '文', route: '/literature', ready: true,
+    glyph: 'literature',
     desc: '闾巷传说，口耳相传，百姓心中的故事。',
     tags: ['传说', '故事', '民间'],
   },
   {
     key: 'food_opera', name: '饮食戏曲', seal: '味', route: '/food-opera', ready: true,
+    glyph: 'food',
     desc: '舌尖记忆与梨园春秋，品味黄河岸边的生活艺术。',
     tags: ['鲁菜', '吕剧', '快书'],
   },

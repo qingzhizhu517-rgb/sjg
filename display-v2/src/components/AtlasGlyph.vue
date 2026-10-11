@@ -8,6 +8,9 @@
     <g v-else-if="kind === 'inscription'"><path d="M12 29V14l4-4h9l3 5v14M9 31h22M17 15h6m-6 5h6m-6 5h6"/><path d="m25 12 3 3h-3v-3Z"/></g>
     <g v-else-if="kind === 'food'"><path d="M9 21h22c-1 7-5 10-11 10S10 28 9 21ZM16 33h8M12 25h16M14 17c-3-3 3-4 0-7m6 7c-3-3 3-4 0-7m6 7c-3-3 3-4 0-7"/></g>
     <g v-else-if="kind === 'festival'"><path d="M20 7v4M15 12h10m-10 15h10M20 28v5m-3-2h6"/><path d="M15 13c-8 4-6 12 0 13h10c6-1 8-9 0-13H15ZM17 13c-3 4-3 8 0 13m6-13c3 4 3 8 0 13M11 19h18"/></g>
+    <g v-else-if="kind === 'poetry'"><path d="M13 11h15v16H13m0-16a2 2 0 0 0-4 0v16a2 2 0 0 1 4 0m-4 0a2 2 0 0 0 2 2h17a2 2 0 0 0 0-4M17 15h7m-7 4h7m-7 4h4"/></g>
+    <g v-else-if="kind === 'craft'"><path d="M18 9h4m-2 0v3c-7-2-9 7-3 9-9 3-6 11 3 11s12-8 3-11c6-2 4-11-3-9M17 21h6m-7 5c1 3 6 3 8 0"/></g>
+    <g v-else-if="kind === 'literature'"><path d="M20 14c-4-3-8-3-12-2v16c4-1 8-1 12 2 4-3 8-3 12-2V12c-4-1-8-1-12 2Zm0 0v16M11 17c2-1 4 0 6 1m-6 4c2-1 4 0 6 1m6-5c2-1 4-2 6-1m-6 6c2-1 4-2 6-1"/></g>
     <g v-else><path d="m20 8 10 8-4 12H14l-4-12 10-8Z"/><path d="m20 12 6 5-2 8h-8l-2-8 6-5Zm-5 17-3 5 8-3 8 3-3-5"/></g>
   </svg>
 </template>

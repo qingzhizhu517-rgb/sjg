@@ -4,18 +4,17 @@
     <div class="cg-grid">
       <component
         :is="c.ready ? 'router-link' : 'div'"
-        v-for="(c, i) in cards"
+        v-for="c in cards"
         :key="c.key"
         :to="c.ready ? atlasLink(c.route, route) : undefined"
         class="cg-card"
         :class="{ disabled: !c.ready }"
-        :style="{ animationDelay: `${i * 0.1}s` }"
         :aria-disabled="!c.ready"
         data-reveal
       >
-        <!-- 卡片图片区域：水墨风格（印章字 + 淡朱砂底） -->
+        <!-- 类别图形与真实计数；装饰不参与链接名称。 -->
         <div class="cg-card__image">
-          <span class="cg-card__seal-char">{{ c.seal }}</span>
+          <AtlasGlyph :kind="c.glyph" class="cg-card__glyph" />
           <div class="cg-card__count">
             <template v-if="c.ready">{{ countOf(c.key) }} {{ isAtlasPreview(route) ? '项样本' : '条收录' }}</template>
             <template v-else>筹备中</template>
@@ -26,9 +25,6 @@
         <div class="cg-card__content">
           <h3 class="cg-card__name">{{ c.name }}</h3>
           <p class="cg-card__desc">{{ c.desc }}</p>
-          <div class="cg-card__tags">
-            <span v-for="tag in c.tags" :key="tag" class="cg-card__tag">{{ tag }}</span>
-          </div>
           <span v-if="c.ready" class="cg-card__arrow">探索更多 →</span>
           <span v-else class="cg-card__badge">敬请期待</span>
         </div>
@@ -45,6 +41,7 @@ import api from '../../api'
 import { useRoute } from 'vue-router'
 import { atlasLink, isAtlasPreview } from '../../config/atlasPreview'
 import { culturePreviewItems } from '../../config/culturePreview'
+import AtlasGlyph from '../AtlasGlyph.vue'
 const route = useRoute()
 
 const { reveal } = useReveal()
@@ -75,191 +72,144 @@ onMounted(async () => {
 
 <style scoped>
 .cultural-gallery {
-  max-width: var(--container-max);
+  width: 100%;
   margin: 0 auto;
-  padding: 0 var(--sp-5) var(--sp-10);
 }
 
-/* 卡片网格 */
 .cg-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: var(--sp-5);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--card-gap);
 }
 
 .cg-card {
-  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-5);
   background: var(--card-bg);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--card-shadow);
   border: 1px solid var(--border);
-  text-decoration: none;
+  border-radius: var(--radius-sm);
   color: inherit;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-  animation: fadeSlideUp 0.6s ease both;
+  text-decoration: none;
+  transition: border-color .2s ease, background-color .2s ease, transform .2s ease;
 }
 
-.cg-card:hover:not(.disabled) {
-  transform: translateY(-4px);
-  box-shadow: var(--card-shadow-hover);
+.cg-card:hover:not(.disabled),
+.cg-card:focus-visible {
   border-color: var(--accent);
+  background: var(--bg-primary);
 }
 
-.cg-card.disabled {
-  opacity: 0.6;
-  cursor: default;
-}
+.cg-card:active:not(.disabled) { transform: translateY(1px); }
+.cg-card.disabled { opacity: .6; }
 
-@keyframes fadeSlideUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* 卡片图片区域：水墨风格（淡朱砂底 + 印章字） */
 .cg-card__image {
-  position: relative;
-  height: 200px;
-  overflow: hidden;
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: var(--accent-faint);
+  justify-content: space-between;
+  gap: var(--sp-2);
 }
 
-.cg-card__seal-char {
-  font-family: var(--font-display);
-  font-size: 80px;
-  font-weight: 600;
-  color: var(--accent);
-  opacity: 0.2;
-  transition: transform 0.5s ease, opacity 0.5s ease;
-}
-
-.cg-card:hover .cg-card__seal-char {
-  transform: scale(1.1);
-  opacity: 0.3;
+.cg-card__glyph {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  color: var(--reading-green);
 }
 
 .cg-card__count {
-  position: absolute;
-  bottom: var(--sp-4);
-  right: var(--sp-4);
-  padding: var(--sp-1) var(--sp-3);
-  background: var(--glass-bg);
-  backdrop-filter: blur(10px);
-  border-radius: var(--radius-lg);
-  font-size: var(--fs-caption);
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: 1px;
+  font-size: var(--fs-meta);
+  line-height: 1.5;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-/* 卡片内容 */
 .cg-card__content {
-  padding: var(--sp-5);
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .cg-card__name {
+  margin: 0 0 var(--sp-2);
   font-family: var(--font-heading);
-  font-size: var(--fs-lead);
+  font-size: var(--fs-card-title);
   font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 1px;
   color: var(--text-primary);
-  margin-bottom: 8px;
-  letter-spacing: 3px;
 }
 
 .cg-card__desc {
-  font-size: var(--fs-caption);
-  line-height: 1.6;
-  color: var(--text-muted);
-  letter-spacing: 0.5px;
-  margin-bottom: var(--sp-4);
-}
-
-.cg-card__tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: var(--sp-4);
-}
-
-.cg-card__tag {
-  padding: 4px 10px;
-  background: var(--bg-secondary);
-  border-radius: var(--radius-lg);
-  font-size: 11px;
+  margin: 0;
+  font-size: var(--fs-reading);
+  line-height: 1.7;
   color: var(--text-secondary);
-  letter-spacing: 1px;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
 }
 
-.cg-card__arrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: var(--fs-caption);
-  font-weight: 600;
-  color: var(--accent);
-  letter-spacing: 1px;
-  opacity: 0;
-  transform: translateX(-8px);
-  transition: all 0.3s ease;
-}
-
-.cg-card:hover .cg-card__arrow {
-  opacity: 1;
-  transform: translateX(0);
-}
-
+.cg-card__arrow,
 .cg-card__badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border: 1px dashed var(--border);
-  border-radius: var(--radius-lg);
-  font-size: 11px;
-  color: var(--text-muted);
-  letter-spacing: 1px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  margin-top: auto;
+  padding-top: var(--sp-2);
+  font-size: var(--fs-body-sm);
+  line-height: 1.5;
+  color: var(--reading-green);
 }
+.cg-card__badge { color: var(--text-secondary); }
 
-/* 响应式 */
-@media (max-width: 1200px) {
-  .cg-grid {
-    grid-template-columns: repeat(3, 1fr);
+/* 平板两列，奇数项改为通栏图文，不留孤立半行。 */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .cg-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cg-card:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 144px minmax(0, 1fr);
+    gap: var(--sp-5);
+  }
+  .cg-card:last-child:nth-child(odd) .cg-card__image {
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--sp-3);
+    border-right: 1px solid var(--border-light);
+  }
+  .cg-card:last-child:nth-child(odd) .cg-card__glyph {
+    flex-basis: auto;
+    width: 56px;
+    height: 56px;
   }
 }
 
-@media (max-width: 768px) {
-  .cultural-gallery {
-    padding: 0 var(--sp-4) var(--sp-9);
-  }
-
-  .cg-grid {
-    grid-template-columns: repeat(2, 1fr);
+/* 手机紧凑图文行；文字完整换行，入口始终可见。 */
+@media (max-width: 767px) {
+  .cg-grid { grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); }
+  .cg-card {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
     gap: var(--sp-4);
+    padding: var(--sp-4);
   }
-
   .cg-card__image {
-    height: 160px;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: var(--sp-3);
+    padding-top: var(--sp-1);
   }
+  .cg-card__glyph { flex-basis: auto; width: 48px; height: 48px; }
+  .cg-card__count { font-size: var(--fs-meta); }
+  .cg-card__name { letter-spacing: .5px; }
 }
 
-@media (max-width: 480px) {
-  .cg-grid {
-    grid-template-columns: 1fr;
-  }
+@media (prefers-reduced-motion: reduce) {
+  .cg-card { transition: none; }
+  .cg-card:active:not(.disabled) { transform: none; }
 }
-.cultural-gallery { padding:0; }
-.cg-grid { grid-template-columns: repeat(5,minmax(0,1fr)); gap:16px; }
-@media (max-width: 1100px) { .cg-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
-@media (max-width: 720px) { .cg-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
-.cg-card { border-radius:3px; box-shadow:none; }
-.cg-card__image { height:140px; background: url('/media/inkwash/atlas/mountain-vignette.webp') right bottom/155px auto no-repeat; }
-.cg-card__seal-char { color:#8a755c66; background:none; }
-.cg-card__content { padding:24px; }
-.cg-card__tags { display:none; }
-.cg-card__count { background:transparent; color:var(--text-muted); }
-.cg-card__arrow { min-height:44px; display:flex; align-items:center; margin-top:12px; color:var(--reading-green); }
-@media(max-width:850px) { .cg-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-@media(max-width:520px) { .cg-grid { grid-template-columns:1fr; } .cg-card__image { height:110px; } }
 </style>

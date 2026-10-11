@@ -1,7 +1,7 @@
 <template>
   <div ref="rootRef" class="culture-view folio-page">
     <PageHeading eyebrow="齐鲁文化 / 文化总览" title="风物有情，文脉相连" description="从节令、工艺、故事与乡音出发，走近黄河岸边的文化日常。">
-      <template #actions><a href="#culture-cities" class="folio-button folio-button--secondary">按城市探索 ↓</a></template>
+      <a href="#culture-cities" class="folio-button folio-button--secondary culture-city-jump">按城市探索 ↓</a>
     </PageHeading>
     <!-- 五大板块入口(复用首页聚合组件, 计数来自 /cultural/categories) -->
     <CulturalGallery />
@@ -19,12 +19,12 @@
           :key="c"
           :to="atlasLink(`/cities/${c}`, route)"
           class="cv-city"
-          :style="{ animationDelay: `${i * 0.05}s` }"
           data-reveal
         >
           <span class="cv-city__seal">{{ c[0] }}</span>
           <span class="cv-city__name">{{ c }}</span>
           <span class="cv-city__idx">{{ String(i + 1).padStart(2, '0') }}</span>
+          <span class="cv-city__arrow" aria-hidden="true">→</span>
         </router-link>
       </div>
     </section>
@@ -52,104 +52,79 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.culture-view {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 40px 40px 120px;
-}
+.culture-city-jump { margin-top: var(--sp-4); }
 
-/* 页头: 日式留白 + 衬线大标题 */
-.cv-hero {
-  text-align: center;
-  padding: 64px 20px 24px;
-}
-.cv-hero__tag {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 3px;
-  color: var(--text-on-accent);
-  background: var(--accent);
-  padding: 5px 14px;
-  border-radius: 2px;
-  margin-bottom: 18px;
-}
-.cv-hero__title {
-  font-family: var(--font-heading);
-  font-size: clamp(26px, 3.4vw, 38px);
-  font-weight: 500;
-  letter-spacing: 6px;
-  color: var(--text-primary);
-  margin: 0 0 14px;
-}
-.cv-hero__desc {
-  max-width: 620px;
-  margin: 0 auto;
-  font-size: 14px;
-  line-height: 2;
-  color: var(--text-secondary);
-  letter-spacing: 1px;
-}
-
-/* 九城入口: 3×3 细线卡, 印章 + 序号 */
 .cv-cities {
-  margin-top: 88px;
+  margin-top: var(--section-gap);
+  /* html 已预留固定导航的滚动偏移，这里只补阅读间距。 */
+  scroll-margin-top: var(--sp-2);
 }
 .cv-cities__grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-top: 28px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-4) var(--card-gap);
+  margin-top: var(--sp-5);
 }
 .cv-city {
-  position: relative;
-  display: flex;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto 20px;
   align-items: center;
-  gap: 16px;
-  padding: 22px 24px;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
   background: var(--card-bg);
-  border: 1px solid var(--line, var(--border));
-  border-radius: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   text-decoration: none;
-  transition: all 0.25s ease;
+  transition: border-color .2s ease, background-color .2s ease;
 }
-.cv-city:hover {
+.cv-city:hover,
+.cv-city:focus-visible {
   border-color: var(--accent);
-  transform: translateY(-2px);
+  background: var(--bg-primary);
 }
 .cv-city__seal {
-  width: 46px;
-  height: 46px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--accent);
-  color: var(--text-on-accent);
+  border: 1px solid var(--border);
+  color: var(--reading-green);
   font-family: var(--font-display);
   font-size: 24px;
   font-weight: 600;
-  border-radius: 3px;
-  transform: rotate(-3deg);
-  flex-shrink: 0;
+  border-radius: 2px;
 }
 .cv-city__name {
   font-family: var(--font-heading);
-  font-size: 18px;
+  font-size: var(--fs-card-title);
   font-weight: 600;
-  letter-spacing: 4px;
+  letter-spacing: 2px;
   color: var(--text-primary);
+  white-space: nowrap;
 }
 .cv-city__idx {
-  margin-left: auto;
-  font-family: Georgia, serif;
-  font-size: 13px;
-  letter-spacing: 1px;
-  color: var(--text-muted);
+  font-size: var(--fs-meta);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.cv-city__arrow {
+  color: var(--reading-green);
+  text-align: right;
 }
 
-@media (max-width: 768px) {
-  .culture-view { padding: 24px 16px 88px; }
-  .cv-cities__grid { grid-template-columns: 1fr; }
+@media (max-width: 1279px) {
+  .cv-cities__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-.culture-view { max-width:1360px; padding:32px var(--page-gutter) 70px; } .cv-cities { margin-top:40px; scroll-margin-top:145px; } .cv-city__seal { background:transparent; border:1px solid var(--border); color:var(--reading-green); }
+@media (max-width: 767px) {
+  .cv-city { gap: var(--sp-2); padding: var(--sp-4); }
+  .cv-city__name { font-size: var(--fs-lead); letter-spacing: 0; }
+}
+@media (max-width: 479px) {
+  .cv-cities__grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cv-city { transition: none; }
+}
 </style>
