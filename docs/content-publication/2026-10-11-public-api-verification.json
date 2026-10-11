@@ -1,0 +1,57 @@
+{
+  "observedAt": "2026-10-11T11:28:40+0800",
+  "counts": {
+    "poems": 9,
+    "poets": 8,
+    "spots": 11,
+    "dynasties": 4
+  },
+  "regions": {
+    "菏泽": {
+      "spots": 1,
+      "poems": 1
+    },
+    "济宁": {
+      "spots": 1,
+      "poems": 1
+    },
+    "泰安": {
+      "spots": 1,
+      "poems": 1
+    },
+    "聊城": {
+      "spots": 2,
+      "poems": 1
+    },
+    "济南": {
+      "spots": 1,
+      "poems": 1
+    },
+    "德州": {
+      "spots": 1,
+      "poems": 1
+    },
+    "淄博": {
+      "spots": 1,
+      "poems": 1
+    },
+    "滨州": {
+      "spots": 1,
+      "poems": 1
+    },
+    "东营": {
+      "spots": 2,
+      "poems": 1
+    }
+  },
+  "checkedEndpoints": 53,
+  "allPublishedDetailsHaveSources": true,
+  "heldPoemsRemainHidden": [
+    97,
+    161,
+    182
+  ],
+  "poem1CompleteLines": 6,
+  "poem60TypoCorrected": true,
+  "dynastyIdsVerified": true
+}

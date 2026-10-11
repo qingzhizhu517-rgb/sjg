@@ -1,0 +1,996 @@
+{
+  "batch": "nine-cities-20261011",
+  "status": "published_api_verified",
+  "authorization": "用户选择先上线九城景点及关联诗词、作者，并提供管理员登录用于执行。审核备注明示 AI 辅助核对，不伪造逐条人工校勘或文献版本。",
+  "countsBefore": {
+    "poems": 203,
+    "poets": 129,
+    "spots": 71,
+    "reviewsNeedsReview": 494,
+    "sourceDocuments": 0
+  },
+  "entities": [
+    {
+      "entityType": "poem",
+      "entityId": 1,
+      "name": "陪李北海宴历下亭",
+      "sources": [
+        "p1"
+      ],
+      "note": "核对实体名称、原文或基本事实及来源；本轮为用户授权的首批九城公开内容。",
+      "status": "published",
+      "reviewId": 1,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:25:17.447438926"
+    },
+    {
+      "entityType": "poem",
+      "entityId": 36,
+      "name": "望岳",
+      "sources": [
+        "p36"
+      ],
+      "note": "核对实体名称、原文或基本事实及来源；本轮为用户授权的首批九城公开内容。",
+      "status": "published",
+      "reviewId": 3,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:25:19.901935901"
+    },
+    {
+      "entityType": "poem",
+      "entityId": 60,
+      "name": "卫河",
+      "sources": [
+        "p60"
+      ],
+      "note": "卫河与卫运河按历史水系关联；不据此断言具体作诗地点。",
+      "status": "published",
+      "reviewId": 82,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:25:22.69843314"
+    },
+    {
+      "entityType": "poem",
+      "entityId": 93,
+      "name": "经鲁祭孔子而叹之",
+      "sources": [
+        "p93"
+      ],
+      "note": "核对实体名称、原文或基本事实及来源；本轮为用户授权的首批九城公开内容。",
+      "status": "published",
+      "reviewId": 113,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:25:25.522095783",
+      "publishedName": "经邹鲁祭孔子而叹之"
+    },
+    {
+      "entityType": "poem",
+      "entityId": 154,
+      "name": "曹南牡丹四首・其三",
+      "sources": [
+        "p154"
+      ],
+      "note": "核对实体名称、原文或基本事实及来源；本轮为用户授权的首批九城公开内容。",
+      "status": "published",
+      "reviewId": 172,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:25:28.368396064"
+    },
+    {
+      "entityType": "poem",
+      "entityId": 156,
+      "name": "东阿王",
+      "sources": [
+        "p156"
+      ],
+      "note": "怀咏曹植的文化关联，不代表李商隐曾到访今日东阿县。",
+      "status": "published",
+      "reviewId": 174,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:25:31.266740962"
+    },
+    {
+      "entityType": "poem",
+      "entityId": 178,
+      "name": "锦秋湖竹枝词・其一",
+      "sources": [
+        "p178"
+      ],
+      "note": "核对实体名称、原文或基本事实及来源；本轮为用户授权的首批九城公开内容。",
+      "status": "published",
+      "reviewId": 188,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:25:34.189073086"
+    },
+    {
+      "entityType": "poem",
+      "entityId": 201,
+      "name": "观沧海",
+      "sources": [
+        "p201"
+      ],
+      "note": "无棣碣石山为观沧海地理归属的一说；地点存争议，不据此确证曹操在无棣创作。",
+      "status": "published",
+      "reviewId": 96,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:25:37.748570748"
+    },
+    {
+      "entityType": "poem",
+      "entityId": 204,
+      "name": "浪淘沙九首·其一",
+      "sources": [
+        "p204"
+      ],
+      "note": "黄河主题展示关联，不代表刘禹锡曾在东营黄河大堤创作。",
+      "status": "published",
+      "reviewId": 203,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:25:40.543098796"
+    },
+    {
+      "entityType": "poet",
+      "entityId": 1,
+      "name": "杜甫",
+      "sources": [
+        "author1"
+      ],
+      "note": "核对实体名称、原文或基本事实及来源；本轮为用户授权的首批九城公开内容。",
+      "status": "published",
+      "reviewId": 274,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:25:43.287789252"
+    },
+    {
+      "entityType": "poet",
+      "entityId": 41,
+      "name": "王世贞",
+      "sources": [
+        "author41"
+      ],
+      "note": "核对实体名称、原文或基本事实及来源；本轮为用户授权的首批九城公开内容。",
+      "status": "published",
+      "reviewId": 331,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:25:45.964587323"
+    },
+    {
+      "entityType": "poet",
+      "entityId": 65,
+      "name": "李隆基",
+      "sources": [
+        "author65"
+      ],
+      "note": "核对实体名称、原文或基本事实及来源；本轮为用户授权的首批九城公开内容。",
+      "status": "published",
+      "reviewId": 277,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:25:48.808555664"
+    },
+    {
+      "entityType": "poet",
+      "entityId": 111,
+      "name": "王曰高",
+      "sources": [
+        "author111"
+      ],
+      "note": "核对实体名称、原文或基本事实及来源；本轮为用户授权的首批九城公开内容。",
+      "status": "published",
+      "reviewId": 387,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:25:51.509021073"
+    },
+    {
+      "entityType": "poet",
+      "entityId": 113,
+      "name": "李商隐",
+      "sources": [
+        "author113"
+      ],
+      "note": "核对实体名称、原文或基本事实及来源；本轮为用户授权的首批九城公开内容。",
+      "status": "published",
+      "reviewId": 287,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:25:54.014783045"
+    },
+    {
+      "entityType": "poet",
+      "entityId": 122,
+      "name": "王士禛",
+      "sources": [
+        "author122"
+      ],
+      "note": "核对实体名称、原文或基本事实及来源；本轮为用户授权的首批九城公开内容。",
+      "status": "published",
+      "reviewId": 392,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:25:56.801262873"
+    },
+    {
+      "entityType": "poet",
+      "entityId": 51,
+      "name": "曹操",
+      "sources": [
+        "author51"
+      ],
+      "note": "核对实体名称、原文或基本事实及来源；本轮为用户授权的首批九城公开内容。",
+      "status": "published",
+      "reviewId": 271,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:26:00.040023125"
+    },
+    {
+      "entityType": "poet",
+      "entityId": 134,
+      "name": "刘禹锡",
+      "sources": [
+        "author134"
+      ],
+      "note": "核对实体名称、原文或基本事实及来源；本轮为用户授权的首批九城公开内容。",
+      "status": "published",
+      "reviewId": 290,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:27:31.86515155"
+    },
+    {
+      "entityType": "scenic_spot",
+      "entityId": 1,
+      "name": "大明湖",
+      "sources": [
+        "s1"
+      ],
+      "note": "地方景观资料与文学主题关联分开；不把传说或主题挂靠作为确定的历史到访证据。",
+      "status": "published",
+      "reviewId": 526,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:27:34.789455615"
+    },
+    {
+      "entityType": "scenic_spot",
+      "entityId": 14,
+      "name": "泰山",
+      "sources": [
+        "s14"
+      ],
+      "note": "地方景观资料与文学主题关联分开；不把传说或主题挂靠作为确定的历史到访证据。",
+      "status": "published",
+      "reviewId": 539,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:27:37.556833358"
+    },
+    {
+      "entityType": "scenic_spot",
+      "entityId": 17,
+      "name": "卫运河",
+      "sources": [
+        "s17"
+      ],
+      "note": "地方景观资料与文学主题关联分开；不把传说或主题挂靠作为确定的历史到访证据。",
+      "status": "published",
+      "reviewId": 542,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:27:40.35125358"
+    },
+    {
+      "entityType": "scenic_spot",
+      "entityId": 21,
+      "name": "曲阜孔庙",
+      "sources": [
+        "s21"
+      ],
+      "note": "地方景观资料与文学主题关联分开；不把传说或主题挂靠作为确定的历史到访证据。",
+      "status": "published",
+      "reviewId": 546,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:27:43.173477317"
+    },
+    {
+      "entityType": "scenic_spot",
+      "entityId": 54,
+      "name": "曹州牡丹",
+      "sources": [
+        "s54"
+      ],
+      "note": "地方景观资料与文学主题关联分开；不把传说或主题挂靠作为确定的历史到访证据。",
+      "status": "published",
+      "reviewId": 579,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:27:45.9954472"
+    },
+    {
+      "entityType": "scenic_spot",
+      "entityId": 55,
+      "name": "东阿",
+      "sources": [
+        "s55"
+      ],
+      "note": "地方景观资料与文学主题关联分开；不把传说或主题挂靠作为确定的历史到访证据。",
+      "status": "published",
+      "reviewId": 580,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:27:48.938448802"
+    },
+    {
+      "entityType": "scenic_spot",
+      "entityId": 58,
+      "name": "东阿县",
+      "sources": [
+        "s55"
+      ],
+      "note": "地方景观资料与文学主题关联分开；不把传说或主题挂靠作为确定的历史到访证据。",
+      "status": "published",
+      "reviewId": 583,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:27:51.565611607"
+    },
+    {
+      "entityType": "scenic_spot",
+      "entityId": 63,
+      "name": "马踏湖",
+      "sources": [
+        "p178"
+      ],
+      "note": "地方景观资料与文学主题关联分开；不把传说或主题挂靠作为确定的历史到访证据。",
+      "status": "published",
+      "reviewId": 588,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:27:54.34782039"
+    },
+    {
+      "entityType": "scenic_spot",
+      "entityId": 64,
+      "name": "东津渡",
+      "sources": [
+        "s64"
+      ],
+      "note": "地方景观资料与文学主题关联分开；不把传说或主题挂靠作为确定的历史到访证据。",
+      "status": "published",
+      "reviewId": 589,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:27:56.942795999"
+    },
+    {
+      "entityType": "scenic_spot",
+      "entityId": 65,
+      "name": "黄河大堤",
+      "sources": [
+        "s65"
+      ],
+      "note": "地方景观资料与文学主题关联分开；不把传说或主题挂靠作为确定的历史到访证据。",
+      "status": "published",
+      "reviewId": 590,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:27:59.553526953"
+    },
+    {
+      "entityType": "scenic_spot",
+      "entityId": 71,
+      "name": "无棣碣石山（马谷山）",
+      "sources": [
+        "s71"
+      ],
+      "note": "地方景观资料与文学主题关联分开；不把传说或主题挂靠作为确定的历史到访证据。",
+      "status": "published",
+      "reviewId": 596,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:28:02.076998508"
+    },
+    {
+      "entityType": "dynasty",
+      "entityId": 2,
+      "name": "秦汉",
+      "sources": [
+        "秦朝",
+        "汉朝"
+      ],
+      "note": "沿用项目的合并时期词表；公开后核对 ID、名称与纪年，若不一致立即归档本轮发布。",
+      "status": "published",
+      "reviewId": 257,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:28:04.506894315"
+    },
+    {
+      "entityType": "dynasty",
+      "entityId": 4,
+      "name": "隋唐",
+      "sources": [
+        "隋朝",
+        "唐朝"
+      ],
+      "note": "沿用项目的合并时期词表；公开后核对 ID、名称与纪年，若不一致立即归档本轮发布。",
+      "status": "published",
+      "reviewId": 259,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:28:06.881026878"
+    },
+    {
+      "entityType": "dynasty",
+      "entityId": 7,
+      "name": "明",
+      "sources": [
+        "明朝"
+      ],
+      "note": "沿用项目的合并时期词表；公开后核对 ID、名称与纪年，若不一致立即归档本轮发布。",
+      "status": "published",
+      "reviewId": 262,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:28:09.481520982"
+    },
+    {
+      "entityType": "dynasty",
+      "entityId": 8,
+      "name": "清",
+      "sources": [
+        "清朝"
+      ],
+      "note": "沿用项目的合并时期词表；公开后核对 ID、名称与纪年，若不一致立即归档本轮发布。",
+      "status": "published",
+      "reviewId": 263,
+      "reviewerId": 1,
+      "reviewedAt": "2026-10-11T03:28:12.168312772"
+    }
+  ],
+  "sources": [
+    {
+      "key": "p1",
+      "sourceType": "other",
+      "title": "陪李北海宴历下亭（原文）",
+      "authorOrg": "杜甫；古文岛网络整理",
+      "url": "https://www.guwendao.net/shiwenv_398a8b1c77a8.aspx",
+      "identifier": "sjg-nine-cities-20261011:p1",
+      "citation": "杜甫；古文岛网络整理：《陪李北海宴历下亭（原文）》，https://www.guwendao.net/shiwenv_398a8b1c77a8.aspx（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 1
+    },
+    {
+      "key": "p36",
+      "sourceType": "other",
+      "title": "望岳（岱宗夫如何）",
+      "authorOrg": "杜甫；维基文库整理",
+      "url": "https://zh.wikisource.org/zh-hans/%E6%9C%9B%E5%B2%B3",
+      "identifier": "sjg-nine-cities-20261011:p36",
+      "citation": "杜甫；维基文库整理：《望岳（岱宗夫如何）》，https://zh.wikisource.org/zh-hans/%E6%9C%9B%E5%B2%B3（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 2
+    },
+    {
+      "key": "p60",
+      "sourceType": "other",
+      "title": "卫河四首其一（河流曲曲转）",
+      "authorOrg": "王世贞；百度汉语整理",
+      "url": "https://hanyu.baidu.com/shici/detail?pid=f61482995eb4f78fd580e49014d1185a",
+      "identifier": "sjg-nine-cities-20261011:p60",
+      "citation": "王世贞；百度汉语整理：《卫河四首其一（河流曲曲转）》，https://hanyu.baidu.com/shici/detail?pid=f61482995eb4f78fd580e49014d1185a（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 3
+    },
+    {
+      "key": "p93",
+      "sourceType": "archive",
+      "title": "文苑英华·卷一百七十一",
+      "authorOrg": "李昉等编；中国哲学书电子化计划",
+      "url": "https://ctext.org/wiki.pl?chapter=249369&if=gb&remap=gb",
+      "identifier": "sjg-nine-cities-20261011:p93",
+      "citation": "李昉等编；中国哲学书电子化计划：《文苑英华·卷一百七十一》，https://ctext.org/wiki.pl?chapter=249369&if=gb&remap=gb（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 4
+    },
+    {
+      "key": "p154",
+      "sourceType": "article",
+      "title": "吟诗、作赋，明清文人捧红菏泽牡丹",
+      "authorOrg": "齐鲁晚报",
+      "url": "https://www.qlwb.com.cn/detail/23663918.html",
+      "identifier": "sjg-nine-cities-20261011:p154",
+      "citation": "齐鲁晚报：《吟诗、作赋，明清文人捧红菏泽牡丹》，https://www.qlwb.com.cn/detail/23663918.html（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 5
+    },
+    {
+      "key": "p156",
+      "sourceType": "other",
+      "title": "东阿王（原文）",
+      "authorOrg": "李商隐；古诗文网网络整理",
+      "url": "https://m.gushiwen.cn/shiwenv_91ce1f72246b.aspx",
+      "identifier": "sjg-nine-cities-20261011:p156",
+      "citation": "李商隐；古诗文网网络整理：《东阿王（原文）》，https://m.gushiwen.cn/shiwenv_91ce1f72246b.aspx（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 6
+    },
+    {
+      "key": "p178",
+      "sourceType": "article",
+      "title": "厉彦林：马踏湖畔碧浪滔天",
+      "authorOrg": "厉彦林；央广网",
+      "url": "https://www.cnr.cn/sd/stwl/20240906/t20240906_526890321.shtml",
+      "identifier": "sjg-nine-cities-20261011:p178",
+      "citation": "厉彦林；央广网：《厉彦林：马踏湖畔碧浪滔天》，https://www.cnr.cn/sd/stwl/20240906/t20240906_526890321.shtml（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 7
+    },
+    {
+      "key": "p201",
+      "sourceType": "archive",
+      "title": "宋书·乐志所载观沧海原文",
+      "authorOrg": "沈约撰；识典古籍整理",
+      "url": "https://www.shidianguji.com/mid-page/7622789051401125914",
+      "identifier": "sjg-nine-cities-20261011:p201",
+      "citation": "沈约撰；识典古籍整理：《宋书·乐志所载观沧海原文》，https://www.shidianguji.com/mid-page/7622789051401125914（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 8
+    },
+    {
+      "key": "p204",
+      "sourceType": "other",
+      "title": "浪淘沙九首（原文）",
+      "authorOrg": "刘禹锡；古诗文网网络整理",
+      "url": "https://www.gushiwen.cn/shiwenv_ee36f83f387d.aspx",
+      "identifier": "sjg-nine-cities-20261011:p204",
+      "citation": "刘禹锡；古诗文网网络整理：《浪淘沙九首（原文）》，https://www.gushiwen.cn/shiwenv_ee36f83f387d.aspx（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 9
+    },
+    {
+      "key": "s1",
+      "sourceType": "official_site",
+      "title": "大明湖风景名胜区",
+      "authorOrg": "济南市园林和林业绿化局",
+      "url": "https://jnly.jinan.gov.cn/col117783/art/2025/art_117783_4779721.html",
+      "identifier": "sjg-nine-cities-20261011:s1",
+      "citation": "济南市园林和林业绿化局：《大明湖风景名胜区》，https://jnly.jinan.gov.cn/col117783/art/2025/art_117783_4779721.html（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 10
+    },
+    {
+      "key": "s14",
+      "sourceType": "official_site",
+      "title": "Mount Taishan",
+      "authorOrg": "UNESCO World Heritage Centre",
+      "url": "https://whc.unesco.org/en/list/437/",
+      "identifier": "sjg-nine-cities-20261011:s14",
+      "citation": "UNESCO World Heritage Centre：《Mount Taishan》，https://whc.unesco.org/en/list/437/（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 11
+    },
+    {
+      "key": "s21",
+      "sourceType": "official_site",
+      "title": "Temple and Cemetery of Confucius and the Kong Family Mansion in Qufu",
+      "authorOrg": "UNESCO World Heritage Centre",
+      "url": "https://whc.unesco.org/en/list/704/",
+      "identifier": "sjg-nine-cities-20261011:s21",
+      "citation": "UNESCO World Heritage Centre：《Temple and Cemetery of Confucius and the Kong Family Mansion in Qufu》，https://whc.unesco.org/en/list/704/（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 12
+    },
+    {
+      "key": "s17",
+      "sourceType": "official_site",
+      "title": "读遍山川：海河之源在陵川",
+      "authorOrg": "晋城市人民政府",
+      "url": "https://www.jcgov.gov.cn/mljc/lswh/whys/whhd/202105/t20210514_1406154.shtml",
+      "identifier": "sjg-nine-cities-20261011:s17",
+      "citation": "晋城市人民政府：《读遍山川：海河之源在陵川》，https://www.jcgov.gov.cn/mljc/lswh/whys/whhd/202105/t20210514_1406154.shtml（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 13
+    },
+    {
+      "key": "s54",
+      "sourceType": "archive",
+      "title": "菏泽牡丹志·第十类曹州牡丹园",
+      "authorOrg": "菏泽牡丹志；山东地情档案网络整理",
+      "url": "https://shandong-chorography.org/database/bh/section/19/article/82/",
+      "identifier": "sjg-nine-cities-20261011:s54",
+      "citation": "菏泽牡丹志；山东地情档案网络整理：《菏泽牡丹志·第十类曹州牡丹园》，https://shandong-chorography.org/database/bh/section/19/article/82/（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 14
+    },
+    {
+      "key": "s55",
+      "sourceType": "article",
+      "title": "东阿行",
+      "authorOrg": "程绍武；人民日报海外版",
+      "url": "https://paper.people.com.cn/rmrbhwb/html/2019-01/31/content_1907241.htm",
+      "identifier": "sjg-nine-cities-20261011:s55",
+      "citation": "程绍武：《东阿行》，人民日报海外版，2019年1月31日，第11版。https://paper.people.com.cn/rmrbhwb/html/2019-01/31/content_1907241.htm（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "publicationYear": 2019,
+      "sourceDocumentId": 15
+    },
+    {
+      "key": "s64",
+      "sourceType": "archive",
+      "title": "武定府（山东）志·附津梁",
+      "authorOrg": "庄肇奎纂、赫达色修；识典古籍整理",
+      "url": "https://www.shidianguji.com/mid-page/7432049572840505381",
+      "identifier": "sjg-nine-cities-20261011:s64",
+      "citation": "庄肇奎纂、赫达色修；识典古籍整理：《武定府（山东）志·附津梁》，https://www.shidianguji.com/mid-page/7432049572840505381（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 16
+    },
+    {
+      "key": "s65",
+      "sourceType": "other",
+      "title": "黄河",
+      "authorOrg": "维基百科网络整理",
+      "url": "https://zh.wikipedia.org/wiki/%E9%BB%84%E6%B2%B3",
+      "identifier": "sjg-nine-cities-20261011:s65",
+      "citation": "维基百科网络整理：《黄河》，https://zh.wikipedia.org/wiki/%E9%BB%84%E6%B2%B3（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 17
+    },
+    {
+      "key": "s71",
+      "sourceType": "article",
+      "title": "滨州地名文化展播——碣石山镇",
+      "authorOrg": "滨州网；北京号转载",
+      "url": "https://peking.bjd.com.cn/content/s6295a5cee4b0d498ab73e6b4.html",
+      "identifier": "sjg-nine-cities-20261011:s71",
+      "citation": "滨州网；北京号转载：《滨州地名文化展播——碣石山镇》，https://peking.bjd.com.cn/content/s6295a5cee4b0d498ab73e6b4.html（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 18
+    },
+    {
+      "key": "author1",
+      "sourceType": "other",
+      "title": "杜甫简介",
+      "authorOrg": "古文岛网络整理",
+      "url": "https://www.guwendao.net/authorv.aspx?name=%E6%9D%9C%E7%94%AB",
+      "identifier": "sjg-nine-cities-20261011:author1",
+      "citation": "古文岛网络整理：《杜甫简介》，https://www.guwendao.net/authorv.aspx?name=%E6%9D%9C%E7%94%AB（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 19
+    },
+    {
+      "key": "author41",
+      "sourceType": "other",
+      "title": "王世贞简介",
+      "authorOrg": "古文岛网络整理",
+      "url": "https://www.guwendao.net/authorv.aspx?name=%E7%8E%8B%E4%B8%96%E8%B4%9E",
+      "identifier": "sjg-nine-cities-20261011:author41",
+      "citation": "古文岛网络整理：《王世贞简介》，https://www.guwendao.net/authorv.aspx?name=%E7%8E%8B%E4%B8%96%E8%B4%9E（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 20
+    },
+    {
+      "key": "author65",
+      "sourceType": "other",
+      "title": "李隆基简介",
+      "authorOrg": "古文岛网络整理",
+      "url": "https://www.guwendao.net/authorv.aspx?name=%E6%9D%8E%E9%9A%86%E5%9F%BA",
+      "identifier": "sjg-nine-cities-20261011:author65",
+      "citation": "古文岛网络整理：《李隆基简介》，https://www.guwendao.net/authorv.aspx?name=%E6%9D%8E%E9%9A%86%E5%9F%BA（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 21
+    },
+    {
+      "key": "author113",
+      "sourceType": "other",
+      "title": "李商隐简介",
+      "authorOrg": "古文岛网络整理",
+      "url": "https://www.guwendao.net/authorv.aspx?name=%E6%9D%8E%E5%95%86%E9%9A%90",
+      "identifier": "sjg-nine-cities-20261011:author113",
+      "citation": "古文岛网络整理：《李商隐简介》，https://www.guwendao.net/authorv.aspx?name=%E6%9D%8E%E5%95%86%E9%9A%90（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 22
+    },
+    {
+      "key": "author51",
+      "sourceType": "other",
+      "title": "曹操简介",
+      "authorOrg": "古文岛网络整理",
+      "url": "https://www.guwendao.net/authorv.aspx?name=%E6%9B%B9%E6%93%8D",
+      "identifier": "sjg-nine-cities-20261011:author51",
+      "citation": "古文岛网络整理：《曹操简介》，https://www.guwendao.net/authorv.aspx?name=%E6%9B%B9%E6%93%8D（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 23
+    },
+    {
+      "key": "author134",
+      "sourceType": "other",
+      "title": "刘禹锡简介",
+      "authorOrg": "古文岛网络整理",
+      "url": "https://www.guwendao.net/authorv.aspx?name=%E5%88%98%E7%A6%B9%E9%94%A1",
+      "identifier": "sjg-nine-cities-20261011:author134",
+      "citation": "古文岛网络整理：《刘禹锡简介》，https://www.guwendao.net/authorv.aspx?name=%E5%88%98%E7%A6%B9%E9%94%A1（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 24
+    },
+    {
+      "key": "author111",
+      "sourceType": "other",
+      "title": "王曰高（含茌平县志墓表引文）",
+      "authorOrg": "维基百科网络整理",
+      "url": "https://zh.wikipedia.org/wiki/%E7%8E%8B%E6%9B%B0%E9%AB%98",
+      "identifier": "sjg-nine-cities-20261011:author111",
+      "citation": "维基百科网络整理：《王曰高（含茌平县志墓表引文）》，https://zh.wikipedia.org/wiki/%E7%8E%8B%E6%9B%B0%E9%AB%98（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 25
+    },
+    {
+      "key": "author122",
+      "sourceType": "official_site",
+      "title": "王士禛",
+      "authorOrg": "故宫博物院",
+      "url": "https://www.dpm.org.cn/lemmas/242928.html",
+      "identifier": "sjg-nine-cities-20261011:author122",
+      "citation": "故宫博物院：《王士禛》，https://www.dpm.org.cn/lemmas/242928.html（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 26
+    },
+    {
+      "key": "秦朝",
+      "sourceType": "other",
+      "title": "秦朝",
+      "authorOrg": "维基百科网络整理",
+      "url": "https://zh.wikipedia.org/wiki/%E7%A7%A6%E6%9C%9D",
+      "identifier": "sjg-nine-cities-20261011:秦朝",
+      "citation": "维基百科网络整理：《秦朝》，https://zh.wikipedia.org/wiki/%E7%A7%A6%E6%9C%9D（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 27
+    },
+    {
+      "key": "汉朝",
+      "sourceType": "other",
+      "title": "汉朝",
+      "authorOrg": "维基百科网络整理",
+      "url": "https://zh.wikipedia.org/wiki/%E6%B1%89%E6%9C%9D",
+      "identifier": "sjg-nine-cities-20261011:汉朝",
+      "citation": "维基百科网络整理：《汉朝》，https://zh.wikipedia.org/wiki/%E6%B1%89%E6%9C%9D（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 28
+    },
+    {
+      "key": "隋朝",
+      "sourceType": "other",
+      "title": "隋朝",
+      "authorOrg": "维基百科网络整理",
+      "url": "https://zh.wikipedia.org/wiki/%E9%9A%8B%E6%9C%9D",
+      "identifier": "sjg-nine-cities-20261011:隋朝",
+      "citation": "维基百科网络整理：《隋朝》，https://zh.wikipedia.org/wiki/%E9%9A%8B%E6%9C%9D（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 29
+    },
+    {
+      "key": "唐朝",
+      "sourceType": "other",
+      "title": "唐朝",
+      "authorOrg": "维基百科网络整理",
+      "url": "https://zh.wikipedia.org/wiki/%E5%94%90%E6%9C%9D",
+      "identifier": "sjg-nine-cities-20261011:唐朝",
+      "citation": "维基百科网络整理：《唐朝》，https://zh.wikipedia.org/wiki/%E5%94%90%E6%9C%9D（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 30
+    },
+    {
+      "key": "明朝",
+      "sourceType": "other",
+      "title": "明朝",
+      "authorOrg": "维基百科网络整理",
+      "url": "https://zh.wikipedia.org/wiki/%E6%98%8E%E6%9C%9D",
+      "identifier": "sjg-nine-cities-20261011:明朝",
+      "citation": "维基百科网络整理：《明朝》，https://zh.wikipedia.org/wiki/%E6%98%8E%E6%9C%9D（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 31
+    },
+    {
+      "key": "清朝",
+      "sourceType": "other",
+      "title": "清朝",
+      "authorOrg": "维基百科网络整理",
+      "url": "https://zh.wikipedia.org/wiki/%E6%B8%85%E6%9C%9D",
+      "identifier": "sjg-nine-cities-20261011:清朝",
+      "citation": "维基百科网络整理：《清朝》，https://zh.wikipedia.org/wiki/%E6%B8%85%E6%9C%9D（访问日期：2026-10-11）。",
+      "copyrightNote": "仅用于出处索引与事实核对；古代原诗属公版，不转载网页现代译文、赏析或图片。",
+      "sourceDocumentId": 32
+    }
+  ],
+  "updates": [
+    {
+      "path": "/api/admin/poems/1",
+      "method": "PUT",
+      "body": {
+        "content": "东藩驻皂盖，北渚凌清河。\n海右此亭古，济南名士多。\n云山已发兴，玉佩仍当歌。\n修竹不受暑，交流空涌波。\n蕴真惬所欲，落日将如何？\n贵贱俱物役，从公难重过！",
+        "annotation": "原存前四句，现据原文整理页补齐十二句；“北渚凌青荷”订正为“北渚凌清河”。清河指古济水，历下亭今址与唐代亭址有变迁。",
+        "background": "杜甫在济南与李邕等宴游历下亭所作，诗中记述宴饮、山水景色与重游难期的感怀。"
+      },
+      "before": {
+        "content": "东藩驻皂盖，北渚凌青荷。海右此亭古，济南名士多。",
+        "annotation": "历下亭原址已移建；意象: 青荷、碧波、古亭、名士；出处: 《全唐诗》卷216",
+        "background": "杜甫、李邕曾游宴，有\"济南名士多\"典故"
+      }
+    },
+    {
+      "path": "/api/admin/poems/36",
+      "method": "PUT",
+      "body": {
+        "annotation": "岱宗：泰山。曾云一作层云，本平台保留层云版本。原文参校维基文库《望岳》，该页关联《全唐诗》卷216；删去原记录误标卷225。",
+        "background": "这首诗以泰山为题，从齐鲁山色写到登临志向。地质年代等非原诗创作背景信息从本条移除，景观事实另见泰山资料来源。"
+      },
+      "before": {
+        "annotation": "意象: 泰山、齐鲁、\n山云、归鸟；出处: 《全唐诗》‌\n卷225",
+        "background": "黄河与泰山是齐鲁大地独一无二的地理坐标。黄河与泰山古有“河岳”之并称。从古至今，泰山和黄河从文化的点、线、面多个维度互动，蕴含静与动、阳与阴、时间与空间、责任与信仰的多重意象。\n见证着华夏文明的形成和发展，映照出中华民族对和谐、安宁的千年追寻。主峰玉皇顶拔地而起，海拔1545米，如天柱般屹立。\n泰山并非寻常山岳，而是华北克拉通古老基底的脊梁，其岩体形成于31亿年前的新太古代，历经五次构造运动隆升，终成“五岳独尊”。\n地质上，泰山属于鲁西隆起带，而其北侧广袤的黄河下游平原则坐落在济阳坳陷之上，一隆一陷，一刚一柔。\n二者在构造上互为镜像：山为骨，河为脉；山主静，河主动；山守恒，河创生。正是这种地质上的张力与互补，塑造了齐鲁“山河表里、刚柔相济”的独特格局。"
+      }
+    },
+    {
+      "path": "/api/admin/poems/60",
+      "method": "PUT",
+      "body": {
+        "content": "河流曲曲转，十里还相唤。\n那比下江船，扬帆忽不见。",
+        "annotation": "“杨帆”订正为“扬帆”。据百度汉语《卫河四首其一》（河流曲曲转）整理页参校；网络组诗编号可能有差异，沿用原条目题名《卫河》，不冒充已核对的纸本卷次。",
+        "background": "诗写曲折河道中舟船往来的景象。与德州卫运河按历史水系作展示关联，具体创作地点尚未据原始文献确证。"
+      },
+      "before": {
+        "content": "河流曲曲转，十里还相唤。\n那比下江船，杨帆忽不见。",
+        "annotation": "意象: 黄河、船帆；出处: 《弇山堂别集》",
+        "background": "卫运河（含卫河）上段是沟通河南、山东的重要航道，历史上大部分时间都为通航河段。是古黄河文化在德州重要见证。"
+      }
+    },
+    {
+      "path": "/api/admin/poems/93",
+      "method": "PUT",
+      "body": {
+        "title": "经邹鲁祭孔子而叹之",
+        "content": "夫子何为者，栖栖一代中。\n地犹鄹氏邑，宅即鲁王宫。\n叹凤嗟身否，伤麟怨道穷。\n今看两楹奠，当与梦时同。",
+        "annotation": "唐玄宗即李隆基。栖栖：奔走不安；两楹奠：典出《礼记》，借指祭孔。题名、作者及原文参校《文苑英华》卷171网络整理本；不同整理本创作年份有差异，本条不固定年份。",
+        "background": "唐玄宗祭孔题咏，感叹孔子的际遇，与曲阜孔庙的祭孔文化关联。"
+      },
+      "before": {
+        "title": "经鲁祭孔子而叹之",
+        "content": "夫子何为者？栖栖一代中。地犹鄹氏邑，宅即鲁王宫。叹凤嗟身否，伤麟怨道穷。今看两楹奠，当与梦时同。",
+        "annotation": "唐玄宗封禅泰山后所作；意象: 孔子、栖遑、凤鸟、麒麟、两楹之奠；出处: 《全唐诗》卷3",
+        "background": "帝王祭孔，尊崇儒学"
+      }
+    },
+    {
+      "path": "/api/admin/poems/154",
+      "method": "PUT",
+      "body": {
+        "annotation": "四句原文、作者及其三的组诗次序参校齐鲁晚报《吟诗、作赋，明清文人捧红菏泽牡丹》；原记录泛称清诗汇的书目出处未完成版本核验，不列作已核实来源。",
+        "background": "王曰高借曹南、洛阳牡丹的对比咏曹州花事，与菏泽牡丹文化关联。"
+      },
+      "before": {
+        "annotation": "意象: 牡丹；出处: 清诗汇",
+        "background": "此地为上古文明沃土，兼具牡丹文化、水浒忠义文化与黄河民俗风情，文化底蕴深厚多元。"
+      }
+    },
+    {
+      "path": "/api/admin/poems/156",
+      "method": "PUT",
+      "body": {
+        "annotation": "东阿王指曹植。此诗为李商隐咏史怀人之作，原文参校古诗文网整理页；诗中叙事含洛神传说，不作为人物历史事实。",
+        "background": "围绕曹植及《洛神赋》的文学传说寄托感慨，与东阿曹植文化作主题关联，并非李商隐到访今日东阿县的游记。"
+      },
+      "before": {
+        "annotation": "意象: 东阿王曹植；出处: 全唐诗",
+        "background": "曹植居东阿期间留下诸多诗文与遗迹，是三国文学、建安文化在鲁西地区的重要载体。"
+      }
+    },
+    {
+      "path": "/api/admin/poems/178",
+      "method": "PUT",
+      "body": {
+        "annotation": "四句原文及王渔洋与马踏湖的关联参校央广网厉彦林文章；原记录所列诗集、县志卷次尚未逐本核验，不冒充已核实书目。",
+        "background": "诗将锦秋湖的水色、莼菜与江南风物比较。锦秋湖与马踏湖的名称关联见所列地方景观资料。"
+      },
+      "before": {
+        "annotation": "意象: 锦秋湖水、湖中产莼羹、湖乡水产、水乡风光；出处: 《渔洋山人精华录》、《桓台县志・艺文志》",
+        "background": "王士禛立足家乡湖景创作竹枝词，将淄博黄河水系孕育的锦秋湖与江南名湖对比，夸赞本地湖景与湖鲜物产，凸显黄河滋养下齐地水乡独有的风物魅力，承载齐地本土水乡文化自信"
+      }
+    },
+    {
+      "path": "/api/admin/poems/201",
+      "method": "PUT",
+      "body": {
+        "background": "《步出夏门行》组诗中的观海篇章，原文参校《宋书》乐志网络整理页。碣石具体地点有多种说法；无棣关联作为地方文化解读呈现，不能确证创作地点。"
+      },
+      "before": {
+        "background": "建安十二年（207）曹操北征乌桓凯旋，途经碣石观海赋此，为《步出夏门行》首章，气象壮阔，开山水诗先声。"
+      }
+    },
+    {
+      "path": "/api/admin/spots/1",
+      "method": "PUT",
+      "body": {
+        "description": "大明湖位于济南古城北部，由城内泉水汇聚而成。湖区有历下亭、铁公祠等人文景观。历下亭历史位置曾迁移，不能把今日湖中亭址直接等同于唐代宴游地点。"
+      },
+      "before": {
+        "description": "始建于北魏，历代重修扩建；杜甫、李邕曾游宴，有\"济南名士多\"典故"
+      }
+    },
+    {
+      "path": "/api/admin/spots/14",
+      "method": "PUT",
+      "body": {
+        "description": "泰山位于山东泰安，是中国传统五岳之一，山中留有历代祭祀建筑和碑刻，1987年列入联合国教科文组织世界遗产名录。杜甫《望岳》以泰山为题。"
+      },
+      "before": {
+        "description": "先秦至秦汉：先秦时期已成为五岳之首和政权象征，秦始皇统一六国后，将泰山祭祀仪式变为帝王专有的封禅大典。汉武帝曾先后8次前往岱顶封禅，汉光武帝也进行过一次泰山封禅。\n魏晋南北朝：佛教和道教相继流入泰山，时局动荡使常规祭祀难以开展，临时的非常规祭祀盛行，分裂政权常祭祀泰山以证明统治合法性。\n隋唐宋金：隋代开创泰山祭祀制度，将其纳入政府行政体系；唐代开创泰山封爵制度，并规范祭祀仪式程序。宋代宋真宗前往泰山封禅，此后皇帝不再正式举办封禅大典。金代泰山庙呈现道教化宫观化色彩。这一时期还出现了泰山书院。\n元明清：元代加封泰山为“东岳为天齐大生仁圣帝”；明朝增设管理泰山的官员，文人墨客游览增多并留下墨迹；清朝康熙、乾隆等皇帝都曾前往泰山祭祀或游览。历代帝王均来泰山举行封禅大典。；黄河与泰山是齐鲁大地独一无二的地理坐标。黄河与泰山古有“河岳”之并称。从古至今，泰山和黄河从文化的点、线、面多个维度互动，蕴含静与动、阳与阴、时间与空间、责任与信仰的多重意象。\n见证着华夏文明的形成和发展，映照出中华民族对和谐、安宁的千年追寻。主峰玉皇顶拔地而起，海拔1545米，如天柱般屹立。\n泰山并非寻常山岳，而是华北克拉通古老基底的脊梁，其岩体形成于25亿年前的新太古代，历经五次构造运动隆升，终成“五岳独尊”。\n地质上，泰山属于鲁西隆起带，而其北侧广袤的黄河下游平原则坐落在济阳坳陷之上，一隆一陷，一刚一柔。\n二者在构造上互为镜像：山为骨，河为脉；山主静，河主动；山守恒，河创生。正是这种地质上的张力与互补，塑造了齐鲁“山河表里、刚柔相济”的独特格局。"
+      }
+    },
+    {
+      "path": "/api/admin/spots/17",
+      "method": "PUT",
+      "body": {
+        "description": "卫运河为漳河、卫河汇合后的河段，属于冀鲁交界的历史水系，与德州的运河文化关联。王世贞《卫河》在本站按水系主题关联，不据此确认具体作诗地点。"
+      },
+      "before": {
+        "description": "原为黄河故道，因春秋属卫地而得名，汉代称白沟。卫运河、南运河的前身为清河，为先秦黄河决流而成。历史上，卫河、卫运河、南运河是一条河，唐代称永济渠，宋代称御河。；卫运河（含卫河）上段是沟通河南、山东的重要航道，历史上大部分时间都为通航河段。是古黄河文化在德州重要见证。"
+      }
+    },
+    {
+      "path": "/api/admin/spots/54",
+      "method": "PUT",
+      "body": {
+        "description": "曹州即今日菏泽一带，明清以来以牡丹花事著称。曹州牡丹园承接当地牡丹园林和栽培传统；王曰高《曹南牡丹四首》咏当地牡丹。此条为牡丹文化景观，并非古城建制史条目。"
+      },
+      "before": {
+        "description": "北周始设曹州，金代迁至今址，明清升为府治，建制历经更迭，古城脉络延续至今。；此地为上古文明沃土，兼具牡丹文化、水浒忠义文化与黄河民俗风情，文化底蕴深厚多元。"
+      }
+    },
+    {
+      "path": "/api/admin/spots/55",
+      "method": "PUT",
+      "body": {
+        "description": "东阿与曹植文化密切相关，县域鱼山有曹植墓。李商隐《东阿王》借曹植及洛神传说咏史怀人，本站以文学主题与此地关联，不作为李商隐到访记录。"
+      },
+      "before": {
+        "description": "曹魏时期曹植受封东阿王，在此居处理政、著文度日，封地建制后世几经沿革。；曹植居东阿期间留下诸多诗文与遗迹，是三国文学、建安文化在鲁西地区的重要载体。"
+      }
+    },
+    {
+      "path": "/api/admin/spots/58",
+      "method": "PUT",
+      "body": {
+        "description": "山东聊城东阿县以阿胶文化、黄河沿岸景观及鱼山曹植文化为特色。历史上的东阿县治有迁移，古诗中的地名不直接等同于今日县城。"
+      },
+      "before": {
+        "description": "春秋称柯、战国为阿，秦置东阿县，曹植封王、阿胶贡御，千年古县，黄河阿胶文化核心地；东阿坐拥黄河文化底蕴，以阿胶养生文化、鱼山梵呗佛教音乐文化为两大核心，兼有名士文脉与吉祥民俗，地域文化特色鲜明。"
+      }
+    },
+    {
+      "path": "/api/admin/spots/63",
+      "method": "PUT",
+      "body": {
+        "description": "马踏湖位于淄博桓台一带，又称锦秋湖，是具有水乡风貌的湖泊湿地。王士禛咏湖诗以水色和莼菜等风物入诗；出处详见央广网所列文章。"
+      },
+      "before": {
+        "description": "锦秋湖即马踏湖，依托黄河古河道洼地形成，依靠黄河支渠引水充盈湖面，湖区盛产莼菜、水产，自古为齐北著名水乡，盛产湖鲜，是本地百姓渔耕赖以生存的水域；王士禛立足家乡湖景创作竹枝词，将淄博黄河水系孕育的锦秋湖与江南名湖对比，夸赞本地湖景与湖鲜物产，凸显黄河滋养下齐地水乡独有的风物魅力，承载齐地本土水乡文化自信"
+      }
+    },
+    {
+      "path": "/api/admin/spots/64",
+      "method": "PUT",
+      "body": {
+        "description": "东津渡为利津城东的历史渡口，《武定府志》津梁条记有“东津渡在东门外”。该地河道经历变迁；清咸丰五年以前的济水、大清河景象不能一律写为当时的黄河。关联旧志诗文的作者与版本仍有待核验，本轮不发布未核实诗词。"
+      },
+      "before": {
+        "description": "东津渡坐落利津城东黄河岸，为明清黄河三角洲核心水陆码头，连通京津与胶东，商旅、学子、渔舟往来不绝，位列利津古八景之首，素有黄河 “小天津” 之称；依托黄河干流航运发展商贸，是古代鲁北跨河交通枢纽。；明成化利津儒学训导章忠本地实景创作，完整描摹拂晓时分黄河渡口繁忙图景，记录黄河干流航运商贸盛景；既绘黄河长河、晨雾浪涛、竞渡舟楫的自然河景，又写舟子、行旅、渔人的人间烟火，末句借渡口安宁景象称颂当朝治世，兼具黄河地理纪实与地方民生人文价值。"
+      }
+    },
+    {
+      "path": "/api/admin/spots/65",
+      "method": "PUT",
+      "body": {
+        "description": "东营位于黄河下游入海地区，黄河堤岸是区域河流文化景观。本站将刘禹锡《浪淘沙九首·其一》作为黄河主题诗关联于此；这属于展示关联，不能证明作者在这里创作。"
+      },
+      "before": {
+        "description": "清代为管控黄河水患，沿大清河两岸修筑连绵防洪大堤，堤岸遍植垂柳；安澜场是利津独有的黄河护堤管理设施，周边配套田庄、渔埠，农、渔、河工在此聚居，傍晚时分渔船归港，是当地民众休闲游赏的河岸胜地。；利津本土诗人漫步黄河大堤，于黄昏眺望河堤、河场、归帆，将黄河水利设施、沿岸农耕渔业景象与文人宴游结合。诗歌以本地独有水利地名 “安澜场” 为核心意象，既写实记录东营清代黄河堤防治理成果，又描绘黄河岸边悠然的市井渔耕生活，承载黄河水利文化与三角洲乡土风情。"
+      }
+    }
+  ],
+  "heldPoemIds": [
+    97,
+    161,
+    182
+  ],
+  "heldReason": "97、182未完成全文及作者版本核验；161与杨维桢《东阿所记》所附原诗不符，继续待审。",
+  "sourceLinkCount": 34,
+  "countsAfter": {
+    "publishedEntities": 32,
+    "needsReview": 462,
+    "sourceDocuments": 32,
+    "sourceLinks": 34
+  },
+  "publicVerificationFile": "2026-10-11-public-api-verification.json"
+}
