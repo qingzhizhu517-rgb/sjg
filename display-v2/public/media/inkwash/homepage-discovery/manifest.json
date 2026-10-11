@@ -1,0 +1,48 @@
+{
+  "provider": "built-in image_gen",
+  "created_at": "2026-10-11",
+  "purpose": "首页浏览入口的艺术意象插画，不作为实景或人物肖像复原",
+  "encoding": "cwebp -q 82 -m 6 -resize 1024 0; scholar portrait 768 0",
+  "assets": [
+    {
+      "filename": "qilu-table-v1.webp",
+      "width": 1024,
+      "height": 683,
+      "bytes": 126246,
+      "sha256": "b4dd8c224fbb6317450dede800741497dd0303f09b1ab7fd2b56f63d5aeeaa6e",
+      "original_dimensions": [
+        1536,
+        1024
+      ],
+      "original_sha256": "e4727cc505e4f156e19f0c60d8669dfdbe063db57a352452d1772180b67e43be",
+      "original_filename": "exec-ca059c45-1b2f-461b-83ca-883d5ff57278.png"
+    },
+    {
+      "filename": "folk-lanterns-v1.webp",
+      "width": 1024,
+      "height": 683,
+      "bytes": 150292,
+      "sha256": "b966211df21d5717c692da2feac675e4b357802faae61c675c1ac3d7f6823684",
+      "original_dimensions": [
+        1536,
+        1024
+      ],
+      "original_sha256": "68d80a7f30e07c2375286da9bed8ea526fcd8b922f56fa92cf1b6a7d03aa99ac",
+      "original_filename": "exec-7e766870-5bdb-408c-a94f-3cdd09da0b21.png"
+    },
+    {
+      "filename": "scholar-poet-v1.webp",
+      "width": 768,
+      "height": 1152,
+      "bytes": 113720,
+      "sha256": "8183b0c4232c6ff7774d04e2c2a15b96251181244964c456cafa98f90a2a9fcb",
+      "original_dimensions": [
+        1024,
+        1536
+      ],
+      "original_sha256": "deca0d4f6f337e8567ecd4a40881391277fad1749dde5c4b96be1ba86faa2d87",
+      "original_filename": "exec-abe3f220-5c0c-46b5-977f-a45ce1ef1bb6.png"
+    }
+  ],
+  "prompts_file": "prompts.json"
+}

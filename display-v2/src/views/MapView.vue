@@ -36,14 +36,28 @@
     </section>
 
     <section class="atlas-experiences" aria-labelledby="experience-title">
-      <h2 id="experience-title"><span aria-hidden="true">❧</span> 特色体验 <img src="/media/inkwash/atlas/mountain-vignette.webp" alt="" /></h2>
-      <router-link v-for="experience in experiences" :key="experience.title" :to="atlasLink(experience.path, route)" class="atlas-experience"><span class="atlas-experience__art"><AtlasGlyph :kind="experience.icon" /></span><span><strong>{{ experience.title }}</strong><small>{{ experience.description }}</small></span></router-link>
+      <header class="atlas-heading"><div><p class="atlas-section-kicker">登临 · 寻迹 · 风物 · 岁时</p><h2 id="experience-title">把山河，走成自己的体验</h2></div><span class="atlas-journeys__hint">从一处风景开始</span></header>
+      <div class="atlas-experience-grid">
+        <router-link v-for="(experience, i) in experiences" :key="experience.title" :to="atlasLink(experience.path, route)" class="atlas-experience">
+          <span class="atlas-experience__art"><img :src="experience.image" alt="" width="1024" height="683" loading="lazy" decoding="async" /><span class="atlas-experience__number" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span></span>
+          <span class="atlas-experience__copy"><strong>{{ experience.title }}</strong><span class="atlas-experience__arrow" aria-hidden="true">↗</span><small>{{ experience.description }}</small></span>
+        </router-link>
+      </div>
+      <p class="atlas-art-note">水墨意象插画</p>
     </section>
 
     <section class="atlas-journeys" aria-labelledby="journey-title">
-      <header class="atlas-heading"><h2 id="journey-title">一河九城 <span class="atlas-heading__english">NINE CITIES · ONE RIVER</span></h2><span class="atlas-journeys__hint">由山水入人文</span></header>
-      <nav class="atlas-city-rail" aria-label="沿黄九市"><router-link v-for="(city, i) in cities" :key="city" :to="atlasLink(`/regions/${city}`, route)"><small>{{ String(i + 1).padStart(2, '0') }}</small><span>{{ city }}</span><i aria-hidden="true">↗</i></router-link></nav>
-      <div class="atlas-reading-links"><router-link :to="atlasLink(isAtlasPreview(route) ? '/poets/2' : '/poets', route)"><span>循诗访人</span><strong>会当凌绝顶，一览众山小。</strong><small>走近齐鲁名士 <span aria-hidden="true">→</span></small></router-link><router-link :to="atlasLink(isAtlasPreview(route) ? '/spots/2' : '/regions/济南', route)"><span>湖山有情</span><strong>同一片山水，不同的心境。</strong><small>品读湖畔诗意 <span aria-hidden="true">→</span></small></router-link></div>
+      <header class="atlas-heading"><div><p class="atlas-section-kicker">择一城，慢慢读</p><h2 id="journey-title">一河九城 <span class="atlas-heading__english">NINE CITIES · ONE RIVER</span></h2></div><span class="atlas-journeys__hint">由山水入人文</span></header>
+      <nav class="atlas-city-rail" aria-label="沿黄九市">
+        <router-link v-for="(city, i) in cityStops" :key="city.city" :to="atlasLink(`/regions/${city.city}`, route)">
+          <span class="atlas-city-rail__art"><img :src="`/media/inkwash/sights/${city.slug}.webp`" alt="" width="1024" height="683" loading="lazy" decoding="async" /></span>
+          <span class="atlas-city-rail__label"><small>{{ String(i + 1).padStart(2, '0') }}</small><strong>{{ city.city }}</strong><i aria-hidden="true">↗</i></span><span class="atlas-city-rail__caption">{{ city.name }}</span>
+        </router-link>
+      </nav>
+      <div class="atlas-reading-links">
+        <router-link :to="atlasLink(isAtlasPreview(route) ? '/poets/2' : '/poets', route)" class="atlas-reading-link atlas-reading-link--poet"><img src="/media/inkwash/homepage-discovery/scholar-poet-v1.webp" alt="" width="1024" height="1536" loading="lazy" decoding="async" /><span class="atlas-reading-link__copy"><span class="atlas-reading-link__eyebrow">循诗访人 · 齐鲁名士</span><strong>会当凌绝顶，<br />一览众山小。</strong><span class="atlas-reading-link__source">杜甫《望岳》</span><span class="atlas-reading-link__action">走近齐鲁名士 <span aria-hidden="true">→</span></span></span></router-link>
+        <router-link :to="atlasLink(isAtlasPreview(route) ? '/spots/2' : '/regions/济南', route)" class="atlas-reading-link atlas-reading-link--lake"><img src="/media/inkwash/city-experiences/jinan-poetry-v1.webp" alt="" width="1024" height="1024" loading="lazy" decoding="async" /><span class="atlas-reading-link__copy"><span class="atlas-reading-link__eyebrow">湖山有情 · 泉城诗意</span><strong>同一片山水，<br />不同的心境。</strong><span class="atlas-reading-link__source">从湖光柳影，读到字里行间</span><span class="atlas-reading-link__action">品读湖畔诗意 <span aria-hidden="true">→</span></span></span></router-link>
+      </div>
     </section>
   </div>
 </template>
@@ -57,6 +71,7 @@ import { atlasLink, isAtlasPreview } from '../config/atlasPreview'
 
 const route = useRoute()
 const cities = NINE_CITIES
+const cityStops = cities.map(city => NINE_SIGHTS.find(sight => sight.city === city))
 const categories = [
   { title: '世界遗产', en: 'WORLD HERITAGE', icon: 'heritage', path: '/regions/泰安' },
   { title: '历史文化名城', en: 'HISTORIC CITIES', icon: 'temple', path: '/regions/济宁' },
@@ -79,10 +94,10 @@ const points = [
 // 九城各一处预设景点：静态数据，不请求接口；诗句均为 poem 表中的真实原句（见 config/nineSights.js）。
 const sights = NINE_SIGHTS
 const experiences = [
-  { title: '泰山日出', description: '清晨登顶，观日出云海，揽群山入怀。', icon: 'sunrise', path: '/regions/泰安' },
-  { title: '泰山石刻', description: '沿石阶品读摩崖，遇见历史与书法。', icon: 'inscription', path: '/regions/泰安' },
-  { title: '齐鲁风味', description: '在一餐一食中，品味山川与人间。', icon: 'food', path: '/food-opera' },
-  { title: '民俗文化', description: '走进节庆与乡土，感受绵延的日常。', icon: 'festival', path: '/festivals' },
+  { title: '泰山日出', description: '清晨登顶，观日出云海，揽群山入怀。', image: '/media/inkwash/sights/taian-taishan.webp', path: '/regions/泰安' },
+  { title: '泰山石刻', description: '沿石阶品读摩崖，遇见历史与书法。', image: '/media/inkwash/atlas/spot-yuhuangding.webp', path: '/regions/泰安' },
+  { title: '齐鲁风味', description: '在一餐一食中，品味山川与人间。', image: '/media/inkwash/homepage-discovery/qilu-table-v1.webp', path: '/food-opera' },
+  { title: '民俗文化', description: '走进节庆与乡土，感受绵延的日常。', image: '/media/inkwash/homepage-discovery/folk-lanterns-v1.webp', path: '/festivals' },
 ]
 </script>
 
@@ -147,31 +162,46 @@ const experiences = [
 .atlas-pill:hover { background: #ede5d7; }
 .atlas-index-note { font-size: 11px; color: var(--text-muted); margin-top: 10px; }
 .atlas-index-note button { color: var(--accent); background: none; border: 0; padding: 4px 8px; cursor: pointer; }
-.atlas-experiences { display: grid; grid-template-columns: 1.12fr repeat(4, 1fr); gap: 30px; align-items: center; padding: 26px 28px; margin-top: 25px; border: 1px solid #ded6c76b; background: #e9e2d426; }
-.atlas-experiences h2 { position: relative; display: flex; align-items: center; gap: 8px; font-size: 23px; letter-spacing: 1px; white-space: nowrap; }
-.atlas-experiences h2 > span { color: #9c794c; font-size: 24px; }
-.atlas-experiences h2 > img { width: 90px; height: 45px; position: absolute; left: 55px; bottom: -35px; mix-blend-mode: multiply; opacity: .35; }
-.atlas-experience { display: flex; gap: 12px; align-items: center; }
-.atlas-experience__art { width: 57px; height: 57px; color: #817250; flex-shrink: 0; }
-.atlas-experience__art svg { display: block; width: 100%; height: 100%; }
-.atlas-experience strong { display: block; font-size: 13px; font-weight: 600; letter-spacing: 1px; }
-.atlas-experience small { display: block; font-size: 10px; line-height: 1.8; color: #807361; margin-top: 4px; }
-.atlas-journeys { margin-top: 63px; }
-.atlas-heading__english { color: #9b8b75; font: 9px Georgia, serif; letter-spacing: 2px; margin-left: 8px; }
-.atlas-journeys__hint { font-size: 11px; color: #93816b; letter-spacing: 2px; }
-.atlas-city-rail { display: grid; grid-template-columns: repeat(9, minmax(0,1fr)); padding: 24px 0; border-bottom: 1px solid var(--border-light); }
-.atlas-city-rail a { display: flex; gap: 11px; justify-content: center; align-items: center; border-right: 1px solid var(--border-light); padding: 14px 0; }
-.atlas-city-rail a:last-child { border: 0; }
-.atlas-city-rail small { color: #a39075; font: italic 12px Georgia,serif; }
-.atlas-city-rail span { font-size: 18px; letter-spacing: 3px; }
-.atlas-city-rail i { color: #9d8a6c; font-style: normal; font-size: 13px; }
-.atlas-city-rail a:hover { background: #e8ddc933; }
-.atlas-reading-links { display: grid; grid-template-columns: 1fr 1fr; }
-.atlas-reading-links > a { display: flex; flex-direction: column; align-items: start; gap: 12px; padding: 34px 6%; }
-.atlas-reading-links > a + a { border-left: 1px solid var(--border-light); }
-.atlas-reading-links > a > span { font-size: 10px; color: #9a856b; letter-spacing: 3px; }
-.atlas-reading-links strong { font: 25px/1.7 var(--font-display); letter-spacing: 2px; }
-.atlas-reading-links small { font-size: 11px; color: #82735e; }
+.atlas-experiences { margin-top:52px; }
+.atlas-section-kicker { font-size:11px; color:var(--text-muted); letter-spacing:3px; margin:0 0 8px; }
+.atlas-experience-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:24px; margin-top:24px; }
+.atlas-experience { min-width:0; color:var(--text-primary); }
+.atlas-experience__art { position:relative; display:block; aspect-ratio:3/2; overflow:hidden; background:var(--bg-secondary); }
+.atlas-experience__art img { display:block; width:100%; height:100%; object-fit:cover; mix-blend-mode:multiply; transition:transform .4s ease; }
+.atlas-experience__number { position:absolute; top:12px; left:12px; display:grid; place-items:center; width:26px; height:30px; background:#f6f2e8e8; border:1px solid #b15e5059; color:var(--accent); font:italic 12px Georgia,serif; }
+.atlas-experience__copy { display:grid; grid-template-columns:1fr auto; gap:7px 10px; padding:15px 0 14px; border-bottom:1px solid var(--border); }
+.atlas-experience strong { font-family:var(--font-display); font-size:22px; font-weight:400; letter-spacing:2px; }
+.atlas-experience small { grid-column:1/-1; color:var(--text-secondary); font-size:13px; line-height:1.85; }
+.atlas-experience__arrow { align-self:center; color:var(--accent); font-size:18px; transition:transform .2s; }
+.atlas-experience:hover img { transform:scale(1.035); }
+.atlas-experience:hover .atlas-experience__arrow { transform:translate(2px,-2px); }
+.atlas-art-note { margin:10px 0 0; color:var(--text-muted); font-size:11px; text-align:right; }
+.atlas-journeys { margin-top:45px; }
+.atlas-heading__english { color:#9b8b75; font:9px Georgia,serif; letter-spacing:2px; margin-left:8px; }
+.atlas-journeys__hint { font-size:12px; color:var(--text-muted); letter-spacing:2px; }
+.atlas-city-rail { display:grid; grid-template-columns:repeat(9,minmax(0,1fr)); gap:12px; padding:22px 0 26px; }
+.atlas-city-rail a { min-width:0; display:block; padding:0 0 10px; border-bottom:1px solid var(--border); }
+.atlas-city-rail__art { display:block; aspect-ratio:1.35; overflow:hidden; }
+.atlas-city-rail__art img { display:block; width:100%; height:100%; object-fit:cover; mix-blend-mode:multiply; transition:transform .35s; }
+.atlas-city-rail__label { display:flex; gap:7px; align-items:baseline; margin-top:10px; }
+.atlas-city-rail small { color:#a39075; font:italic 11px Georgia,serif; }
+.atlas-city-rail strong { font-size:18px; font-family:var(--font-display); font-weight:400; letter-spacing:2px; }
+.atlas-city-rail i { margin-left:auto; color:var(--accent); font-size:13px; font-style:normal; }
+.atlas-city-rail__caption { display:block; color:var(--text-muted); margin-top:6px; font-size:11px; }
+.atlas-city-rail a:hover img { transform:scale(1.055); }
+.atlas-city-rail a:hover strong { color:var(--accent); }
+.atlas-reading-links { display:grid; grid-template-columns:1.08fr 1fr; gap:24px; margin-top:8px; }
+.atlas-reading-link { position:relative; isolation:isolate; display:flex; align-items:center; min-height:270px; padding:30px 34px; overflow:hidden; background:#e8e2d538; border:1px solid var(--border-light); }
+.atlas-reading-link>img { position:absolute; z-index:-1; object-fit:contain; mix-blend-mode:multiply; right:0; bottom:0; width:48%; height:100%; opacity:.88; transition:transform .4s; }
+.atlas-reading-link--poet>img { width:43%; object-position:right 35%; mask-image:linear-gradient(to right,transparent,black 20%); }
+.atlas-reading-link--lake>img { width:49%; padding:12px 0; }
+.atlas-reading-link__copy { position:relative; display:flex; flex-direction:column; align-items:start; gap:10px; }
+.atlas-reading-link__eyebrow { font-size:11px; color:var(--text-muted); letter-spacing:2px; }
+.atlas-reading-link strong { font:400 clamp(22px,2.15vw,31px)/1.65 var(--font-display); letter-spacing:2px; }
+.atlas-reading-link__source { font-size:12px; color:var(--text-secondary); }
+.atlas-reading-link__action { display:flex; align-items:center; gap:20px; min-height:44px; color:var(--accent); font-size:13px; margin-top:4px; }
+.atlas-reading-link:hover>img { transform:translateY(-3px); }
+.atlas-experience:focus-visible,.atlas-city-rail a:focus-visible,.atlas-reading-link:focus-visible { outline:2px solid var(--accent); outline-offset:5px; }
 @media (min-width: 1450px) { .atlas-hero__copy { padding-top: 90px; } }
 @media (max-width: 1150px) {
   .river-atlas { padding-inline: 25px; }
@@ -189,11 +219,6 @@ const experiences = [
   .atlas-sight h3 { font-size: 20px; }
   .atlas-sight__tag { font-size: 9px; }
   .atlas-sight__description { font-size: 12px; }
-  .atlas-experiences { gap: 20px; padding: 23px 18px; grid-template-columns: repeat(4,1fr); }
-  .atlas-experiences h2 { grid-column: 1 / -1; }
-  .atlas-experiences h2 > img { position: static; height: 32px; }
-  .atlas-city-rail a { gap: 5px; }
-  .atlas-city-rail span { font-size: 16px; }
 }
 @media (max-width: 760px) {
   .river-atlas { padding-inline: 20px; }
@@ -217,15 +242,8 @@ const experiences = [
   .atlas-sight { padding: 14px 11px; }
   .atlas-sight h3 { font-size: 16px; }
   .atlas-sight__tag { font-size: 8px; }
-  .atlas-experiences { grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px 15px; }
-  .atlas-experience { gap: 8px; }
-  .atlas-experience__art { width: 46px; height: 46px; }
   .atlas-city-rail { grid-template-columns: repeat(3,minmax(0,1fr)); }
-  .atlas-city-rail a { gap: 16px; border-bottom: 1px solid var(--border-light); }
-  .atlas-city-rail a:nth-child(3n) { border-right: 0; }
   .atlas-reading-links { grid-template-columns: 1fr; }
-  .atlas-reading-links > a + a { border-left: 0; border-top: 1px solid var(--border-light); }
-  .atlas-reading-links strong { font-size: 22px; }
   .atlas-journeys { margin-top: 40px; }
 }
 @media (max-width: 480px) {
@@ -239,7 +257,6 @@ const experiences = [
   .atlas-sight__tag { margin-left: 24px; }
   .atlas-sight__poetry { font-size: 11px; letter-spacing: .5px; }
   .atlas-sight__description { font-size: 11px; }
-  .atlas-experiences { column-gap: 16px; }
 }
 @media (prefers-reduced-motion: reduce) { .atlas-sight__image :deep(img), .atlas-map-point, .atlas-sandbox-entry { transition: none; } }
 .atlas-hero__actions { pointer-events:auto; margin-top:25px; gap:8px; }
@@ -252,7 +269,10 @@ const experiences = [
 .atlas-sight__poetry { font-size:15px; min-height:30px; }
 .atlas-sight__description { font-size:13px; padding-bottom:20px; }
 .atlas-heading > a { font-size:13px; min-height:44px; display:inline-flex; align-items:center; }
-.atlas-experiences { margin-top:28px; }
 @media(max-width:760px) { .atlas-categories { position:static; grid-template-columns:repeat(2,1fr); width:100%; margin-top:26px; } .atlas-sights__grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; } .atlas-sight { padding:18px; } .atlas-sight__tag { margin:0; } .atlas-sight h3 { font-size:19px; } }
 @media(max-width:480px) { .atlas-sights__grid { grid-template-columns:1fr; } .atlas-sight { display:grid; grid-template-columns:1fr 1fr; gap:8px 18px; } .atlas-sight__heading { grid-column:1/-1; } .atlas-sight__image { grid-row:2 / 5; margin:0; align-self:center; } .atlas-sight__poetry { font-size:13px; } .atlas-sight__description { padding:0; margin:0; font-size:12px; } .atlas-pill { justify-self:start; font-size:12px; padding-inline:12px; } }
+@media(max-width:1100px) { .atlas-experience-grid { gap:18px; } .atlas-city-rail { gap:8px; } .atlas-city-rail strong { font-size:17px; letter-spacing:1px; } .atlas-city-rail__label { gap:4px; } .atlas-reading-link { padding:26px; } }
+@media(max-width:760px) { .atlas-experiences { margin-top:34px; } .atlas-experiences .atlas-heading h2 { font-size:21px; letter-spacing:1px; } .atlas-experiences .atlas-journeys__hint { display:none; } .atlas-experience-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px 16px; margin-top:20px; } .atlas-experience strong { font-size:20px; } .atlas-experience small { font-size:12px; } .atlas-city-rail { gap:16px 13px; } .atlas-city-rail__art { aspect-ratio:1.65; } .atlas-reading-links { gap:16px; } .atlas-reading-link { min-height:244px; padding:24px; } .atlas-reading-link strong { font-size:26px; } .atlas-reading-link--poet>img { width:42%; } .atlas-reading-link--lake>img { width:44%; opacity:.65; } }
+@media(max-width:480px) { .atlas-reading-link { min-height:256px; padding:24px 20px; } .atlas-reading-link strong { font-size:23px; letter-spacing:1px; } .atlas-reading-link__eyebrow { font-size:10px; letter-spacing:1px; } .atlas-reading-link__source { font-size:11px; } .atlas-reading-link--lake>img { width:43%; } }
+@media(prefers-reduced-motion:reduce) { .atlas-experience img,.atlas-experience__arrow,.atlas-city-rail img,.atlas-reading-link>img { transition:none!important; transform:none!important; } }
 </style>
