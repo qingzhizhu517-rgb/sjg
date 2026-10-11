@@ -31,13 +31,13 @@
       "expected_url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
       "checkout_path": "/Users/a1/.codex/worktrees/ba33/sjg/.local/sites/display-v2",
       "status": "succeeded_private",
-      "commit_sha": "888419f38f7795e4a38a7d4897864fde27ebbeb7",
-      "deployment_id": "appgdep_6acaf3aa89448191995bc76e3f951998",
-      "version_id": "appgprj_6aca26e375b081919acfa874a379028d~appgver_a0b90770bda88191855096b729d25be3",
+      "commit_sha": "58162be96f1a4e115ad54da364a3cf51be859dfa",
+      "deployment_id": "appgdep_6acaf8fa94e88191ad727604b80a765a",
+      "version_id": "appgprj_6aca26e375b081919acfa874a379028d~appgver_b9ba6e88082c8191833ff8c30e03a8fc",
       "url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
-      "repository_revision": "3c5c46a49102f404004cb05a8fa4ddf8637b9381",
-      "version_number": 4,
-      "published_at": "2026-10-11T02:25:58.287985+00:00"
+      "repository_revision": "32974f55d31d80137e420ab5b30fa142a4490380",
+      "version_number": 5,
+      "published_at": "2026-10-11T02:48:38.959285+00:00"
     },
     "admin-frontend": {
       "project_id": "appgprj_6aca26f42d9081918bc7545e1b373f99",
@@ -80,7 +80,7 @@
     "admin_anonymous": "HTTP401",
     "learning_task_absent": "HTTP404",
     "ai_sse": "error_event_explicitly_reports_missing_LLM_API_KEY",
-    "static_site_content": "display_revision_3c5c46a_and_12_resources_including_reading_code_CSS_and_new_banner_match_built_artifacts; admin_and_datav_previous_f67c2c6_checks_unchanged",
+    "static_site_content": "display_revision_32974f5_and_10_resources_including_homepage_JS_CSS_AI_reading_JS_and_three_new_WebP_match_built_artifacts; other_services_preserved",
     "database_asset_migrations": {
       "updated_entities": 78,
       "verified_entities": 78,
@@ -138,15 +138,32 @@
         "display-v2"
       ],
       "review": "independent_findings_resolved; final_followup_terminated_by_account_usage; primary_agent_reverified_in_browser_and_full_gates"
+    },
+    "homepage_discovery": {
+      "application_revision": "32974f55d31d80137e420ab5b30fa142a4490380",
+      "display_tests": 214,
+      "display_build": "passed",
+      "master_ci": "success",
+      "master_ci_url": "https://github.com/qingzhizhu517-rgb/sjg/actions/runs/38106169746",
+      "generated_images": 3,
+      "runtime_webp_bytes": 390258,
+      "browser": "1440x1300_and_390x844_passed; images_decoded; nine_cities_order; contextual_preview_links; real_clicks; keyboard_focus_2px; reduced_motion",
+      "hosted_resources_verified": 10,
+      "owner_scoped_HTTP_verification": "passed",
+      "production_authenticated_DOM_QA": "not_run",
+      "published_services": [
+        "display-v2"
+      ],
+      "database_changes": false
     }
   },
   "repository": {
-    "online_base_sha": "3c5c46a49102f404004cb05a8fa4ddf8637b9381",
+    "online_base_sha": "32974f55d31d80137e420ab5b30fa142a4490380",
     "online_latest_local_redesign": true,
     "publication_mode": "manual_upload_and_independent_sites_source_repositories",
     "master_updates_do_not_auto_deploy": true,
     "online_component_revisions": {
-      "display-v2": "3c5c46a49102f404004cb05a8fa4ddf8637b9381",
+      "display-v2": "32974f55d31d80137e420ab5b30fa142a4490380",
       "admin-frontend": "f67c2c609b4119c299cd0d3cb3e371d35412c9d7",
       "sjg-datav": "f67c2c609b4119c299cd0d3cb3e371d35412c9d7",
       "backend": "3c5c46a49102f404004cb05a8fa4ddf8637b9381"
