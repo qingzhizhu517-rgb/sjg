@@ -1,0 +1,4127 @@
+{
+  "researchedAt": "2026-10-12",
+  "basis": "44条线上已发布文化条目；公开来源元数据与真实媒体策展，不包含数据库快照或网页全文。",
+  "summary": {
+    "publishedEntries": 44,
+    "categories": {
+      "festival": 14,
+      "craft": 12,
+      "literature": 10,
+      "food_opera": 8
+    },
+    "sourceLinks": 84,
+    "uniqueSourcePages": 81,
+    "inlineMediaEntries": 34,
+    "videoEntries": 24,
+    "imageEntries": 17,
+    "inlineAssets": 49,
+    "missingInlineMedia": 10
+  },
+  "permissionNote": "仅链接来源机构的公开媒体并保留署名，技术可访问不代表开放转载许可；明示禁止使用的素材仅留原页。未下载或重新分发媒体。",
+  "entries": [
+    {
+      "title": "菏泽国际牡丹文化旅游节（曹州牡丹花会）",
+      "category": "festival",
+      "region": "菏泽",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器",
+        "sourceCount": 2,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已有活动实录；只表示节目拍摄年的活动，不代替当年最新会期公告。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "url": "https://stream5.iqilu.com/vod_bag_2016//2026/04/10/78a3c3784bc44a0d91b3aecccabe32ce/78a3c3784bc44a0d91b3aecccabe32ce_H264_mp4_500K.mp4",
+          "sourceUrl": "https://v.iqilu.com/sdws/sdxwlb/2026/0410/5873803.html",
+          "title": "2026世界牡丹大会 第35届菏泽国际牡丹文化旅游节开幕",
+          "authorOrg": "山东广播电视台（齐鲁网）",
+          "format": "mp4",
+          "inlineVerified": true,
+          "license": "原页公开提供MP4与嵌入分享代码；版权归原机构，不复制或重新分发媒体",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 206,
+          "cors": "*",
+          "reason": "原页公开MP4分享地址；HTTP206、ftyp文件头与视频Content-Type核验，浏览器实际播放待主代理验收。",
+          "note": "该年度活动现场记录，不作下届会期、票价信息。",
+          "poster": "https://img8.iqilu.com/vmsimgs/2026/04/10/5816508_78a3c3784bc44a0d91b3aecccabe32ce.jpg",
+          "posterHttpStatus": 206
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://boftec.zibo.gov.cn/cec/news/detail?newsid=1833",
+          "title": "千年花事今更艳——2025世界牡丹大会 第34届菏泽国际牡丹文化旅游节开幕侧记",
+          "authorOrg": "淄博市商务局网站",
+          "publicationYear": 2025,
+          "note": "2025年4月8日开幕；赏花、非遗与演艺。原页图文，避免把往年会期当今年会期。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:34.380Z",
+              "reason": "",
+              "pageTitle": "千年花事今更艳——2025世界牡丹大会 第34届菏泽国际牡丹文化旅游节开幕侧记"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:07.793Z",
+              "reason": "",
+              "pageTitle": "千年花事今更艳——2025世界牡丹大会 第34届菏泽国际牡丹文化旅游节开幕侧记"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://v.iqilu.com/sdws/sdxwlb/2026/0410/5873803.html",
+          "title": "2026世界牡丹大会 第35届菏泽国际牡丹文化旅游节开幕",
+          "authorOrg": "山东广播电视台（齐鲁网）",
+          "publicationYear": 2026,
+          "note": "该年度活动现场记录，不作下届会期、票价信息。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:45:51.914Z",
+              "reason": "",
+              "pageTitle": "2026世界牡丹大会 第35届菏泽国际牡丹文化旅游节开幕_山东新闻联播_山东卫视_山东网络台_齐鲁网"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "image",
+          "url": "https://boftec.zibo.gov.cn/cec/news/detail?newsid=1833",
+          "title": "千年花事今更艳——2025世界牡丹大会 第34届菏泽国际牡丹文化旅游节开幕侧记（原页图文）",
+          "reuse": "未发现开放许可，仅原页观看"
+        }
+      ]
+    },
+    {
+      "title": "曲阜祭孔大典",
+      "category": "festival",
+      "region": "济宁",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器；1张真实图像",
+        "sourceCount": 3,
+        "inlineAssetCount": 2
+      },
+      "remaining": "已有活动实录；只表示节目拍摄年的活动，不代替当年最新会期公告。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "url": "https://newcntv.qcloudcdn.com/asp/hls/main/0303000a/3/default/3f2c8d17be6145599818a86ee75fff4d/main.m3u8?maxbr=2048",
+          "sourceUrl": "https://tv.cctv.com/2014/09/28/VIDE1411903848514381.shtml",
+          "title": "[视频]甲午年公祭孔子大典举行",
+          "authorOrg": "中央广播电视总台央视网",
+          "format": "hls",
+          "duration": 39,
+          "license": "引用原站公开视频流，版权归原作者与机构；技术可嵌核验不代表开放授权，不复制或重新分发媒体",
+          "checkedAt": "2026-10-12",
+          "playerApi": "https://vdn.apps.cntv.cn/api/getHttpVideoInfo.do?pid=3f2c8d17be6145599818a86ee75fff4d",
+          "httpStatus": 200,
+          "inlineVerified": true,
+          "cors": "*",
+          "reason": "央视普通公开播放器实际URL；HLS主清单、子清单HTTP200、视频分片HTTP206且CORS*，非加密TS，浏览器播放待主代理验收。",
+          "poster": "https://p4.img.cctvpic.com/fmspic/2014/09/28/3f2c8d17be6145599818a86ee75fff4d-180.jpg",
+          "posterHttpStatus": 206,
+          "note": "2014年曲阜公祭现场记录；用于观察礼乐与仪程，不作今年会期信息。"
+        },
+        {
+          "kind": "image",
+          "url": "https://www.jining.gov.cn/picture/-1/250929153748047100.1",
+          "sourceUrl": "https://www.jining.gov.cn/art/2025/9/29/art_182_2915095.html",
+          "title": "乙巳年公祭孔子大典现场（2025年）",
+          "authorOrg": "济宁市人民政府（济宁日报全媒体记者杨国庆摄）",
+          "license": "版权归原发布方，非开放授权；原页未见明示转载限制",
+          "width": 550,
+          "height": 366,
+          "inlineVerified": true,
+          "reason": "已在济宁政府原页目视核验2025祭孔大典现场及记者署名；源URL响应为图片但直接顶层导航下载，页面img引用能正确显示。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.ihchina.cn/project_details/14982.html",
+          "title": "祭孔大典",
+          "authorOrg": "中国非物质文化遗产网",
+          "publicationYear": null,
+          "note": "国家级项目Ⅹ-35，集乐、歌、舞、礼。民俗家祭与当代公祭流程需区别。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:34.385Z",
+              "reason": "",
+              "pageTitle": "祭孔大典 - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:07.798Z",
+              "reason": "",
+              "pageTitle": "祭孔大典 - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://tv.cctv.com/2014/09/28/VIDE1411903848514381.shtml",
+          "title": "[视频]甲午年公祭孔子大典举行",
+          "authorOrg": "中央广播电视总台央视网",
+          "publicationYear": 2014,
+          "note": "2014年曲阜公祭现场记录；用于观察礼乐与仪程，不作今年会期信息。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:07.798Z",
+              "reason": "",
+              "pageTitle": "[视频]甲午年公祭孔子大典举行"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://www.jining.gov.cn/art/2025/9/29/art_182_2915095.html",
+          "title": "乙巳年公祭孔子大典现场（2025年）",
+          "authorOrg": "济宁市人民政府（济宁日报全媒体记者杨国庆摄）",
+          "publicationYear": 2025,
+          "note": "作品与现场素材原页；仅支持素材所述范围。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:45:51.925Z",
+              "reason": "",
+              "pageTitle": "济宁市人民政府 今日济宁 乙巳年公祭孔子大典在曲阜孔庙举行"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "泰山东岳庙会",
+      "category": "festival",
+      "region": "泰安",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "1张真实图像",
+        "sourceCount": 1,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已有当年活动图集；完整实录或现场原声仍缺。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "image",
+          "url": "https://tsgw.taian.gov.cn/picture/0/5495b6eb35b348669a19a8e92181d6d1.png",
+          "sourceUrl": "https://tsgw.taian.gov.cn/art/2026/3/23/art_363610_10321002.html",
+          "title": "泰山东岳庙会场景与民间艺人",
+          "authorOrg": "泰山风景名胜区管理委员会",
+          "license": "版权归原发布方；仅引用原始链接并署名，未发现本页明确禁止引用图片的声明，不视为开放授权。",
+          "width": 800,
+          "height": 591,
+          "inlineVerified": true,
+          "reason": "官方非遗项目页配图，目视为真实庙会场景拼图；非一般泰山banner。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://tsgw.taian.gov.cn/art/2026/3/23/art_363610_10321002.html",
+          "title": "泰山东岳庙会",
+          "authorOrg": "泰山风景名胜区管理委员会",
+          "publicationYear": 2026,
+          "note": "宗教文化、民间艺术与商贸活动；2008年第二批国家级非遗。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:34.385Z",
+              "reason": "",
+              "pageTitle": "泰山风景名胜区管理委员会 非物质文化遗产 泰山东岳庙会"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:11.201Z",
+              "reason": "",
+              "pageTitle": "泰山风景名胜区管理委员会 非物质文化遗产 泰山东岳庙会"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "临清庙会（古运河庙会）",
+      "category": "festival",
+      "region": "聊城",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "文本阅读、影像待补标识",
+        "sourceCount": 1,
+        "inlineAssetCount": 0
+      },
+      "remaining": "尚缺核验过的现场／作品图、实录或原声；有文献来源，暂以阅读与原页入口呈现。",
+      "researchNotes": [
+        "临清历史上存在多个庙会与不同祭期；当代运河大集、贺年会等活动不等于统一固定的“临清庙会”日程。"
+      ],
+      "realAssets": [],
+      "sources": [
+        {
+          "url": "https://www.chinakongzi.org/xsyj/xmcg/202004/t20200415_426393.htm",
+          "title": "地方神庙、信仰空间与社会文化变迁——以临清碧霞元君庙宇碑刻为中心",
+          "authorOrg": "中国孔子网（周嘉研究）",
+          "publicationYear": 2020,
+          "note": "庙宇碑刻史料与运河商埠信俗；当代活动名称/会期不统一，勿认定为每年固定节期。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:36.292Z",
+              "reason": "",
+              "pageTitle": "地方神庙、信仰空间与社会文化变迁 ——以临清碧霞元君庙宇碑刻为中心"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:11.621Z",
+              "reason": "",
+              "pageTitle": "地方神庙、信仰空间与社会文化变迁 ——以临清碧霞元君庙宇碑刻为中心"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "临清驾鼓（新春社火锣鼓）",
+      "category": "festival",
+      "region": "聊城",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "文本阅读、影像待补标识",
+        "sourceCount": 2,
+        "inlineAssetCount": 0
+      },
+      "remaining": "真实MP4已核验HTTP206、ftyp及CORS*，但原页明示未经允许不得转载；本轮不嵌入，保留来源观看链接。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "url": "https://video.sdpcc.cn/1639896427312.mp4",
+          "sourceUrl": "https://www.sdpcc.com/resources/1775",
+          "title": "聊城非物质文化遗产——临清驾鼓",
+          "authorOrg": "聊城临清市文化馆（山东公共文化云）",
+          "poster": "https://oss.sdpcc.com/home/resource/141/20211219/141_2021121914462833147_1120.png?x-oss-process=image/resize,m_fill,w_800,h_450",
+          "format": "mp4",
+          "inlineVerified": false,
+          "httpStatus": 206,
+          "cors": "*",
+          "checkedAt": "2026-10-12",
+          "license": "原页明示“未经允许不得转载”，未获得外站呈现授权，仅保留原页观看入口。",
+          "reason": "真实MP4已核验HTTP206、ftyp及CORS*，但原页明示未经允许不得转载；本轮不嵌入，保留来源观看链接。",
+          "technicalVerified": true
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.ihchina.cn/project_details/23648/",
+          "title": "锣鼓艺术（临清驾鼓）",
+          "authorOrg": "中国非物质文化遗产网",
+          "publicationYear": null,
+          "note": "国家级项目Ⅱ-123；鼓、点锣、筛锣；行街与圆场、六首曲目。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:37.181Z",
+              "reason": "",
+              "pageTitle": "锣鼓艺术（临清驾鼓） - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 锣鼓艺术（临清驾鼓）"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:13.461Z",
+              "reason": "",
+              "pageTitle": "锣鼓艺术（临清驾鼓） - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 锣鼓艺术（临清驾鼓）"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://www.sdpcc.com/resources/1775",
+          "title": "聊城非物质文化遗产——临清驾鼓",
+          "authorOrg": "聊城临清市文化馆（山东公共文化云）",
+          "publicationYear": null,
+          "note": "作品与现场素材原页；仅支持素材所述范围。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:45:51.925Z",
+              "reason": "",
+              "pageTitle": "聊城非物质文化遗产——临清驾鼓_山东公共文化云"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "video",
+          "url": "https://www.sdpcc.com/resources/1775",
+          "title": "聊城非物质文化遗产——临清驾鼓（来源原页）",
+          "reuse": "真实MP4已核验HTTP206、ftyp及CORS*，但原页明示未经允许不得转载；本轮不嵌入，保留来源观看链接。"
+        }
+      ]
+    },
+    {
+      "title": "趵突泉迎春花灯会",
+      "category": "festival",
+      "region": "济南",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器；2张真实图可切换图集",
+        "sourceCount": 2,
+        "inlineAssetCount": 3
+      },
+      "remaining": "已有活动实录；只表示节目拍摄年的活动，不代替当年最新会期公告。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "url": "https://stream.iqilu.com/vod_bag_2016//2025/01/31/b4c64f69c51048518f05d5aef9b2af94/b4c64f69c51048518f05d5aef9b2af94_H264_mp4_500K.mp4",
+          "sourceUrl": "https://v.iqilu.com/ggpd/xwwbc/202501/31/5661175.html",
+          "title": "【喜庆新春】趵突泉花灯盛宴 三大主题板块独具匠心",
+          "authorOrg": "山东广播电视台（齐鲁网）",
+          "poster": "https://img8.iqilu.com/vmsimgs/2025/01/31/8299828_b4c64f69c51048518f05d5aef9b2af94.jpg",
+          "posterHttpStatus": 206,
+          "format": "mp4",
+          "inlineVerified": true,
+          "license": "原页公开提供MP4与嵌入分享代码；版权归原机构，不复制或重新分发媒体",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 206,
+          "cors": "*",
+          "reason": "原页公开MP4分享地址；HTTP206、ftyp文件头与视频Content-Type核验，浏览器实际播放待主代理验收。",
+          "note": "2025年灯会现场记录；用于观看灯组设计，不作当下会期与票价信息。"
+        },
+        {
+          "kind": "image",
+          "url": "https://p3.img.cctvpic.com/photoworkspace/contentimg/2024/02/16/2024021611170615033.jpg",
+          "sourceUrl": "https://news.cctv.com/2024/02/16/ARTIqRimyZ6nJx5DFWLkB5BT240216.shtml",
+          "title": "济南趵突泉迎春花灯会龙元素灯组",
+          "authorOrg": "央视网",
+          "license": "版权归原发布方；仅引用原始链接并署名，未发现本页明确禁止引用图片的声明，不视为开放授权。",
+          "width": 940,
+          "height": 440,
+          "inlineVerified": true,
+          "reason": "原文济南趵突泉段落后的两张灯组新闻画面；排除了前段天津水上公园图片。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        },
+        {
+          "kind": "image",
+          "url": "https://p5.img.cctvpic.com/photoworkspace/contentimg/2024/02/16/2024021611170675266.jpg",
+          "sourceUrl": "https://news.cctv.com/2024/02/16/ARTIqRimyZ6nJx5DFWLkB5BT240216.shtml",
+          "title": "趵突泉迎春花灯会彩灯细节",
+          "authorOrg": "央视网",
+          "license": "版权归原发布方；仅引用原始链接并署名，未发现本页明确禁止引用图片的声明，不视为开放授权。",
+          "width": 942,
+          "height": 448,
+          "inlineVerified": true,
+          "reason": "原文济南趵突泉段落后的两张灯组新闻画面；排除了前段天津水上公园图片。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://news.cctv.com/2024/02/16/ARTIqRimyZ6nJx5DFWLkB5BT240216.shtml",
+          "title": "锦绣中国年 | 龙元素引领新春灯会国潮热 “中国风”视觉盛宴点亮文旅市场",
+          "authorOrg": "央视网",
+          "publicationYear": 2024,
+          "note": "正文明确趵突泉花灯会融入龙元素、泉文化、宫灯等；图文及新闻视频原页。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:37.453Z",
+              "reason": "",
+              "pageTitle": "锦绣中国年 | 龙元素引领新春灯会国潮热 “中国风”视觉盛宴点亮文旅市场_新闻频道_央视网(cctv.com)"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:14.201Z",
+              "reason": "",
+              "pageTitle": "锦绣中国年 | 龙元素引领新春灯会国潮热 “中国风”视觉盛宴点亮文旅市场_新闻频道_央视网(cctv.com)"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://v.iqilu.com/ggpd/xwwbc/202501/31/5661175.html",
+          "title": "【喜庆新春】趵突泉花灯盛宴 三大主题板块独具匠心",
+          "authorOrg": "山东广播电视台（齐鲁网）",
+          "publicationYear": null,
+          "note": "2025年灯会现场记录；用于观看灯组设计，不作当下会期与票价信息。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:45:54.288Z",
+              "reason": "",
+              "pageTitle": "【喜庆新春】趵突泉花灯盛宴 三大主题板块独具匠心_新闻午班车_新闻频道_山东网络台_齐鲁网"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "image",
+          "url": "https://news.cctv.com/2024/02/16/ARTIqRimyZ6nJx5DFWLkB5BT240216.shtml",
+          "title": "锦绣中国年 | 龙元素引领新春灯会国潮热 “中国风”视觉盛宴点亮文旅市场（原页图文）",
+          "reuse": "未发现开放许可，仅原页观看"
+        }
+      ]
+    },
+    {
+      "title": "千佛山重阳山会（千佛山庙会）",
+      "category": "festival",
+      "region": "济南",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "文本阅读、影像待补标识",
+        "sourceCount": 1,
+        "inlineAssetCount": 0
+      },
+      "remaining": "原页及HEAD可访问，但2026-10-12本地页面内跨站加载实测失败；仅保留来源原页，不绕过站点限制。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "image",
+          "url": "https://imagepphcloud.thepaper.cn/pph/image/360/885/457.jpg",
+          "sourceUrl": "https://m.thepaper.cn/newsDetail_forward_31825125",
+          "title": "千佛山重阳山会入口布置",
+          "authorOrg": "济南发布（济南市政府新闻办官方澎湃号）",
+          "license": "版权归原发布方；仅引用原始链接并署名，未发现本页明确禁止引用图片的声明，不视为开放授权。",
+          "width": 677,
+          "height": 508,
+          "inlineVerified": false,
+          "reason": "原页及HEAD可访问，但2026-10-12本地页面内跨站加载实测失败；仅保留来源原页，不绕过站点限制。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        },
+        {
+          "kind": "image",
+          "url": "https://imagepphcloud.thepaper.cn/pph/image/360/885/460.jpg",
+          "sourceUrl": "https://m.thepaper.cn/newsDetail_forward_31825125",
+          "title": "千佛山大舜巡游演员现场",
+          "authorOrg": "济南发布（济南市政府新闻办官方澎湃号）",
+          "license": "版权归原发布方；仅引用原始链接并署名，未发现本页明确禁止引用图片的声明，不视为开放授权。",
+          "width": 677,
+          "height": 451,
+          "inlineVerified": false,
+          "reason": "原页及HEAD可访问，但2026-10-12本地页面内跨站加载实测失败；仅保留来源原页，不绕过站点限制。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://m.thepaper.cn/newsDetail_forward_31825125",
+          "title": "10月25日至11月2日，济南千佛山第42届“九月九”重阳山会举行",
+          "authorOrg": "济南市政府新闻办“济南发布”官方账号",
+          "publicationYear": 2025,
+          "note": "传统看戏、品小吃、赏民俗；巡游、登山、非遗市集。仅核验2025届，非实时活动预告。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:38.504Z",
+              "reason": "",
+              "pageTitle": "10月25日至11月2日，济南千佛山第42届“九月九”重阳山会举行"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:14.505Z",
+              "reason": "",
+              "pageTitle": "10月25日至11月2日，济南千佛山第42届“九月九”重阳山会举行"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "image",
+          "url": "https://m.thepaper.cn/newsDetail_forward_31825125",
+          "title": "10月25日至11月2日，济南千佛山第42届“九月九”重阳山会举行（原页图文）",
+          "reuse": "未发现开放许可，仅原页观看"
+        }
+      ]
+    },
+    {
+      "title": "中国乐陵金丝小枣文化旅游节",
+      "category": "festival",
+      "region": "德州",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "文本阅读、影像待补标识",
+        "sourceCount": 1,
+        "inlineAssetCount": 0
+      },
+      "remaining": "尚缺核验过的现场／作品图、实录或原声；有文献来源，暂以阅读与原页入口呈现。",
+      "researchNotes": [],
+      "realAssets": [],
+      "sources": [
+        {
+          "url": "https://www.sdxc.gov.cn/wmsd/wmsj/202101/t20210113_11639973.htm",
+          "title": "德州市乐陵经济开发区：以文明实践打通服务群众“最后一公里”",
+          "authorOrg": "山东宣传网（乐陵经济开发区）",
+          "publicationYear": 2021,
+          "note": "正文记录2020年小枣文化旅游节开杆仪式与农民合唱；可配枣文化物候图。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:38.810Z",
+              "reason": "",
+              "pageTitle": "德州市乐陵经济开发区：以文明实践打通服务群众“最后一公里”_山东宣传网"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:15.203Z",
+              "reason": "",
+              "pageTitle": "德州市乐陵经济开发区：以文明实践打通服务群众“最后一公里”_山东宣传网"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "宁津蟋蟀文化节（暨杂技古会）",
+      "category": "festival",
+      "region": "德州",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "文本阅读、影像待补标识",
+        "sourceCount": 1,
+        "inlineAssetCount": 0
+      },
+      "remaining": "尚缺核验过的现场／作品图、实录或原声；有文献来源，暂以阅读与原页入口呈现。",
+      "researchNotes": [
+        "已核验官方页支持宁津蟋蟀文化节筹备与恢复黄镇杂技古会研究；不能证实二者历年同期、固定会期及库中第十届细节。",
+        "页面明确未经授权不得转载、摘编；配图与录音均保留原页观看。"
+      ],
+      "realAssets": [],
+      "sources": [
+        {
+          "url": "https://iapp.njxrmtzx.cn/share/YS0xOTMtNDIxNTQwNjM.html",
+          "title": "杂技 “炫技”遇蟋蟀 “雅趣” 宁津让传统文化持续迸发新活力",
+          "authorOrg": "宁津县文化和旅游局、宁津县融媒体中心",
+          "publicationYear": 2026,
+          "note": "官方页报道筹备宁津蟋蟀文化节与研究恢复黄镇杂技古会，不能据此确认二者历年同期、固定会期或库中文案的第十届信息。页脚明确未经授权不得转载、摘编，故仅保留原页链接。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:39.743Z",
+              "reason": "",
+              "pageTitle": "杂技 “炫技”遇蟋蟀 “雅趣” 宁津让传统文化持续迸发新活力"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:15.489Z",
+              "reason": "",
+              "pageTitle": "杂技 “炫技”遇蟋蟀 “雅趣” 宁津让传统文化持续迸发新活力"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "齐文化节（临淄）",
+      "category": "festival",
+      "region": "淄博",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器",
+        "sourceCount": 2,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已有活动实录；只表示节目拍摄年的活动，不代替当年最新会期公告。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "url": "https://stream.iqilu.com/vod_bag_2016//2023/09/24/2b58253741e645d7b9e51a4c516909ba/2b58253741e645d7b9e51a4c516909ba_H264_mp4_500K.mp4",
+          "sourceUrl": "https://v.iqilu.com/ggpd/sddsy/202309/24/5398555.html",
+          "title": "第二十届齐文化节暨第八届齐文化与稷下学论坛在淄博开幕",
+          "authorOrg": "山东广播电视台（齐鲁网）",
+          "format": "mp4",
+          "inlineVerified": true,
+          "license": "原页公开提供MP4与嵌入分享代码；版权归原机构，不复制或重新分发媒体",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 206,
+          "cors": "*",
+          "reason": "原页公开MP4分享地址；HTTP206、ftyp文件头与视频Content-Type核验，浏览器实际播放待主代理验收。",
+          "note": "该年度活动现场记录，不作下届会期、票价信息。",
+          "poster": "https://img8.iqilu.com/vmsimgs/2023/09/24/5557934_2b58253741e645d7b9e51a4c516909ba.jpg",
+          "posterHttpStatus": 206
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://wh.zibo.gov.cn/gongkai/channel_c_5f9fa491ab327f36e4c13060_n_1605682639.9549/doc_68bf96911427114bd64b5b4b.html",
+          "title": "关于深化文旅融合促进齐文化新时代的传承与发展的建议答复",
+          "authorOrg": "淄博市文化和旅游局",
+          "publicationYear": 2025,
+          "note": "官方答复谈齐文化传承、节庆、研学旅游；使用整合展示而非复刻现场。网页由本地HTTP成功读取。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:39.751Z",
+              "reason": "",
+              "pageTitle": "关于深化文旅融合促进齐文化新时代的传承与发展的建议答复-政协委员提案-政务公开-淄博市文化和旅游局"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:15.808Z",
+              "reason": "",
+              "pageTitle": "关于深化文旅融合促进齐文化新时代的传承与发展的建议答复-政协委员提案-政务公开-淄博市文化和旅游局"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://v.iqilu.com/ggpd/sddsy/202309/24/5398555.html",
+          "title": "第二十届齐文化节暨第八届齐文化与稷下学论坛在淄博开幕",
+          "authorOrg": "山东广播电视台（齐鲁网）",
+          "publicationYear": null,
+          "note": "该年度活动现场记录，不作下届会期、票价信息。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:45:55.218Z",
+              "reason": "",
+              "pageTitle": "第二十届齐文化节暨第八届齐文化与稷下学论坛在淄博开幕_闪电大视野_新闻频道_山东网络台_齐鲁网"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "淄博国际聊斋文化旅游节（聊斋文化节）",
+      "category": "festival",
+      "region": "淄博",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器",
+        "sourceCount": 2,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已有活动实录；只表示节目拍摄年的活动，不代替当年最新会期公告。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "sourceUrl": "https://v.iqilu.com/ggpd/sddsy/202505/04/5708711.html",
+          "authorOrg": "山东广播电视台（齐鲁网·闪电新闻）",
+          "license": "引用原站公开视频流，版权归原作者与机构；技术可嵌核验不代表开放授权，不复制或重新分发媒体",
+          "checkedAt": "2026-10-12",
+          "url": "https://stream4.iqilu.com/vod_bag_2016//2025/05/04/ca84c97963f14d6b94a7810c9e2253b5/ca84c97963f14d6b94a7810c9e2253b5_H264_mp4_500K.mp4",
+          "poster": "https://img8.iqilu.com/vmsimgs/2025/05/04/6361007_ca84c97963f14d6b94a7810c9e2253b5.jpg",
+          "title": "【畅游齐鲁 乐享“五一”】科技赋能 淄博解锁《聊斋》新玩法",
+          "format": "mp4",
+          "httpStatus": 206,
+          "inlineVerified": true,
+          "cors": "http://127.0.0.1:5195",
+          "reason": "原页HTML内video.src实际MP4；HTTP 206与ftyp MP4文件头已核验，浏览器播放由主代理继续验收。",
+          "posterHttpStatus": 206
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://wh.zibo.gov.cn/gongkai/channel_c_5f9fa491ab327f36e4c13060_n_1605682639.9549/doc_68bf96911427114bd64b5b4b.html",
+          "title": "关于深化文旅融合促进齐文化新时代的传承与发展的建议答复",
+          "authorOrg": "淄博市文化和旅游局",
+          "publicationYear": 2025,
+          "note": "明确聊斋文化节罗刹海市巡游、民间杂耍与二人转；可接原页视频作为视听入口。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:39.751Z",
+              "reason": "",
+              "pageTitle": "关于深化文旅融合促进齐文化新时代的传承与发展的建议答复-政协委员提案-政务公开-淄博市文化和旅游局"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:15.808Z",
+              "reason": "",
+              "pageTitle": "关于深化文旅融合促进齐文化新时代的传承与发展的建议答复-政协委员提案-政务公开-淄博市文化和旅游局"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://v.iqilu.com/ggpd/sddsy/202505/04/5708711.html",
+          "title": "【畅游齐鲁 乐享“五一”】科技赋能 淄博解锁《聊斋》新玩法",
+          "authorOrg": "山东广播电视台（齐鲁网·闪电新闻）",
+          "publicationYear": 2025,
+          "note": "影像资料原页，用于对照观察。山东广播电视台原页观看；未核验跨站嵌入许可",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:40.010Z",
+              "reason": "",
+              "pageTitle": "【畅游齐鲁 乐享“五一”】科技赋能 淄博解锁《聊斋》新玩法_闪电大视野_新闻频道_山东网络台_齐鲁网"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:17.244Z",
+              "reason": "",
+              "pageTitle": "【畅游齐鲁 乐享“五一”】科技赋能 淄博解锁《聊斋》新玩法_闪电大视野_新闻频道_山东网络台_齐鲁网"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "video",
+          "url": "https://v.iqilu.com/ggpd/sddsy/202505/04/5708711.html",
+          "title": "【畅游齐鲁 乐享“五一”】科技赋能 淄博解锁《聊斋》新玩法",
+          "reuse": "山东广播电视台原页观看；未核验跨站嵌入许可"
+        }
+      ]
+    },
+    {
+      "title": "惠民胡集书会",
+      "category": "festival",
+      "region": "滨州",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器",
+        "sourceCount": 2,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已有活动实录；只表示节目拍摄年的活动，不代替当年最新会期公告。",
+      "researchNotes": [
+        "中国非遗网将胡集书会归为民俗类，项目编号Ⅹ-59、首批2006年；其核心活动是曲艺交流。",
+        "传统偏节/正节与当年具体活动安排不同，来源页不作2026年实时会期预告。"
+      ],
+      "realAssets": [
+        {
+          "kind": "video",
+          "url": "https://newcntv.qcloudcdn.com/asp/hls/main/0303000a/3/default/354560416e7c4b028acd3d45d588ca06/main.m3u8?maxbr=2048",
+          "sourceUrl": "https://tv.cctv.com/2026/03/12/VIDEe9Y4vdGjDWqy0MQhddzt260312.shtml",
+          "title": "[文化十分]十分深度 2026胡集书会——鼓板铿锵传古韵 说唱笑乐送春风",
+          "authorOrg": "中央广播电视总台央视网",
+          "format": "hls",
+          "duration": 864.36,
+          "inlineVerified": true,
+          "license": "引用原站公开视频流，版权归原作者与机构；技术可嵌核验不代表开放授权，不复制或重新分发媒体",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200,
+          "cors": "*",
+          "reason": "央视普通公开播放器实际URL；HLS主清单、子清单HTTP200、视频分片HTTP206且CORS*，非加密TS，浏览器播放待主代理验收。",
+          "note": "2026年胡集书会现场记录，可听原声与观察说唱、鼓板，不作后续会期公告。",
+          "poster": "https://p2.img.cctvpic.com/fmspic/2026/03/12/354560416e7c4b028acd3d45d588ca06-1.jpg",
+          "posterHttpStatus": 206
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.ihchina.cn/project_details/15035/",
+          "title": "胡集书会",
+          "authorOrg": "中国非物质文化遗产网",
+          "publicationYear": null,
+          "note": "国家级项目Ⅹ-59为民俗（库中文案“曲艺类”不准确）；正月十二偏节、十五正节，曲艺集市。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:40.837Z",
+              "reason": "",
+              "pageTitle": "胡集书会 - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:19.183Z",
+              "reason": "",
+              "pageTitle": "胡集书会 - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://tv.cctv.com/2026/03/12/VIDEe9Y4vdGjDWqy0MQhddzt260312.shtml",
+          "title": "[文化十分]十分深度 2026胡集书会——鼓板铿锵传古韵 说唱笑乐送春风",
+          "authorOrg": "中央广播电视总台央视网",
+          "publicationYear": 2026,
+          "note": "2026年胡集书会现场记录，可听原声与观察说唱、鼓板，不作后续会期公告。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:45:55.219Z",
+              "reason": "",
+              "pageTitle": "[文化十分]十分深度 2026胡集书会——鼓板铿锵传古韵 说唱笑乐送春风"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "黄河口开渔节",
+      "category": "festival",
+      "region": "东营",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "文本阅读、影像待补标识",
+        "sourceCount": 1,
+        "inlineAssetCount": 0
+      },
+      "remaining": "图片出现在开渔节祭海段落后并署张新光；原页明示未经书面授权不得转载/链接，原图使用HTTP。不启用，待许可与稳定HTTPS载体。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "image",
+          "url": "https://pic.dongyingnews.cn/0/10/57/16/10571608_483790.jpg",
+          "sourceUrl": "https://www.dongyingnews.cn/topic/system/2017/09/19/010689818.shtml",
+          "title": "2017垦利红光首届开渔节祭海现场",
+          "authorOrg": "张新光摄；东营网",
+          "license": "原页版权声明①要求书面授权，未获授权；仅保留原页入口",
+          "width": 611,
+          "height": 912,
+          "inlineVerified": false,
+          "reason": "图片出现在开渔节祭海段落后并署张新光；原页明示未经书面授权不得转载/链接，原图使用HTTP。不启用，待许可与稳定HTTPS载体。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        },
+        {
+          "kind": "image",
+          "url": "https://pic.dongyingnews.cn/0/10/57/16/10571609_475048.jpg",
+          "sourceUrl": "https://www.dongyingnews.cn/topic/system/2017/09/19/010689818.shtml",
+          "title": "2017垦利红光开渔节现场",
+          "authorOrg": "张新光摄；东营网",
+          "license": "原页版权声明①要求书面授权，未获授权；仅保留原页入口",
+          "width": 635,
+          "height": 420,
+          "inlineVerified": false,
+          "reason": "图片出现在开渔节祭海段落后并署张新光；原页明示未经书面授权不得转载/链接，原图使用HTTP。不启用，待许可与稳定HTTPS载体。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.dongyingnews.cn/topic/system/2017/09/19/010689818.shtml",
+          "title": "【风雅颂·东营】开海咯！约你来赴一场带着海风的舌尖盛宴",
+          "authorOrg": "东营网",
+          "publicationYear": 2017,
+          "note": "首届中国·垦利红光开渔节，红光渔港千帆出海；会期以当年官方发布为准。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:41.002Z",
+              "reason": "",
+              "pageTitle": "【风雅颂·东营】开海咯！约你来赴一场带着海风的舌尖盛宴~-专题策划-东营网"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:19.303Z",
+              "reason": "",
+              "pageTitle": "【风雅颂·东营】开海咯！约你来赴一场带着海风的舌尖盛宴~-专题策划-东营网"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "image",
+          "url": "https://www.dongyingnews.cn/topic/system/2017/09/19/010689818.shtml",
+          "title": "【风雅颂·东营】开海咯！约你来赴一场带着海风的舌尖盛宴（原页图文）",
+          "reuse": "未发现开放许可，仅原页观看"
+        }
+      ]
+    },
+    {
+      "title": "中国孙子文化旅游节（广饶）",
+      "category": "festival",
+      "region": "东营",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "文本阅读、影像待补标识",
+        "sourceCount": 1,
+        "inlineAssetCount": 0
+      },
+      "remaining": "原页明确需书面授权，当前仅可原页观看。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "image",
+          "url": "https://v2.cri.cn/b91c9192-85f8-4062-acff-922dc5c67362/image/116b0a1e018f475291e3612937fb8ee7.1600x1065.750x2147483647.jpg",
+          "sourceUrl": "https://sd.cri.cn/20250910/f5a8eb6d-1dfe-358b-f697-1f6deab4e1a2.html",
+          "title": "第十七届孙子文化旅游节开幕式实拍",
+          "authorOrg": "东营市委宣传部供图／中央广电总台国际在线",
+          "license": "未经书面授权不得转载、复制或其他方式使用。",
+          "width": 750,
+          "height": 500,
+          "inlineVerified": false,
+          "reason": "原页与图注明确对应第十七届开幕式；已目视确认主题舞台。原页明确未经书面授权不得转载、复制或其他方式使用，因此不可嵌入，只保留原页访问。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://sd.cri.cn/20250910/f5a8eb6d-1dfe-358b-f697-1f6deab4e1a2.html",
+          "title": "第十七届孙子文化旅游节在东营广饶开幕",
+          "authorOrg": "中央广电总台国际在线（东营市委宣传部供图）",
+          "publicationYear": 2025,
+          "note": "2025年第十七届，问道孙武·溯说古今，13项主题活动。该站已实际HTTP读取200。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:41.774Z",
+              "reason": "",
+              "pageTitle": "第十七届孙子文化旅游节在东营广饶开幕-国际在线"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:20.815Z",
+              "reason": "",
+              "pageTitle": "第十七届孙子文化旅游节在东营广饶开幕-国际在线"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "image",
+          "url": "https://sd.cri.cn/20250910/f5a8eb6d-1dfe-358b-f697-1f6deab4e1a2.html",
+          "title": "第十七届孙子文化旅游节在东营广饶开幕（原页图文）",
+          "reuse": "未发现开放许可，仅原页观看"
+        }
+      ]
+    },
+    {
+      "title": "曹州面塑（面人·曹州面人）",
+      "category": "craft",
+      "region": "菏泽",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器；可展开工序观察索引",
+        "sourceCount": 2,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已有工艺／传承现场视频；工序时间点未逐段核定，不提供假跳转。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "url": "https://newcntv.qcloudcdn.com/asp/hls/main/0303000a/3/default/4d8a88af1f49485fbc9511485a4ccc07/main.m3u8?maxbr=2048",
+          "sourceUrl": "https://tv.cctv.com/2025/03/18/VIDEijoYiLIon8vLW7Gg2nHl250318.shtml",
+          "title": "《三农群英汇》 20250318 行走的非遗——让面团在指尖生花",
+          "authorOrg": "中央广播电视总台央视网",
+          "format": "hls",
+          "duration": 1498.76,
+          "license": "引用原站公开视频流，版权归原作者与机构；技术可嵌核验不代表开放授权，不复制或重新分发媒体",
+          "checkedAt": "2026-10-12",
+          "playerApi": "https://vdn.apps.cntv.cn/api/getHttpVideoInfo.do?pid=4d8a88af1f49485fbc9511485a4ccc07",
+          "httpStatus": 200,
+          "inlineVerified": true,
+          "cors": "*",
+          "reason": "央视普通公开播放器实际URL；HLS主清单、子清单HTTP200、视频分片HTTP206且CORS*，非加密TS，浏览器播放待主代理验收。",
+          "poster": "https://p2.img.cctvpic.com/fmspic/2025/03/18/4d8a88af1f49485fbc9511485a4ccc07-1.jpg",
+          "posterHttpStatus": 206
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://arts.cntv.cn/20120516/111335.shtml",
+          "title": "曹州面塑指尖上的非遗传承",
+          "authorOrg": "央视网艺术台（大众日报）",
+          "publicationYear": 2012,
+          "note": "揉、搓、拈、压、拍等技法；配传承人教学照片。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:41.795Z",
+              "reason": "",
+              "pageTitle": "曹州面塑指尖上的非遗传承_艺术台_中国网络电视台"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:20.841Z",
+              "reason": "",
+              "pageTitle": "曹州面塑指尖上的非遗传承_艺术台_中国网络电视台"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://tv.cctv.com/2025/03/18/VIDEijoYiLIon8vLW7Gg2nHl250318.shtml",
+          "title": "《三农群英汇》 20250318 行走的非遗——让面团在指尖生花",
+          "authorOrg": "中央广播电视总台央视网",
+          "publicationYear": 2025,
+          "note": "真实影音原页，供观察节目所展示的内容；版权归来源机构。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:22.114Z",
+              "reason": "",
+              "pageTitle": "《三农群英汇》 20250318 行走的非遗——让面团在指尖生花"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "image",
+          "url": "https://arts.cntv.cn/20120516/111335.shtml",
+          "title": "传承人教学照片（原页观看）",
+          "reuse": "未发现开放许可，仅原页观看，不搬运"
+        }
+      ]
+    },
+    {
+      "title": "鲁锦织造技艺",
+      "category": "craft",
+      "region": "菏泽",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器；可展开工序观察索引",
+        "sourceCount": 2,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已有工艺／传承现场视频；工序时间点未逐段核定，不提供假跳转。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "sourceUrl": "https://tv.cctv.com/2026/07/11/VIDECMDdZ5aLceFtWKGjJCKR260711.shtml",
+          "authorOrg": "中央广播电视总台央视网",
+          "license": "引用原站公开视频流，版权归原作者与机构；技术可嵌核验不代表开放授权，不复制或重新分发媒体",
+          "checkedAt": "2026-10-12",
+          "url": "https://newcntv.qcloudcdn.com/asp/hls/main/0303000a/3/default/be5aa0db0d114c67b4d671dc7647c40c/main.m3u8?maxbr=2048",
+          "title": "[非遗里的中国第五季]鲁锦织造技艺",
+          "format": "hls",
+          "duration": 84.76,
+          "poster": "https://p5.img.cctvpic.com/fmspic/2026/07/11/be5aa0db0d114c67b4d671dc7647c40c-1.jpg",
+          "playerApi": "https://vdn.apps.cntv.cn/api/getHttpVideoInfo.do?pid=be5aa0db0d114c67b4d671dc7647c40c",
+          "httpStatus": 200,
+          "inlineVerified": true,
+          "cors": "*",
+          "reason": "公开播放器实际URL；HTTP与媒体格式已核验。HLS主清单、子清单与视频分片允许跨站读取，浏览器播放由主代理继续验收。",
+          "posterHttpStatus": 206
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.ihchina.cn/art/detail/id/14489.html",
+          "title": "鲁锦织造技艺",
+          "authorOrg": "中国非物质文化遗产网",
+          "publicationYear": null,
+          "note": "国家级项目Ⅷ-103；彩色经纬线交织与几何纹样。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:41.968Z",
+              "reason": "",
+              "pageTitle": "鲁锦织造技艺 - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:22.199Z",
+              "reason": "",
+              "pageTitle": "鲁锦织造技艺 - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://tv.cctv.com/2026/07/11/VIDECMDdZ5aLceFtWKGjJCKR260711.shtml",
+          "title": "[非遗里的中国第五季]鲁锦织造技艺",
+          "authorOrg": "央视网",
+          "publicationYear": null,
+          "note": "影像资料原页，用于对照观察。央视原页播放器；未核验跨站嵌入许可",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:42.758Z",
+              "reason": "",
+              "pageTitle": "[非遗里的中国第五季]鲁锦织造技艺"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:23.194Z",
+              "reason": "",
+              "pageTitle": "[非遗里的中国第五季]鲁锦织造技艺"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "video",
+          "url": "https://tv.cctv.com/2026/07/11/VIDECMDdZ5aLceFtWKGjJCKR260711.shtml",
+          "title": "[非遗里的中国第五季]鲁锦织造技艺",
+          "reuse": "央视原页播放器；未核验跨站嵌入许可",
+          "verifiedAt": "2026-10-12"
+        }
+      ]
+    },
+    {
+      "title": "曲阜楷木雕刻（木雕·曲阜楷木雕刻）",
+      "category": "craft",
+      "region": "济宁",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "1张真实图像；可展开工序观察索引",
+        "sourceCount": 1,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已有作品／制作现场图；完整制作实录仍缺。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "image",
+          "url": "https://whlyj.jining.gov.cn/picture/-1/eaf7a40e6e3c4a8cbb0907bf53f1b1eb.png",
+          "sourceUrl": "https://whlyj.jining.gov.cn/art/2026/4/14/art_32446_2711940.html",
+          "title": "曲阜楷木雕刻：匠人雕刻龙纹寿杖",
+          "authorOrg": "济宁市文化和旅游局（转载齐鲁晚报）",
+          "license": "未发现开放许可；版权归来源机构/作者，未复制下载。",
+          "width": 669,
+          "height": 432,
+          "inlineVerified": true,
+          "reason": "原页楷木雕刻段落对应照片；已目视确认刻制龙纹木杖，HTTP 200，669×432。公开原始链接可访问，未发现开放许可，权利仍归来源作者。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://whlyj.jining.gov.cn/art/2026/4/14/art_32446_2711940.html",
+          "title": "曲阜楷木:从笔杆到雕刻的非遗之路",
+          "authorOrg": "济宁市文化和旅游局",
+          "publicationYear": 2026,
+          "note": "择木、顺木纹规划纹样，深凿浅刻与斜削平推。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:43.381Z",
+              "reason": "",
+              "pageTitle": "济宁市文化和旅游局 媒体聚焦 曲阜楷木:从笔杆到雕刻的非遗之路"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:23.734Z",
+              "reason": "",
+              "pageTitle": "济宁市文化和旅游局 媒体聚焦 曲阜楷木:从笔杆到雕刻的非遗之路"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "嘉祥石雕（石雕·嘉祥石雕）",
+      "category": "craft",
+      "region": "济宁",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器；可展开工序观察索引",
+        "sourceCount": 2,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已有工艺／传承现场视频；工序时间点未逐段核定，不提供假跳转。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "url": "https://hls.cntv.lxdns.com/asp/hls/main/0303000a/3/default/3fad3465b52a454e90189d3e8119a573/main.m3u8?maxbr=2048",
+          "sourceUrl": "https://tv.cctv.com/2025/11/05/VIDEApsYmCZ0UgTSkxQssrCU251105.shtml",
+          "title": "[地理·中国]嘉祥石雕造型逼真 雕工圆润细腻 纹饰流畅洒脱",
+          "authorOrg": "中央广播电视总台央视网",
+          "format": "hls",
+          "duration": 229.8,
+          "license": "引用原站公开视频流，版权归原作者与机构；技术可嵌核验不代表开放授权，不复制或重新分发媒体",
+          "checkedAt": "2026-10-12",
+          "playerApi": "https://vdn.apps.cntv.cn/api/getHttpVideoInfo.do?pid=3fad3465b52a454e90189d3e8119a573",
+          "httpStatus": 206,
+          "inlineVerified": true,
+          "cors": "*",
+          "reason": "央视普通公开播放器实际URL；HLS主清单、子清单HTTP200、视频分片HTTP206且CORS*，非加密TS，浏览器播放待主代理验收。",
+          "poster": "https://p3.img.cctvpic.com/fmspic/2025/11/05/3fad3465b52a454e90189d3e8119a573-1.jpg",
+          "posterHttpStatus": 206
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.ihchina.cn/project_details/14113.html",
+          "title": "石雕（嘉祥石雕）",
+          "authorOrg": "中国非物质文化遗产网",
+          "publicationYear": null,
+          "note": "国家级项目Ⅶ-56；当地天青石，圆雕、浮雕、透雕、线雕。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:43.462Z",
+              "reason": "",
+              "pageTitle": "石雕（嘉祥石雕） - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:24.001Z",
+              "reason": "",
+              "pageTitle": "石雕（嘉祥石雕） - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://tv.cctv.com/2025/11/05/VIDEApsYmCZ0UgTSkxQssrCU251105.shtml",
+          "title": "[地理·中国]嘉祥石雕造型逼真 雕工圆润细腻 纹饰流畅洒脱",
+          "authorOrg": "中央广播电视总台央视网",
+          "publicationYear": 2025,
+          "note": "真实影音原页，供观察节目所展示的内容；版权归来源机构。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:25.477Z",
+              "reason": "",
+              "pageTitle": "[地理·中国]嘉祥石雕造型逼真 雕工圆润细腻 纹饰流畅洒脱"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "泰山玉雕刻（石雕·泰山玉雕刻）",
+      "category": "craft",
+      "region": "泰安",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "2张真实图可切换图集；可展开工序观察索引",
+        "sourceCount": 2,
+        "inlineAssetCount": 2
+      },
+      "remaining": "已有作品／制作现场图；完整制作实录仍缺。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "image",
+          "url": "https://whlyj.taian.gov.cn/picture/-1/240909151219238160.jpg",
+          "sourceUrl": "https://whlyj.taian.gov.cn/art/2024/9/9/art_350861_10303832.html",
+          "title": "泰山玉吉祥如意系列：瑞兽纹玉雕",
+          "authorOrg": "泰安市文化和旅游局",
+          "license": "原机构公开图像；保留原网址与署名，仅链接引用，不复制或重新分发媒体；不等于取得开放授权",
+          "width": 800,
+          "height": 548,
+          "inlineVerified": true,
+          "reason": "已在原页确认图片与对应段落，浏览器载入后逐张目视核验真实内容与自然尺寸，排除广告和通用配图。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200,
+          "note": "2024 年城市礼品展作品图，用于观察玉色、器形与雕刻纹饰。",
+          "contentType": "image/jpeg"
+        },
+        {
+          "kind": "image",
+          "url": "https://whlyj.taian.gov.cn/picture/-1/240909151219297903.jpg",
+          "sourceUrl": "https://whlyj.taian.gov.cn/art/2024/9/9/art_350861_10303832.html",
+          "title": "泰吉祥·泰如意：泰山玉文房作品展陈",
+          "authorOrg": "泰安市文化和旅游局",
+          "license": "原机构公开图像；保留原网址与署名，仅链接引用，不复制或重新分发媒体；不等于取得开放授权",
+          "width": 800,
+          "height": 574,
+          "inlineVerified": true,
+          "reason": "已在原页确认图片与对应段落，浏览器载入后逐张目视核验真实内容与自然尺寸，排除广告和通用配图。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200,
+          "note": "2024 年城市礼品展资料；作品展陈不等同于制作过程。",
+          "contentType": "image/jpeg"
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.cnr.cn/sd/tysd/20231115/t20231115_526486978.shtml",
+          "title": "泰安税务：雕玉成器 税惠呵护匠心巧手",
+          "authorOrg": "央广网",
+          "publicationYear": 2023,
+          "note": "介绍遇石记泰山玉雕刻与传承人师秀娜；项目细分名称与库中广义标题不同。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:44.637Z",
+              "reason": "",
+              "pageTitle": "泰安税务：雕玉成器 税惠呵护匠心巧手_央广网"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:25.538Z",
+              "reason": "",
+              "pageTitle": "泰安税务：雕玉成器 税惠呵护匠心巧手_央广网"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://whlyj.taian.gov.cn/art/2024/9/9/art_350861_10303832.html",
+          "title": "发现不一样的泰安！带您一览2024“泰有礼”泰安城市礼品展",
+          "authorOrg": "泰安市文化和旅游局",
+          "publicationYear": 2024,
+          "note": "本文相邻标题明确标注“泰山玉吉祥如意系列产品”与“泰吉祥·泰如意文房系列产品”，据此采用两张对应作品图；产品展陈不替代具体工序演示。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:45:55.294Z",
+              "reason": "",
+              "pageTitle": "泰安市文化和旅游局 泰山国际登山节 发现不一样的泰安！带您一览2024“泰有礼”泰安城市礼品展"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "肥城桃木雕刻",
+      "category": "craft",
+      "region": "泰安",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器；1张真实图像；可展开工序观察索引",
+        "sourceCount": 2,
+        "inlineAssetCount": 2
+      },
+      "remaining": "已有工艺／传承现场视频；工序时间点未逐段核定，不提供假跳转。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "url": "https://stream.iqilu.com/vod_bag_2016//2024/08/07/15cdfa58571c4054ad1824d1e6d9968e/15cdfa58571c4054ad1824d1e6d9968e_H264_mp4_500K.mp4",
+          "sourceUrl": "https://v.iqilu.com/sdws/zasd/2024/0807/5569723.html",
+          "title": "肥城桃木雕刻：以刀为笔 刻木生“花”",
+          "authorOrg": "山东广播电视台（齐鲁网）",
+          "license": "原页公开提供MP4与嵌入分享代码；版权归原机构，不复制或重新分发媒体",
+          "format": "mp4",
+          "inlineVerified": true,
+          "reason": "原页公开MP4分享地址；HTTP206、ftyp文件头与视频Content-Type核验，浏览器实际播放由主代理验收。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 206,
+          "cors": "*"
+        },
+        {
+          "kind": "image",
+          "url": "https://tajs.taian.gov.cn/picture/0/b12f12aec3ba4793ad24a8bb9e5f6c16.png",
+          "sourceUrl": "https://tajs.taian.gov.cn/art/2023/8/9/art_318699_10301263.html",
+          "title": "桃木雕刻传承人王来新现场演示",
+          "authorOrg": "泰安市住房和城乡建设局",
+          "license": "版权归原发布方；仅引用原始链接并署名，未发现本页明确禁止引用图片的声明，不视为开放授权。",
+          "width": 800,
+          "height": 600,
+          "inlineVerified": true,
+          "reason": "原页民俗文化章节“传承人王来新”对应照片，目视现场雕刻与背景作品；剔除了村落石墙、纳鞋底、磨盘图片。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://tajs.taian.gov.cn/art/2023/8/9/art_318699_10301263.html",
+          "title": "山东省传统村落肥城市仪阳街道办事处鱼山古村",
+          "authorOrg": "泰安市住房和城乡建设局",
+          "publicationYear": 2023,
+          "note": "原页“民俗文化”介绍肥城桃木雕刻、作品、传承人王来新，含配图；以该部分作为技艺资料，不据其中古代起源说覆盖正文。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:45.607Z",
+              "reason": "",
+              "pageTitle": "泰安市住房和城乡建设局 肥城市 山东省传统村落肥城市仪阳街道办事处鱼山古村"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:26.092Z",
+              "reason": "",
+              "pageTitle": "泰安市住房和城乡建设局 肥城市 山东省传统村落肥城市仪阳街道办事处鱼山古村"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://v.iqilu.com/sdws/zasd/2024/0807/5569723.html",
+          "title": "肥城桃木雕刻：以刀为笔 刻木生“花”",
+          "authorOrg": "山东广播电视台（齐鲁网）",
+          "publicationYear": 2024,
+          "note": "真实影音原页，供观察节目所展示的内容。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:45:55.771Z",
+              "reason": "",
+              "pageTitle": "肥城桃木雕刻：以刀为笔 刻木生“花”_早安山东_山东卫视_山东网络台_齐鲁网"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "image",
+          "url": "https://tajs.taian.gov.cn/art/2023/8/9/art_318699_10301263.html",
+          "title": "桃木雕刻及传承人图（原页观看）",
+          "reuse": "未发现开放许可，仅原页观看"
+        }
+      ]
+    },
+    {
+      "title": "德州黑陶烧制技艺（陶器烧制技艺·德州黑陶烧制技艺）",
+      "category": "craft",
+      "region": "德州",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器；2张真实图可切换图集；可展开工序观察索引",
+        "sourceCount": 3,
+        "inlineAssetCount": 3
+      },
+      "remaining": "已有工艺／传承现场视频；工序时间点未逐段核定，不提供假跳转。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "url": "https://stream5.iqilu.com/vod_bag_2016//2026/02/04/c18e67e66f7048d1996111ecfb4cc683/c18e67e66f7048d1996111ecfb4cc683_H264_mp4_500K.mp4",
+          "sourceUrl": "https://v.iqilu.com/qlpd/mrxw/2026/0204/5846245.html",
+          "title": "德州黑陶亮相“运河大集” 为市民送上文化大餐",
+          "authorOrg": "山东广播电视台（齐鲁网）",
+          "license": "原页公开提供MP4与嵌入分享代码；版权归原机构，不复制或重新分发媒体",
+          "format": "mp4",
+          "inlineVerified": true,
+          "reason": "原页公开MP4分享地址；HTTP206、ftyp文件头与视频Content-Type核验，浏览器实际播放由主代理验收。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 206,
+          "cors": "*",
+          "poster": "https://img8.iqilu.com/vmsimgs/2026/02/04/0200778_c18e67e66f7048d1996111ecfb4cc683.jpg",
+          "posterHttpStatus": 200
+        },
+        {
+          "kind": "image",
+          "url": "https://ht.dzu.edu.cn/__local/1/C4/B3/3904DEC992F1CFB4D66840D5862_E4522D16_1C3D1.jpg",
+          "sourceUrl": "https://ht.dzu.edu.cn/info/1003/1079.htm",
+          "title": "中国黑陶城博物馆东厅黑陶精品展陈",
+          "authorOrg": "德州学院黑陶文化产业学院",
+          "license": "版权归原发布方；仅引用原始链接并署名，未发现本页明确禁止引用图片的声明，不视为开放授权。",
+          "width": 1080,
+          "height": 711,
+          "inlineVerified": true,
+          "reason": "德州学院官方介绍中国黑陶城博物馆，明确为国家级德州黑陶烧制技艺展示平台，逐张核验真实展陈。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        },
+        {
+          "kind": "image",
+          "url": "https://ht.dzu.edu.cn/__local/A/B9/7D/F10E0321862D8655DFE523689CF_780149FB_13473.jpg",
+          "sourceUrl": "https://ht.dzu.edu.cn/info/1003/1079.htm",
+          "title": "中国黑陶城博物馆西厅发展历程展陈",
+          "authorOrg": "德州学院黑陶文化产业学院",
+          "license": "版权归原发布方；仅引用原始链接并署名，未发现本页明确禁止引用图片的声明，不视为开放授权。",
+          "width": 1024,
+          "height": 464,
+          "inlineVerified": true,
+          "reason": "德州学院官方介绍中国黑陶城博物馆，明确为国家级德州黑陶烧制技艺展示平台，逐张核验真实展陈。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.ihchina.cn/project_details/14466.html",
+          "title": "陶器烧制技艺（德州黑陶烧制技艺）",
+          "authorOrg": "中国非物质文化遗产网",
+          "publicationYear": null,
+          "note": "国家级项目Ⅷ-98；手工轮制、无釉压光、渗碳还原。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:45.751Z",
+              "reason": "",
+              "pageTitle": "陶器烧制技艺（德州黑陶烧制技艺） - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:26.809Z",
+              "reason": "",
+              "pageTitle": "陶器烧制技艺（德州黑陶烧制技艺） - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://v.iqilu.com/qlpd/mrxw/2026/0204/5846245.html",
+          "title": "德州黑陶亮相“运河大集” 为市民送上文化大餐",
+          "authorOrg": "山东广播电视台（齐鲁网）",
+          "publicationYear": 2026,
+          "note": "真实影音原页，供观察节目所展示的内容。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:45:56.233Z",
+              "reason": "",
+              "pageTitle": "德州黑陶亮相“运河大集” 为市民送上文化大餐_每日新闻_齐鲁频道_山东网络台_齐鲁网"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://ht.dzu.edu.cn/info/1003/1079.htm",
+          "title": "中国黑陶城博物馆东厅黑陶精品展陈",
+          "authorOrg": "德州学院黑陶文化产业学院",
+          "publicationYear": null,
+          "note": "作品与现场照片原页；仅支持照片所述范围。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:45:56.674Z",
+              "reason": "",
+              "pageTitle": "中国黑陶城博物馆-德州学院黑陶文化产业学院"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "蟋蟀罐传统制作技艺（宁津）",
+      "category": "craft",
+      "region": "德州",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器；1张真实图像；可展开工序观察索引",
+        "sourceCount": 4,
+        "inlineAssetCount": 2
+      },
+      "remaining": "已有工艺／传承现场视频；工序时间点未逐段核定，不提供假跳转。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "url": "https://stream.iqilu.com/vod_bag_2016//2025/11/12/5c282fdd1d4a40ac8f4e993b3e389071/5c282fdd1d4a40ac8f4e993b3e389071_H264_mp4_500K.mp4",
+          "sourceUrl": "https://v.iqilu.com/nkpd/xcjf/2025/1112/5805955.html",
+          "title": "【乡约“她力量”】刘秀芬：蟋蟀罐里的巾帼力量",
+          "authorOrg": "山东广播电视台（齐鲁网）",
+          "license": "原页公开提供MP4与嵌入分享代码；版权归原机构，不复制或重新分发媒体",
+          "format": "mp4",
+          "inlineVerified": true,
+          "reason": "原页公开MP4分享地址；HTTP206、ftyp文件头与视频Content-Type核验，浏览器实际播放由主代理验收。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 206,
+          "cors": "*",
+          "poster": "https://img8.iqilu.com/vmsimgs/2025/11/12/2952359_5c282fdd1d4a40ac8f4e993b3e389071.jpg",
+          "posterHttpStatus": 200
+        },
+        {
+          "kind": "image",
+          "url": "https://dzngimage.dzwww.com/2026/09/09/0d42f912af34060fd7802535944bf87c.jpg",
+          "sourceUrl": "https://hb.dzwww.com/p/pbEXdMBVjG6.html",
+          "title": "宁津蟋蟀罐：制罐者展示器物与样品",
+          "authorOrg": "大众网·海报新闻",
+          "license": "原机构公开图像；保留原网址与署名，仅链接引用，不复制或重新分发媒体；不等于取得开放授权",
+          "width": 770,
+          "height": 578,
+          "inlineVerified": true,
+          "reason": "已在原页确认图片与对应段落，浏览器载入后逐张目视核验真实内容与自然尺寸，排除广告和通用配图。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200,
+          "note": "2026 年 9 月工坊探访现场，可对照器形与罐体表面；人物讲解画面不作为具体工序演示。",
+          "contentType": "image/jpeg"
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://sd.cri.cn/20220130/64ca8177-f93d-94be-9bfa-9d5821605136.html",
+          "title": "瓷器、核雕、鸽子会... 非遗项目过大年 德州启动线上非遗展播",
+          "authorOrg": "国际在线山东频道（德州文化和旅游局资料）",
+          "publicationYear": 2022,
+          "note": "明确刘氏丫头蟋蟀罐：胶土、拉坯、压光、匣钵高温封窑还原。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:45.889Z",
+              "reason": "",
+              "pageTitle": "瓷器、核雕、鸽子会... 非遗项目过大年 德州启动线上非遗展播-国际在线"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:27.894Z",
+              "reason": "",
+              "pageTitle": "瓷器、核雕、鸽子会... 非遗项目过大年 德州启动线上非遗展播-国际在线"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://www.ihchina.cn/Uploads/File/2021/11/23/u619cc935d42d7.pdf",
+          "title": "山东省第五批省级非物质文化遗产代表性项目名录",
+          "authorOrg": "中国非物质文化遗产网（山东省名录）",
+          "publicationYear": 2021,
+          "note": "名单第511项：蟋蟀罐传统制作技艺，申报地宁津县。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "skipped",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:46.234Z",
+              "reason": "non_text_resource",
+              "pageTitle": ""
+            },
+            {
+              "status": "skipped",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:28.079Z",
+              "reason": "non_text_resource",
+              "pageTitle": ""
+            }
+          ],
+          "candidateMediaNotApproved": false
+        },
+        {
+          "url": "https://v.iqilu.com/nkpd/xcjf/2025/1112/5805955.html",
+          "title": "【乡约“她力量”】刘秀芬：蟋蟀罐里的巾帼力量",
+          "authorOrg": "山东广播电视台（齐鲁网）",
+          "publicationYear": 2025,
+          "note": "真实影音原页，供观察节目所展示的内容。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:45:58.141Z",
+              "reason": "",
+              "pageTitle": "【乡约“她力量”】刘秀芬：蟋蟀罐里的巾帼力量_乡村季风_农科频道_山东网络台_齐鲁网"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://hb.dzwww.com/p/pbEXdMBVjG6.html",
+          "title": "宁津县刘营伍乡践行社会主义核心价值观 以敬业匠心赋能非遗传承",
+          "authorOrg": "大众网·海报新闻",
+          "publicationYear": 2026,
+          "note": "2026-09-09 原页报道刘记丫头蟋蟀罐非遗工坊探访，图中制罐者展示器物，后方有不同器形样品。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:45:58.624Z",
+              "reason": "",
+              "pageTitle": "宁津县刘营伍乡践行社会主义核心价值观 以敬业匠心赋能非遗传承 - 海报新闻"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "image",
+          "url": "https://sd.cri.cn/20220130/64ca8177-f93d-94be-9bfa-9d5821605136.html",
+          "title": "刘氏丫头蟋蟀罐图文展播（原页观看）",
+          "reuse": "仅原页观看，未核验素材转载许可"
+        }
+      ]
+    },
+    {
+      "title": "泥塑（惠民泥塑）",
+      "category": "craft",
+      "region": "滨州",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器；可展开工序观察索引",
+        "sourceCount": 2,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已有工艺／传承现场视频；工序时间点未逐段核定，不提供假跳转。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "url": "https://hls.cntv.lxdns.com/asp/hls/main/0303000a/3/default/66b23b0f8d6e4174a234ddbf525ba2bd/main.m3u8?maxbr=2048",
+          "sourceUrl": "https://tv.cctv.com/2013/08/29/VIDE1409105343127739.shtml",
+          "title": "《农广天地》 20130829 惠民泥塑",
+          "authorOrg": "中央广播电视总台央视网",
+          "format": "hls",
+          "duration": 1472,
+          "license": "引用原站公开视频流，版权归原作者与机构；技术可嵌核验不代表开放授权，不复制或重新分发媒体",
+          "checkedAt": "2026-10-12",
+          "playerApi": "https://vdn.apps.cntv.cn/api/getHttpVideoInfo.do?pid=66b23b0f8d6e4174a234ddbf525ba2bd",
+          "httpStatus": 206,
+          "inlineVerified": true,
+          "cors": "*",
+          "reason": "央视普通公开播放器实际URL；HLS主清单、子清单HTTP200、视频分片HTTP206且CORS*，非加密TS，浏览器播放待主代理验收。",
+          "poster": "https://p4.img.cctvpic.com/fmspic/2013/08/29/66b23b0f8d6e4174a234ddbf525ba2bd-180.jpg",
+          "posterHttpStatus": 206
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.ihchina.cn/project_details/14051.html",
+          "title": "泥塑（惠民泥塑）",
+          "authorOrg": "中国非物质文化遗产网",
+          "publicationYear": null,
+          "note": "国家级项目Ⅶ-47；捣泥制坯、晾干糊纸、涂粉上色、开眼涂胶；泥哨及活动玩具。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:46.678Z",
+              "reason": "",
+              "pageTitle": "泥塑（惠民泥塑） - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:28.721Z",
+              "reason": "",
+              "pageTitle": "泥塑（惠民泥塑） - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://tv.cctv.com/2013/08/29/VIDE1409105343127739.shtml",
+          "title": "《农广天地》 20130829 惠民泥塑",
+          "authorOrg": "中央广播电视总台央视网",
+          "publicationYear": 2013,
+          "note": "真实影音原页，供观察节目所展示的内容；版权归来源机构。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:28.874Z",
+              "reason": "",
+              "pageTitle": "[农广天地]惠民泥塑(20130829)_CCTV节目官网-CCTV-7_央视网(cctv.com)"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "柳编（博兴柳编）",
+      "category": "craft",
+      "region": "滨州",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器；可展开工序观察索引",
+        "sourceCount": 3,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已有工艺／传承现场视频；工序时间点未逐段核定，不提供假跳转。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "url": "https://hls.cntv.lxdns.com/asp/hls/main/0303000a/3/default/bdf7ae07d54a4af7b7a4c8ff88182152/main.m3u8?maxbr=2048",
+          "sourceUrl": "https://tv.cctv.com/2014/07/19/VIDE1405780740754751.shtml",
+          "title": "《经济半小时》 20140719 村庄创富记：“草柳村”今昔",
+          "authorOrg": "中央广播电视总台央视网",
+          "format": "hls",
+          "duration": 1663,
+          "license": "引用原站公开视频流，版权归原作者与机构；技术可嵌核验不代表开放授权，不复制或重新分发媒体",
+          "checkedAt": "2026-10-12",
+          "playerApi": "https://vdn.apps.cntv.cn/api/getHttpVideoInfo.do?pid=bdf7ae07d54a4af7b7a4c8ff88182152",
+          "httpStatus": 206,
+          "inlineVerified": true,
+          "cors": "*",
+          "reason": "央视普通公开播放器实际URL；HLS主清单、子清单HTTP200、视频分片HTTP206且CORS*，非加密TS，浏览器播放待主代理验收。",
+          "poster": "https://p4.img.cctvpic.com/fmspic/2014/07/19/bdf7ae07d54a4af7b7a4c8ff88182152-180.jpg",
+          "posterHttpStatus": 206,
+          "note": "2014年博兴湾头村现场记录，可用于观察传统材料、编织和产业背景；不作当前经济数据。"
+        },
+        {
+          "kind": "image",
+          "url": "https://f2.cnfin.com/group1/M00/09/57/rB02iGO8zoOAGpX_AAQChr0ZozU289.jpg",
+          "sourceUrl": "https://www.cnfin.com/cmjj-lb/detail/20230110/3782700_1.html",
+          "title": "博兴草柳编作品与制作图文",
+          "authorOrg": "新华财经（中国金融信息网）",
+          "license": "原页明示“未经授权 不得转载”；仅保留原页入口",
+          "width": null,
+          "height": null,
+          "inlineVerified": false,
+          "reason": "来源正文确有作品与制作图组，但页尾明示“未经授权 不得转载”，只提供原页入口，绝不内嵌",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.ihchina.cn/project_details/14108.html",
+          "title": "柳编（博兴柳编）",
+          "authorOrg": "中国非物质文化遗产网",
+          "publicationYear": null,
+          "note": "国家级项目Ⅶ-55；蒲草苇草等湿地材料与家居器物。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:47.180Z",
+              "reason": "",
+              "pageTitle": "柳编（博兴柳编） - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:29.648Z",
+              "reason": "",
+              "pageTitle": "柳编（博兴柳编） - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://tv.cctv.com/2014/07/19/VIDE1405780740754751.shtml",
+          "title": "《经济半小时》 20140719 村庄创富记：“草柳村”今昔",
+          "authorOrg": "中央广播电视总台央视网",
+          "publicationYear": 2014,
+          "note": "2014年博兴湾头村现场记录，可用于观察传统材料、编织和产业背景；不作当前经济数据。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:29.975Z",
+              "reason": "",
+              "pageTitle": "《经济半小时》 20140719 村庄创富记：“草柳村”今昔_CCTV节目官网-CCTV-2_央视网(cctv.com)"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://www.cnfin.com/cmjj-lb/detail/20230110/3782700_1.html",
+          "title": "博兴草柳编作品与制作图文",
+          "authorOrg": "新华财经（中国金融信息网）",
+          "publicationYear": null,
+          "note": "作品与现场素材原页；仅支持素材所述范围。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:45:59.626Z",
+              "reason": "",
+              "pageTitle": "山东博兴：老手艺艺“编”出新花样 “织”就幸福路 - 中国金融信息网"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "image",
+          "url": "https://www.cnfin.com/cmjj-lb/detail/20230110/3782700_1.html",
+          "title": "博兴草柳编作品与制作图文（来源原页）",
+          "reuse": "来源正文确有作品与制作图组，但页尾明示“未经授权 不得转载”，只提供原页入口，绝不内嵌"
+        }
+      ]
+    },
+    {
+      "title": "毛笔制作技艺（广饶齐笔制作技艺）",
+      "category": "craft",
+      "region": "东营",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器；可展开工序观察索引",
+        "sourceCount": 3,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已有工艺／传承现场视频；工序时间点未逐段核定，不提供假跳转。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "url": "https://stream4.iqilu.com/vod_bag_2016//2026/02/09/c57cb1582305476bac1e7e64b536eb38/c57cb1582305476bac1e7e64b536eb38_H264_mp4_500K.mp4",
+          "sourceUrl": "https://v.iqilu.com/nkpd/snxw/2026/0209/5848837.html",
+          "title": "【传承非遗技艺】广饶：齐笔工坊翰墨香 千年技艺写“共富”",
+          "authorOrg": "山东广播电视台（齐鲁网）",
+          "license": "原页公开提供MP4与嵌入分享代码；版权归原机构，不复制或重新分发媒体",
+          "format": "mp4",
+          "inlineVerified": true,
+          "reason": "原页公开MP4分享地址；HTTP206、ftyp文件头与视频Content-Type核验，浏览器实际播放由主代理验收。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 206,
+          "cors": "http://127.0.0.1:5195",
+          "poster": "https://img8.iqilu.com/vmsimgs/2026/02/09/0646694_c57cb1582305476bac1e7e64b536eb38.jpg",
+          "posterHttpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://sdxw.iqilu.com/share/YS0yMS02OTgzNTg=.html",
+          "title": "第三批省级非遗生产性保护示范基地出炉 广饶齐笔入选",
+          "authorOrg": "山东广播电视台闪电新闻（东营台、广饶台）",
+          "publicationYear": 2017,
+          "note": "浸、拔、梳、并、连、剔、修、刻字工序与尖齐圆健四德。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:47.312Z",
+              "reason": "",
+              "pageTitle": "第三批省级非遗生产性保护示范基地出炉 广饶齐笔入选"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:30.482Z",
+              "reason": "",
+              "pageTitle": "第三批省级非遗生产性保护示范基地出炉 广饶齐笔入选"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://tv.cctv.com/2011/12/19/VIDE1397721288122844.shtml",
+          "title": "《远方的家》 20111219 沿海行（15）",
+          "authorOrg": "中央广播电视总台央视网",
+          "publicationYear": 2011,
+          "note": "2011年东营沿海行整期，齐笔制作是节目第六节，尚未核定章节时间；请标整期而非齐笔专门短片。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:30.537Z",
+              "reason": "",
+              "pageTitle": "《沿海行》第15集 黄河之子东营《远方的家》20111219_CCTV节目官网-CCTV-4_央视网(cctv.com)"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://v.iqilu.com/nkpd/snxw/2026/0209/5848837.html",
+          "title": "【传承非遗技艺】广饶：齐笔工坊翰墨香 千年技艺写“共富”",
+          "authorOrg": "山东广播电视台（齐鲁网）",
+          "publicationYear": 2026,
+          "note": "真实影音原页，供观察节目所展示的内容。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:45:59.668Z",
+              "reason": "",
+              "pageTitle": "【传承非遗技艺】广饶：齐笔工坊翰墨香 千年技艺写“共富”_山东三农新闻联播_农科频道_山东网络台_齐鲁网"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "video",
+          "url": "https://tv.cctv.com/2011/12/19/VIDE1397721288122844.shtml",
+          "title": "《远方的家》 20111219 沿海行（15）（整期含齐笔，章节时间待核）",
+          "reuse": "来源原页观看"
+        }
+      ]
+    },
+    {
+      "title": "黄河口芦苇画",
+      "category": "craft",
+      "region": "东营",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "2张真实图可切换图集；可展开工序观察索引",
+        "sourceCount": 1,
+        "inlineAssetCount": 2
+      },
+      "remaining": "已有作品／制作现场图；完整制作实录仍缺。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "image",
+          "url": "https://www.xinhuanet.com/culture/20230602/aeff368ea36741c5a82f1c7485bc33ac/20230602aeff368ea36741c5a82f1c7485bc33ac_202306026a11f4c75a5e4995803307dd3c40cca7.jpg",
+          "sourceUrl": "https://www.xinhuanet.com/culture/20230602/aeff368ea36741c5a82f1c7485bc33ac/c.html",
+          "title": "芦苇画《连年有余》制作现场",
+          "authorOrg": "新华网",
+          "license": "版权归原发布方；仅引用原始链接并署名，未发现本页明确禁止引用图片的声明，不视为开放授权。",
+          "width": 600,
+          "height": 400,
+          "inlineVerified": true,
+          "reason": "在新华社原页目视核验制作现场与作品；正文明确东营乐安苇编传承人李光祥教授芦苇画。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        },
+        {
+          "kind": "image",
+          "url": "https://www.xinhuanet.com/culture/20230602/aeff368ea36741c5a82f1c7485bc33ac/20230602aeff368ea36741c5a82f1c7485bc33ac_2023060294242285910f4f30818b1c13a36c32a7.jpg",
+          "sourceUrl": "https://www.xinhuanet.com/culture/20230602/aeff368ea36741c5a82f1c7485bc33ac/c.html",
+          "title": "东营乐安苇编工作室花鸟芦苇画作品",
+          "authorOrg": "新华网",
+          "license": "版权归原发布方；仅引用原始链接并署名，未发现本页明确禁止引用图片的声明，不视为开放授权。",
+          "width": 600,
+          "height": 400,
+          "inlineVerified": true,
+          "reason": "在新华社原页目视核验制作现场与作品；正文明确东营乐安苇编传承人李光祥教授芦苇画。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.xinhuanet.com/culture/20230602/aeff368ea36741c5a82f1c7485bc33ac/c.html",
+          "title": "“老手艺”的时尚传承",
+          "authorOrg": "新华网",
+          "publicationYear": 2023,
+          "note": "东营乐安苇编传承人李光祥；选材、浸泡、熨烫、构图、裁剪、烫画、缝边工序与湿地题材。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:47.875Z",
+              "reason": "",
+              "pageTitle": "“老手艺”的时尚传承-新华网"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:31.013Z",
+              "reason": "",
+              "pageTitle": "“老手艺”的时尚传承-新华网"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "image",
+          "url": "https://www.xinhuanet.com/culture/20230602/aeff368ea36741c5a82f1c7485bc33ac/c.html",
+          "title": "芦苇画制作及作品照片（原页观看）",
+          "reuse": "新华网版权；原页观看，不搬运"
+        }
+      ]
+    },
+    {
+      "title": "尧的传说（鄄城谷林）",
+      "category": "literature",
+      "region": "菏泽",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "公有领域图像文献（注明作者／年代）；故事线索与版本辨读",
+        "sourceCount": 2,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已补后世图像文献，明确年代与作者；非地方传承现场、非古人真实肖像；地方讲述原声仍缺。",
+      "researchNotes": [
+        "鄄城县“尧的传说”列入2021年山东省第五批省级名录；与其他地区同名国家级项目应分开核对。",
+        "谷林尧陵与禅让叙事属于地方传说、文献与民俗记忆；来源链接不等于已解决所有历史归属争议。"
+      ],
+      "realAssets": [
+        {
+          "kind": "image",
+          "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/Ma_Lin_-_Emperor_Yao.jpg/960px-Ma_Lin_-_Emperor_Yao.jpg",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ma_Lin_-_Emperor_Yao.jpg",
+          "title": "图像文献：宋代马麟《帝尧立像》",
+          "authorOrg": "马麟绘；台北故宫博物院藏；Wikimedia Commons",
+          "license": "Public domain（Commons文件原页PD-Art／PD-old-100）",
+          "width": 960,
+          "height": 2089,
+          "inlineVerified": true,
+          "presentation": "archive",
+          "note": "宋代后世艺术形象，供比较尧传说的图像传播；不是鄄城出土文物、尧的真实肖像或鄄城谷林现场照片。",
+          "reason": "Commons API核验画名《帝尧立像》、马麟、台北故宫博物院馆藏、公有领域；浏览器实图已核验。仅引用公开衍生预览图，避免34MB原图影响页面加载；来源链接保留原图记录。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.ihchina.cn/Uploads/File/2021/11/23/u619cc935d42d7.pdf",
+          "title": "山东省第五批省级非物质文化遗产代表性项目名录",
+          "authorOrg": "中国非物质文化遗产网（山东省名录）",
+          "publicationYear": 2021,
+          "note": "表中尧的传说申报地为鄄城县；库中文案不能把山西/菏泽其他地区国家级归属套给鄄城谷林。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "skipped",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:46.234Z",
+              "reason": "non_text_resource",
+              "pageTitle": ""
+            },
+            {
+              "status": "skipped",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:28.079Z",
+              "reason": "non_text_resource",
+              "pageTitle": ""
+            }
+          ],
+          "candidateMediaNotApproved": false
+        },
+        {
+          "url": "https://commons.wikimedia.org/wiki/File:Ma_Lin_-_Emperor_Yao.jpg",
+          "title": "图像文献：宋代马麟《帝尧立像》",
+          "authorOrg": "马麟绘；台北故宫博物院藏；Wikimedia Commons",
+          "publicationYear": null,
+          "note": "宋代后世艺术形象，供比较尧传说的图像传播；不是鄄城出土文物、尧的真实肖像或鄄城谷林现场照片。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:53:29.828Z",
+              "reason": "",
+              "pageTitle": "File:Ma Lin - Emperor Yao.jpg - Wikimedia Commons"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "麒麟传说",
+      "category": "literature",
+      "region": "菏泽",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "1张真实图像；故事线索与版本辨读",
+        "sourceCount": 2,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已补当代场景／演绎或文化地标图；地方讲述原声仍缺，图像不作为传说史实。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "image",
+          "url": "https://whlyj.jining.gov.cn/picture/0/s_ccc35df2fd8e4753b7b98a81c74d65cf.jpg",
+          "sourceUrl": "https://whlyj.jining.gov.cn/art/2021/1/26/art_69979_2705987.html",
+          "title": "当代麒麟雕塑：传说的地方文化表达",
+          "authorOrg": "济宁市文化和旅游局",
+          "license": "版权归原发布方；仅引用原始链接并署名，未发现本页明确禁止引用图片的声明，不视为开放授权。",
+          "width": 640,
+          "height": 480,
+          "inlineVerified": true,
+          "reason": "济宁官方《麒麟传说》记录页配图；目视核验为现代雕塑，展示地方文化表达，不作为传说生物实物或西狩获麟史实照片。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.ihchina.cn/project_details/12268.html",
+          "title": "麒麟传说",
+          "authorOrg": "中国非物质文化遗产网",
+          "publicationYear": null,
+          "note": "巨野县项目Ⅰ-43，西狩获麟、孔母梦麟、麒麟送子等故事母题，关联获麟台等地方风物。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:48.268Z",
+              "reason": "",
+              "pageTitle": "麒麟传说 - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:31.069Z",
+              "reason": "",
+              "pageTitle": "麒麟传说 - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://whlyj.jining.gov.cn/art/2021/1/26/art_69979_2705987.html",
+          "title": "当代麒麟雕塑：传说的地方文化表达",
+          "authorOrg": "济宁市文化和旅游局",
+          "publicationYear": 2021,
+          "note": "作品与现场素材原页；仅支持素材所述范围。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:46:00.130Z",
+              "reason": "",
+              "pageTitle": "济宁市文化和旅游局 国家级 济宁非遗记录之麒麟传说"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "大舜传说",
+      "category": "literature",
+      "region": "济南",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "文本阅读、影像待补标识；故事线索与版本辨读",
+        "sourceCount": 2,
+        "inlineAssetCount": 0
+      },
+      "remaining": "原页及HEAD可访问，但2026-10-12本地页面内跨站加载实测失败；仅保留来源原页，不绕过站点限制。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "image",
+          "url": "https://imagepphcloud.thepaper.cn/pph/image/360/885/460.jpg",
+          "sourceUrl": "https://m.thepaper.cn/newsDetail_forward_31825125",
+          "title": "当代演绎：千佛山重阳山会大舜巡游",
+          "authorOrg": "济南发布（济南市政府新闻办官方澎湃号）",
+          "license": "版权归原发布方；仅引用原始链接并署名，未发现本页明确禁止引用图片的声明，不视为开放授权。",
+          "width": 677,
+          "height": 451,
+          "inlineVerified": false,
+          "reason": "原页及HEAD可访问，但2026-10-12本地页面内跨站加载实测失败；仅保留来源原页，不绕过站点限制。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://jnjtj.jinan.gov.cn/col/col15149/art/2026/art_1ed475235a414e318296579b6f6146a2.html",
+          "title": "济南市系列主题宣讲基层行走进市交通运输局",
+          "authorOrg": "济南市交通运输局",
+          "publicationYear": 2026,
+          "note": "由历下区大舜传说省级非遗传承人赵志刚讲述舜文化；仅支持传承人/地方传承，不把舜事当信史。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:48.462Z",
+              "reason": "",
+              "pageTitle": "济南市系列主题宣讲基层行走进市交通运输局"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:32.119Z",
+              "reason": "",
+              "pageTitle": "济南市系列主题宣讲基层行走进市交通运输局"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://m.thepaper.cn/newsDetail_forward_31825125",
+          "title": "当代演绎：千佛山重阳山会大舜巡游",
+          "authorOrg": "济南发布（济南市政府新闻办官方澎湃号）",
+          "publicationYear": null,
+          "note": "作品与现场照片原页；仅支持照片所述范围。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:38.504Z",
+              "reason": "",
+              "pageTitle": "10月25日至11月2日，济南千佛山第42届“九月九”重阳山会举行"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:14.505Z",
+              "reason": "",
+              "pageTitle": "10月25日至11月2日，济南千佛山第42届“九月九”重阳山会举行"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "image",
+          "url": "https://m.thepaper.cn/newsDetail_forward_31825125",
+          "title": "当代演绎：千佛山重阳山会大舜巡游（来源原页）",
+          "reuse": "原页及HEAD可访问，但2026-10-12本地页面内跨站加载实测失败；仅保留来源原页，不绕过站点限制。"
+        }
+      ]
+    },
+    {
+      "title": "闵子骞传说",
+      "category": "literature",
+      "region": "济南",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器；故事线索与版本辨读",
+        "sourceCount": 2,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已补调查／地方人物节目；传承人讲述的版本录音及转写尚未编目。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "url": "https://quehuaobs.ijntv.cn/58CE1F28EF5E42F6/QMTNRK_YUNSHI/3E294E7E62D34EEA85A8D2BF185EA259/10766add2e0e08722d90a7dba5807157.mp4",
+          "sourceUrl": "https://www.jinan.gov.cn/col/col73383/art/2025/art_2ea538ab260d46909c2335503eb5665d.html",
+          "title": "海右名士第三十三期：闵子骞",
+          "authorOrg": "济南广播电视台（济南市政府网转载）",
+          "format": "mp4",
+          "inlineVerified": true,
+          "httpStatus": 206,
+          "cors": "*",
+          "checkedAt": "2026-10-12",
+          "license": "引用原页公开视频，版权归原机构，不复制或重新分发媒体",
+          "reason": "济南政府转载页中的公开播放器MP4，HTTP与ftyp格式核验，浏览器实际播放由主代理验收。"
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.nopss.gov.cn/n1/2019/0610/c219470-31126949.html",
+          "title": "闵子骞孝行的文学流传",
+          "authorOrg": "全国哲学社会科学工作办公室",
+          "publicationYear": 2019,
+          "note": "梳理芦衣故事的文学流传与版本差异，指出故事传闻性质；适合故事排序，明确传说标签。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:48.916Z",
+              "reason": "",
+              "pageTitle": "闵子骞孝行的文学流传 - 全国哲学社会科学工作办公室"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:32.318Z",
+              "reason": "",
+              "pageTitle": "闵子骞孝行的文学流传 - 全国哲学社会科学工作办公室"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://www.jinan.gov.cn/col/col73383/art/2025/art_2ea538ab260d46909c2335503eb5665d.html",
+          "title": "海右名士第三十三期：闵子骞",
+          "authorOrg": "济南广播电视台（济南市政府网转载）",
+          "publicationYear": 2025,
+          "note": "作品与现场素材原页；仅支持素材所述范围。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:46:00.446Z",
+              "reason": "",
+              "pageTitle": "海右名士第三十三期：闵子骞"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "东方朔传说",
+      "category": "literature",
+      "region": "德州",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "2张真实图可切换图集；故事线索与版本辨读",
+        "sourceCount": 2,
+        "inlineAssetCount": 2
+      },
+      "remaining": "已补当代场景／演绎或文化地标图；地方讲述原声仍缺，图像不作为传说史实。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "image",
+          "url": "https://img8.iqilu.com/camimgs/2018/04/19/b68c0fc76eff49644ef8e51be5bd3d90.jpg",
+          "sourceUrl": "https://sdxw.iqilu.com/w/article/YS0yMS00NjcwNDQ2.html",
+          "title": "东方朔庙会当代纪念礼仪现场",
+          "authorOrg": "陵城融媒（齐鲁网·闪电新闻）",
+          "license": "版权归原发布方；仅引用原始链接并署名，原页未见明示必须书面授权；非开放授权。",
+          "width": 1000,
+          "height": 666,
+          "inlineVerified": true,
+          "reason": "已目视核验2018年东方朔庙会现代纪念活动；是地方纪念文化现场，不以影像证明古代事件。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        },
+        {
+          "kind": "image",
+          "url": "https://img8.iqilu.com/camimgs/2018/04/19/defeb2f290030b5ca1f5669f18971e3d.jpg",
+          "sourceUrl": "https://sdxw.iqilu.com/w/article/YS0yMS00NjcwNDQ2.html",
+          "title": "东方朔庙会当代纪念活动",
+          "authorOrg": "陵城融媒（齐鲁网·闪电新闻）",
+          "license": "版权归原发布方；仅引用原始链接并署名，原页未见明示必须书面授权；非开放授权。",
+          "width": 1000,
+          "height": 666,
+          "inlineVerified": true,
+          "reason": "已目视核验2018年东方朔庙会现代纪念活动；是地方纪念文化现场，不以影像证明古代事件。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://dzwww.com/2013/sdwsdt/dzwsdt/lxwsdt/lxywcs/201312/t20131211_9332213.htm",
+          "title": "东方朔传说:东方朔传为岁星下凡",
+          "authorOrg": "大众网山东文史地图",
+          "publicationYear": 2013,
+          "note": "陵县神头镇口承、岁星下凡故事与地方传承；历史人物和民间神话区分呈现。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:49.765Z",
+              "reason": "",
+              "pageTitle": "东方朔传说:东方朔传为岁星下凡_陵县轶闻传说_大众网"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:32.344Z",
+              "reason": "",
+              "pageTitle": "东方朔传说:东方朔传为岁星下凡_陵县轶闻传说_大众网"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://sdxw.iqilu.com/w/article/YS0yMS00NjcwNDQ2.html",
+          "title": "东方朔庙会当代纪念礼仪现场",
+          "authorOrg": "陵城融媒（齐鲁网·闪电新闻）",
+          "publicationYear": null,
+          "note": "作品与现场素材原页；仅支持素材所述范围。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:46:00.606Z",
+              "reason": "",
+              "pageTitle": "陵城区三月三东方朔庙会开幕"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "四女寺的传说",
+      "category": "literature",
+      "region": "德州",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "文本阅读、影像待补标识；故事线索与版本辨读",
+        "sourceCount": 1,
+        "inlineAssetCount": 0
+      },
+      "remaining": "尚缺核验过的现场／作品图、实录或原声；有文献来源，暂以阅读与原页入口呈现。",
+      "researchNotes": [
+        "原始研究考辨傅氏四女孝亲、宋氏姊妹与“四棵柳树”地名演变等说法；故事作为民间传说阅读，不当作可证地方史。",
+        "四女寺传说的非遗名录级别尚未核验。"
+      ],
+      "realAssets": [],
+      "sources": [
+        {
+          "url": "https://dzxyxb.dzu.edu.cn/__local/9/56/97/AE839DE5B15954E255800CABB27_94782008_36D848.pdf",
+          "title": "山东武城县四女祠传说考辨（德州学院学报，2020年第3期）",
+          "authorOrg": "德州学院学报（胡梦飞）",
+          "publicationYear": 2020,
+          "note": "胡梦飞原始研究，考辨傅氏四女、宋氏姊妹和“四棵柳树”地名演变等说法；未支持把其中任一解释认定唯一史实。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "skipped",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:50.168Z",
+              "reason": "non_text_resource",
+              "pageTitle": ""
+            },
+            {
+              "status": "skipped",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:33.455Z",
+              "reason": "non_text_resource",
+              "pageTitle": ""
+            }
+          ],
+          "candidateMediaNotApproved": false
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "孟姜女传说（淄博）",
+      "category": "literature",
+      "region": "淄博",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器；2张真实图可切换图集；故事线索与版本辨读",
+        "sourceCount": 3,
+        "inlineAssetCount": 3
+      },
+      "remaining": "已补调查／地方人物节目；传承人讲述的版本录音及转写尚未编目。",
+      "researchNotes": [
+        "本站原正文采用广泛流传的秦长城故事版本；来源页另介绍淄博博山的杞梁妻故事与悲歌哀哭习俗。",
+        "下方故事线索按非遗官网介绍的传说流变整理，可与原正文比较不同版本；传说情节不作为可证历史事实。"
+      ],
+      "realAssets": [
+        {
+          "kind": "video",
+          "url": "https://hls.cntv.lxdns.com/asp/hls/main/0303000a/3/default/164a84b12f0240c849b143abb34b71ca/main.m3u8?maxbr=2048",
+          "sourceUrl": "https://tv.cctv.com/2010/02/27/VIDE1384937048552975.shtml",
+          "title": "寻找孟姜女 下集",
+          "authorOrg": "中央广播电视总台央视网",
+          "format": "hls",
+          "duration": 1768,
+          "inlineVerified": true,
+          "license": "引用原站公开视频流，版权归原作者与机构；技术可嵌核验不代表开放授权，不复制或重新分发媒体",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 206,
+          "cors": "*",
+          "reason": "央视普通公开播放器实际URL；HLS主清单、子清单HTTP200、视频分片HTTP206且CORS*，非加密TS，浏览器播放待主代理验收。",
+          "note": "纪录片对传说流变与长城地点进行探寻；文化叙事与学术假说不等于历史定论。旧节目，仅用于比较传说版本。",
+          "poster": "https://p1.img.cctvpic.com/image/2009/tansuofaxian/2010/02/27/tansuofaxian_h264418000nero_aac32_20100227_1267214200771_2.jpg",
+          "posterHttpStatus": 206
+        },
+        {
+          "kind": "image",
+          "url": "https://edu.zibo.gov.cn/picture/0/fbc835fe63584313825c39cebecf09a4.jpg",
+          "sourceUrl": "https://edu.zibo.gov.cn/art/2022/9/28/art_3533_2328655.html",
+          "title": "孟姜女传说采风与民歌传承现场（一）",
+          "authorOrg": "淄博市教育局（淄川区教育和体育局）",
+          "license": "版权归原发布方；仅引用原始链接并署名，原页未见明示必须书面授权；非开放授权。",
+          "width": 500,
+          "height": 333,
+          "inlineVerified": true,
+          "reason": "已目视核验两张为孟凡智与教师团队采风、教唱民歌现场；官方页明确《孟姜女传说》与传统小调的传承活动，HTTP200且浏览器可加载。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        },
+        {
+          "kind": "image",
+          "url": "https://edu.zibo.gov.cn/picture/0/2145238a2df74c489cef80c9d549c6ca.jpg",
+          "sourceUrl": "https://edu.zibo.gov.cn/art/2022/9/28/art_3533_2328655.html",
+          "title": "孟姜女传说采风与民歌传承现场（二）",
+          "authorOrg": "淄博市教育局（淄川区教育和体育局）",
+          "license": "版权归原发布方；仅引用原始链接并署名，原页未见明示必须书面授权；非开放授权。",
+          "width": 500,
+          "height": 333,
+          "inlineVerified": true,
+          "reason": "已目视核验两张为孟凡智与教师团队采风、教唱民歌现场；官方页明确《孟姜女传说》与传统小调的传承活动，HTTP200且浏览器可加载。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.ihchina.cn/project_details/12192/",
+          "title": "孟姜女传说",
+          "authorOrg": "中国非物质文化遗产网",
+          "publicationYear": null,
+          "note": "淄博国家级Ⅰ-8；源于杞梁妻故事，博山悲歌哀哭习俗。官方叙述不同于库中秦长城版本，适合并列版本比较。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:50.289Z",
+              "reason": "",
+              "pageTitle": "孟姜女传说 - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:32:33.658Z",
+              "reason": "",
+              "pageTitle": "孟姜女传说 - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://tv.cctv.com/2010/02/27/VIDE1384937048552975.shtml",
+          "title": "寻找孟姜女 下集",
+          "authorOrg": "中央广播电视总台央视网",
+          "publicationYear": 2010,
+          "note": "纪录片对传说流变与长城地点进行探寻；文化叙事与学术假说不等于历史定论。旧节目，仅用于比较传说版本。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:46:01.611Z",
+              "reason": "",
+              "pageTitle": "寻找孟姜女 下集_CCTV节目官网-CCTV-10_央视网(cctv.com)"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://edu.zibo.gov.cn/art/2022/9/28/art_3533_2328655.html",
+          "title": "孟姜女传说采风与民歌传承现场（一）",
+          "authorOrg": "淄博市教育局（淄川区教育和体育局）",
+          "publicationYear": 2022,
+          "note": "作品与现场素材原页；仅支持素材所述范围。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:46:02.020Z",
+              "reason": "",
+              "pageTitle": "淄博市教育局 区县采风 淄川区：探寻非遗文化 传承乡音乡情"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "牛郎织女传说（沂源）",
+      "category": "literature",
+      "region": "淄博",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器；故事线索与版本辨读",
+        "sourceCount": 2,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已补调查／地方人物节目；传承人讲述的版本录音及转写尚未编目。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "sourceUrl": "https://tv.cctv.com/2010/05/18/VIDE1384937047438877.shtml",
+          "authorOrg": "中央广播电视总台央视网",
+          "license": "引用原站公开视频流，版权归原作者与机构；技术可嵌核验不代表开放授权，不复制或重新分发媒体",
+          "checkedAt": "2026-10-12",
+          "url": "https://hls.cntv.lxdns.com/asp/hls/main/0303000a/3/default/bc18ef40eb664de3cab6fa855bfef9ea/main.m3u8?maxbr=2048",
+          "title": "沂源牛郎织女寻踪",
+          "format": "hls",
+          "duration": 2279.68,
+          "playerApi": "https://vdn.apps.cntv.cn/api/getHttpVideoInfo.do?pid=bc18ef40eb664de3cab6fa855bfef9ea",
+          "httpStatus": 206,
+          "inlineVerified": true,
+          "cors": "*",
+          "reason": "公开播放器实际URL；HTTP与媒体格式已核验。HLS主清单、子清单与视频分片允许跨站读取，浏览器播放由主代理继续验收。"
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.ihchina.cn/Article/Index/detail?id=12254",
+          "title": "牛郎织女传说",
+          "authorOrg": "中国非物质文化遗产网",
+          "publicationYear": null,
+          "note": "沂源县国家级Ⅰ-36；星宿意象、男耕女织、七夕乞巧、地方遗迹；不要将地方化传说视为人物生活实证。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:50.912Z",
+              "reason": "",
+              "pageTitle": "牛郎织女传说 - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            },
+            {
+              "status": "failed",
+              "httpStatus": null,
+              "checkedAt": "2026-10-12T13:32:34.153Z",
+              "reason": "timeout",
+              "pageTitle": ""
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://tv.cctv.com/2010/05/18/VIDE1384937047438877.shtml",
+          "title": "沂源牛郎织女寻踪",
+          "authorOrg": "央视网",
+          "publicationYear": null,
+          "note": "影像资料原页，用于对照观察。央视原页观看；旧节目，仅用于传说地方化研究，不作当下旅游信息",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:51.426Z",
+              "reason": "",
+              "pageTitle": "沂源牛郎织女寻踪_CCTV节目官网-CCTV-10_央视网(cctv.com)"
+            },
+            {
+              "status": "failed",
+              "httpStatus": null,
+              "checkedAt": "2026-10-12T13:32:34.827Z",
+              "reason": "timeout",
+              "pageTitle": ""
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "video",
+          "url": "https://tv.cctv.com/2010/05/18/VIDE1384937047438877.shtml",
+          "title": "沂源牛郎织女寻踪",
+          "reuse": "央视原页观看；旧节目，仅用于传说地方化研究，不作当下旅游信息"
+        }
+      ]
+    },
+    {
+      "title": "董永传说",
+      "category": "literature",
+      "region": "滨州",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "公有领域图像文献（注明作者／年代）；故事线索与版本辨读",
+        "sourceCount": 2,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已补后世图像文献，明确年代与作者；非地方传承现场、非古人真实肖像；地方讲述原声仍缺。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "image",
+          "url": "https://upload.wikimedia.org/wikipedia/commons/1/1b/%E8%91%A3%E5%AD%9D%E5%AD%90%E5%83%8F%EF%BC%88%E5%8F%A4%E8%81%96%E8%B3%A2%E5%83%8F%E5%82%B3%E7%95%A7%EF%BC%89.jpg",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:%E8%91%A3%E5%AD%9D%E5%AD%90%E5%83%8F%EF%BC%88%E5%8F%A4%E8%81%96%E8%B3%A2%E5%83%8F%E5%82%B3%E7%95%A7%EF%BC%89.jpg",
+          "title": "图像文献：1830年《古圣贤像传略》董孝子像",
+          "authorOrg": "孔莲卿绘；Wikimedia Commons公开馆藏扫描",
+          "license": "Public domain（Commons文件原页PD-old／CC-PD-Mark）",
+          "width": 774,
+          "height": 1091,
+          "inlineVerified": true,
+          "reason": "Commons API明示作者孔莲卿、1830年、取自《古圣贤像传略》、公有领域；浏览器逐张核验题签董孝子像。属于后世图像文献，不是汉代董永真实肖像，也不是博兴现场实拍。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200,
+          "presentation": "archive",
+          "note": "1830年后世图像文献，用于观察董永形象的传播；不是汉代真实肖像或博兴现场实拍。"
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.sdpcc.com/article/12091",
+          "title": "孝子董永",
+          "authorOrg": "山东公共文化云·滨州市博兴县文化馆",
+          "publicationYear": 2022,
+          "note": "文化馆介绍董永卖身葬父与天仙配题材，人物从史事/孝子叙事到神话演变。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:51.490Z",
+              "reason": "",
+              "pageTitle": "孝子董永_滨州市博兴县文化馆_山东公共文化云"
+            },
+            {
+              "status": "failed",
+              "httpStatus": null,
+              "checkedAt": "2026-10-12T13:32:34.888Z",
+              "reason": "timeout",
+              "pageTitle": ""
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://commons.wikimedia.org/wiki/File:%E8%91%A3%E5%AD%9D%E5%AD%90%E5%83%8F%EF%BC%88%E5%8F%A4%E8%81%96%E8%B3%A2%E5%83%8F%E5%82%B3%E7%95%A7%EF%BC%89.jpg",
+          "title": "图像文献：1830年《古圣贤像传略》董孝子像",
+          "authorOrg": "孔莲卿绘；Wikimedia Commons公开馆藏扫描",
+          "publicationYear": null,
+          "note": "1830年后世图像文献，用于观察董永形象的传播；不是汉代真实肖像或博兴现场实拍。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:53:29.833Z",
+              "reason": "",
+              "pageTitle": "File:董孝子像（古聖賢像傳畧）.jpg - Wikimedia Commons"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "丈八佛传说",
+      "category": "literature",
+      "region": "滨州",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "文本阅读、影像待补标识；故事线索与版本辨读",
+        "sourceCount": 2,
+        "inlineAssetCount": 0
+      },
+      "remaining": "HEAD200但浏览器实际返回400×400灰色占位，非活动照片；禁用此URL，保留原页来源，待其他公开真素材。",
+      "researchNotes": [
+        "文化和旅游部原页证实博兴兴国寺丈八佛作为地方文旅资源；未足以证实所有灵验故事和本条目的非遗级别。"
+      ],
+      "realAssets": [
+        {
+          "kind": "image",
+          "url": "https://img5.iqilu.com/c/u/2017/0204/1486201156694.jpg",
+          "sourceUrl": "https://binzhou.iqilu.com/bzminsheng/2017/0204/3370439.shtml",
+          "title": "博兴丈八佛庙会现场",
+          "authorOrg": "齐鲁网（转载大众网，记者吕云龙）",
+          "license": "版权归原发布方；仅引用原始链接并署名，原页未见明示必须书面授权；非开放授权。",
+          "width": 400,
+          "height": 400,
+          "inlineVerified": false,
+          "reason": "HEAD200但浏览器实际返回400×400灰色占位，非活动照片；禁用此URL，保留原页来源，待其他公开真素材。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.mct.gov.cn/whzx/qgwhxxlb/sd/202312/t20231204_950081.htm",
+          "title": "山东博兴：文旅融合为乡村振兴赋彩",
+          "authorOrg": "文化和旅游部",
+          "publicationYear": 2023,
+          "note": "支持博兴湖滨镇丈八佛村的兴国寺丈八佛文旅资源；并不证实库中所有灵验故事或市级非遗级别，保留待核提示。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:52.054Z",
+              "reason": "",
+              "pageTitle": "山东博兴：文旅融合为乡村振兴赋彩"
+            },
+            {
+              "status": "blocked",
+              "httpStatus": null,
+              "checkedAt": "2026-10-12T13:32:54.478Z",
+              "reason": "dns_lookup_failed",
+              "pageTitle": ""
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://binzhou.iqilu.com/bzminsheng/2017/0204/3370439.shtml",
+          "title": "博兴丈八佛庙会现场",
+          "authorOrg": "齐鲁网（转载大众网，记者吕云龙）",
+          "publicationYear": 2017,
+          "note": "作品与现场素材原页；仅支持素材所述范围。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:46:02.170Z",
+              "reason": "",
+              "pageTitle": "过完年来赶庙会 博兴千年古佛庙会人气爆棚_滨州民生_滨州_齐鲁网"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "image",
+          "url": "https://binzhou.iqilu.com/bzminsheng/2017/0204/3370439.shtml",
+          "title": "博兴丈八佛庙会现场（来源原页）",
+          "reuse": "HEAD200但浏览器实际返回400×400灰色占位，非活动照片；禁用此URL，保留原页来源，待其他公开真素材。"
+        }
+      ]
+    },
+    {
+      "title": "甏肉干饭",
+      "category": "food_opera",
+      "region": "济宁",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器；1张真实图像",
+        "sourceCount": 2,
+        "inlineAssetCount": 2
+      },
+      "remaining": "已有真实制作／表演视频及原声；独立唱段转写与分段标注尚未编目。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "url": "https://hls.cntv.lxdns.com/asp/hls/main/0303000a/3/default/ace4eebf32004975b370974023bb0494/main.m3u8?maxbr=2048",
+          "sourceUrl": "https://tv.cctv.com/2024/05/30/VIDEjrQIzbW3JXULy8JWoIOX240530.shtml",
+          "title": "[味道]街巷食味（9） 甏肉干饭在任城落地生根",
+          "authorOrg": "中央广播电视总台央视网",
+          "poster": "https://p4.img.cctvpic.com/fmspic/2024/05/30/ace4eebf32004975b370974023bb0494-1.jpg",
+          "format": "hls",
+          "duration": 383.24,
+          "inlineVerified": true,
+          "license": "引用原站公开视频流，版权归原作者与机构；技术可嵌核验不代表开放授权，不复制或重新分发媒体",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 206,
+          "cors": "*",
+          "reason": "央视普通公开播放器实际URL；HLS主清单、子清单HTTP200、视频分片HTTP206且CORS*，非加密TS；浏览器实际播放待主代理验收。"
+        },
+        {
+          "kind": "image",
+          "url": "https://www.jining.gov.cn/picture/-1/66722f20eb3e419280009d762b9ba3ce.png",
+          "sourceUrl": "https://www.jining.gov.cn/art/2025/4/7/art_65758_2898310.html",
+          "title": "甏肉干饭：炖制五花肉实拍",
+          "authorOrg": "济宁市人民政府",
+          "license": "未发现开放许可；版权归来源机构/作者，未复制下载。",
+          "width": 1024,
+          "height": 576,
+          "inlineVerified": true,
+          "reason": "原页甏肉干饭正文唯一配图；已目视确认锅中炖制五花肉，HTTP 200，1024×576。未发现开放许可，保留来源署名与原页，不作本地复制。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.jining.gov.cn/art/2025/4/7/art_65758_2898310.html",
+          "title": "甏肉干饭",
+          "authorOrg": "济宁市人民政府",
+          "publicationYear": 2025,
+          "note": "以陶器甏炖五花肉，卷煎、面筋、豆腐皮、鸡蛋与米饭搭配。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:52.800Z",
+              "reason": "",
+              "pageTitle": "济宁市人民政府 济宁美食 甏肉干饭"
+            },
+            {
+              "status": "blocked",
+              "httpStatus": null,
+              "checkedAt": "2026-10-12T13:32:54.481Z",
+              "reason": "dns_lookup_failed",
+              "pageTitle": ""
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://tv.cctv.com/2024/05/30/VIDEjrQIzbW3JXULy8JWoIOX240530.shtml",
+          "title": "[味道]街巷食味（9） 甏肉干饭在任城落地生根",
+          "authorOrg": "中央广播电视总台央视网",
+          "publicationYear": 2024,
+          "note": "作品与现场素材原页；仅支持素材所述范围。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:46:03.270Z",
+              "reason": "",
+              "pageTitle": "[味道]街巷食味（9） 甏肉干饭在任城落地生根"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "image",
+          "url": "https://www.jining.gov.cn/art/2025/4/7/art_65758_2898310.html",
+          "title": "甏肉干饭原页配图",
+          "reuse": "未发现开放许可，仅原页观看"
+        }
+      ]
+    },
+    {
+      "title": "四平调（金乡四平调）",
+      "category": "food_opera",
+      "region": "济宁",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器",
+        "sourceCount": 3,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已有真实制作／表演视频及原声；独立唱段转写与分段标注尚未编目。",
+      "researchNotes": [
+        "非遗官网列出主奏乐器高胡；原档案中的泛化伴奏字段仍需复核。"
+      ],
+      "realAssets": [
+        {
+          "kind": "video",
+          "sourceUrl": "https://tv.cctv.com/2023/08/12/VIDEy9h3MQCSK7lKouTsBDBA230812.shtml",
+          "authorOrg": "中央广播电视总台央视网",
+          "license": "引用原站公开视频流，版权归原作者与机构；技术可嵌核验不代表开放授权，不复制或重新分发媒体",
+          "checkedAt": "2026-10-12",
+          "url": "https://hls.cntv.lxdns.com/asp/hls/main/0303000a/3/default/f49a7b33d2a8469aa50bd0e75b56bb78/main.m3u8?maxbr=2048",
+          "title": "[欢乐大猜想]金乡四平调名称的由来是什么？",
+          "format": "hls",
+          "duration": 467.24,
+          "poster": "https://p5.img.cctvpic.com/fmspic/2023/08/12/f49a7b33d2a8469aa50bd0e75b56bb78-1.jpg",
+          "playerApi": "https://vdn.apps.cntv.cn/api/getHttpVideoInfo.do?pid=f49a7b33d2a8469aa50bd0e75b56bb78",
+          "httpStatus": 206,
+          "inlineVerified": true,
+          "cors": "*",
+          "reason": "公开播放器实际URL；HTTP与媒体格式已核验。HLS主清单、子清单与视频分片允许跨站读取，浏览器播放由主代理继续验收。",
+          "posterHttpStatus": 206
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.ihchina.cn/project_details/13253/",
+          "title": "四平调",
+          "authorOrg": "中国非物质文化遗产网",
+          "publicationYear": null,
+          "note": "金乡县项目Ⅳ-50；平调板式、四句旋律、以高胡为主要伴奏乐器。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:53.247Z",
+              "reason": "",
+              "pageTitle": "四平调 - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            },
+            {
+              "status": "blocked",
+              "httpStatus": null,
+              "checkedAt": "2026-10-12T13:32:54.482Z",
+              "reason": "dns_lookup_failed",
+              "pageTitle": ""
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://tv.cctv.com/2023/08/12/VIDEUWPBAHmpX1rKWyKiRYpc230812.shtml",
+          "title": "《欢乐大猜想》20230812（金乡四平调）",
+          "authorOrg": "央视网",
+          "publicationYear": null,
+          "note": "影像资料原页，用于对照观察。央视官方原页播放器观看；未核验跨站嵌入或素材复制许可",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:53.982Z",
+              "reason": "",
+              "pageTitle": "《欢乐大猜想》 20230812"
+            },
+            {
+              "status": "blocked",
+              "httpStatus": null,
+              "checkedAt": "2026-10-12T13:32:54.483Z",
+              "reason": "dns_lookup_failed",
+              "pageTitle": ""
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://tv.cctv.com/2023/08/12/VIDEy9h3MQCSK7lKouTsBDBA230812.shtml",
+          "title": "[欢乐大猜想]金乡四平调名称的由来是什么？",
+          "authorOrg": "中央广播电视总台央视网",
+          "publicationYear": null,
+          "note": "真实影音原页，供观察节目所展示的内容；原节目版权归来源机构。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "blocked",
+              "httpStatus": null,
+              "checkedAt": "2026-10-12T13:32:54.484Z",
+              "reason": "dns_lookup_failed",
+              "pageTitle": ""
+            },
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:46:03.830Z",
+              "reason": "",
+              "pageTitle": "[欢乐大猜想]金乡四平调名称的由来是什么？"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "video",
+          "url": "https://tv.cctv.com/2023/08/12/VIDEUWPBAHmpX1rKWyKiRYpc230812.shtml",
+          "title": "《欢乐大猜想》20230812（金乡四平调）",
+          "reuse": "央视官方原页播放器观看；未核验跨站嵌入或素材复制许可"
+        }
+      ]
+    },
+    {
+      "title": "泰山豆腐宴",
+      "category": "food_opera",
+      "region": "泰安",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "2张真实图可切换图集",
+        "sourceCount": 2,
+        "inlineAssetCount": 2
+      },
+      "remaining": "已有现场／食品图像；制作实录或可核验原声唱段仍缺。",
+      "researchNotes": [
+        "官方介绍将泰山豆腐宴视为豆腐传统制作技艺的活态呈现；独立的国家级名录名称是豆腐传统制作技艺。"
+      ],
+      "realAssets": [
+        {
+          "kind": "image",
+          "url": "https://whlyj.taian.gov.cn/picture/0/s_9b6f3b8a053a4f3c9c1e5787e45ef774.jpg",
+          "sourceUrl": "https://whlyj.taian.gov.cn/art/2026/3/12/art_365230_10311647.html",
+          "title": "泰山豆腐宴菜品实拍",
+          "authorOrg": "泰安市文化和旅游局",
+          "license": "版权归原发布方；仅引用原始链接并署名，未发现本页明确禁止引用图片的声明，不视为开放授权。",
+          "width": 500,
+          "height": 250,
+          "inlineVerified": true,
+          "reason": "官方《泰山豆腐宴》专页两张菜肴照片均已浏览器目视；不把豆腐宴与豆腐制作技艺名录混同。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        },
+        {
+          "kind": "image",
+          "url": "https://whlyj.taian.gov.cn/picture/0/s_3336d739787d41e2b0af0411ce7becc9.png",
+          "sourceUrl": "https://whlyj.taian.gov.cn/art/2026/3/12/art_365230_10311647.html",
+          "title": "泰山豆腐菜肴实拍",
+          "authorOrg": "泰安市文化和旅游局",
+          "license": "版权归原发布方；仅引用原始链接并署名，未发现本页明确禁止引用图片的声明，不视为开放授权。",
+          "width": 500,
+          "height": 335,
+          "inlineVerified": true,
+          "reason": "官方《泰山豆腐宴》专页两张菜肴照片均已浏览器目视；不把豆腐宴与豆腐制作技艺名录混同。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://whlyj.taian.gov.cn/art/2026/4/13/art_366263_10312080.html",
+          "title": "我们最喜欢吃各地美食，能不能给我讲讲泰安有哪些美食？",
+          "authorOrg": "泰安市文化和旅游局",
+          "publicationYear": 2026,
+          "note": "明确泰山豆腐宴是豆腐传统制作技艺的活态展示方式；国家级项目是技艺，不能把宴席概念当独立名录名。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:54.394Z",
+              "reason": "",
+              "pageTitle": "泰安市文化和旅游局 泰安旅游服务指南 我们最喜欢吃各地美食，能不能给我讲讲泰安有哪些美食？"
+            },
+            {
+              "status": "blocked",
+              "httpStatus": null,
+              "checkedAt": "2026-10-12T13:32:54.484Z",
+              "reason": "dns_lookup_failed",
+              "pageTitle": ""
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://whlyj.taian.gov.cn/art/2026/3/12/art_365230_10311647.html",
+          "title": "泰山豆腐宴菜品实拍",
+          "authorOrg": "泰安市文化和旅游局",
+          "publicationYear": 2026,
+          "note": "作品与现场照片原页；仅支持照片所述范围。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:46:04.286Z",
+              "reason": "",
+              "pageTitle": "泰安市文化和旅游局 泰安市非遗项目 泰山豆腐宴"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "山东梆子（泰安）",
+      "category": "food_opera",
+      "region": "泰安",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器",
+        "sourceCount": 2,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已有真实制作／表演视频及原声；独立唱段转写与分段标注尚未编目。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "sourceUrl": "https://tv.cctv.com/v/v1/VIDE1355619984056451.html",
+          "authorOrg": "中央广播电视总台央视网",
+          "license": "引用原站公开视频流，版权归原作者与机构；技术可嵌核验不代表开放授权，不复制或重新分发媒体",
+          "checkedAt": "2026-10-12",
+          "url": "https://hls.cntv.lxdns.com/asp/hls/main/0303000a/3/default/afda2bf0b6704d5b05c49db0db3dfdd5/main.m3u8?maxbr=2048",
+          "title": "山东梆子 泰山石敢当 2-3",
+          "format": "hls",
+          "duration": 1814,
+          "playerApi": "https://vdn.apps.cntv.cn/api/getHttpVideoInfo.do?pid=afda2bf0b6704d5b05c49db0db3dfdd5",
+          "httpStatus": 206,
+          "inlineVerified": true,
+          "cors": "*",
+          "reason": "公开播放器实际URL；HTTP与媒体格式已核验。HLS主清单、子清单与视频分片允许跨站读取，浏览器播放由主代理继续验收。",
+          "posterHttpStatus": 0
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.ihchina.cn/project_details/13521/",
+          "title": "山东梆子",
+          "authorOrg": "中国非物质文化遗产网",
+          "publicationYear": null,
+          "note": "项目Ⅳ-118，泰安市保护单位；梆子、板胡等伴奏与唱腔特征。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:54.397Z",
+              "reason": "",
+              "pageTitle": "山东梆子 - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            },
+            {
+              "status": "blocked",
+              "httpStatus": null,
+              "checkedAt": "2026-10-12T13:32:54.485Z",
+              "reason": "dns_lookup_failed",
+              "pageTitle": ""
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://tv.cctv.com/v/v1/VIDE1355619984056451.html",
+          "title": "山东梆子《泰山石敢当》2-3（泰安市山东梆子剧团）",
+          "authorOrg": "央视网",
+          "publicationYear": null,
+          "note": "影像资料原页，用于对照观察。央视官方原页播放器观看；未核验跨站嵌入或素材复制许可",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:55.289Z",
+              "reason": "",
+              "pageTitle": "山东梆子 泰山石敢当 2-3"
+            },
+            {
+              "status": "blocked",
+              "httpStatus": null,
+              "checkedAt": "2026-10-12T13:32:54.486Z",
+              "reason": "dns_lookup_failed",
+              "pageTitle": ""
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "video",
+          "url": "https://tv.cctv.com/v/v1/VIDE1355619984056451.html",
+          "title": "山东梆子《泰山石敢当》2-3（泰安市山东梆子剧团）",
+          "reuse": "央视官方原页播放器观看；未核验跨站嵌入或素材复制许可"
+        }
+      ]
+    },
+    {
+      "title": "临清什香面",
+      "category": "food_opera",
+      "region": "聊城",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器",
+        "sourceCount": 2,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已有真实制作／表演视频及原声；独立唱段转写与分段标注尚未编目。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "url": "https://hls.cntv.lxdns.com/asp/hls/main/0303000a/3/default/ac4bbc091e3d485db93d74b5cc8a3001/main.m3u8?maxbr=2048",
+          "sourceUrl": "https://tv.cctv.com/2025/12/20/VIDEnwPA8G0IH9aaMPC764nJ251220.shtml",
+          "title": "《乐游新乡村》 20251220 沿着运河游古城",
+          "authorOrg": "中央广播电视总台央视网",
+          "format": "hls",
+          "duration": 2999.88,
+          "inlineVerified": true,
+          "license": "引用原站公开视频流，版权归原作者与机构；技术可嵌核验不代表开放授权，不复制或重新分发媒体",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 206,
+          "cors": "*",
+          "reason": "央视普通公开播放器实际URL；HLS主清单、子清单HTTP200、视频分片HTTP206且CORS*，非加密TS，浏览器播放待主代理验收。",
+          "note": "《乐游新乡村》临清整期节目，第一站跟随非遗传承人买菜码、学做什香面；后续还包含园林、钞关、贡砖等临清内容。章节时间尚未核定。",
+          "poster": "https://p1.img.cctvpic.com/fmspic/2025/12/20/ac4bbc091e3d485db93d74b5cc8a3001-1.jpg",
+          "posterHttpStatus": 206
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://zhuanti.mct.gov.cn/mmyghcyt2023/hjgn/detail/4996.html",
+          "title": "山东·“春‘运’来临 千年运河文化”之旅",
+          "authorOrg": "文化和旅游部",
+          "publicationYear": 2023,
+          "note": "明确什读shí、取什锦之意，也称十香面，菜码品种多样；套餐配菜随厨师与季节变化。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:55.688Z",
+              "reason": "",
+              "pageTitle": "山东·“春‘运’来临 千年运河文化”之旅"
+            },
+            {
+              "status": "blocked",
+              "httpStatus": null,
+              "checkedAt": "2026-10-12T13:32:54.486Z",
+              "reason": "dns_lookup_failed",
+              "pageTitle": ""
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://tv.cctv.com/2025/12/20/VIDEnwPA8G0IH9aaMPC764nJ251220.shtml",
+          "title": "《乐游新乡村》 20251220 沿着运河游古城",
+          "authorOrg": "中央广播电视总台央视网",
+          "publicationYear": 2025,
+          "note": "《乐游新乡村》临清整期节目，第一站跟随非遗传承人买菜码、学做什香面；后续还包含园林、钞关、贡砖等临清内容。章节时间尚未核定。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T13:53:31.920Z",
+              "reason": "",
+              "pageTitle": "《乐游新乡村》 20251220 沿着运河游古城"
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": []
+    },
+    {
+      "title": "聊城八角鼓",
+      "category": "food_opera",
+      "region": "聊城",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "2张真实图可切换图集",
+        "sourceCount": 1,
+        "inlineAssetCount": 2
+      },
+      "remaining": "已有现场／食品图像；制作实录或可核验原声唱段仍缺。",
+      "researchNotes": [
+        "八角鼓属于说唱曲艺；本页现场照片展示传承人与师生体验，尚未收录可核验的原声唱段。"
+      ],
+      "realAssets": [
+        {
+          "kind": "image",
+          "url": "https://yyx.lcudcc.edu.cn/__local/F/71/0D/A4592BCF66FF8E58746B031A63F_C082E8AC_1A959.jpg",
+          "sourceUrl": "https://yyx.lcudcc.edu.cn/info/1087/2162.htm",
+          "title": "聊城八角鼓：商景刚传承人校园讲解",
+          "authorOrg": "聊城大学东昌学院音乐系",
+          "license": "未发现开放许可；版权归来源机构/作者，未复制下载。",
+          "width": 1024,
+          "height": 768,
+          "inlineVerified": true,
+          "reason": "原页讲座照片；已目视确认传承人持鼓讲解，HTTP 200，1024×768。未发现开放许可，保留机构与原页。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        },
+        {
+          "kind": "image",
+          "url": "https://yyx.lcudcc.edu.cn/__local/0/F7/DA/1889376CB7707DB229E15A079FB_A70F8A8C_203C0.jpg",
+          "sourceUrl": "https://yyx.lcudcc.edu.cn/info/1087/2162.htm",
+          "title": "聊城八角鼓：师生击节体验现场",
+          "authorOrg": "聊城大学东昌学院音乐系",
+          "license": "未发现开放许可；版权归来源机构/作者，未复制下载。",
+          "width": 1024,
+          "height": 768,
+          "inlineVerified": true,
+          "reason": "原页击节互动照片；已目视确认课堂师生互动，HTTP 200，1024×768。未发现开放许可，保留机构与原页。",
+          "checkedAt": "2026-10-12",
+          "httpStatus": 200
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://yyx.lcudcc.edu.cn/info/1087/2162.htm",
+          "title": "非遗传承人进校园 聊城八角鼓奏新歌",
+          "authorOrg": "聊城大学东昌学院音乐系",
+          "publicationYear": 2022,
+          "note": "商景刚传承人讲解，现场演示拍、弹、搓、碰、摇手法；曲艺与戏曲应区别，互动不以泛戏曲脸谱代替。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:57.301Z",
+              "reason": "",
+              "pageTitle": "非遗传承人进校园 聊城八角鼓奏新歌-聊城大学东昌学院音乐系"
+            },
+            {
+              "status": "blocked",
+              "httpStatus": null,
+              "checkedAt": "2026-10-12T13:32:54.487Z",
+              "reason": "dns_lookup_failed",
+              "pageTitle": ""
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "image",
+          "url": "https://yyx.lcudcc.edu.cn/info/1087/2162.htm",
+          "title": "八角鼓校园展示与传承人照片（原页）",
+          "reuse": "未发现开放许可，仅原页观看"
+        }
+      ]
+    },
+    {
+      "title": "滨州锅子饼",
+      "category": "food_opera",
+      "region": "滨州",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器",
+        "sourceCount": 1,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已有真实制作／表演视频及原声；独立唱段转写与分段标注尚未编目。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "sourceUrl": "https://tv.cctv.com/2018/06/20/VIDEoTrBWEXxq1KiD5igodJO180620.shtml",
+          "authorOrg": "中央广播电视总台央视网",
+          "license": "引用原站公开视频流，版权归原作者与机构；技术可嵌核验不代表开放授权，不复制或重新分发媒体",
+          "checkedAt": "2026-10-12",
+          "url": "https://hls.cntv.lxdns.com/asp/hls/main/0303000a/3/default/b543afe88c064a09ac903fb3c2d6ef45/main.m3u8?maxbr=2048",
+          "title": "《回家吃饭》 20180620 波罗叶饼 滨州锅子饼",
+          "format": "hls",
+          "duration": 1289,
+          "poster": "https://p2.img.cctvpic.com/fmspic/2018/06/20/b543afe88c064a09ac903fb3c2d6ef45-19.jpg",
+          "playerApi": "https://vdn.apps.cntv.cn/api/getHttpVideoInfo.do?pid=b543afe88c064a09ac903fb3c2d6ef45",
+          "httpStatus": 206,
+          "inlineVerified": true,
+          "cors": "*",
+          "reason": "公开播放器实际URL；HTTP与媒体格式已核验。HLS主清单、子清单与视频分片允许跨站读取，浏览器播放由主代理继续验收。",
+          "posterHttpStatus": 206
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://tv.cctv.com/2018/06/20/VIDEoTrBWEXxq1KiD5igodJO180620.shtml",
+          "title": "《回家吃饭》20180620 波罗叶饼 滨州锅子饼",
+          "authorOrg": "央视网",
+          "publicationYear": 2018,
+          "note": "厨师示范滨州锅子饼，饼皮包裹馅料；节目还含波罗叶饼，不能把其素材误标为锅子饼。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:57.637Z",
+              "reason": "",
+              "pageTitle": "《回家吃饭》 20180620 波罗叶饼 滨州锅子饼_CCTV节目官网-CCTV-2_央视网(cctv.com)"
+            },
+            {
+              "status": "blocked",
+              "httpStatus": null,
+              "checkedAt": "2026-10-12T13:32:54.488Z",
+              "reason": "dns_lookup_failed",
+              "pageTitle": ""
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "video",
+          "url": "https://tv.cctv.com/2018/06/20/VIDEoTrBWEXxq1KiD5igodJO180620.shtml",
+          "title": "《回家吃饭》20180620 滨州锅子饼示范",
+          "reuse": "央视官方原页播放器观看；未核验跨站嵌入或素材复制许可"
+        }
+      ]
+    },
+    {
+      "title": "沾化渔鼓戏",
+      "category": "food_opera",
+      "region": "滨州",
+      "before": {
+        "mountedImage": false,
+        "video": false,
+        "audio": false,
+        "interaction": false,
+        "linkedSources": 0
+      },
+      "after": {
+        "visualization": "直接显示来源视频播放器",
+        "sourceCount": 2,
+        "inlineAssetCount": 1
+      },
+      "remaining": "已有真实制作／表演视频及原声；独立唱段转写与分段标注尚未编目。",
+      "researchNotes": [],
+      "realAssets": [
+        {
+          "kind": "video",
+          "sourceUrl": "https://tv.cctv.com/2026/07/27/VIDEoHTGbvVnWmNkKfvjpBKt260727.shtml",
+          "authorOrg": "中央广播电视总台央视网",
+          "license": "引用原站公开视频流，版权归原作者与机构；技术可嵌核验不代表开放授权，不复制或重新分发媒体",
+          "checkedAt": "2026-10-12",
+          "url": "https://hls.cntv.lxdns.com/asp/hls/main/0303000a/3/default/cc21ea9ce8674d3783a7d90b7854d65e/main.m3u8?maxbr=2048",
+          "title": "[生财有道]国家级非物质文化遗产代表性项目——沾化渔鼓戏",
+          "format": "hls",
+          "duration": 159.56,
+          "poster": "https://p1.img.cctvpic.com/fmspic/2026/07/27/cc21ea9ce8674d3783a7d90b7854d65e-1.jpg",
+          "playerApi": "https://vdn.apps.cntv.cn/api/getHttpVideoInfo.do?pid=cc21ea9ce8674d3783a7d90b7854d65e",
+          "httpStatus": 206,
+          "inlineVerified": true,
+          "cors": "*",
+          "reason": "公开播放器实际URL；HTTP与媒体格式已核验。HLS主清单、子清单与视频分片允许跨站读取，浏览器播放由主代理继续验收。",
+          "posterHttpStatus": 206
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.ihchina.cn/project_details/13323.html",
+          "title": "道情戏（沾化渔鼓戏）",
+          "authorOrg": "中国非物质文化遗产网",
+          "publicationYear": null,
+          "note": "国家级Ⅳ-71；渔鼓道情、地方歌舞、渔民号子与三句一番唱词。",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:57.893Z",
+              "reason": "",
+              "pageTitle": "道情戏（沾化渔鼓戏） - 中国非物质文化遗产网·中国非物质文化遗产数字博物馆 - 中国非物质文化遗产网非遗"
+            },
+            {
+              "status": "blocked",
+              "httpStatus": null,
+              "checkedAt": "2026-10-12T13:32:54.488Z",
+              "reason": "dns_lookup_failed",
+              "pageTitle": ""
+            }
+          ],
+          "candidateMediaNotApproved": true
+        },
+        {
+          "url": "https://tv.cctv.com/2026/07/27/VIDEoHTGbvVnWmNkKfvjpBKt260727.shtml",
+          "title": "[生财有道]国家级非物质文化遗产代表性项目——沾化渔鼓戏",
+          "authorOrg": "央视网",
+          "publicationYear": null,
+          "note": "影像资料原页，用于对照观察。央视官方原页播放器观看；未核验跨站嵌入或素材复制许可",
+          "verifiedAt": "2026-10-12",
+          "verification": "opened",
+          "crawlObservations": [
+            {
+              "status": "fetched",
+              "httpStatus": 200,
+              "checkedAt": "2026-10-12T08:14:58.374Z",
+              "reason": "",
+              "pageTitle": "[生财有道]国家级非物质文化遗产代表性项目——沾化渔鼓戏"
+            },
+            {
+              "status": "blocked",
+              "httpStatus": null,
+              "checkedAt": "2026-10-12T13:32:54.489Z",
+              "reason": "dns_lookup_failed",
+              "pageTitle": ""
+            }
+          ],
+          "candidateMediaNotApproved": true
+        }
+      ],
+      "mediaViewingLinks": [
+        {
+          "kind": "video",
+          "url": "https://tv.cctv.com/2026/07/27/VIDEoHTGbvVnWmNkKfvjpBKt260727.shtml",
+          "title": "[生财有道]国家级非物质文化遗产代表性项目——沾化渔鼓戏",
+          "reuse": "央视官方原页播放器观看；未核验跨站嵌入或素材复制许可"
+        }
+      ]
+    }
+  ]
+}

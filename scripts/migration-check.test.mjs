@@ -33,7 +33,16 @@ test('inspectMigrationSet validates the repository target migrations', async () 
   const result = await inspectMigrationSet('backend/src/main/resources/db/migration')
 
   assert.deepEqual(result.errors, [])
-  assert.deepEqual(result.versions, [27, 28, 29, 30, 35, 36])
+  assert.deepEqual(result.versions, [27, 28, 29, 30, 35, 36, 37])
+})
+
+test('V37逐条保护来源写入，不允许借回填改变内容发布状态', async () => {
+  const filename = 'V37__culture_resources.sql'
+  const sql = await fs.readFile(`backend/src/main/resources/db/migration/${filename}`, 'utf8')
+  assert.deepEqual(inspectMigrationText(filename, sql).errors, [])
+  const unguarded = sql.replace('AND NOT EXISTS (SELECT 1 FROM source_document', 'AND EXISTS (SELECT 1 FROM source_document')
+  assert.ok(inspectMigrationText(filename, unguarded).errors.length)
+  assert.ok(inspectMigrationText(filename, sql + "\nUPDATE content_review SET status = 'published';").errors.some(error => error.includes('审核状态')))
 })
 
 test('V27 initializes review records for every public historical entity domain', async () => {

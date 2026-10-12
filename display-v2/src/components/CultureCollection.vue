@@ -14,8 +14,8 @@
     <ErrorState v-else-if="error" :message="error" @retry="load" />
     <div v-else-if="filtered.length" class="collection-grid folio-grid">
       <router-link v-for="(item, i) in filtered" :key="item.id" :to="detailLink(item)" class="collection-card">
-        <div class="collection-card__art"><img v-if="imageOf(item) && !failedImages.has(item.id)" :src="imageOf(item)" :alt="item.title" loading="lazy" @error="failedImages.add(item.id)" /><span v-else aria-hidden="true">{{ item.title?.charAt(0) || meta.seal }}</span><small>{{ String(i + 1).padStart(2, '0') }}</small></div>
-        <div class="collection-card__body"><p class="folio-eyebrow">{{ item.region || '齐鲁' }} · {{ meta.label }}</p><h2>{{ item.title }}</h2><p class="collection-card__summary">{{ item.summary || '走进这则文化记录，继续阅读。' }}</p><span class="collection-card__read">展开阅读 <i aria-hidden="true">↗</i></span></div>
+        <div class="collection-card__art"><img v-if="imageOf(item) && !failedImages.has(item.id)" :src="imageOf(item)" :alt="item.title" loading="lazy" @error="failedImages.add(item.id)" /><span v-else aria-hidden="true">{{ item.title?.charAt(0) || meta.seal }}</span><small>{{ String(i + 1).padStart(2, '0') }}</small><em v-if="enrichmentOf(item)">{{ imageOf(item) && !failedImages.has(item.id) ? imageLabel(item) : '影像待补' }}</em></div>
+        <div class="collection-card__body"><p class="folio-eyebrow">{{ item.region || '齐鲁' }} · {{ meta.label }}</p><h2>{{ item.title }}</h2><p class="collection-card__summary">{{ item.summary || '走进这则文化记录，继续阅读。' }}</p><p v-if="enrichmentOf(item)" class="collection-card__experience">{{ cultureExperienceLabel(enrichmentOf(item)) }} · {{ enrichmentOf(item).sources.length }} 则扩展资料</p><span class="collection-card__read">{{ enrichmentOf(item) ? '查看内容与资料' : '展开阅读' }} <i aria-hidden="true">↗</i></span></div>
       </router-link>
     </div>
     <template v-else><EmptyState message="没有找到符合条件的内容" hint="换一个关键词，或回到全部城市看看" /><div class="folio-empty-actions"><button class="folio-button" type="button" @click="reset">查看全部内容</button></div></template>
@@ -33,6 +33,7 @@ import PageHeading from './ui/PageHeading.vue'
 import ErrorState from './homepage/ErrorState.vue'
 import EmptyState from './homepage/EmptyState.vue'
 import SkeletonBlock from './homepage/SkeletonBlock.vue'
+import { getCultureEnrichment, cultureExperienceLabel, culturePreviewImage } from '../utils/cultureEnrichment.js'
 const props = defineProps({ category: { type: String, required: true } })
 const route = useRoute(), router = useRouter()
 const { resolveFirstImage } = useImage()
@@ -49,7 +50,9 @@ const draft = ref(keyword.value), items = ref([]), loading = ref(true), error = 
 const failedImages = ref(new Set())
 let sequence = 0
 const filtered = computed(() => items.value.filter(item => !keyword.value || `${item.title || ''} ${item.summary || ''} ${item.content || ''}`.includes(keyword.value)))
-const imageOf = item => resolveFirstImage([item.imageAnimeUrl, item.imageUrl], '文', { placeholder: false })
+const enrichmentOf = getCultureEnrichment
+const imageOf = item => resolveFirstImage([culturePreviewImage(enrichmentOf(item)), item.imageAnimeUrl, item.imageUrl, enrichmentOf(item)?.image], '文', { placeholder: false })
+const imageLabel = item => culturePreviewImage(enrichmentOf(item)) === imageOf(item) ? '来源影像' : '文化插画'
 const detailLink = item => { const target = atlasLink(`${meta.value.path}/${item.id}`, route); return { ...(typeof target === 'string' ? { path: target } : target), query: { ...(typeof target === 'object' ? target.query : {}), returnTo: route.fullPath } } }
 function update(values) { const query = { ...route.query, ...values }; for (const key of ['region','keyword']) if (!query[key]) delete query[key]; router.replace({ query }) }
 function search() { update({ keyword: draft.value.trim() }) }
@@ -73,7 +76,9 @@ onBeforeUnmount(() => { sequence++ })
 .collection-card__art { position: relative; height: 170px; background: url('/media/inkwash/atlas/mountain-vignette.webp') right bottom/170px auto no-repeat; overflow: hidden; }
 .collection-card__art > span { position: absolute; left: 28px; top: 14px; font: 84px/1.5 var(--font-display); color: #8d755840; }
 .collection-card__art > small { position: absolute; right: 18px; top: 18px; font: italic 15px Georgia,serif; color: #a99c85; }
-.collection-card__art img { width: 100%; height: 100%; object-fit: cover; mix-blend-mode: multiply; }
+.collection-card__art > em { position:absolute; left:12px; bottom:10px; font:11px var(--font-body); color:var(--text-secondary); background:var(--bg-primary); padding:4px 8px; }
+.collection-card__experience { margin:0 0 16px; font-size:12px; color:var(--reading-green); }
+.collection-card__art img { width: 100%; height: 100%; object-fit: cover; }
 .collection-card__body { display: flex; flex-direction: column; flex: 1; padding: 23px 26px; }
 .collection-card h2 { font: 25px/1.5 var(--font-display); letter-spacing: 2px; }
 .collection-card__summary { font-size: 14px; color: var(--text-secondary); line-height: 1.9; margin: 13px 0 24px; }

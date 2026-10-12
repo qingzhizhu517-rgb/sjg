@@ -22,6 +22,7 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
+            if (id.includes('hls.js')) return 'vendor-media'
             if (id.includes('echarts') || id.includes('zrender')) {
               return 'vendor-echarts'
             }

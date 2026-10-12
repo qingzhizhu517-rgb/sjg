@@ -14,15 +14,17 @@
 
     <div v-else-if="item" class="cd-content">
       <header class="cd-head">
-        <div class="cd-head-media" :style="{ aspectRatio: heroPresentation.aspectRatio }">
+        <div v-if="heroImage && !realAssets.length" class="cd-head-media" :style="{ aspectRatio: heroPresentation.aspectRatio }">
           <img
-            v-if="heroImage"
+            v-if="heroImage && !heroFailed"
             :src="heroImage"
             :alt="item.title"
             class="cd-hero-img"
             :style="{ objectFit: heroPresentation.objectFit, objectPosition: heroPresentation.objectPosition }"
+            @error="heroFailed = true"
           />
-          <InkPlaceholder v-else :seed="item.id || item.title" :kind="item.category || '文'" />
+          <p v-else class="cd-image-missing">图像暂未载入</p>
+          <span v-if="enrichment" class="cd-art-label">{{ heroImage && !heroFailed ? (enrichment.realAssets?.some(asset => asset.kind === 'image' && asset.inlineVerified === true) ? '来源图像' : '文化插画') : '影像待补' }}</span>
         </div>
         <div class="cd-head-main">
           <span class="cd-category">{{ categoryLabel(item.category) }}</span>
@@ -34,6 +36,11 @@
           </p>
         </div>
       </header>
+
+      <aside v-if="enrichment?.researchNotes?.length" class="cd-reading-notes" aria-label="阅读与核验提示"><h2>阅读提示</h2><p v-for="note in enrichment.researchNotes" :key="note">{{ note }}</p></aside>
+      <CultureMediaGallery v-if="realAssets.length" :key="item.title" :assets="realAssets" :item-title="item.title" />
+      <CultureExperience v-if="enrichment?.experience && ['story', 'craft'].includes(enrichment.experience.kind)" :key="`${item.category}:${item.title}`" :experience="enrichment.experience" :item-title="item.title" />
+      <CultureMediaResources v-if="resources.length" :media="resources" :item-title="item.title" class="cd-section folio-section" />
 
       <section v-if="item.content" class="cd-section folio-section">
         <h2 class="cd-section-title folio-section-title">详细介绍</h2>
@@ -57,7 +64,11 @@
         </div>
       </section>
 
-      <SourceList show-missing :sources="sources" class="cd-section folio-section" />
+      <SourceList show-missing v-if="sources.length || !supplementalSources.length" :sources="sources" class="cd-section folio-section" />
+      <section v-if="supplementalSources.length" class="cd-section folio-section">
+        <p class="cd-source-context">下列为本次逐项核验的扩展资料与影像出处，帮助观察和比较；正文中的“待考”信息仍需继续复核。</p>
+        <SourceList :sources="supplementalSources" heading="扩展资料与素材出处" heading-id="culture-research-sources" description="图像、节目与文献由来源机构提供，可打开原页继续查看。" />
+      </section>
       <div class="folio-detail-actions"><p>继续循着风物，了解这座城。</p><div class="folio-actions"><router-link :to="backTo" class="folio-button">返回浏览结果</router-link><router-link v-if="item.region" :to="atlasLink(`/cities/${item.region}`, route)" class="folio-button folio-button--primary">走进{{ item.region }} →</router-link></div></div>
     </div>
 
@@ -78,11 +89,14 @@ import { safeReturnPath } from '../config/siteNavigation'
 import { useImage } from '../composables/useImage'
 import { getCuratedPresentation } from '../config/curatedMedia'
 import { CATEGORY_LABELS } from '../config/culturalCategories'
-import InkPlaceholder from '../components/InkPlaceholder.vue'
 import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import ErrorState from '../components/homepage/ErrorState.vue'
 import EmptyState from '../components/homepage/EmptyState.vue'
 import SourceList from '../components/SourceList.vue'
+import CultureMediaGallery from '../components/culture/CultureMediaGallery.vue'
+import CultureExperience from '../components/culture/CultureExperience.vue'
+import CultureMediaResources from '../components/culture/CultureMediaResources.vue'
+import { getCultureEnrichment, cultureMedia, mergeCultureSources } from '../utils/cultureEnrichment.js'
 
 const route = useRoute()
 const { resolveFirstImage } = useImage()
@@ -92,6 +106,11 @@ const detail = ref(null)
 const sources = ref([])
 const loaded = ref(false)
 const errorMsg = ref('')
+const heroFailed = ref(false)
+const enrichment = computed(() => getCultureEnrichment(item.value))
+const realAssets = computed(() => enrichment.value?.realAssets?.filter(asset => asset.inlineVerified) || [])
+const resources = computed(() => cultureMedia(enrichment.value).filter(media => !realAssets.value.some(asset => asset.sourceUrl === media.url)))
+const supplementalSources = computed(() => mergeCultureSources([], enrichment.value).filter(source => !sources.value.some(existing => existing.url === source.url)))
 
 // 详情路由统一: /festivals/:id /crafts/:id /literature/:id /food-opera/:id 共用本组件
 // /crafts 是非遗工艺列表，东昌葫芦 3D/插画专题工坊在 /crafts/workshop。
@@ -114,7 +133,7 @@ const categoryLabel = (c) => CATEGORY_LABELS_LOCAL[c] || c
 // 主表配图：imageAnimeUrl 优先（库里现有数据在 anime 字段），imageUrl 兜底
 const heroImage = computed(() =>
   resolveFirstImage(
-    [item.value?.imageAnimeUrl, item.value?.imageUrl],
+    [item.value?.imageAnimeUrl, item.value?.imageUrl, realAssets.value.find(asset => asset.kind === 'image')?.url, enrichment.value?.image],
     '文',
     { placeholder: false },
   ),
@@ -175,6 +194,7 @@ async function load() {
   loaded.value = false
   errorMsg.value = ''
   sources.value = []
+  heroFailed.value = false
   if (isAtlasPreview(route)) {
     const categories = { festivals: 'festival', literature: 'literature', crafts: 'craft', 'food-opera': 'food_opera' }
     item.value = culturePreviewItems.find(it => String(it.id) === String(route.params.id) && it.category === categories[route.path.split('/')[1]]) || null
@@ -206,6 +226,12 @@ watch(() => [route.params.id, route.query.preview], load, { immediate: true })
   padding: 32px 48px 96px;
 }
 .cd-back { margin-bottom: 24px; }
+.cd-head-media { position:relative; }
+.cd-art-label { position:absolute; bottom:8px; left:8px; padding:3px 7px; background:var(--bg-primary); color:var(--text-secondary); font-size:11px; }
+.cd-source-context { color:var(--text-secondary); font-size:var(--fs-caption); line-height:1.8; margin-bottom:24px; }
+.cd-reading-notes { margin:24px 0; padding:20px 24px; border-left:2px solid var(--accent); background:var(--accent-faint); }
+.cd-reading-notes h2 { margin:0 0 10px; font:600 17px var(--font-heading); }
+.cd-reading-notes p { margin:8px 0; font-size:13px; line-height:1.9; color:var(--text-secondary); }
 .cd-back-link {
   font-size: 13px;
   color: var(--text-muted);

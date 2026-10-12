@@ -7,7 +7,7 @@ const REQUIRED_TABLES = new Map([
   [29, ['learning_task', 'learning_submission']],
 ])
 
-const DATA_ONLY_MIGRATIONS = new Set([30])
+const DATA_ONLY_MIGRATIONS = new Set([30, 37])
 const GUARDED_SCHEMA_MIGRATIONS = new Set([35, 36])
 
 function versionFromFilename(filename) {
@@ -22,7 +22,11 @@ export function inspectMigrationText(filename, text, requiredTables = [], option
     || (version !== null && DATA_ONLY_MIGRATIONS.has(version))
   if (version === null) errors.push(`文件名不是 Flyway V{n}__*.sql：${filename}`)
   const hasIdempotentTable = /CREATE\s+TABLE\s+IF\s+NOT\s+EXISTS/i.test(text)
-  const hasIdempotentData = /INSERT[\s\S]*ON\s+DUPLICATE\s+KEY\s+UPDATE/i.test(text)
+  const inserts = text.replace(/--[^\n]*/g, '').split(';').filter(statement => /\bINSERT\s+INTO\b/i.test(statement))
+  const hasGuardedSourceBackfill = version === 37 && inserts.length > 0 && inserts.every(statement =>
+    /INSERT\s+INTO\s+(?:source_document|content_source_link)\b/i.test(statement) && /\bNOT\s+EXISTS\b/i.test(statement),
+  )
+  const hasIdempotentData = /INSERT[\s\S]*ON\s+DUPLICATE\s+KEY\s+UPDATE/i.test(text) || hasGuardedSourceBackfill
   const hasGuardedSchema = GUARDED_SCHEMA_MIGRATIONS.has(version)
     && /information_schema\.(?:columns|statistics)/i.test(text)
     && /SET\s+@\w+\s*=\s*IF\s*\(/i.test(text)
@@ -32,10 +36,13 @@ export function inspectMigrationText(filename, text, requiredTables = [], option
     errors.push(`${filename} 缺少 CREATE TABLE IF NOT EXISTS`)
   }
   if (allowDataOnly && !hasIdempotentTable && !hasIdempotentData) {
-    errors.push(`${filename} 数据迁移缺少 ON DUPLICATE KEY UPDATE 幂等保护`)
+    errors.push(`${filename} 数据迁移缺少${version === 37 ? '逐条 NOT EXISTS 来源保护' : ' ON DUPLICATE KEY UPDATE 幂等保护'}`)
   }
   if (/\bDROP\s+(?:TABLE|DATABASE)\b/i.test(text)) {
     errors.push(`${filename} 包含禁止的 DROP 操作`)
+  }
+  if (version === 37 && /\b(?:DELETE\s+FROM|UPDATE\s+content_review|SET\s+(?:\w+\.)?status\s*=)/i.test(text)) {
+    errors.push(`${filename} 来源回填不得删除实体或修改审核状态`)
   }
   for (const table of requiredTables) {
     const tablePattern = new RegExp(
@@ -47,7 +54,7 @@ export function inspectMigrationText(filename, text, requiredTables = [], option
   return { filename, version, errors }
 }
 
-export async function inspectMigrationSet(directory, targetVersions = [27, 28, 29, 30, 35, 36]) {
+export async function inspectMigrationSet(directory, targetVersions = [27, 28, 29, 30, 35, 36, 37]) {
   const entries = await fs.readdir(directory)
   const files = entries.filter((entry) => /^V\d+__.*\.sql$/i.test(entry)).sort()
   const byVersion = new Map()

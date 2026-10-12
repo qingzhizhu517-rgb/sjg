@@ -2,16 +2,15 @@
   <section v-if="selected" class="craft-video" aria-label="非遗匠人实录">
     <div class="craft-video__main">
       <div class="craft-video__screen">
-        <video v-if="opened && selected.mediaUrl && !failed" ref="playerRef" :key="selected.url" :src="selected.mediaUrl" controls playsinline preload="metadata" controlslist="nodownload" :aria-label="selected.title" @error="failPreview" />
+        <video v-if="selected.mediaUrl && !failed" ref="playerRef" :key="selected.url" :src="selected.mediaUrl" controls playsinline preload="auto" controlslist="nodownload" :aria-label="selected.title" @error="failPreview" />
         <div v-else class="craft-video__cover">
           <span class="craft-video__seal">刻</span><p>匠人实录 · 东昌葫芦</p><h2>{{ selected.title }}</h2>
-          <button v-if="selected.mediaUrl && !failed" type="button" class="folio-button folio-button--primary" @click="startPreview">▶ 在此预览视频</button>
           <p v-if="failed" role="status">视频暂时无法加载，可前往来源原页观看。</p>
           <a v-if="!selected.mediaUrl || failed" :href="selected.url" target="_blank" rel="noopener noreferrer" class="folio-button">到{{ selected.source }}观看 ↗</a>
         </div>
       </div>
       <div class="craft-video__caption"><span>{{ selected.source }} · {{ selected.date }}</span><a :href="selected.url" target="_blank" rel="noopener noreferrer">查看原文与视频 ↗</a></div>
-      <p class="craft-video__note">{{ selected.note }} 视频由来源网站提供，点击预览后加载。</p>
+      <p class="craft-video__note">{{ selected.note }} 视频由来源网站提供，可直接在此播放。</p>
     </div>
     <aside class="craft-video__aside">
       <p class="folio-eyebrow">从观看到创作</p><h3>先看手艺，再试一笔</h3><p>留意天然葫芦的形态、刀下的细线与作品留白。带着观察，试着做一件自己的数字作品。</p>
@@ -29,12 +28,11 @@ import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { resolveVideoPreview } from '../../utils/craftVideo.js'
 const props = defineProps({ videos: { type: Array, default: () => [] } })
 defineEmits(['make', 'observe'])
-const index = ref(0), opened = ref(false), failed = ref(false), playerRef = ref(null)
+const index = ref(0), failed = ref(false), playerRef = ref(null)
 const available = computed(() => props.videos.map(resolveVideoPreview).filter(Boolean))
 const selected = computed(() => available.value[index.value] || available.value[0])
 const releasePlayer = () => { const player = playerRef.value; if (player) { player.pause(); player.removeAttribute('src'); player.load() } }
-const stopPreview = () => { releasePlayer(); opened.value = false; failed.value = false }
-const startPreview = () => { if (selected.value?.mediaUrl) { failed.value = false; opened.value = true } }
+const stopPreview = () => { releasePlayer(); failed.value = false }
 const failPreview = () => { releasePlayer(); failed.value = true }
 const selectVideo = value => { if (available.value[value] && index.value !== value) { stopPreview(); index.value = value } }
 watch(() => selected.value?.url, stopPreview)
