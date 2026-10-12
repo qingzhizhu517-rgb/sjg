@@ -59,6 +59,7 @@ jobs:
           npm run test:admin-contract
           npm run test:migrations
           npm run check:migrations
+          npm run test:culture-tooling
           npm run test:content-ledger
           npm run test:ci-contract
           PYTHONDONTWRITEBYTECODE=1 python3 scripts/apply_migration_test.py

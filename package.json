@@ -18,6 +18,7 @@
     "test:admin-contract": "node --test admin-frontend/sourceGovernance.test.mjs admin-frontend/apiErrorHandling.test.mjs admin-frontend/accessControlContract.test.mjs admin-frontend/dataTableErrorState.test.mjs admin-frontend/aiMetricsContract.test.mjs admin-frontend/batchReview.test.mjs",
     "test:migrations": "node --test scripts/migration-check.test.mjs",
     "check:migrations": "node scripts/check-migrations.mjs",
+    "test:culture-tooling": "node --test scripts/crawl-cultural-sources.test.mjs scripts/generate-cultural-resource-migration.test.mjs",
     "test:content-ledger": "node --test scripts/content-ledger-check.test.mjs",
     "test:ci-contract": "node --test scripts/ci-contract.test.mjs",
     "lint": "eslint display-v2/src admin-frontend/src sjg-datav/src shared scripts",

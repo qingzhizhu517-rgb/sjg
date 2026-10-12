@@ -23,6 +23,7 @@ run_stage "admin governance contract tests" npm run test:admin-contract
 run_stage "migration runner preflight test" env PYTHONDONTWRITEBYTECODE=1 python3 scripts/apply_migration_test.py
 run_stage "migration tooling tests" npm run test:migrations
 run_stage "migration static check" npm run check:migrations
+run_stage "culture source tooling tests" npm run test:culture-tooling
 run_stage "content ledger tooling tests" npm run test:content-ledger
 run_stage "CI quality-gate contract" npm run test:ci-contract
 run_stage "shared boundaries" npm run test:shared
