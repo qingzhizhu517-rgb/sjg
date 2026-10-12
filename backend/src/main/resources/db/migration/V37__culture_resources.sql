@@ -856,4 +856,3 @@ SELECT 'cultural_item', c.id, s.id, '来源原页：扩展观察', '扩展资料
 FROM cultural_item c JOIN source_document s ON s.id = (SELECT MIN(id) FROM source_document WHERE url = 'https://tv.cctv.com/2026/07/27/VIDEoHTGbvVnWmNkKfvjpBKt260727.shtml')
 WHERE c.category = 'food_opera' AND c.title = '沾化渔鼓戏'
 AND NOT EXISTS (SELECT 1 FROM content_source_link l WHERE l.entity_type = 'cultural_item' AND l.entity_id = c.id AND l.source_document_id = s.id AND l.locator = '来源原页：扩展观察');
-

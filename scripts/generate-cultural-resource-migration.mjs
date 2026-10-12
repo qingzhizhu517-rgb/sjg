@@ -37,7 +37,7 @@ export function buildCultureResourceMigration(catalog) {
     }
     sql.push('')
   }
-  return sql.join('\n') + '\n'
+  return sql.join('\n').trimEnd() + '\n'
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
