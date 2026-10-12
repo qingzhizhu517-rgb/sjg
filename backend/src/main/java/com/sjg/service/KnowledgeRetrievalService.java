@@ -244,7 +244,7 @@ public class KnowledgeRetrievalService {
                 && !isPubliclyPublished("poem", analysis.getPoemId())) return;
         if (row instanceof PoetRelation relation && !isRelationPublic(relation)) return;
         EvidenceSnippet snippet = toSnippet(row, context);
-        if (snippet != null) out.putIfAbsent(snippet.entityType() + ":" + snippet.entityId(), snippet);
+        if (snippet != null && !snippet.sourceIds().isEmpty()) out.putIfAbsent(snippet.entityType() + ":" + snippet.entityId(), snippet);
     }
 
     private boolean isRelationPublic(PoetRelation relation) {

@@ -2,11 +2,13 @@ import { chromium } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 import { spawn } from 'node:child_process'
 import fs from 'node:fs/promises'
+import { prepareBatchReviewBrowser, exerciseBatchReviewBrowser } from './batch-review-browser-fixture.mjs'
 
 const targets = [
   ['display-v2', 4175, '/map?preview=inkwash'],
   ['display-v2', 4175, '/poets?preview=inkwash'],
   ['admin-frontend', 4173, '/login'],
+  ['admin-frontend', 4173, '/content-governance'],
   ['sjg-datav', 4180, '/'],
 ]
 const servers = new Map()
@@ -50,7 +52,9 @@ try {
       reducedMotion: 'reduce',
     })
     const page = await context.newPage()
+    if (path === '/content-governance') await prepareBatchReviewBrowser(context, page)
     await page.goto(`http://127.0.0.1:${port}${path}`, { waitUntil: 'networkidle' })
+    if (path === '/content-governance') await exerciseBatchReviewBrowser(page)
     const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()
     const navigation = await page.evaluate(() => performance.getEntriesByType('navigation')[0]?.toJSON())
     const blocking = results.violations.filter((item) => ['critical', 'serious'].includes(item.impact))

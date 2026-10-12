@@ -15,7 +15,7 @@
     "test:backend": "mvn -B -f backend/pom.xml test",
     "test:ai-eval": "node --test scripts/ai-eval.test.mjs",
     "test:learning-task": "node --test scripts/learning-task-check.test.mjs",
-    "test:admin-contract": "node --test admin-frontend/sourceGovernance.test.mjs admin-frontend/apiErrorHandling.test.mjs admin-frontend/accessControlContract.test.mjs admin-frontend/dataTableErrorState.test.mjs admin-frontend/aiMetricsContract.test.mjs",
+    "test:admin-contract": "node --test admin-frontend/sourceGovernance.test.mjs admin-frontend/apiErrorHandling.test.mjs admin-frontend/accessControlContract.test.mjs admin-frontend/dataTableErrorState.test.mjs admin-frontend/aiMetricsContract.test.mjs admin-frontend/batchReview.test.mjs",
     "test:migrations": "node --test scripts/migration-check.test.mjs",
     "check:migrations": "node scripts/check-migrations.mjs",
     "test:content-ledger": "node --test scripts/content-ledger-check.test.mjs",

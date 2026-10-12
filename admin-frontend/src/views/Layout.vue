@@ -318,7 +318,7 @@ const logout = () => {
 
 .logout-btn {
   font-family: var(--font-body);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   gap: 4px;

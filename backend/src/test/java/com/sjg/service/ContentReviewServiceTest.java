@@ -48,6 +48,8 @@ class ContentReviewServiceTest {
 
     @BeforeEach
     void stubExistingEntities() {
+        when(mapper.updateById(any(ContentReview.class))).thenReturn(1);
+        when(culturalItemMapper.updateById(any(CulturalItem.class))).thenReturn(1);
         when(poemMapper.selectById(anyLong())).thenReturn(new com.sjg.entity.Poem());
         when(culturalItemMapper.selectById(anyLong())).thenReturn(new CulturalItem());
     }

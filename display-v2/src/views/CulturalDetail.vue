@@ -57,7 +57,7 @@
         </div>
       </section>
 
-      <SourceList :sources="sources" class="cd-section folio-section" />
+      <SourceList show-missing :sources="sources" class="cd-section folio-section" />
       <div class="folio-detail-actions"><p>继续循着风物，了解这座城。</p><div class="folio-actions"><router-link :to="backTo" class="folio-button">返回浏览结果</router-link><router-link v-if="item.region" :to="atlasLink(`/cities/${item.region}`, route)" class="folio-button folio-button--primary">走进{{ item.region }} →</router-link></div></div>
     </div>
 

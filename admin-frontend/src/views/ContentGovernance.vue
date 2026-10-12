@@ -79,10 +79,29 @@
 
       <el-tab-pane label="审核队列" name="reviews">
         <div class="toolbar-row">
-          <el-select v-model="reviewEntityType" clearable placeholder="实体类型" class="filter-select" @change="loadReviews"><el-option v-for="item in entityTypes" :key="item.value" :label="item.label" :value="item.value" /></el-select>
-          <el-select v-model="reviewStatus" clearable placeholder="审核状态" class="filter-select" @change="loadReviews"><el-option v-for="item in reviewStatuses" :key="item.value" :label="item.label" :value="item.value" /></el-select>
-          <el-button class="btn-outline" @click="loadReviews"><el-icon><Refresh /></el-icon>刷新</el-button>
+          <el-select aria-label="审核实体类型" v-model="reviewEntityType" clearable placeholder="实体类型" class="filter-select"  :disabled="batchBusy" @change="changeReviewFilter"><el-option v-for="item in entityTypes" :key="item.value" :label="item.label" :value="item.value" /></el-select>
+          <el-select aria-label="审核状态" v-model="reviewStatus" clearable placeholder="审核状态" class="filter-select"  :disabled="batchBusy" @change="changeReviewFilter"><el-option v-for="item in reviewStatuses" :key="item.value" :label="item.label" :value="item.value" /></el-select>
+          <el-select v-model="reviewSize" aria-label="每页审核记录数" class="filter-select" :disabled="batchBusy" @change="changeReviewFilter"><el-option v-for="size in [10, 20, 50, 100]" :key="size" :label="`${size}条/页`" :value="size" /></el-select>
+          <el-button class="btn-outline" :disabled="batchBusy" @click="loadReviews"><el-icon><Refresh /></el-icon>刷新</el-button>
         </div>
+        <div class="batch-toolbar">
+          <span>已选 {{ selectedReviews.length }} 条待审核数据（仅当前页）</span>
+          <el-input v-model="batchReviewNote" :disabled="batchBusy" maxlength="500" show-word-limit placeholder="批量审核备注（可选）" aria-label="批量审核备注" class="batch-note" />
+          <el-checkbox v-model="allowUnreferenced" :disabled="batchBusy">允许以来源待补充方式发布</el-checkbox>
+          <el-button type="primary" class="btn-zhu" :loading="batchBusy" :disabled="!selectedReviews.length || reviewLoading" @click="submitBatchReview">批量通过并发布</el-button>
+        </div>
+        <el-alert v-if="batchError" :title="batchError" type="warning" :closable="false" show-icon role="alert" class="page-error" />
+        <section v-if="batchResult" class="batch-results" aria-label="批量审核处理结果" aria-live="polite">
+          <p class="batch-summary">本批共 {{ batchResult.total }} 条：已发布 {{ batchResult.successCount }} 条，失败 {{ batchResult.failureCount }} 条。失败条目请按原因处理后重新选择。</p>
+          <div class="table-scroll">
+            <el-table :data="batchResult.items" stripe class="traditional-table">
+              <el-table-column prop="reviewId" label="审核 ID" width="100" />
+              <el-table-column label="条目" min-width="160"><template #default="{ row }">{{ entityLabel(row.entityType) }} #{{ row.entityId }}</template></el-table-column>
+              <el-table-column label="结果" width="110"><template #default="{ row }"><el-tag :type="row.success ? 'success' : 'danger'">{{ row.success ? '已发布' : '失败' }}</el-tag></template></el-table-column>
+              <el-table-column prop="message" label="处理说明 / 失败原因" min-width="320" />
+            </el-table>
+          </div>
+        </section>
         <el-alert v-if="reviewError" type="error" :closable="false" show-icon role="alert" class="page-error">
           <template #title>审核队列加载失败</template>
           <template #default><span>{{ reviewError }}</span><el-button link type="primary" @click="loadReviews"><el-icon><Refresh /></el-icon>重试</el-button></template>
@@ -93,15 +112,16 @@
         </el-alert>
         <el-empty v-if="reviewLoaded && !reviewLoading && !reviewError && !reviews.length" description="暂无待处理审核" />
         <div v-if="!reviewError && !(reviewLoaded && !reviewLoading && !reviews.length)" class="table-scroll">
-          <el-table v-loading="reviewLoading" :data="reviews" stripe class="traditional-table">
+          <el-table ref="reviewTable" v-loading="reviewLoading" :data="reviews" row-key="id" stripe class="traditional-table" @selection-change="selectedReviews = $event">
+            <el-table-column type="selection" width="50" :selectable="canSelectReview" />
             <el-table-column prop="entityType" label="实体类型" width="140"><template #default="{ row }">{{ entityLabel(row.entityType) }}</template></el-table-column>
             <el-table-column prop="entityId" label="实体 ID" width="100" />
             <el-table-column prop="status" label="当前状态" width="120"><template #default="{ row }"><el-tag size="small" :type="reviewTag(row.status)">{{ reviewLabel(row.status) }}</el-tag></template></el-table-column>
             <el-table-column prop="reviewNote" label="审核备注" min-width="260" show-overflow-tooltip />
-            <el-table-column label="下一步" width="180" fixed="right"><template #default="{ row }"><el-button v-if="nextStatus(row.status)" type="primary" link @click="transitionReview(row)"><el-icon><Promotion /></el-icon>{{ reviewLabel(nextStatus(row.status)) }}</el-button><span v-else class="muted">已归档</span></template></el-table-column>
+            <el-table-column label="下一步" width="180" fixed="right"><template #default="{ row }"><el-button v-if="nextStatus(row.status)" type="primary" link :disabled="batchBusy" @click="transitionReview(row)"><el-icon><Promotion /></el-icon>{{ reviewLabel(nextStatus(row.status)) }}</el-button><span v-else class="muted">已归档</span></template></el-table-column>
           </el-table>
         </div>
-        <el-pagination v-if="!reviewError && reviewTotal > 0" v-model:current-page="reviewPage" v-model:page-size="reviewSize" class="traditional-pagination" :total="reviewTotal" :page-sizes="[10, 20, 50]" layout="total, sizes, prev, pager, next" @current-change="loadReviews" @size-change="loadReviews" />
+        <el-pagination :disabled="batchBusy" v-if="!reviewError && reviewTotal > 0" v-model:current-page="reviewPage" v-model:page-size="reviewSize" class="traditional-pagination" :total="reviewTotal" layout="total, prev, pager, next" @current-change="loadReviews" />
       </el-tab-pane>
     </el-tabs>
 
@@ -135,7 +155,7 @@ const entityTypes = [
   { value: 'poem', label: '诗词' }, { value: 'poet', label: '诗人' },
   { value: 'scenic_spot', label: '景点' }, { value: 'event', label: '历史事件' },
   { value: 'cultural_item', label: '文化条目' }, { value: 'dynasty', label: '朝代' },
-  { value: 'poem_analysis', label: '诗词赏析' },
+  { value: 'poem_analysis', label: '诗词赏析' }, { value: 'poet_relation', label: '诗人关系' },
 ]
 const sourceTypes = [
   { value: 'book', label: '图书' }, { value: 'article', label: '论文/文章' },
@@ -147,7 +167,56 @@ const reviewStatuses = [
 ]
 
 const sources = ref([]); const sourceOptions = ref([]); const sourceTotal = ref(0); const sourcePage = ref(1); const sourceSize = ref(20); const sourceKeyword = ref(''); const sourceLoading = ref(false); const sourceLoaded = ref(false); const sourceError = ref(''); const sourceOptionsError = ref(''); const sourceActionError = ref(''); const sourceActionRetry = ref(null)
-const reviews = ref([]); const reviewTotal = ref(0); const reviewPage = ref(1); const reviewSize = ref(20); const reviewEntityType = ref(''); const reviewStatus = ref(''); const reviewLoading = ref(false); const reviewLoaded = ref(false); const reviewError = ref(''); const reviewActionError = ref(''); const reviewRetry = ref(null)
+const reviews = ref([]); const reviewTotal = ref(0); const reviewPage = ref(1); const reviewSize = ref(20); const reviewEntityType = ref(''); const reviewStatus = ref('needs_review'); const reviewLoading = ref(false); const reviewLoaded = ref(false); const reviewError = ref(''); const reviewActionError = ref(''); const reviewRetry = ref(null)
+const reviewTable = ref(null)
+const selectedReviews = ref([])
+const batchReviewNote = ref('')
+const allowUnreferenced = ref(false)
+const batchBusy = ref(false)
+const batchResult = ref(null)
+const batchError = ref('')
+const canSelectReview = row => row.status === 'needs_review' && !batchBusy.value && !reviewLoading.value
+const changeReviewFilter = () => { reviewPage.value = 1; return loadReviews() }
+
+const submitBatchReview = async () => {
+  if (batchBusy.value || reviewLoading.value || !selectedReviews.value.length) return
+  const rows = selectedReviews.value.map(row => ({ ...row }))
+  if (rows.length > 100 || rows.some(row => row.status !== 'needs_review')) {
+    ElMessage.warning('每批最多选择100条待审核记录')
+    return
+  }
+  const allowMissing = allowUnreferenced.value
+  batchBusy.value = true
+  batchError.value = ''
+  try {
+    await ElMessageBox.confirm(`确认发布所选 ${rows.length} 条数据？${allowMissing ? '无来源条目将标明“来源待补充”，不进入 AI 证据检索。' : '缺少来源的条目会单独失败。'}状态已变更的条目会单独失败。`, '批量通过并发布', {
+      confirmButtonText: '通过并发布', cancelButtonText: '取消', type: 'warning',
+    })
+  } catch (error) {
+    batchBusy.value = false
+    if (isUserCancel(error)) return
+    batchError.value = errorMessage(error, '确认操作未完成')
+    return
+  }
+  batchResult.value = null
+  try {
+    const result = await api.post('/admin/content-reviews/batch-approve', {
+      reviewIds: rows.map(row => row.id), ...(allowMissing ? { allowUnreferenced: true } : {}), reviewNote: batchReviewNote.value.trim() || undefined,
+    }, { timeout: 120000 })
+    const labels = new Map(rows.map(row => [row.id, row]))
+    batchResult.value = { ...result, items: result.items.map(item => ({
+      ...item, entityType: item.entityType || labels.get(item.reviewId)?.entityType,
+      entityId: item.entityId || labels.get(item.reviewId)?.entityId,
+    })) }
+  } catch (error) {
+    // 网络失败可能发生在服务端提交后，不能将结果未知伪装成逐条失败或自动重发。
+    batchError.value = `本次处理结果尚未确认：${errorMessage(error, '请求失败')}。请刷新队列核对已发布状态后再操作。`
+  } finally {
+    await loadReviews()
+    batchBusy.value = false
+  }
+}
+
 const links = ref([]); const linkLoading = ref(false); const linkLoaded = ref(false); const linkError = ref(''); const linkSaving = ref(false); const linkActionError = ref(''); const linkActionRetry = ref(null)
 const sourceDialogVisible = ref(false); const sourceSaving = ref(false)
 const emptySourceForm = () => ({ sourceType: 'book', title: '', authorOrg: '', publicationYear: null, identifier: '', url: '', citation: '', copyrightNote: '' })
@@ -188,6 +257,8 @@ const loadSourceOptions = async () => {
 }
 
 const loadReviews = async () => {
+  selectedReviews.value = []
+  reviewTable.value?.clearSelection()
   reviewLoading.value = true
   reviewError.value = ''
   reviewActionError.value = ''
@@ -286,6 +357,7 @@ const retryLinkAction = async () => {
 }
 
 const transitionReview = async (row) => {
+  if (batchBusy.value) return
   const next = nextStatus(row.status)
   if (!next) return
   reviewActionError.value = ''
@@ -328,6 +400,12 @@ onMounted(async () => { await Promise.all([loadSources(), loadSourceOptions(), l
 .governance-tabs { background: rgba(255, 255, 255, .52); border: 1px solid var(--border-light); padding: 6px 18px 20px; min-width: 0; }
 .governance-tabs :deep(.el-tabs__nav-wrap) { overflow-x: auto; }
 .toolbar-row, .linked-query { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 4px 0 16px; }
+.batch-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 14px; margin-bottom: 16px; background: var(--bg-primary); border: 1px solid var(--border-light); }
+.page-heading :deep(.el-tag--plain) { --el-tag-text-color: var(--color-zhu-dark); }
+.filter-select :deep(.el-select__placeholder), .batch-note :deep(.el-input__count-inner) { color: var(--text-secondary); }
+.batch-note { flex: 1; min-width: 240px; }
+.batch-results { margin-bottom: 20px; padding: 14px; border: 1px solid var(--border-light); }
+.batch-summary { margin: 0 0 12px; color: var(--text-primary); }
 .search-input { width: 280px; }
 .filter-select { width: 150px; }
 .page-error { margin: 0 0 12px; }

@@ -115,7 +115,7 @@
         <details><summary>了解情感呈现方法 <span aria-hidden="true">→</span></summary><p>仅对已识别标签赋分，按朝代取均值；缺失与未知标签不补分。平滑曲线用于浏览，不代表年代间的连续变化。环图显示频次最高的五种标签，多标签作品会分别计数。</p></details>
       </aside>
     </section>
-    <SourceList :sources="sources" />
+    <SourceList show-missing :sources="sources" />
     <div class="folio-detail-actions"><p>山水之外，仍有一城文脉。</p><div class="folio-actions"><router-link :to="atlasLink(`/cities/${spot.region || '济南'}`, route)" class="folio-button">探索城市文化</router-link><router-link :to="readingLink" class="folio-button">AI对照阅读 ↗</router-link><router-link :to="atlasLink(`/poems?region=${encodeURIComponent(spot.region || '')}`, route)" class="folio-button folio-button--primary">阅读更多诗词 →</router-link></div></div>
   </div>
 </template>

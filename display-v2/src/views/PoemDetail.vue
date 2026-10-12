@@ -37,7 +37,7 @@
       </div>
     </div>
 
-    <SourceList :sources="sources" class="folio-section detail-section" />
+    <SourceList show-missing :sources="sources" class="folio-section detail-section" />
 
     <section v-if="previewMode && poem.appreciation" class="folio-section detail-section preview-appreciation">
       <h2 class="section-heading folio-section-title">诗意赏读</h2>

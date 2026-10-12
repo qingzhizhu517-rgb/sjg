@@ -2,6 +2,10 @@ package com.sjg.controller.admin;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.sjg.dto.PageResult;
+import com.sjg.dto.BatchReviewRequest;
+import com.sjg.dto.BatchReviewResult;
+import com.sjg.service.BatchContentReviewService;
+import jakarta.validation.Valid;
 import com.sjg.dto.Result;
 import com.sjg.entity.ContentReview;
 import com.sjg.entity.ContentSourceLink;
@@ -33,16 +37,34 @@ public class ContentReviewController {
 
     private final ContentReviewService service;
     private final UserMapper userMapper;
+    private final BatchContentReviewService batchService;
 
     /** 保留轻量构造器，兼容不需要认证解析的旧单元测试和调用方。 */
     public ContentReviewController(ContentReviewService service) {
         this(service, null);
     }
 
-    @org.springframework.beans.factory.annotation.Autowired
     public ContentReviewController(ContentReviewService service, UserMapper userMapper) {
+        this(service, userMapper, new BatchContentReviewService(service));
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public ContentReviewController(ContentReviewService service, UserMapper userMapper,
+                                   BatchContentReviewService batchService) {
         this.service = service;
         this.userMapper = userMapper;
+        this.batchService = batchService;
+    }
+
+    @Operation(summary = "批量审核通过并发布", description = "待审核记录逐条提交事务，返回每条处理结果，最多100条")
+    @PostMapping("/content-reviews/batch-approve")
+    public ResponseEntity<Result<BatchReviewResult>> batchApprove(@Valid @RequestBody BatchReviewRequest request) {
+        Long reviewerId = resolveAuthenticatedReviewerId();
+        if (reviewerId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Result.error(401, "未登录或无法确定当前审核人"));
+        }
+        return ResponseEntity.ok(Result.success(batchService.approveAndPublish(request, reviewerId)));
     }
 
     @Operation(summary = "分页查询审核记录")

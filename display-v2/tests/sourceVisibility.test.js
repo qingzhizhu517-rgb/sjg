@@ -82,7 +82,7 @@ test('来源组件展示完整引用字段并对外链设置安全属性', async
   assert.match(source, /target="_blank"/)
   assert.match(source, /rel="noopener noreferrer"/)
   assert.match(source, /safeSourceUrl/)
-  assert.match(source, /v-if="normalizedSources\.length"/)
+  assert.match(source, /v-if="normalizedSources\.length \|\| showMissing"/)
 })
 
 for (const view of ['views/PoemDetail.vue', 'views/PoetDetail.vue', 'views/SpotDetail.vue']) {
@@ -93,3 +93,14 @@ for (const view of ['views/PoemDetail.vue', 'views/PoetDetail.vue', 'views/SpotD
     assert.match(source, /sources\.value\s*=\s*Array\.isArray\(data\??\.sources\)\s*\?\s*data\.sources\s*:\s*\[\]/)
   })
 }
+
+
+test('未关联来源的公开详情显示待补充提示，AI来源列表可保持空态隐藏', async () => {
+  const component = await readSource('components/SourceList.vue')
+  assert.match(component, /showMissing:.*default: false/)
+  assert.match(component, /normalizedSources.length \|\| showMissing/)
+  assert.match(component, /来源待补充/)
+  for (const page of ['PoetDetail', 'PoemDetail', 'SpotDetail', 'CulturalDetail']) {
+    assert.match(await readSource(`views/${page}.vue`), /<SourceList show-missing/)
+  }
+})

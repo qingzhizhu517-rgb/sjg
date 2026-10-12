@@ -59,7 +59,7 @@ node --test tests/mediaBase.test.js   # 单文件
 ### 质量关卡
 **CI**（`.github/workflows/ci.yml`）与根目录 `npm run verify:all` 执行同一批门禁：根目录及三前端 `npm ci` → 依赖扫描 → 仓库契约与迁移测试 → lint/格式/重复率 → display-v2 覆盖率 → 三前端构建 → Maven Wrapper 的单元/真实 MySQL 集成/静态分析 → 四页面无障碍 → 空白检查。
 
-新增门禁：根 npm ci、npm/OSV 成分扫描（真实 Maven SBOM）、ESLint、共享代码 Prettier、jscpd 重复率≤3%、display-v2 已加载源码行覆盖率≥60%、后端 Checkstyle/PMD/SpotBugs、Testcontainers 集成测试和四页面 axe 无障碍检查。`npm run verify:all` 全部执行；需要 Node≥22.13、Java 17、Docker、OSV-Scanner 2.4.0 和浏览器。报告在 `.local/quality` / `backend/target`，不提交。契约测试仍是纯断言；完整上下文/SQL/HTTP 由集成测试验证。
+新增门禁：根 npm ci、npm/OSV 成分扫描（真实 Maven SBOM）、ESLint、共享代码 Prettier、jscpd 重复率≤3%、display-v2 已加载源码行覆盖率≥60%、后端 Checkstyle/PMD/SpotBugs、Testcontainers 集成测试和五页面 axe 无障碍检查（含批量审核结果页）。`npm run verify:all` 全部执行；需要 Node≥22.13、Java 17、Docker、OSV-Scanner 2.4.0 和浏览器。报告在 `.local/quality` / `backend/target`，不提交。契约测试仍是纯断言；完整上下文/SQL/HTTP 由集成测试验证。
 
 ## 后端架构
 
@@ -281,3 +281,5 @@ CORS 是独立的 `CorsFilter` bean（不是 `http.cors()`）：读 `@Value("${c
 ## 统一发布
 
 目标与依赖以 `ops/release.json` 为准。根 `npm run release -- <阶段>` 按MySQL备份/TLS→受限V35/V36 pre-deploy→后端健康/同SHA→Sites大屏/后台/主站发布。Sites独立源码内打包shared副本；公开配置、版本标记与journal统一，详情见 `docs/unified-deployment.md`。禁止把Actions artifact当成上线；密钥保留平台变量。历史DB迁移仍需逐环境审核，pre-deploy不会重放V31等素材或内容发布迁移。
+
+- 批量审核可显式传 `allowUnreferenced=true`，以“来源待补充”方式发布；默认及单条发布仍要求来源。未关联来源的公开内容不进入 KnowledgeRetrievalService 的 AI 证据检索，详情页必须显示来源待补充说明。

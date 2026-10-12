@@ -12,6 +12,7 @@
     <footer class="site-footer">
       <div><span class="site-footer__title">山河有迹 · 文脉有声</span><p>数字人文视域下黄河流域（山东段）文学景观构建与教学应用研究</p></div>
       <nav aria-label="页脚导航"><router-link :to="atlasLink('/poems', route)">检索诗词</router-link><router-link :to="atlasLink('/reading', route)">AI对照阅读</router-link><router-link :to="atlasLink('/learn', route)">探究任务</router-link><router-link :to="atlasLink('/compose', route)">诗词创作</router-link></nav>
+      <p>部分资料来源待补充，请留意详情页的来源说明；未关联出处的内容不纳入 AI 证据检索。</p>
       <small>SHANDONG · LITERARY LANDSCAPES OF THE YELLOW RIVER</small>
     </footer>
     <div v-if="isAtlasPreview(route)" class="atlas-preview-bar" role="status"><span>设计预览 · 样本内容</span><router-link :to="{ path: route.path, query: { ...route.query, preview: undefined } }" aria-label="退出设计预览">退出预览 ↗</router-link></div>

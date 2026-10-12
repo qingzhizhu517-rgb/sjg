@@ -110,7 +110,7 @@
             <span aria-hidden="true">→</span>
           </router-link>
 
-          <SourceList :sources="sources" class="pd-sources" />
+          <SourceList show-missing :sources="sources" class="pd-sources" />
           <div class="folio-detail-actions"><p>循着诗文，继续你的阅读。</p><router-link :to="backTo" class="folio-button">返回名士列表 →</router-link></div>
         </main>
       </div>

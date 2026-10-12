@@ -1,10 +1,10 @@
 <template>
-  <section v-if="normalizedSources.length" class="source-list" aria-labelledby="source-list-heading">
+  <section v-if="normalizedSources.length || showMissing" class="source-list" aria-labelledby="source-list-heading">
     <header class="source-list__heading">
       <span class="source-list__seal" aria-hidden="true">据</span>
       <div>
-        <h2 id="source-list-heading" class="folio-section-title">来源资料</h2>
-        <p>本页内容所据文献及原文定位</p>
+        <h2 id="source-list-heading" class="folio-section-title">{{ normalizedSources.length ? '来源资料' : '来源待补充' }}</h2>
+        <p>{{ normalizedSources.length ? '本页内容所据文献及原文定位' : '本条资料尚未关联可核验出处，请审慎参考；不作为 AI 有据回答的证据。' }}</p>
       </div>
     </header>
 
@@ -80,6 +80,7 @@ import { normalizeSourceEntries, safeSourceUrl } from '../utils/source'
 
 const props = defineProps({
   sources: { type: Array, default: () => [] },
+  showMissing: { type: Boolean, default: false },
 })
 
 const normalizedSources = computed(() => normalizeSourceEntries(props.sources))

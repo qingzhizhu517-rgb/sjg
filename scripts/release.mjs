@@ -421,9 +421,15 @@ if (phase === 'plan') {
     })
     if (!response.ok || (await response.json()).repository_revision !== revision)
       throw new Error(`Frontend version mismatch: ${name}`)
-    const cors = await fetch(`${config.services.backend.url}/api/public/poems`, {
+    const corsPath = name === 'admin-frontend' ? '/api/admin/content-reviews' : '/api/public/poems'
+    const cors = await fetch(`${config.services.backend.url}${corsPath}`, {
       method: 'OPTIONS',
-      headers: { Origin: config.services[name].url, 'Access-Control-Request-Method': 'GET' },
+      headers: {
+        Origin: config.services[name].url,
+        'Access-Control-Request-Method': 'GET',
+        'Access-Control-Request-Headers':
+          name === 'admin-frontend' ? 'authorization,content-type' : 'x-requested-with',
+      },
       signal: AbortSignal.timeout(15000),
     })
     if (!cors.ok || cors.headers.get('access-control-allow-origin') !== config.services[name].url)
@@ -431,9 +437,12 @@ if (phase === 'plan') {
     checks.push(name)
   }
   const anonymous = await fetch(`${config.services.backend.url}/api/admin/users`, {
+    headers: { Origin: config.services['admin-frontend'].url },
     signal: AbortSignal.timeout(15000),
   })
   if (anonymous.status !== 401) throw new Error('Anonymous admin request was not rejected')
+  if (anonymous.headers.get('access-control-allow-origin') !== config.services['admin-frontend'].url)
+    throw new Error('Admin authentication errors do not retain CORS headers')
   state.validation = {
     completed_at: new Date().toISOString(),
     frontend_revisions: checks,

@@ -126,6 +126,9 @@ class ApiSmokeTest {
     ContentReviewService contentReviewService;
 
     @MockitoBean
+    com.sjg.service.BatchContentReviewService batchContentReviewService;
+
+    @MockitoBean
     ChatService chatService;
 
     @MockitoBean

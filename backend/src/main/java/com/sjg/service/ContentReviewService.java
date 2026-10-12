@@ -22,6 +22,7 @@ import com.sjg.mapper.SourceDocumentMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -151,6 +152,11 @@ public class ContentReviewService {
     @Transactional
     public ContentReview transition(String entityType, Long entityId, String targetStatus,
                                     Long reviewerId, String reviewNote) {
+        return transitionInternal(entityType, entityId, targetStatus, reviewerId, reviewNote, false);
+    }
+
+    private ContentReview transitionInternal(String entityType, Long entityId, String targetStatus,
+                                            Long reviewerId, String reviewNote, boolean allowUnreferenced) {
         String normalizedType = normalizeEntityType(entityType);
         long validEntityId = requireEntityId(entityId);
         if (!StringUtils.hasText(targetStatus)) throw new IllegalArgumentException("status 不能为空");
@@ -183,15 +189,44 @@ public class ContentReviewService {
             long sourceCount = sourceLinkMapper.selectCount(new LambdaQueryWrapper<ContentSourceLink>()
                     .eq(ContentSourceLink::getEntityType, normalizedType)
                     .eq(ContentSourceLink::getEntityId, validEntityId));
-            if (sourceCount < 1) {
+            if (sourceCount < 1 && !allowUnreferenced) {
                 throw new IllegalStateException("实体至少需要一条来源关联才能发布");
             }
         }
         current.setStatus(target);
         applyReviewMetadata(current, reviewerId, reviewNote);
-        reviewMapper.updateById(current);
+        if (reviewMapper.updateById(current) != 1) {
+            throw new IllegalStateException("审核记录已变更，请刷新队列后重试");
+        }
         syncLegacyCulturalStatus(normalizedType, validEntityId, target);
         return current;
+    }
+
+    /** 锁定审核记录，原子完成通过和发布。失败时包括approved中间态在内全部回滚。 */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public ContentReview approveAndPublish(Long reviewId, Long reviewerId, String reviewNote) {
+        return approveAndPublish(reviewId, reviewerId, reviewNote, false);
+    }
+
+    /** 显式允许来源待补充发布；保存审计备注，但不创建虚构来源。 */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public ContentReview approveAndPublish(Long reviewId, Long reviewerId, String reviewNote,
+                                          boolean allowUnreferenced) {
+        if (reviewId == null || reviewId <= 0) throw new IllegalArgumentException("审核记录ID必须为正数");
+        ContentReview current = reviewMapper.selectOne(new LambdaQueryWrapper<ContentReview>()
+                .eq(ContentReview::getId, reviewId).last("FOR UPDATE"));
+        if (current == null) throw new IllegalArgumentException("审核记录不存在");
+        if (!ContentReview.NEEDS_REVIEW.equals(current.getStatus())) {
+            throw new IllegalStateException("记录已不处于待审核状态，请刷新队列");
+        }
+        boolean missingSource = sourceLinkMapper != null && sourceLinkMapper.selectCount(
+                new LambdaQueryWrapper<ContentSourceLink>().eq(ContentSourceLink::getEntityType, current.getEntityType())
+                        .eq(ContentSourceLink::getEntityId, current.getEntityId())) < 1;
+        String note = allowUnreferenced && missingSource
+                ? "[来源待补充] " + (reviewNote == null ? "" : reviewNote.trim()) : reviewNote;
+        transitionInternal(current.getEntityType(), current.getEntityId(), ContentReview.APPROVED, reviewerId, note, false);
+        return transitionInternal(current.getEntityType(), current.getEntityId(), ContentReview.PUBLISHED,
+                reviewerId, note, allowUnreferenced);
     }
 
     /**
@@ -204,12 +239,16 @@ public class ContentReviewService {
             CulturalItem item = new CulturalItem();
             item.setId(entityId);
             item.setStatus(CulturalItemService.STATUS_PUBLISHED);
-            culturalItemMapper.updateById(item);
+            if (culturalItemMapper.updateById(item) != 1) {
+                throw new IllegalStateException("文化条目已变更，请刷新队列后重试");
+            }
         } else if (ContentReview.ARCHIVED.equals(reviewStatus)) {
             CulturalItem item = new CulturalItem();
             item.setId(entityId);
             item.setStatus(CulturalItemService.STATUS_DRAFT);
-            culturalItemMapper.updateById(item);
+            if (culturalItemMapper.updateById(item) != 1) {
+                throw new IllegalStateException("文化条目已变更，请刷新队列后重试");
+            }
         }
     }
 
@@ -291,6 +330,7 @@ public class ContentReviewService {
     private void applyReviewMetadata(ContentReview review, Long reviewerId, String reviewNote) {
         review.setReviewerId(reviewerId);
         review.setReviewedAt(LocalDateTime.now());
+        review.setUpdatedAt(review.getReviewedAt());
         review.setReviewNote(StringUtils.hasText(reviewNote) ? reviewNote.trim() : null);
     }
 

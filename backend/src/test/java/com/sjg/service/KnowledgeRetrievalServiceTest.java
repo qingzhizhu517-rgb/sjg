@@ -47,6 +47,8 @@ class KnowledgeRetrievalServiceTest {
 
     @Test
     void entityContextIsRankedFirstAndContainsStableIds() {
+        ContentSourceLink linked = new ContentSourceLink(); linked.setSourceDocumentId(3L);
+        when(sourceLinkMapper.selectList(any())).thenReturn(List.of(linked));
         Poem poem = new Poem();
         poem.setId(7L);
         poem.setTitle("静夜思");
@@ -100,6 +102,8 @@ class KnowledgeRetrievalServiceTest {
 
     @Test
     void culturalItemQueryUsesDedicatedDomain() {
+        ContentSourceLink linked = new ContentSourceLink(); linked.setSourceDocumentId(3L);
+        when(sourceLinkMapper.selectList(any())).thenReturn(List.of(linked));
         CulturalItem item = new CulturalItem();
         item.setId(3L);
         item.setTitle("泉水文化");
@@ -115,6 +119,8 @@ class KnowledgeRetrievalServiceTest {
 
     @Test
     void publishedAnalysisIsIncludedAsEvidence() {
+        ContentSourceLink linked = new ContentSourceLink(); linked.setSourceDocumentId(3L);
+        when(sourceLinkMapper.selectList(any())).thenReturn(List.of(linked));
         PoemAnalysis analysis = new PoemAnalysis();
         analysis.setId(9L);
         analysis.setPoemId(7L);
@@ -147,6 +153,8 @@ class KnowledgeRetrievalServiceTest {
 
     @Test
     void relationBetweenPublishedPoetsIsIncludedAsEvidence() {
+        ContentSourceLink linked = new ContentSourceLink(); linked.setSourceDocumentId(3L);
+        when(sourceLinkMapper.selectList(any())).thenReturn(List.of(linked));
         PoetRelation relation = new PoetRelation();
         relation.setId(12L);
         relation.setPoetAId(1L);
@@ -212,6 +220,14 @@ class KnowledgeRetrievalServiceTest {
         assertEquals(12L, context.entityId());
         assertEquals("济南", context.region());
         assertEquals(4L, context.dynastyId());
+    }
+
+    @Test
+    void publishedButUnreferencedEntityIsExcludedFromEvidence() {
+        Poem poem = new Poem(); poem.setId(7L); poem.setTitle("待补来源"); poem.setContent("黄河");
+        when(poemMapper.selectById(7L)).thenReturn(poem);
+        when(reviewMapper.selectOne(any())).thenReturn(publishedReview());
+        assertTrue(service.retrieve("黄河", new EntityContext("poem",7L,null,null)).isEmpty());
     }
 
     private ContentReview publishedReview() {
