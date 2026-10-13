@@ -10,6 +10,7 @@ import {
   relocateSharedLock,
   backendUploadSpec,
   injectBackendRuntime,
+  releaseCorsOrigins,
 } from './release-lib.mjs'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
@@ -206,7 +207,7 @@ if (phase === 'plan') {
   const state = await journal()
   if (!state.backup) throw new Error('Back up the existing database before deployment')
   await configureBackend(state)
-  const cors = frontends.map((name) => config.services[name].url).join(',')
+  const cors = releaseCorsOrigins(config).join(',')
   await railway([
     'variable',
     'set',

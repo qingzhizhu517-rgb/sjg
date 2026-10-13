@@ -36,9 +36,11 @@ export function validateReleaseConfig(config) {
     throw new Error('Invalid release configuration')
   const ids = new Set()
   for (const service of Object.values(config.services)) {
-    if (service.url) {
-      const url = new URL(service.url)
-      if (url.protocol !== 'https:' || url.origin !== service.url || url.username || url.password)
+    if (service.customOrigins !== undefined && !Array.isArray(service.customOrigins))
+      throw new Error('Custom origins must be an array')
+    for (const origin of [service.url, ...(service.customOrigins || [])].filter(Boolean)) {
+      const url = new URL(origin)
+      if (url.protocol !== 'https:' || url.origin !== origin || url.username || url.password)
         throw new Error('Release targets must be HTTPS origins without credentials')
     }
     if (service.provider === 'sites') {
@@ -52,6 +54,16 @@ export function validateReleaseConfig(config) {
     throw new Error('Assets must use HTTPS')
   releaseOrder(config)
   return config
+}
+
+export function releaseCorsOrigins(config) {
+  return [
+    ...new Set(
+      Object.values(config.services)
+        .filter((service) => service.provider === 'sites')
+        .flatMap((service) => [service.url, ...(service.customOrigins || [])]),
+    ),
+  ]
 }
 
 export function frontendEnvironment(config) {

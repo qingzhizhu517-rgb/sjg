@@ -1,33 +1,33 @@
 <template>
-  <div class="ai-chat-wrapper">
-    <!-- Floating Chat Toggle Button -->
-    <button ref="toggleRef" class="ai-toggle-btn" :aria-expanded="isOpen" aria-controls="reading-assistant" :aria-label="isOpen ? '关闭问答助手' : '打开问答助手小文'" @click="isOpen = !isOpen" :title="isOpen ? '关闭小文' : '唤醒AI小文'">
-      <div class="bot-avatar-inner">
-        <svg class="ai-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        </svg>
-      </div>
-      <span class="ai-toggle-label">问小文</span>
+  <div class="ai-chat-wrapper" :class="{ 'is-dragging': isDragging }" :style="dockStyle">
+    <p id="xiaowen-controls" class="assistant-sr-only">点击小文打开对话，拖动换位置。也可按住 Shift 和方向键移动。</p>
+    <button ref="toggleRef" type="button" class="ai-toggle-btn" :class="{ 'is-open': isOpen }"
+      :aria-expanded="isOpen" aria-controls="reading-assistant" aria-describedby="xiaowen-controls"
+      :aria-label="isOpen ? '收起小文对话' : '和小文对话'"
+      @pointerdown="onPointerDown" @pointermove="onPointerMove" @pointerup="onPointerUp"
+      @pointercancel="onPointerCancel" @lostpointercapture="onPointerCancel" @keydown="onKeydown"
+      @click="onClick($event, () => { isOpen = !isOpen })">
+      <span class="pet-greeting" :class="greetingClasses" aria-hidden="true">{{ isDragging ? '这里也可以' : isOpen ? '点我收起对话' : '聊聊齐鲁风物？' }}<small>{{ isDragging ? '松手就停在这里' : '点击对话 · 拖动换位置' }}</small></span>
+      <AssistantPet :awake="isOpen" :dragging="isDragging" :thinking="isTyping" />
+      <span class="ai-toggle-label" aria-hidden="true"><i></i>小文</span>
     </button>
 
     <!-- Chat Slide-in Drawer -->
     <transition name="drawer-fade">
-      <div id="reading-assistant" class="ai-chat-drawer card" v-if="isOpen" role="dialog" aria-label="问答助手小文" @keydown.esc="isOpen = false">
+      <div id="reading-assistant" ref="drawerRef" class="ai-chat-drawer" :class="{ 'is-short': Number.parseFloat(drawerStyle.height) < 420 }" :style="drawerStyle" v-if="isOpen" role="dialog" tabindex="-1" aria-labelledby="xiaowen-title" @keydown.esc="isOpen = false">
         <!-- Header -->
         <div class="drawer-header-ai">
           <div class="avatar-title-wrap">
-            <div class="bot-avatar-active">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M12 2v9M8 5h8" />
-              </svg>
-            </div>
+            <div class="bot-avatar-active"><AssistantPet compact awake /></div>
             <div class="bot-title-text">
-              <h3 class="bot-name">AI 小文</h3>
-              <span class="bot-status">陪你读懂齐鲁风物</span>
+              <h3 id="xiaowen-title" class="bot-name">小文 <span>AI 伴读</span></h3>
+              <span class="bot-status">陪你读诗，也陪你看风物</span>
             </div>
           </div>
-          <button class="close-drawer-btn" aria-label="关闭问答助手" @click="isOpen = false">×</button>
+          <div class="assistant-window-actions">
+            <button type="button" class="dock-reset-btn" aria-label="把小文放回右下角" title="放回右下角" @click="resetPosition"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M19 12a7 7 0 1 0-2 5" /></svg></button>
+            <button type="button" class="close-drawer-btn" aria-label="收起小文对话" title="收起对话" @click="isOpen = false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6" /></svg></button>
+          </div>
         </div>
 
         <div class="assistant-tools">
@@ -40,7 +40,7 @@
 
         <!-- Predefined Quick Questions -->
         <div class="quick-questions" v-if="messages.length <= 1">
-          <span class="quick-lbl">您可以这样问我：</span>
+          <span class="quick-lbl">从这里聊起</span>
           <div class="quick-tags">
             <button
               v-for="q in quickList"
@@ -69,7 +69,12 @@
             </div>
             <!-- Bubble -->
             <div class="msg-bubble">
-              <div v-if="msg.role === 'assistant'" class="bubble-txt md-body" v-html="renderMd(msg.content)"></div>
+              <div v-if="msg.role === 'assistant' && isTyping && i === messages.length - 1 && !msg.content.trim()" class="typing-bubble" role="status" aria-label="小文正在思考">
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+              </div>
+              <div v-else-if="msg.role === 'assistant'" class="bubble-txt md-body" v-html="renderMd(msg.content)"></div>
               <p v-else class="bubble-txt">{{ msg.content }}</p>
               <!-- 导航 action 按钮 -->
               <div v-if="msg.role === 'assistant' && msg.navAction" class="nav-action-row">
@@ -98,16 +103,6 @@
               <div v-if="msg.role === 'assistant' && msg.feedback" class="feedback-thanks">感谢反馈</div>
             </div>
           </div>
-          <!-- Typing indicator -->
-          <div class="message-row assistant" v-if="isTyping">
-            <div class="msg-avatar">文</div>
-            <div class="msg-bubble typing-bubble">
-              <span class="typing-dot"></span>
-              <span class="typing-dot"></span>
-              <span class="typing-dot"></span>
-            </div>
-          </div>
-
           <!-- 错误重试 -->
           <div v-if="errorMsg && !isTyping" class="retry-row">
             <button class="retry-btn" :disabled="!canGenerate" @click="retryLastMessage">
@@ -121,7 +116,7 @@
           <input
             v-model="inputMsg"
             type="text"
-            placeholder="探寻齐鲁文脉，问我李杜足迹..."
+            placeholder="想了解哪段齐鲁文脉？"
             class="chat-input" aria-label="向小文提问"
             :disabled="!canGenerate && !isTyping"
             required
@@ -148,6 +143,8 @@ import DOMPurify from 'dompurify'
 import { consumeSseBuffer } from '../utils/sse.js'
 import { atlasLink, isAtlasPreview } from '../config/atlasPreview.js'
 import { buildReadingLink } from '../utils/readingLink.js'
+import AssistantPet from './AssistantPet.vue'
+import { useAssistantDock } from '../composables/useAssistantDock.js'
 
 // Markdown 渲染：breaks(单换行-><br>) + gfm(表格/删除线)
 marked.setOptions({ breaks: true, gfm: true })
@@ -162,11 +159,14 @@ DOMPurify.addHook('afterSanitizeAttributes', (node) => {
 const renderMd = (md) => (md ? DOMPurify.sanitize(marked.parse(md)) : '')
 
 const isOpen = ref(false)
+const { dockStyle, drawerStyle, isDragging, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, onClick, onKeydown, resetPosition } = useAssistantDock()
+const greetingClasses = computed(() => ({ 'opens-right': Number.parseFloat(dockStyle.value.left) < 180, 'opens-below': Number.parseFloat(dockStyle.value.top) < 110 }))
 const inputMsg = ref('')
 const isTyping = ref(false)
 const chatLogRef = ref(null)
 const inputRef = ref(null)
 const toggleRef = ref(null)
+const drawerRef = ref(null)
 const errorMsg = ref(null)
 
 // SSE 健壮性：AbortController
@@ -216,7 +216,7 @@ async function checkGenerationStatus() {
 watch(isOpen, async open => {
   if (open && generationStatus.value === 'idle') checkGenerationStatus()
   await nextTick()
-  if (open) inputRef.value?.focus({ preventScroll: true })
+  if (open) (inputRef.value?.disabled ? drawerRef.value : inputRef.value)?.focus({ preventScroll: true })
   else toggleRef.value?.focus({ preventScroll: true })
 })
 
@@ -555,141 +555,94 @@ const retryLastMessage = () => {
 <style scoped>
 .ai-chat-wrapper {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 100;
+  width: 88px;
+  height: 96px;
+  z-index: var(--z-float);
 }
-
-/* Floating button */
+.assistant-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
 .ai-toggle-btn {
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 6px 20px var(--accent-a35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  width:88px;
+  height:96px;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:var(--text-secondary);
+  cursor:grab;
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;
 }
-
-.ai-toggle-btn:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 45%, transparent);
+.ai-toggle-btn:focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:16px; }
+.is-dragging .ai-toggle-btn { cursor:grabbing; }
+.ai-toggle-btn > .assistant-pet { width:88px; height:88px; margin-top:-3px; pointer-events:none; transition:filter .2s; }
+.ai-toggle-btn:hover > .assistant-pet { filter:drop-shadow(0 5px 4px var(--shadow-soft)); }
+.ai-toggle-label { display:flex; align-items:center; gap:5px; margin-top:-3px; font:11px var(--font-body); line-height:18px; letter-spacing:2px; }
+.ai-toggle-label i { width:4px; height:4px; background:var(--accent); border-radius:50%; }
+.pet-greeting {
+  position:absolute;
+  bottom:104px;
+  right:0;
+  width:170px;
+  padding:12px 14px;
+  border:1px solid var(--border-light);
+  border-radius:12px 12px 3px 12px;
+  box-shadow:0 5px 22px var(--shadow-soft);
+  background:var(--card-bg);
+  color:var(--text-primary);
+  font:14px var(--font-body);
+  line-height:1.5;
+  text-align:left;
+  opacity:0;
+  transform:translateY(4px);
+  transition:opacity .18s, transform .18s;
+  pointer-events:none;
 }
-
-.bot-avatar-inner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.ai-icon {
-  width: 24px;
-  height: 24px;
-}
-
-/* Breathing glow ring */
-.pulse-ring {
-  position: absolute;
-  inset: -4px;
-  border: 2px solid var(--accent);
-  border-radius: 50%;
-  animation: pulseGlow 2s infinite;
-  pointer-events: none;
-}
-
-@keyframes pulseGlow {
-  0% { transform: scale(0.9); opacity: 1; }
-  100% { transform: scale(1.3); opacity: 0; }
-}
-
-/* Slide in drawer panel */
+.pet-greeting.opens-right { left:0; right:auto; }
+.pet-greeting.opens-below { top:100px; bottom:auto; }
+.pet-greeting small { display:block; margin-top:3px; color:var(--text-muted); font-size:11px; white-space:nowrap; }
+.ai-toggle-btn:hover .pet-greeting,.ai-toggle-btn:focus-visible .pet-greeting,.is-dragging .pet-greeting { opacity:1; transform:translateY(0); }
+.ai-toggle-btn.is-open .pet-greeting { display:none; }
 .ai-chat-drawer {
-  position: absolute;
-  bottom: 66px;
-  right: 0;
-  width: 350px;
-  height: 480px;
-  max-height: calc(100dvh - 130px);
-  background: color-mix(in srgb, var(--bg-primary) 95%, transparent);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: 0 16px 48px color-mix(in srgb, var(--text-primary) 15%, transparent);
-  backdrop-filter: blur(20px);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  text-align: left;
+  position:fixed;
+  z-index:var(--z-drawer);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  text-align:left;
+  background:var(--card-bg);
+  border:1px solid var(--border);
+  border-radius:16px;
+  box-shadow:0 12px 50px var(--shadow-soft),0 2px 8px var(--shadow-a6);
 }
-
 .drawer-header-ai {
-  flex-shrink: 0;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--border-light);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.02);
+  flex-shrink:0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  padding:16px 16px 14px 12px;
+  border-bottom:1px solid var(--border-light);
+  background:var(--bg-primary);
 }
-
-.avatar-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.bot-avatar-active {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.bot-avatar-active svg {
-  width: 18px;
-  height: 18px;
-}
-
-.bot-title-text {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.bot-name {
-  margin: 0;
-  font-family: var(--font-heading);
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.bot-status {
-  font-size: 9px;
-  color: var(--text-muted);
-  font-weight: bold;
-}
-
-.close-drawer-btn {
-  background: transparent;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: var(--text-muted);
-}
-
-.close-drawer-btn:hover {
-  color: var(--accent);
-}
+.avatar-title-wrap { display:flex; align-items:center; gap:9px; min-width:0; }
+.bot-avatar-active { width:50px; height:50px; flex-shrink:0; }
+.bot-title-text { display:flex; flex-direction:column; align-items:flex-start; gap:5px; }
+.bot-name { margin:0; display:flex; align-items:center; gap:10px; color:var(--text-primary); font:22px var(--font-display); line-height:1.3; }
+.bot-name span { font:10px var(--font-body); letter-spacing:1px; color:var(--accent); }
+.bot-status { font-size:11px; color:var(--text-muted); }
+.assistant-window-actions { display:flex; gap:2px; }
+.is-short .quick-questions { display:none; }
+.is-short .drawer-header-ai { padding-block:8px; }
+.is-short .assistant-tools { padding-block:4px; }
+.close-drawer-btn,.dock-reset-btn { width:36px; height:40px; display:grid; place-items:center; border:0; border-radius:8px; background:transparent; color:var(--text-muted); cursor:pointer; }
+.close-drawer-btn:hover,.dock-reset-btn:hover { background:var(--bg-secondary); color:var(--accent); }
+.close-drawer-btn:focus-visible,.dock-reset-btn:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+.close-drawer-btn svg,.dock-reset-btn svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
 
 .assistant-tools {
   padding: 9px 16px;
@@ -705,7 +658,7 @@ const retryLastMessage = () => {
   font-size: 13px;
   font-weight: 700;
 }
-.generation-notice { display: flex; align-items: flex-start; gap: 8px; color: var(--text-muted); font-size: 10px; line-height: 1.5; }
+.generation-notice { display: flex; align-items: flex-start; gap: 8px; color: var(--text-muted); font-size: 11px; line-height: 1.6; }
 .generation-notice p { margin: 0; overflow-wrap: anywhere; }
 .generation-notice button { flex-shrink: 0; border: 0; background: transparent; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; padding: 0; }
 .quick-btn-tag:disabled,.feedback-btn:disabled { opacity: .5; cursor: not-allowed; }
@@ -732,12 +685,13 @@ const retryLastMessage = () => {
 }
 
 .quick-btn-tag {
-  font-size: 11px;
+  font-size: 12px;
+  min-height: 40px;
   background: var(--card-bg);
   border: 1px solid var(--border-light);
   color: var(--text-secondary);
   padding: 4px 10px;
-  border-radius: 12px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -752,8 +706,9 @@ const retryLastMessage = () => {
 .chat-log {
   flex: 1;
   min-height: 0;
-  padding: 16px;
+  padding: 20px 16px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -762,7 +717,7 @@ const retryLastMessage = () => {
 .message-row {
   display: flex;
   gap: 10px;
-  max-width: 88%;
+  max-width: 100%;
 }
 
 .message-row.assistant {
@@ -901,7 +856,7 @@ const retryLastMessage = () => {
   display: flex;
   gap: 4px;
   align-items: center;
-  padding: 12px 18px;
+  padding: 5px 4px;
 }
 
 .typing-dot {
@@ -1058,7 +1013,8 @@ const retryLastMessage = () => {
   border: 1px solid var(--border);
   border-radius: 4px;
   padding: 8px 12px;
-  font-size: 13px;
+  font-size: 14px;
+  min-height: 44px;
   background: var(--card-bg);
   color: var(--text-primary);
   outline: none;
@@ -1074,8 +1030,8 @@ const retryLastMessage = () => {
   color: #fff;
   border: none;
   border-radius: 4px;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1100,32 +1056,22 @@ const retryLastMessage = () => {
 
 /* Slide Drawer animation */
 .drawer-fade-enter-active, .drawer-fade-leave-active {
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity .2s ease, transform .2s ease;
 }
 
 .drawer-fade-enter-from, .drawer-fade-leave-to {
   opacity: 0;
-  transform: translateY(30px) scale(0.95);
+  transform: translateY(8px) scale(.98);
 }
 
-/* Responsive adjustment */
-@media (max-width: 768px) {
-  .ai-chat-drawer {
-    width: calc(100vw - 32px);
-    right: 0px;
-    height: 400px;
-  }
+@media (max-width:600px) {
+  .drawer-header-ai { padding:12px; }
+  .close-drawer-btn,.dock-reset-btn { width:40px; height:44px; }
+  .quick-btn-tag { min-height:40px; }
+  .chat-input { font-size:16px; }
 }
-.ai-toggle-btn { width:auto; min-width:108px; height:46px; padding:0 16px; border-radius:4px; box-shadow:0 4px 16px #332b2214; border:1px solid #c5b7a5; background:#f5f2ebf7; color:var(--text-secondary); gap:9px; }
-.ai-toggle-btn:hover { transform:none; background:var(--card-bg); }
-.bot-avatar-inner { width:22px; height:22px; background:none; }
-.ai-icon { width:22px; height:22px; }
-.ai-toggle-label { font:14px var(--font-body); white-space:nowrap; }
-.ai-chat-drawer { border-radius:4px; box-shadow:0 10px 60px #332b2220; }
-.quick-btn-tag { min-height:40px; border-radius:3px; }
-.close-drawer-btn,.chat-send-btn { min-width:44px; min-height:44px; }
-.chat-input-form { padding:16px; gap:8px; }
-.chat-input { min-height:44px; }
-@media(max-width:768px) { .ai-chat-drawer { position:fixed; width:auto; left:12px; right:12px; bottom:82px; height:560px; max-height:calc(100dvh - 100px); } }
-@media(max-width:600px) { .ai-toggle-btn { min-width:92px; height:44px; padding-inline:12px; } }
+@media (prefers-reduced-motion:reduce) {
+  .drawer-fade-enter-active,.drawer-fade-leave-active,.pet-greeting { transition:none; }
+  .typing-dot { animation:none; }
+}
 </style>

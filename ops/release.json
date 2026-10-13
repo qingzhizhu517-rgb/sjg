@@ -34,6 +34,7 @@
       "provider": "sites",
       "projectId": "appgprj_6aca26e375b081919acfa874a379028d",
       "url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
+      "customOrigins": ["https://qilu.aohs.top"],
       "dependsOn": ["backend", "sjg-datav"]
     }
   }

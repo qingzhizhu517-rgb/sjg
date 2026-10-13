@@ -4,6 +4,10 @@ import { setupPage, testRoute, settle } from './helpers/componentSetup.js'
 import { atlasLink, isAtlasPreview } from '../src/config/atlasPreview.js'
 import { consumeSseBuffer } from '../src/utils/sse.js'
 import { buildReadingLink } from '../src/utils/readingLink.js'
+import { ref } from 'vue'
+import * as Vue from 'vue'
+import { compileTemplate } from '@vue/compiler-sfc'
+import { renderToString } from 'vue/server-renderer'
 
 const statusResponse = (configured = true) => ({ ok: true, json: async () => ({ code: 200, data: { generationConfigured: configured, reason: configured ? 'configured' : 'not_configured' } }) })
 const encoder = new TextEncoder()
@@ -15,6 +19,7 @@ async function openChat({ query = {}, fetch: network, open = true } = {}) {
   const page = await setupPage('components/AiChatBox.vue', {
     useRoute: () => boundary.route, useRouter: () => boundary.router,
     apiUrl: path => path, atlasLink, isAtlasPreview, consumeSseBuffer, buildReadingLink,
+    useAssistantDock: () => ({ dockStyle: ref({ left: '0px', top: '0px' }), drawerStyle: ref({}), isDragging: ref(false) }),
     marked: { setOptions() {}, parse: text => text }, DOMPurify: { addHook() {}, sanitize: text => text },
     fetch: async (url, options) => { calls.push({ url, options }); return network ? network(url, options) : statusResponse() },
   })
@@ -22,6 +27,45 @@ async function openChat({ query = {}, fetch: network, open = true } = {}) {
   if (open) { page.state.isOpen.value = true; await settle() }
   return { ...page, ...boundary, calls }
 }
+
+// Render the real template against the live SSE state, including its conditional rows.
+async function renderChat(page) {
+  const compiled = compileTemplate({ source: page.template, filename: 'AiChatBox.vue', id: 'chat-state' })
+  assert.deepEqual(compiled.errors, [])
+  const code = compiled.code
+    .replace(/import \{([^}]+)\} from ["']vue["']/g, (_, helpers) => `const {${helpers.replace(/ as /g, ': ')}} = Vue`)
+    .replace('export function render', 'function render')
+  const render = new Function('Vue', `${code}\nreturn render`)(Vue)
+  const app = Vue.createSSRApp({ setup: () => ({ ...page.state }), render })
+  app.component('AssistantPet', { render: () => null })
+  app.component('router-link', { setup: (_, { slots }) => () => Vue.h('a', slots.default?.()) })
+  return renderToString(app)
+}
+
+test('等待首字、先收到依据与流式输出共用一个助手消息框', async t => {
+  let stream
+  const page = await openChat({ fetch: async url => url.endsWith('/status') ? statusResponse() : { ok: true, body: new ReadableStream({ start(controller) { stream = controller } }) } })
+  t.after(page.dispose)
+  page.state.inputMsg.value = '李白与杜甫在山东同游过哪些地方？'
+  const pending = page.state.sendMessage(); await settle()
+  const assertSingleReply = async (waiting) => {
+    const html = await renderChat(page)
+    assert.equal((html.match(/class="message-row assistant"/g) || []).length, 2, '欢迎语之外，每次提问只出现一个助手回复框')
+    assert.equal((html.match(/class="typing-dot"/g) || []).length, waiting ? 3 : 0)
+    return html
+  }
+  await assertSingleReply(true)
+  stream.enqueue(encoder.encode('data: {"delta":"\\n"}\n\n')); await settle()
+  await assertSingleReply(true)
+  stream.enqueue(encoder.encode('event: evidence\ndata: {"items":[{"entityType":"poem","entityId":1,"title":"同游资料","snippet":"兖州","sourceIds":[7]}]}\n\n')); await settle()
+  assert.match(await assertSingleReply(true), /同游资料/)
+  stream.enqueue(encoder.encode('data: {"delta":"李白与杜甫"}\n\n')); await settle()
+  assert.match(await assertSingleReply(false), /李白与杜甫/)
+  assert.equal(page.state.isTyping.value, true, '等待动画结束不等于流结束，仍禁止并发提问')
+  stream.enqueue(encoder.encode('data: {"delta":"曾同游山东。"}\n\n')); await settle()
+  stream.close(); await pending
+  assert.match(await assertSingleReply(false), /李白与杜甫曾同游山东。/)
+})
 
 test('小文只在首次打开时检查生成配置，并正确解包 Result', async t => {
   const page = await openChat({ open: false })
@@ -107,6 +151,9 @@ test('生成连接没有回答便结束时，显示可重试状态', async t => 
   assert.equal(page.state.isTyping.value, false)
   assert.match(page.state.messages.value.at(-1).content, /未收到回复/)
   assert.equal(page.state.errorMsg.value, '未收到回复')
+  const html = await renderChat(page)
+  assert.equal((html.match(/class="message-row assistant"/g) || []).length, 2)
+  assert.doesNotMatch(html, /class="typing-dot"/)
 })
 
 test('路由切换中止旧流，旧 AbortError 晚到不能解锁新的请求', async t => {

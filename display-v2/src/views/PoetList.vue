@@ -253,70 +253,16 @@
         <!-- 关系图谱 (AntV G6) -->
         <div v-else key="graph" class="graph-tab-content">
           <div class="graph-panel-inner card graph-panel-layout">
-            <!-- 顶部控制面板: 说明/关系筛选/朝代筛选/双图例 多行排布(免横向滑动) -->
-            <div class="graph-controls">
-              <div class="graph-controls__row graph-instructions">
-                <span class="instruction-tag">互动</span>
-                <p class="instruction-desc">
-                  滚轮滚动页面 · Ctrl+滚轮缩放图谱 · 拖拽画布 · 悬停诗人可见生平与关系说明 · 点击诗人查看关系卡片；师承以箭头示方向（师 → 徒），虚线为推断关系。
-                </p>
-                <button
-                  v-if="graphStatus === 'ready'"
-                  class="filter-chip filter-chip--desc"
-                  :class="{ active: edgeLabelsVisible }"
-                  :aria-pressed="edgeLabelsVisible"
-                  title="开启后关系说明常显；关闭时悬停聚焦仍可见"
-                  @click="edgeLabelsVisible = !edgeLabelsVisible"
-                >关系说明</button>
+            <header class="graph-heading">
+              <div><span class="graph-eyebrow">文人之间</span><h2>循一条线，读一段文脉</h2><p>并称、师承、交游与亲缘，串起名字背后的相遇。</p></div>
+              <p v-if="graphStatus === 'ready'" class="graph-totals"><strong>{{ graphVisibleCounts.nodes }}</strong> 位名士<span>／</span><strong>{{ graphVisibleCounts.edges }}</strong> 条关系</p>
+            </header>
+            <div v-if="graphStatus === 'ready'" class="graph-controls">
+              <div class="graph-filters">
+                <div class="filter-group"><span class="filter-label">关系</span><button v-for="rt in relationFilterOptions" :key="rt" class="filter-chip" :class="{ active: relationFilter === rt }" :aria-pressed="relationFilter === rt" @click="relationFilter = rt">{{ rt }}</button></div>
+                <div class="filter-group"><span class="filter-label">朝代</span><button v-for="d in graphDynastyOptions" :key="d" class="filter-chip" :class="{ active: dynastyFilter === d }" :aria-pressed="dynastyFilter === d" @click="setGraphDynasty(d)">{{ d }}</button></div>
               </div>
-
-              <!-- 筛选行: 关系 + 朝代 -->
-              <div v-if="graphStatus === 'ready'" class="graph-controls__row graph-filters">
-                <div class="filter-group">
-                  <span class="filter-label">关系</span>
-                  <button
-                    v-for="rt in relationFilterOptions"
-                    :key="rt"
-                    class="filter-chip"
-                    :class="{ active: relationFilter === rt }"
-                    @click="relationFilter = rt"
-                  >{{ rt }}</button>
-                  <button
-                    v-if="derivedCount"
-                    class="filter-chip filter-chip--derived"
-                    :class="{ active: derivedVisible }"
-                    @click="derivedVisible = !derivedVisible"
-                  >推断{{ derivedCount }}</button>
-                </div>
-                <div class="filter-group">
-                  <span class="filter-label">朝代</span>
-                  <button
-                    v-for="d in graphDynastyOptions"
-                    :key="d"
-                    class="filter-chip"
-                    :class="{ active: dynastyFilter === d }"
-                    @click="setGraphDynasty(d)"
-                  >{{ d }}</button>
-                </div>
-              </div>
-
-              <!-- 图例行: 关系类型 + 朝代 -->
-              <div v-if="graphStatus === 'ready'" class="graph-controls__row graph-legend">
-                <div class="legend-group">
-                  <span class="legend-group-title">关系</span>
-                  <div v-for="lg in relationLegend" :key="lg.key" class="legend-item">
-                    <span class="legend-swatch legend-line" :style="legendLineStyle(lg)">{{ lg.arrow ? '→' : '' }}</span>
-                    {{ lg.label }}
-                  </div>
-                </div>
-                <div class="legend-group">
-                  <span class="legend-group-title">朝代</span>
-                  <div v-for="d in legendDynasties" :key="d" class="legend-item">
-                    <span class="legend-swatch legend-dot" :style="{ background: dynastyColorByName(d) }"></span>
-                    {{ d }}
-                  </div>
-                </div>
-              </div>
+              <div class="graph-options"><label v-if="derivedCount"><input v-model="derivedVisible" type="checkbox" />包含推断关系 <span>{{ derivedCount }}</span></label><label><input v-model="edgeLabelsVisible" type="checkbox" />显示关系名称</label></div>
             </div>
 
             <!-- 图谱画布(常驻挂载, 保证容器可测量) + 状态浮层 + 诗人抽屉 -->
@@ -343,6 +289,14 @@
                   <EmptyState icon="谱" :message="graphFilterEmptyMessage" hint="可清除城市条件，或更换朝代与关系筛选" />
                 </div>
 
+                <div v-if="graphStatus === 'ready' && !graphFilterEmpty" class="graph-viewport-tools" aria-label="图谱视图操作"><button aria-label="缩小图谱" @click="zoomGraph(0.8)">−</button><button aria-label="放大图谱" @click="zoomGraph(1.25)">＋</button><button @click="fitGraph">完整图谱</button></div>
+                <p class="graph-stage-hint">拖拽移动 · Ctrl＋滚轮缩放 · 点击姓名读关系</p>
+              </div>
+              <aside v-if="!drawerPoet" class="graph-reading-panel">
+                <span class="graph-eyebrow">读谱起笔</span><h3>从一个名字开始</h3><p>点击姓名，看看与他相连的人。</p>
+                <div class="graph-entry-poets"><button v-for="poet in graphEntryPoets" :key="poet.id" @click="openDrawer(poet.id)"><span>{{ poet.name }}</span><small>{{ poet.dynasty }}</small><span aria-hidden="true">↗</span></button></div>
+                <div class="graph-side-legend"><h4>线的含义</h4><div v-for="lg in relationLegend" :key="lg.key" class="legend-item"><span class="legend-swatch legend-line" :style="legendLineStyle(lg)">{{ lg.arrow ? '→' : '' }}</span>{{ lg.label }}<small v-if="lg.arrow">师 → 徒</small><small v-if="lg.key === 'derived'">待考</small></div><h4>名字的朝代</h4><div class="graph-dynasty-key"><span v-for="d in legendDynasties" :key="d"><i :style="{ background: dynastyColorByName(d) }"></i>{{ d }}</span></div></div>
+              </aside>
                 <Transition name="drawer-slide">
                   <aside v-if="drawerPoet" class="graph-drawer" role="dialog" aria-label="诗人关系卡片">
                     <button class="drawer-close" aria-label="关闭卡片" @click="closeDrawer">✕</button>
@@ -354,7 +308,7 @@
                     <p class="drawer-bio">{{ drawerBio }}</p>
                     <ul v-if="drawerRelations.length" class="drawer-relations">
                       <li v-for="(rel, i) in drawerRelations" :key="i" class="drawer-relation">
-                        <span class="dr-type" :style="{ borderColor: relationColorOf(rel.type) }">{{ rel.type }}</span>
+                        <span class="dr-type" :style="{ borderColor: relationColorOf(rel.type) }">{{ rel.type }}<small v-if="rel.derived"> · 推断</small></span>
                         <span class="dr-body">
                           <span class="dr-who">{{ rel.counterpartName }}</span>
                           <span v-if="rel.description" class="dr-desc">{{ rel.description }}</span>
@@ -365,7 +319,6 @@
                     <button class="drawer-primary" @click="goPoetDetail">进入专栏 →</button>
                   </aside>
                 </Transition>
-              </div>
             </div>
           </div>
         </div>
@@ -608,20 +561,20 @@ const safeDestroyGraph = () => {
 }
 
 // ---- 关系类型视觉编码（Phase2 派生边/新类型在此扩展）----
-// 并称: 粗实线（最牢固的"齐名"关系；G6 v5 无原生双线，以线宽 4 + 主题 accent 色表达 double）
+// 并称: 朱红实线；关系说明在侧栏阅读，画布保持简洁
 // 师承: 唯一有向关系，mentor→student 箭头；方向查 MENTOR_DIRECTION，未收录时回退 source→target
 // 交游: 细实线（日常交往）
 // 亲属: 短虚线（血缘纽带）
 const RELATION_STYLES = {
   real: {
-    并称: { color: '#b8860b', lineWidth: 4, double: true },
-    师承: { color: '#4f8377', lineWidth: 2, arrow: true, dir: 'source→target' },
+    并称: { color: '#b8860b', lineWidth: 2, double: true },
+    师承: { color: '#4f8377', lineWidth: 1.4, arrow: true, dir: 'source→target' },
     交游: { color: '#9a8f7d', lineWidth: 1.5 },
     亲属: { color: '#b87f7f', lineWidth: 1.5, lineDash: [5, 4] },
   },
   inkwash: {
-    并称: { color: '#d9a441', lineWidth: 4, double: true },
-    师承: { color: '#7fae9f', lineWidth: 2, arrow: true, dir: 'source→target' },
+    并称: { color: '#d9a441', lineWidth: 2, double: true },
+    师承: { color: '#7fae9f', lineWidth: 1.4, arrow: true, dir: 'source→target' },
     交游: { color: '#a89e8c', lineWidth: 1.5 },
     亲属: { color: '#c99a9a', lineWidth: 1.5, lineDash: [5, 4] },
   },
@@ -662,6 +615,13 @@ const MENTOR_DIRECTION = {
 
 // 原始图谱数据（筛选/抽屉复用）
 const graphRawData = ref({ nodes: [], edges: [] })
+const graphVisibleCounts = ref({ nodes: 0, edges: 0 })
+const graphVisibleNodes = ref([])
+const graphEntryPoets = computed(() => graphVisibleNodes.value
+  .filter(n => dynastyFilter.value === '全部' || n.dynasty === dynastyFilter.value)
+  .slice().sort((a, b) => b.degree - a.degree).slice(0, 5))
+const fitGraph = () => graphInstance?.fitView()
+const zoomGraph = (factor) => { if (graphInstance) graphInstance.zoomTo(Math.min(2.5, Math.max(0.25, graphInstance.getZoom() * factor))) }
 const graphNodeMap = computed(() => {
   const m = {}
   ;(graphRawData.value.nodes || []).forEach((n) => {
@@ -701,7 +661,7 @@ const derivedCount = computed(
 const drawerPoet = ref(null)
 const drawerMeta = computed(() => {
   if (!drawerPoet.value) return ''
-  return [drawerPoet.value.dynasty, drawerPoet.value.style, drawerPoet.value.birthplace]
+  return [drawerPoet.value.dynasty, drawerPoet.value.literaryStyle, drawerPoet.value.birthplace]
     .filter(Boolean)
     .join(' · ')
 })
@@ -804,6 +764,7 @@ const handleGraphResize = () => {
     const width = g6Container.value.clientWidth || 800
     const height = g6Container.value.clientHeight || 600
     graphInstance.setSize(width, height)
+    fitGraph()
   }
 }
 
@@ -826,28 +787,10 @@ const initG6 = async () => {
   const width = g6Container.value.clientWidth || 800
   const height = g6Container.value.clientHeight || 600
 
-  const graphTheme = isAnime.value
-    ? {
-        edgeColor: '#7a7a7a',
-        textPrimary: '#e8e4d8',
-        accent: cssVar('--accent'),
-        // 深色主题下基础 accent(#A93226) 做文字偏暗, 聚焦标签用 accent-light 保证对比度
-        accentText: cssVar('--accent-light') || cssVar('--accent'),
-        textSecondary: '#9a9484',
-        cardBg: '#2a2520',
-        nodeStroke: '#c9c2b0',
-        lineDash: [4, 4],
-      }
-    : {
-        edgeColor: '#c5b8a5',
-        textPrimary: cssVar('--text-primary'),
-        accent: cssVar('--accent'),
-        accentText: cssVar('--accent'),
-        textSecondary: '#8a7e6b',
-        cardBg: cssVar('--bg-primary'),
-        nodeStroke: '#8a7e6b',
-        lineDash: [4, 4],
-      }
+  const graphTheme = {
+    edgeColor: '#b5aa97', textPrimary: '#352f27', accent: '#ac5143',
+    accentText: '#9c4035', textSecondary: '#766e61', cardBg: '#f8f5ee', nodeStroke: '#d3c7b5',
+  }
 
   // 从后端拉真实关系图谱(/api/public/poet-relations), 转 G6 nodes/edges
   graphStatus.value = 'loading'
@@ -867,7 +810,7 @@ const initG6 = async () => {
       return
     }
 
-    // 统计节点度数（全量），用于大小/字号
+    // 统计节点度数（全量），用于节点大小与阅读入口排序
     const degree = {}
     inEdges.forEach((e) => {
       degree[e.source] = (degree[e.source] || 0) + 1
@@ -884,16 +827,12 @@ const initG6 = async () => {
           id: nid,
           poetId: nid,
           name: n.name,
-          label: n.name,
           dynasty,
           dynastyId: n.dynastyId ?? null,
-          style: n.style || '',
+          literaryStyle: n.style || '',
           birthplace: n.birthplace || '',
-          // 副标签: dynasty·style（style 缺失则仅 dynasty）
-          sub: n.style ? `${dynasty} · ${n.style}` : dynasty,
-          size: Math.min(64, 36 + (degree[nid] || 0) * 7),
+          size: Math.min(76, 58 + (degree[nid] || 0) * 3),
           degree: degree[nid] || 0,
-          labelSize: (degree[nid] || 0) >= 2 ? 13 : 12,
         }
       }),
       edges: inEdges.map((e, i) => {
@@ -922,7 +861,7 @@ const initG6 = async () => {
           eStroke: st.color,
           eLineWidth: derived ? 1 : st.lineWidth,
           eLineDash: derived ? [2, 4] : st.lineDash,
-          eOpacity: derived ? 0.55 : 1,
+          eOpacity: derived ? 0.4 : 0.65,
           eEndArrow: arrowAtTarget,
           eStartArrow: arrowAtSource,
         }
@@ -935,6 +874,8 @@ const initG6 = async () => {
     return
   }
   graphStatus.value = 'ready'
+  graphVisibleNodes.value = raw.nodes
+  graphVisibleCounts.value = { nodes: raw.nodes.length, edges: raw.edges.length }
   const data = raw
 
   if (currentSeq !== graphRequestSeq) {
@@ -952,18 +893,21 @@ const initG6 = async () => {
     width,
     height,
     data,
+    autoFit: 'view',
+    padding: [48, 52, 64, 52],
+    animation: false,
     layout: {
       type: 'force',
       // G6 v5 'force' = 经典力导向(库伦斥力+胡克引力):
       // nodeStrength 正数=斥力(默认1000, 旧值30过弱致聚团); 度数越高斥力略增
-      nodeStrength: (d) => 600 + (d.degree || 0) * 160,
+      nodeStrength: (d) => 500 + (d.degree || 0) * 80,
       // nodeSize 按真实节点尺寸+标签区占位(直径口径, collide 半径=size/2), 防叠真正生效
       nodeSize: (d) => (d.size || 50) + 26,
       preventOverlap: true,
       collideStrength: 1,
-      // 拉开源点: 基线 220, 大节点(>50)再放宽, 落 220~248
+      // 保留姓名与朝代的呼吸空间，再由 autoFit 适配全图
       linkDistance: (_d, s, t) =>
-        220 + Math.max(0, (s?.size || 50) - 50) + Math.max(0, (t?.size || 50) - 50),
+        140 + Math.max(0, (s?.size || 58) - 58) + Math.max(0, (t?.size || 58) - 58),
       // 向心锚定画布中心, 不漂移(经典实现原生参数; alpha* 为 d3-force 专属故移除)
       gravity: 10,
       center: [width / 2, height / 2],
@@ -971,56 +915,36 @@ const initG6 = async () => {
     node: {
       type: 'circle',
       style: (d) => ({
-        fill: dynastyColorOf(d.dynastyId),
-        stroke: graphTheme.nodeStroke,
-        lineWidth: 1.5,
-        size: d.size || 50,
-        // 显式默认透明度: G6 已知问题 —— hover-activate 的 inactiveState 透明度
-        // 在状态退出后不恢复(元素保留最后应用的 opacity), 首次悬停后全图卡灰;
-        // 显式声明 opacity:1 提供明确的恢复目标值(边侧已有 d.eOpacity 故不受影响)
+        fill: '#faf7f0',
+        stroke: dynastyColorOf(d.dynastyId),
+        lineWidth: 1.8,
+        size: d.size || 58,
         opacity: 1,
-        // 副标签 badge: dynasty·style, 与名字拉开(offsetY 42), 小灰底保证两行不糊
-        badges: d.sub
-          ? [
-              {
-                text: d.sub,
-                placement: 'bottom',
-                offsetY: 42,
-                fontSize: 11,
-                fill: graphTheme.textSecondary,
-                fillOpacity: 0.85,
-                background: true,
-                backgroundFill: graphTheme.cardBg,
-                backgroundRadius: 3,
-                padding: [2, 5],
-              },
-            ]
-          : [],
+        cursor: 'pointer',
+        labelText: d.name?.replaceAll('·', '\n'),
+        labelPlacement: 'center',
+        labelFontFamily: '"Noto Serif SC", "Songti SC", serif',
+        labelFontSize: 18,
+        labelLineHeight: 20,
+        labelFontWeight: 600,
+        labelFill: graphTheme.textPrimary,
+        labelOpacity: 1,
+        labelBackground: false,
+        badges: [{ text: d.dynasty, placement: 'bottom', offsetY: 10, fontSize: 10, fill: graphTheme.textSecondary, background: false, padding: 0 }],
       }),
-      labelText: (d) => d.label,
-      labelPlacement: 'bottom',
-      labelOffsetY: 8,
-      labelFontSize: (d) => (d.labelSize || 13) + 1,
-      labelFontWeight: 600,
-      labelFill: graphTheme.textPrimary,
-      // 名字标签加 cardBg 底, 离开节点圆且不压线
-      labelBackground: true,
-      labelBackgroundFill: graphTheme.cardBg,
-      labelBackgroundRadius: 4,
-      labelBackgroundPadding: [3, 6],
       state: {
         // 聚焦态: 光晕+粗描边提亮节点本体(不改 fill, 保留朝代色维度); 标签同时变色加粗放大
         active: {
-          lineWidth: 4,
+          lineWidth: 2.5,
           stroke: graphTheme.accent,
           shadowColor: graphTheme.accent,
-          shadowBlur: 14,
+          shadowBlur: 0,
           labelFill: graphTheme.accentText,
           labelFontWeight: 700,
-          labelFontSize: (d) => (d.labelSize || 13) + 2,
+          labelFontSize: 19,
         },
         // 淡化态: 元素级 opacity 会随 Group 级联到 label/badge, 无需再叠 labelOpacity(避免双重衰减)
-        inactive: { opacity: 0.15 },
+        inactive: { opacity: 0.6 },
       },
     },
     edge: {
@@ -1036,18 +960,18 @@ const initG6 = async () => {
           opacity: d.eOpacity ?? 1,
           endArrow: !!d.eEndArrow,
           endArrowType: 'triangle',
-          endArrowSize: 9,
+          endArrowSize: 5,
           endArrowFill: stroke,
           endArrowStroke: stroke,
           startArrow: !!d.eStartArrow,
           startArrowType: 'triangle',
-          startArrowSize: 9,
+          startArrowSize: 5,
           startArrowFill: stroke,
           startArrowStroke: stroke,
           // 关系说明默认隐藏(受「关系说明」开关控制常显); labelText 常驻非空,
           // 关闭时 hover 聚焦态(active labelOpacity:1)仍可临时显示
-          labelText: d.description || '',
-          labelAutoRotate: true,
+          labelText: d.relationType || '',
+          labelAutoRotate: false,
           labelFontSize: 10,
           labelFill: graphTheme.textSecondary,
           labelOpacity: edgeLabelsVisible.value ? 1 : 0,
@@ -1072,7 +996,16 @@ const initG6 = async () => {
     ],
   })
 
-  graphInstance.render()
+  const renderedGraph = graphInstance
+  try {
+    await renderedGraph.render()
+  } catch (err) {
+    if (currentSeq !== graphRequestSeq) return
+    graphStatus.value = 'error'
+    console.error('关系图谱渲染失败:', err)
+    return
+  }
+  if (currentSeq !== graphRequestSeq || graphInstance !== renderedGraph) return
 
   graphInstance.on('node:click', (evt) => {
     const modelId = evt.target?.id
@@ -1143,7 +1076,7 @@ const initG6 = async () => {
             ? bio.substring(0, 60) + '…'
             : bio
           : '生平待考，然其诗已传。'
-        const meta = [n.dynasty, n.style, n.birthplace].filter(Boolean).join(' · ')
+        const meta = [n.dynasty, n.literaryStyle, n.birthplace].filter(Boolean).join(' · ')
         const dynasty = dynastyColorOf(n.dynastyId)
         return [
           `<div style="min-width:200px;max-width:240px;background:${graphTheme.cardBg};border:1px solid ${dynasty};border-radius:4px;padding:10px 12px;box-shadow:0 6px 18px rgba(0,0,0,.18);font-size:12px;line-height:1.65;">`,
@@ -1192,6 +1125,8 @@ const applyGraphFilter = () => {
       ? nodes.filter(dynOK)
       : nodes.filter((n) => dynOK(n) && touched.has(n.id))
 
+  graphVisibleNodes.value = visibleNodes
+  graphVisibleCounts.value = { nodes: visibleNodes.length, edges: visibleEdges.length }
   graphFilterEmpty.value = !visibleNodes.length
   if (graphFilterEmpty.value) closeDrawer()
   // 初始全量已交给 Graph；从筛选空态返回全量时仍须恢复其数据。
@@ -1215,9 +1150,12 @@ const applyEdgeLabelVisibility = () => {
     .filter((e) => displayedIds.has(e.id))
     .map((e) => ({
       id: e.id,
-      style: { labelText: e.description || '', labelOpacity: vis ? 1 : 0 },
+      style: { labelText: e.relationType || '', labelOpacity: vis ? 1 : 0 },
     }))
-  if (updates.length) graphInstance.updateEdgeData(updates)
+  if (updates.length) {
+    graphInstance.updateEdgeData(updates)
+    graphInstance.draw()
+  }
 }
 
 watch(edgeLabelsVisible, () => {
@@ -1652,76 +1590,6 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 10px;
 }
-.graph-controls__row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 18px;
-}
-.graph-controls .graph-instructions {
-  margin-bottom: 0;
-  flex-direction: row;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px 14px;
-}
-.graph-controls .graph-filters {
-  margin-bottom: 0;
-}
-.graph-controls .filter-group {
-  flex-direction: row;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.graph-controls .graph-legend {
-  margin-top: 0;
-  padding-top: 0;
-  border-top: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 28px;
-}
-.graph-controls .legend-group {
-  flex-direction: row;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-}
-.graph-controls .legend-group + .legend-group {
-  border-left: 1px dashed var(--border-light);
-  border-top: none;
-  padding-left: 28px;
-  padding-top: 0;
-}
-.graph-instructions {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: color-mix(in srgb, var(--accent) 4%, transparent);
-  border-left: 3px solid var(--accent);
-  padding: 12px 18px;
-  margin-bottom: 20px;
-  border-radius: 0 4px 4px 0;
-  text-align: left;
-}
-.instruction-tag {
-  font-size: 10px;
-  font-weight: 800;
-  color: #fff;
-  background: var(--accent);
-  padding: 3px 8px;
-  border-radius: 2px;
-  letter-spacing: 1px;
-  flex-shrink: 0;
-}
-.instruction-desc {
-  font-size: 12.5px;
-  color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.6;
-}
-
 /* 筛选 chips */
 .graph-filters {
   display: flex;
@@ -2032,4 +1900,66 @@ onBeforeUnmount(() => {
 .layout-toggle-group .toggle-btn.active { background: var(--card-bg); color: var(--accent); box-shadow: none; }
 .poets-featured-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
 @media(max-width:640px) { .poets-view { padding-top: 18px; } .poets-content { padding: 0 0 45px; } .poets-featured-grid { grid-template-columns: 1fr; } .layout-toggle-group { align-self: stretch; } }
+
+/* 纸面关系图：姓名居中，阅读卡片与画布并列。 */
+.graph-panel-inner.card { padding: 0; border: 1px solid var(--border); border-radius: 2px; background: var(--card-bg); box-shadow: none; }
+.graph-panel-layout { gap: 0; }
+.graph-heading { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 26px 30px 20px; border-bottom: 1px solid var(--border-light); }
+.graph-eyebrow { color: var(--accent); font-size: 11px; letter-spacing: .2em; }
+.graph-heading h2 { margin: 8px 0 9px; font-size: clamp(22px, 2.1vw, 30px); font-weight: 500; letter-spacing: .06em; }
+.graph-heading p { margin: 0; color: var(--text-secondary); font-size: 13px; line-height: 1.7; }
+.graph-heading .graph-totals { flex-shrink: 0; font-size: 12px; color: var(--text-muted); }
+.graph-totals strong { font-size: 27px; font-weight: 400; color: var(--text-primary); font-variant-numeric: tabular-nums; margin-right: 4px; }
+.graph-totals span { margin: 0 12px; color: var(--border); }
+.graph-controls { padding: 16px 30px; gap: 12px; border-bottom: 1px solid var(--border-light); }
+.graph-filters { margin: 0; gap: 10px 30px; }
+.graph-controls .filter-group { gap: 5px; }
+.graph-controls .filter-label { margin-right: 8px; }
+.graph-controls .filter-chip { border: 0; border-radius: 2px; padding: 6px 11px; letter-spacing: .02em; }
+.graph-controls .filter-chip.active { background: var(--accent-soft); color: var(--accent); }
+.graph-options { display: flex; flex-wrap: wrap; gap: 20px; font-size: 11px; color: var(--text-muted); }
+.graph-options label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.graph-options input { accent-color: var(--accent); }
+.graph-options span { font-variant-numeric: tabular-nums; }
+.graph-main { display: grid; grid-template-columns: minmax(0, 1fr) 240px; }
+.graph-stage { min-width: 0; background: #f8f5ee; }
+.g6-container-canvas { height: 690px; min-height: 560px; border: 0; border-radius: 0; background: radial-gradient(ellipse at center, #fcfaf5 0%, #f4f0e6 100%); }
+.graph-viewport-tools { position: absolute; bottom: 22px; left: 22px; display: flex; align-items: center; background: #faf7f0; border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+.graph-viewport-tools button { border: 0; border-right: 1px solid var(--border-light); background: transparent; color: var(--text-secondary); min-width: 36px; min-height: 36px; padding: 0 11px; font-family: inherit; font-size: 12px; cursor: pointer; }
+.graph-viewport-tools button:last-child { border-right: 0; }
+.graph-viewport-tools button:hover { color: var(--accent); background: var(--accent-soft); }
+.graph-stage-hint { position: absolute; right: 20px; bottom: 22px; font-size: 10px; color: var(--text-muted); margin: 0; pointer-events: none; }
+.graph-reading-panel, .graph-drawer { border-left: 1px solid var(--border-light); padding: 25px 22px; background: var(--card-bg); }
+.graph-reading-panel h3 { font-size: 19px; font-weight: 500; margin: 13px 0 10px; }
+.graph-reading-panel > p { font-size: 12px; color: var(--text-muted); line-height: 1.8; }
+.graph-entry-poets { margin: 20px 0 28px; display: grid; }
+.graph-entry-poets button { display: flex; align-items: center; gap: 10px; text-align: left; padding: 11px 0; border: 0; border-bottom: 1px solid var(--border-light); background: transparent; color: var(--text-primary); font-family: inherit; font-size: 15px; cursor: pointer; }
+.graph-entry-poets small { font-size: 10px; color: var(--text-muted); margin-left: auto; }
+.graph-entry-poets button:hover { color: var(--accent); }
+.graph-side-legend h4 { margin: 23px 0 14px; font-size: 11px; letter-spacing: .1em; font-weight: 500; color: var(--text-muted); }
+.graph-side-legend .legend-item { gap: 12px; margin: 11px 0; font-size: 12px; color: var(--text-secondary); }
+.graph-side-legend small { font-size: 10px; color: var(--text-muted); margin-left: auto; }
+.graph-dynasty-key { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; font-size: 11px; color: var(--text-secondary); }
+.graph-dynasty-key span { display: inline-flex; align-items: center; gap: 9px; }
+.graph-dynasty-key i { width: 6px; height: 6px; border-radius: 50%; }
+.graph-main .graph-drawer { position: relative; top: auto; right: auto; width: auto; max-height: 690px; box-shadow: none; border-radius: 0; border-top: 0; border-bottom: 0; border-right: 0; overflow-y: auto; }
+.graph-drawer .drawer-close { top: 13px; right: 12px; }
+.graph-drawer .drawer-head { padding-top: 14px; }
+.graph-drawer .dr-type small { font-size: 9px; }
+@media (max-width: 900px) {
+  .graph-main { grid-template-columns: minmax(0, 1fr) 205px; }
+  .graph-heading, .graph-controls { padding-left: 20px; padding-right: 20px; }
+  .graph-reading-panel, .graph-main .graph-drawer { padding: 22px 16px; }
+  .graph-stage-hint { display: none; }
+}
+@media (max-width: 640px) {
+  .graph-heading { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .graph-heading .graph-totals strong { font-size: 21px; }
+  .graph-main { grid-template-columns: minmax(0, 1fr); }
+  .g6-container-canvas { height: 570px; min-height: 570px; }
+  .graph-reading-panel, .graph-main .graph-drawer { border-left: 0; border-top: 1px solid var(--border-light); }
+  .graph-reading-panel .graph-side-legend { display: none; }
+  .graph-entry-poets { grid-template-columns: 1fr 1fr; column-gap: 20px; margin-bottom: 0; }
+  .graph-filters { row-gap: 12px; }
+}
 </style>

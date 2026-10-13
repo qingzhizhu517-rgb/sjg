@@ -8,9 +8,26 @@ import {
   relocateSharedLock,
   backendUploadSpec,
   injectBackendRuntime,
+  releaseCorsOrigins,
 } from './release-lib.mjs'
 
 const config = JSON.parse(await fs.readFile(new URL('../ops/release.json', import.meta.url)))
+test('custom domain CORS survives releases alongside existing Sites origins', () => {
+  const origins = releaseCorsOrigins(validateReleaseConfig(config))
+  assert.ok(origins.includes('https://qilu.aohs.top'))
+  assert.ok(origins.includes(config.services['display-v2'].url))
+  assert.ok(origins.includes(config.services['admin-frontend'].url))
+  assert.ok(!origins.includes(config.services.backend.url))
+  for (const origin of [
+    'http://qilu.aohs.top',
+    'https://qilu.aohs.top/path',
+    'https://user:pass@qilu.aohs.top',
+  ]) {
+    const invalid = structuredClone(config)
+    invalid.services['display-v2'].customOrigins = [origin]
+    assert.throws(() => validateReleaseConfig(invalid))
+  }
+})
 test('native Railway runtime injection preserves imported database and secret policy', () => {
   const source =
     'export default function() {\n const MySQL = mysql("MySQL", {});\n const api = service("sjg-api", {healthcheck:"/old"});\n return {variables:{managed:false},resources:[MySQL,api]};\n}'
