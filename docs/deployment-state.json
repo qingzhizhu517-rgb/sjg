@@ -9,7 +9,7 @@
     "mysql_proxy_id": "13a72fa0-1687-418e-950d-239005eab0d9",
     "mysql_proxy_host": "mainline.proxy.rlwy.net",
     "mysql_proxy_port": 58212,
-    "backend_deployment_id": "fa729ee0-7cc1-42c1-8b39-c2e0da33af0e",
+    "backend_deployment_id": "44e9ef2e-8e46-4da5-a827-0e349fcf2b7e",
     "status": "success",
     "bootstrap_service_id": "db374c4f-0457-4225-b079-8d51a78b2581",
     "bootstrap_deployment_id": "e70d0d4c-d081-4794-80e4-c4effa59c7db",
@@ -23,50 +23,54 @@
     "asset_migration_deployment_id": "0d343e82-b1b3-415c-9153-92c3fa198207",
     "asset_migration_service_status": "completed_service_deleted",
     "trial_state_observed_at": "initial_deployment_2026-10-10",
-    "repository_revision": "5d3b5f3e3385a89651a00f7e60efa4c288c1d5eb",
+    "repository_revision": "d336636892bc0696eb669ad7dc93f9152795b3c5",
     "production_profile": "prod",
     "database_tls": "VERIFY_IDENTITY",
-    "maintenance_service_status": "completed_service_deleted"
+    "maintenance_service_status": "completed_environment_deleted"
   },
   "sites": {
     "display-v2": {
       "project_id": "appgprj_6aca26e375b081919acfa874a379028d",
       "expected_url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
-      "checkout_path": "/Users/a1/.codex/worktrees/0b70/sjg/.local/releases/5d3b5f3e3385a89651a00f7e60efa4c288c1d5eb/sites/display-v2",
-      "status": "succeeded_private",
-      "commit_sha": "e6c6d88fce0691612e59079eea56f081a8a30c3d",
-      "deployment_id": "appgdep_6acc4d4e0aec8191a8356b9da93ef55e",
-      "version_id": "appgprj_6aca26e375b081919acfa874a379028d~appgver_9dcca9d63534819188d8ddaee8293094",
+      "checkout_path": "/Users/a1/.codex/worktrees/8f8b/sjg/.local/releases/d336636892bc0696eb669ad7dc93f9152795b3c5/sites/display-v2",
+      "status": "succeeded",
+      "commit_sha": "f0bc877f16984c0b105b172fd312359c3ae5c119",
+      "deployment_id": "appgdep_6ace2ca9a0e88191a65665641dc39372",
+      "version_id": "appgprj_6aca26e375b081919acfa874a379028d~appgver_6c23be7c91f8819186e52a542320314f",
       "url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
-      "repository_revision": "5d3b5f3e3385a89651a00f7e60efa4c288c1d5eb",
-      "version_number": 9,
-      "verified_at": "2026-10-12T03:01:07.474Z"
+      "repository_revision": "d336636892bc0696eb669ad7dc93f9152795b3c5",
+      "version_number": 11,
+      "verified_at": "2026-10-13T13:06:30.619Z",
+      "access_mode": "public",
+      "custom_url": "https://qilu.aohs.top"
     },
     "admin-frontend": {
       "project_id": "appgprj_6aca26f42d9081918bc7545e1b373f99",
       "expected_url": "https://qilu-wenmai-admin-qzzhu.noisyamber1.chatgpt.site",
-      "checkout_path": "/Users/a1/.codex/worktrees/0b70/sjg/.local/releases/5d3b5f3e3385a89651a00f7e60efa4c288c1d5eb/sites/admin-frontend",
+      "checkout_path": "/Users/a1/.codex/worktrees/8f8b/sjg/.local/releases/d336636892bc0696eb669ad7dc93f9152795b3c5/sites/admin-frontend",
       "status": "succeeded_private",
-      "commit_sha": "51cd35044f717e2316f985cb2f8f4f83f7993de5",
-      "deployment_id": "appgdep_6acc4c88fee88191a39aec1ce7a20469",
-      "version_id": "appgprj_6aca26f42d9081918bc7545e1b373f99~appgver_2d269d35cad881918e4d7164097054ee",
+      "commit_sha": "73774ccf2ab1efd5fcd5883bbb44e250fab03216",
+      "deployment_id": "appgdep_6ace2b5b457c8191aed9fb562e4eac91",
+      "version_id": "appgprj_6aca26f42d9081918bc7545e1b373f99~appgver_ac1eefafecbc8191bea5666f08c6cf5c",
       "url": "https://qilu-wenmai-admin-qzzhu.noisyamber1.chatgpt.site",
-      "repository_revision": "5d3b5f3e3385a89651a00f7e60efa4c288c1d5eb",
-      "version_number": 4,
-      "verified_at": "2026-10-12T02:57:36.159Z"
+      "repository_revision": "d336636892bc0696eb669ad7dc93f9152795b3c5",
+      "version_number": 6,
+      "verified_at": "2026-10-13T13:00:33.819Z",
+      "access_mode": "custom_owner_only"
     },
     "sjg-datav": {
       "project_id": "appgprj_6aca26caccb0819188666ef76e25ea68",
       "expected_url": "https://qilu-wenmai-datav-qzzhu.noisyamber1.chatgpt.site",
-      "checkout_path": "/Users/a1/.codex/worktrees/0b70/sjg/.local/releases/5d3b5f3e3385a89651a00f7e60efa4c288c1d5eb/sites/sjg-datav",
+      "checkout_path": "/Users/a1/.codex/worktrees/8f8b/sjg/.local/releases/d336636892bc0696eb669ad7dc93f9152795b3c5/sites/sjg-datav",
       "status": "succeeded_private",
-      "commit_sha": "1f4bd2d08f695ef6455b3bdc382b69afaf1229c6",
-      "deployment_id": "appgdep_6acc4c3bc1a08191a4fb77c15cb0e757",
-      "version_id": "appgprj_6aca26caccb0819188666ef76e25ea68~appgver_0ce55190dcc881918af85187cd159e00",
+      "commit_sha": "80ef0ff7356e38b7f276747478fe11b7427eeabe",
+      "deployment_id": "appgdep_6acdf8f0ec308191a1cbb7b53f9588fe",
+      "version_id": "appgprj_6aca26caccb0819188666ef76e25ea68~appgver_bd353e46a9088191a90e44801e49d1fc",
       "url": "https://qilu-wenmai-datav-qzzhu.noisyamber1.chatgpt.site",
-      "repository_revision": "5d3b5f3e3385a89651a00f7e60efa4c288c1d5eb",
-      "version_number": 4,
-      "verified_at": "2026-10-12T02:56:12.858Z"
+      "repository_revision": "d336636892bc0696eb669ad7dc93f9152795b3c5",
+      "version_number": 6,
+      "verified_at": "2026-10-13T12:58:48.133Z",
+      "access_mode": "custom_owner_only"
     }
   },
   "validation": {
@@ -78,15 +82,15 @@
       "sjg-datav"
     ],
     "database_import": "snapshot_and_25_migrations_completed",
-    "browser": "local_browser_real_cloud_API_passed_Jinan_region_spot_detail_and_reading_pair; Taian_HD_DPR2_desktop_and_mobile_passed; no_preview; no_overflow; production_authenticated_DOM_QA_not_run",
-    "llm": "not_configured_user_requested_UI_and_samples_first",
+    "browser": "production qilu.aohs.top: graph 32 poets/35 relations, draggable pet, reload position memory, click dialog, one waiting bubble and real AI response passed",
+    "llm": "configured; real production browser reply verified; model facts not audited by this UI acceptance",
     "admin_login": "verified_existing_admin_account",
     "oss_upload": "not_verified",
     "public_api": "53_endpoints_verified; nine_cities_each_have_real_spot_and_poem; published_details_have_sources",
     "cors": "three_site_origins_OPTIONS200_exact_allow_origin",
     "admin_anonymous": "HTTP401",
     "learning_task_absent": "HTTP404",
-    "ai_sse": "error_event_explicitly_reports_missing_LLM_API_KEY",
+    "ai_sse": "production real chat passed: one waiting reply bubble, zero empty bubbles, same reply row after output, no browser errors",
     "static_site_content": "display_revision_2cffd1a_and_9_resources_match_built_artifacts_including_3_HD_images; HTML_entry_matches; other_services_preserved",
     "database_asset_migrations": {
       "updated_entities": 78,
@@ -188,9 +192,9 @@
       "audit_file": "docs/content-publication/2026-10-12-batch-publication.md"
     },
     "unified_release": {
-      "application_revision": "752604f289ac89572ad5e3603cbf6026f9c838ff",
-      "date": "2026-10-11T16:55:59.176782+00:00",
-      "backend_deployment_id": "f6eaf91c-75c7-4fda-a540-0af6dd888146",
+      "application_revision": "d336636892bc0696eb669ad7dc93f9152795b3c5",
+      "date": "2026-10-13T13:07:17.247Z",
+      "backend_deployment_id": "44e9ef2e-8e46-4da5-a827-0e349fcf2b7e",
       "native_predeploy": [
         "V35__user_credential_version.sql",
         "V36__rag_fulltext_indexes.sql"
@@ -198,39 +202,37 @@
       "native_predeploy_timeout_seconds": 180,
       "healthcheck": "/actuator/health",
       "database_tls": {
-        "mode": "VERIFY_IDENTITY",
-        "cipher": "TLS_AES_128_GCM_SHA256",
-        "certificate_expiry": "notAfter=Oct 11 16:16:32 2027 GMT",
-        "certificate_directory": "/var/lib/mysql/sjg-tls",
-        "directory_mode": "700"
+        "mode": "VERIFY_IDENTITY"
       },
       "backup": {
-        "sha256": "1d348bdc04a6ab2a565540a4561c1da2670ff7e26ea4df69d622fbe7384dd4d8",
-        "tables": 28,
+        "sha256": "f417686542981628ef216e334e7b04f7ea9b72337093df01350faff402fcdf4d",
+        "tables": 29,
         "isolated_restore_counts_match": true
       },
       "verification": {
-        "completed_at": "2026-10-11T16:47:44.784Z",
+        "completed_at": "2026-10-13T13:07:17.247Z",
         "frontend_revisions": [
           "sjg-datav",
           "admin-frontend",
           "display-v2"
         ],
-        "backend_revision": "752604f289ac89572ad5e3603cbf6026f9c838ff",
+        "backend_revision": "d336636892bc0696eb669ad7dc93f9152795b3c5",
         "cors": "passed",
         "anonymous_admin": 401
       },
-      "static_assets_matched": 10,
-      "sites_access": "owner-private_preserved",
-      "local_verify_all": "passed_188_unit_5_integration_250_display_8_release_tests",
-      "ci_url": "https://github.com/qingzhizhu517-rgb/sjg/actions/runs/38154731847",
-      "temporary_cloud_service_deleted": true,
-      "temporary_ssh_key_revoked": true,
-      "llm_provider_configured": false,
-      "oss_upload_acceptance": "not_run",
-      "production_owner_browser_dom": "not_run",
-      "scheduled_backup_and_alert_receiver": "not_connected",
-      "local_restore_container": "stopped; deletion blocked by local PreToolUse guard"
+      "static_assets_matched": 4,
+      "sites_access": {
+        "display-v2": "public preserved",
+        "admin-frontend": "owner-only preserved",
+        "sjg-datav": "owner-only preserved"
+      },
+      "local_verify_all": "passed:192 backend unit/MVC,7 MySQL integration,274 display tests,9 release contracts,three builds,five-page axe",
+      "ci_url": "https://github.com/qingzhizhu517-rgb/sjg/actions/runs/38375332175",
+      "ci_status": "success",
+      "temporary_backup_service_removed": true,
+      "local_restore_container": "restore verified and stopped",
+      "production_browser_dom": "passed; qilu.aohs.top/poets?view=graph; no preview mode",
+      "custom_domain_cors": "HTTPS origin preserved by release configuration"
     },
     "previous_source_backed_publication": {
       "application_revision": "8912721b81f96bd8fc3de47940c9503db01592a8",
@@ -295,15 +297,15 @@
     }
   },
   "repository": {
-    "online_base_sha": "5d3b5f3e3385a89651a00f7e60efa4c288c1d5eb",
+    "online_base_sha": "d336636892bc0696eb669ad7dc93f9152795b3c5",
     "online_latest_local_redesign": true,
     "publication_mode": "unified_release_journal_Railway_IaC_and_native_Sites",
     "master_updates_do_not_auto_deploy": true,
     "online_component_revisions": {
-      "backend": "5d3b5f3e3385a89651a00f7e60efa4c288c1d5eb",
-      "sjg-datav": "5d3b5f3e3385a89651a00f7e60efa4c288c1d5eb",
-      "admin-frontend": "5d3b5f3e3385a89651a00f7e60efa4c288c1d5eb",
-      "display-v2": "5d3b5f3e3385a89651a00f7e60efa4c288c1d5eb"
+      "backend": "d336636892bc0696eb669ad7dc93f9152795b3c5",
+      "sjg-datav": "d336636892bc0696eb669ad7dc93f9152795b3c5",
+      "admin-frontend": "d336636892bc0696eb669ad7dc93f9152795b3c5",
+      "display-v2": "d336636892bc0696eb669ad7dc93f9152795b3c5"
     }
   }
 }
