@@ -37,6 +37,7 @@ defineEmits(['go'])
 
 <style scoped>
 .famous-cities {
+  overflow: clip;
   padding: 72px 0;
   max-width: var(--container-max, 1280px);
   margin: 0 auto;

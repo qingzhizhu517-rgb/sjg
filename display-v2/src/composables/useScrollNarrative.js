@@ -70,34 +70,18 @@ export function useScrollNarrative() {
     const el = stickyEl?.$el || stickyEl
     if (!el) return
 
-    const camera = sandboxApi?.getCamera?.()
-    const controls = sandboxApi?.getControls?.()
-    if (!camera || !controls) return
-
-    const initPos = camera.position.clone()
-    const initTarget = controls.target.clone()
-
-    // end: 相机推近 30%，目标微下沉
-    const endPos = initPos.clone()
-    endPos.z -= initPos.z * 0.35
-    endPos.y -= 0.6
-    const endTarget = initTarget.clone()
-    endTarget.y -= 0.3
+    if (!sandboxApi?.setGuidedProgress) return
 
     _triggers.push(
       ScrollTrigger.create({
         trigger: el,
         start: 'top top',
         end: '+=120%',
-        pin: true,
-        pinSpacing: true,
+        pin: false,
         scrub: 1,
         onUpdate: (self) => {
           stickyProgress.value = self.progress
-          if (!camera || !controls) return
-          camera.position.lerpVectors(initPos, endPos, self.progress)
-          controls.target.lerpVectors(initTarget, endTarget, self.progress)
-          controls.update()
+          sandboxApi.setGuidedProgress(self.progress)
         },
       })
     )

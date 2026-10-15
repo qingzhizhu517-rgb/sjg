@@ -1,17 +1,9 @@
 <template>
-  <div class="map-view scroll-narrative">
+  <div class="map-view scroll-narrative" :class="{ 'sandbox-still': !sandbox.motion }">
 
     <!-- ===== S1: 黄河意境 Hero ===== -->
     <section class="sn-section sn-hero">
       <PageHeading eyebrow="山河探索 / 黄河地图" title="循河入境，一览九城" description="在三维地图中选择城市，了解山水与文化；也可以直接进入城市册页。"><template #actions><button class="folio-button folio-button--primary" @click="scrollToMap">开始探索地图 ↓</button></template></PageHeading>
-      <!-- 错误状态 -->
-      <div v-if="errorMsg" class="map-error-state">
-        <div class="error-overlay">
-          <p class="error-icon">!</p>
-          <p class="error-text">{{ errorMsg }}</p>
-          <button class="error-retry-btn folio-button" @click="retryLoadMap">重新加载</button>
-        </div>
-      </div>
     </section>
 
     <!-- ===== S3: 三维沙盘 sticky 段落 ===== -->
@@ -21,60 +13,58 @@
       <div class="sn-sticky-viewport">
         <div class="sn-sticky-media">
           <div class="real-3d-container">
-            <div class="map-stage" :class="{ 'map-stage--has-city': selectedCity }">
+            <div class="map-stage" :class="{ 'map-stage--has-city': selectedCity, 'map-stage--editing': isEditing }">
               <!-- 左：沙盘 3D 地图 -->
-              <div class="map-frame">
+              <div class="map-frame" :class="{ 'map-frame--tour': sandbox.tour.status !== 'idle' }">
                 <div class="map-frame__title">
                   <span class="map-frame__seal">沙盘</span>
                   <span class="map-frame__name">山河图志</span>
                   <span class="map-frame__sub">山东 · 黄河流域</span>
+                  <select class="map-city-select" aria-label="选择城市" :value="selectedCity || ''" @change="clickLabel($event.target.value)"><option value="" disabled>九城导览</option><option v-for="city in cities" :key="city" :value="city">{{ city }}</option></select>
                 </div>
+                <SandboxToolbar :engine="sandbox" :labels="showLabels" :coarse="isCoarsePointer" @toggle-labels="showLabels = !showLabels" />
+                <SandboxTour :engine="sandbox" />
                 <div class="canvas-3d-wrap" style="position: relative;">
-                  <canvas ref="canvas3d" class="webgl-canvas"></canvas>
+                  <canvas ref="canvas3d" class="webgl-canvas" tabindex="0" aria-label="山东三维山河沙盘，使用工具栏切换视角和编辑模式" @keydown="handleCanvasKey"></canvas>
+                  <div v-if="sandbox.loading || errorMsg" class="sandbox-state" role="status">
+                    <p>{{ errorMsg || '正在铺展山河…' }}</p>
+                    <button v-if="errorMsg" class="folio-button" @click="retryLoadMap">重新加载</button>
+                    <router-link v-if="errorMsg" :to="atlasLink('/cities/济南', route)">浏览城市册页 →</router-link>
+                  </div>
+                  <p class="sandbox-gesture-help">{{ isCoarsePointer ? (sandbox.touchInteraction ? '单指旋转 · 双指缩放平移' : '在「光景与画质」开启触控 · 双指缩放平移') : '拖动旋转 · 滚轮缩放 · 右键平移' }}</p>
+                  <p v-if="sandbox.notice" class="sandbox-notice" role="status">{{ sandbox.notice }}</p>
+                  <div class="sandbox-map-note">山河微缩景观 · 地形与聚落为艺术示意 · 河道据 Natural Earth</div>
 
                   <!-- 浮动城市标签 -->
-                  <div class="labels-overlay-3d" v-show="showLabels">
+                  <div class="labels-overlay-3d" v-show="showLabels && !isEditing">
+                    <svg class="label-leaders" aria-hidden="true"><g v-for="label in cityLabels" :key="label.name" v-show="label.visible"><line :x1="label.x" :y1="label.y" :x2="label.anchorX" :y2="label.anchorY"/><circle :cx="label.anchorX" :cy="label.anchorY" r="3"/></g></svg>
                     <div
                       v-for="label in cityLabels"
                       :key="label.name"
                       v-show="label.visible"
-                      class="city-3d-label" role="button" tabindex="0" :aria-label="`预览${label.name}`" @keydown.enter="clickLabel(label.name)" @keydown.space.prevent="clickLabel(label.name)"
+                      class="city-3d-label" :class="{ 'city-3d-label--selected': selectedCity === label.name || sandbox.tour.city === label.name }" :aria-pressed="selectedCity === label.name" role="button" tabindex="0" :aria-label="`预览${label.name}`" @keydown.enter="clickLabel(label.name)" @keydown.space.prevent="clickLabel(label.name)"
                       :style="{ left: `${label.x}px`, top: `${label.y}px` }"
                       @click="clickLabel(label.name)"
                     >
-                      <div class="label-plaque-card">
-                        <div class="decor-corner corner-tl"></div>
-                        <div class="decor-corner corner-tr"></div>
-                        <div class="decor-corner corner-bl"></div>
-                        <div class="decor-corner corner-br"></div>
-                        <div class="plaque-content">
-                          <span class="plaque-name">{{ label.name }}</span>
-                          <span class="plaque-divider"></span>
-                          <span class="plaque-tag">{{ getCityData(label.name).tag }}</span>
-                        </div>
-                      </div>
-                      <div class="label-connector-line"></div>
-                      <div class="label-glow-pin">
-                        <span class="ring-pulse pulse-1" :style="{ borderColor: label.colorHex }"></span>
-                        <span class="ring-pulse pulse-2" :style="{ borderColor: label.colorHex }"></span>
-                        <div class="pin-dot" :style="{ backgroundColor: label.colorHex }"></div>
-                      </div>
+                      <div class="label-plaque-card"><span class="plaque-name">{{ label.name }}</span></div>
+
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- 右：册页信息面板 -->
-              <aside class="map-album">
-                <div class="map-album__hud" v-show="!selectedCity">
+              <!-- 选择城市或编辑时展开侧栏 -->
+              <aside v-if="selectedCity || isEditing" class="map-album">
+                <SandboxEditor v-if="isEditing" :engine="sandbox" />
+                <div class="map-album__hud" v-show="!selectedCity && !isEditing">
                 <div class="hud-header">
                   <span class="hud-seal">山河<br/>图志</span>
                   <div class="hud-title-wrap">
                     <span class="hud-eyebrow">数字人文 · 时空交互</span>
-                    <h2 class="hud-title">三维地理文脉舱</h2>
+                    <h2 class="hud-title">一卷山河，随手入境</h2>
                   </div>
                 </div>
-                <p class="hud-desc">{{ isCoarsePointer ? '双指旋转缩放视角，单指上下滑动浏览页面。' : '拖拽旋转视角，双击节点飞往对应城市。' }}</p>
+                <p class="hud-desc">{{ isCoarsePointer ? '单指浏览页面；在光景与画质中开启操作沙盘后，可单指旋转、双指缩放平移。' : '左键拖动旋转，滚轮缩放；右键或 Shift＋拖动平移。' }}</p>
                 <div class="hud-stats">
                   <template v-for="(s, i) in hudStats" :key="i">
                     <span v-if="i > 0" class="stat-divider"></span>
@@ -90,6 +80,7 @@
                     </div>
                   </template>
                 </div>
+                <label class="sandbox-city-index">九城索引<select aria-label="选择城市" :value="selectedCity || ''" @change="clickLabel($event.target.value)"><option value="" disabled>选择一座城市</option><option v-for="city in cities" :key="city" :value="city">{{ city }}</option></select></label>
                 <div class="hud-actions">
                   <button class="action-btn-toggle folio-button" :aria-pressed="showLabels" @click="showLabels = !showLabels" :title="showLabels ? '隐藏标签' : '显示标签'">
                     <svg v-if="showLabels" class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -110,7 +101,7 @@
 
                 <!-- 点城市 -> 城市卡替换文脉舱 HUD -->
                 <transition name="fade">
-                  <div v-if="selectedCity" class="map-album__card-slot">
+                  <div v-if="selectedCity && !isEditing" class="map-album__card-slot">
                     <div class="map-album__eyebrow">名城档案</div>
                     <CityDetailCard
                       :name="selectedCity"
@@ -146,20 +137,20 @@
 
 <script setup>
 import PageHeading from '../components/ui/PageHeading.vue'
-import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, proxyRefs } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { atlasLink, isAtlasPreview, previewSpot, previewSpots, previewPoets, previewPoems } from '../config/atlasPreview'
 import { useTheme } from '../composables/useTheme'
-import { cssVarAlpha } from '../utils/cssToken'
 import { resolveContent } from '../content'
 import api from '../api'
-import RiverHero from '../components/homepage/RiverHero.vue'
+import SandboxTour from '../components/sandbox/SandboxTour.vue'
+import SandboxToolbar from '../components/sandbox/SandboxToolbar.vue'
+import SandboxEditor from '../components/sandbox/SandboxEditor.vue'
 import CityDetailCard from '../components/homepage/CityDetailCard.vue'
 import FamousCities from '../components/homepage/FamousCities.vue'
 import FooterCTA from '../components/homepage/FooterCTA.vue'
 import { useCityEnrichment } from '../composables/useCityEnrichment'
 import { useThreeSandbox } from '../composables/useThreeSandbox'
-import SkeletonBlock from '../components/homepage/SkeletonBlock.vue'
 import { useScrollNarrative } from '../composables/useScrollNarrative'
 import { useFlipTransition } from '../composables/useFlipTransition'
 import { cityIllustration, CITY_RIVER_ORDER } from '../config/cityIllustrations'
@@ -172,8 +163,9 @@ const { theme } = useTheme()
 const three = useThreeSandbox()
 const { canvas3d, selectedCity, cityLabels, errorMsg } = three
 
-// SVG accent color computed at runtime for theme reactivity
-const svgAccent40 = computed(() => cssVarAlpha('--accent', 0.4))
+const sandbox = proxyRefs(three)
+const isEditing = computed(() => sandbox.mode === 'object' || sandbox.mode === 'terrain')
+let pageDisposed = false
 
 const showLabels = ref(true)
 const regions = ref([])
@@ -286,8 +278,7 @@ const loadHeroData = async () => {
 }
 
 const clickLabel = (cityName) => {
-  openCity(cityName)
-  three.flyToCity(cityName)
+  three.selectCity(cityName)
 }
 
 // Cities list and coords for water-ink custom placement
@@ -307,32 +298,31 @@ const getCityData = (cityName) => {
 }
 
 
-// 失败重试入口（template 错误态按钮）
-const retryLoadMap = () => {
-  three.errorMsg.value = null
-  three.setTheme(true)
+// 相机就绪后才建立滚动导览，用户操作由引擎统一接管。
+const initializeSandbox = async () => {
+  const initialized = await three.init({
+    onPickCity: (name) => openCity(name),
+    onClearCity: () => { cityRequest++; cityDetail.value = null },
+    onDoublePickCity: (name) => router.push(atlasLink(`/regions/${name}`, route)),
+  })
+  if (initialized && !pageDisposed) scrollNarrative.init({ sandboxApi: three, stickyRealRef: stickyRealRef.value })
 }
-
+const retryLoadMap = () => initializeSandbox()
+const handleCanvasKey = (event) => {
+  if (event.key === 'Escape') { closeCity(); three.setMode('explore'); return }
+  const views = { Home: 'overview', '1': 'overview', '2': 'top', '3': 'river' }
+  if (views[event.key]) { event.preventDefault(); three.setView(views[event.key]) }
+  if (event.key === '+' || event.key === '=') { event.preventDefault(); three.zoom(-0.2) }
+  if (event.key === '-') { event.preventDefault(); three.zoom(0.2) }
+}
 onMounted(() => {
   loadHeroData()
   if (!isAtlasPreview(route)) ensurePoets()
-  three.init({
-    onPickCity: (name) => openCity(name),
-    onDoublePickCity: (name) => router.push(atlasLink(`/regions/${name}`, route)),
-  })
-  // P3-1: scroll 叙事延迟初始化（等 DOM 就绪）
-  scrollNarrative.init({
-    sandboxApi: three,
-    stickyRealRef: stickyRealRef.value,
-  })
-  // P5-5: 预取关键数据（浏览器空闲时）
-  if (!isAtlasPreview(route)) {
-    api.prefetch('/timeline')
-    api.prefetch('/poet-relations')
-  }
+  initializeSandbox()
 })
 
 onBeforeUnmount(() => {
+  pageDisposed = true
   cityRequest++
   three.dispose()
   scrollNarrative.dispose()
@@ -359,19 +349,20 @@ onBeforeUnmount(() => {
 
 /* S3: Sticky 沙盘 */
 .sn-sticky-real {
+  scroll-margin-top: 140px;
   width: 100%;
 }
 
 .sn-sticky-viewport {
   position: relative;
   width: 100%;
-  min-height: 100vh; /* 与 media 等高；滚动距离由 ScrollTrigger pin 时长提供 */
+  min-height: 0;
 }
 
 .sn-sticky-media {
   width: 100%;
-  height: 100vh;
-  overflow: hidden;
+  height: auto;
+  overflow: visible;
 }
 
 /* 左图右册 框体化布局 */
@@ -387,15 +378,15 @@ onBeforeUnmount(() => {
 
 .map-stage {
   display: grid;
-  /* 沙盘为主：右栏固定窄条 280px，仅作说明；选中城市时展开至 400px */
-  grid-template-columns: 1fr 280px;
+  /* 观览占满视口，城市资料与编辑器按需展开。 */
+  grid-template-columns: minmax(0, 1fr);
   gap: 24px;
-  height: calc(100vh - var(--nav-height) - 76px);
+  height: min(780px, calc(100svh - 170px));
   min-height: 520px;
   transition: grid-template-columns 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.map-stage--has-city {
-  grid-template-columns: 1fr 400px;
+.map-stage--has-city, .map-stage--editing {
+  grid-template-columns: minmax(0, 1fr) 340px;
 }
 
 /* 左：沙盘框 */
@@ -566,7 +557,7 @@ onBeforeUnmount(() => {
   font-weight: 600;
   color: var(--accent);
   letter-spacing: 2px;
-  opacity: 0.8;
+  opacity: 1;
 }
 
 .hud-title {
@@ -737,7 +728,7 @@ onBeforeUnmount(() => {
 
 /* Mobile */
 @media (max-width: 640px) {
-  .label-plaque-card { min-width: 110px; padding: 6px 10px; }
+  .label-plaque-card { min-width: 30px; padding: 6px 4px; }
   .real-3d-container { padding: 20px 16px; }
   .map-stage { gap: 16px; }
   .map-frame { height: 52vh; min-height: 320px; }
@@ -777,91 +768,43 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Plaque Card styling */
+.label-leaders { position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; }
+.label-leaders line { stroke:#e9c78c; stroke-width:1.2; }
+.label-leaders circle { fill:#ffdf93; stroke:#fff2d8; stroke-width:1; }
+/* Bronze wayfinding plaques remain legible over the miniature landscape. */
 .label-plaque-card {
-  position: relative;
-  padding: 7px 14px;
-  min-width: 130px;
-  max-width: 180px;
-  border-radius: 4px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  backdrop-filter: blur(8px);
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:34px;
+  padding:8px 5px;
+  border:1px solid #e7bd78;
+  border-radius:5px 5px 2px 2px;
+  background:linear-gradient(110deg,#775230,#382c20);
+  box-shadow:0 3px 12px #0008, inset 0 0 0 2px #bf965c50;
+  transition:transform .2s,box-shadow .2s;
 }
-
-/* 城市标签匾额（单一水墨版式：宣纸卡面 + 朱砂描边） */
-.label-plaque-card {
-  background: var(--card-bg);
-  border: 1px solid var(--accent-a35);
-}
-
-/* Hover effects */
-.city-3d-label:hover .label-plaque-card {
-  transform: translateY(-5px) scale(1.06);
-  box-shadow: 0 12px 30px var(--shadow-soft);
-  border-color: var(--accent);
-}
-
-/* Decorative Chinese Plaque Corners */
-.decor-corner {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  border: 1.5px solid var(--accent-a35);
-  pointer-events: none;
-}
-
-/* TL, TR, BL, BR corners */
-.corner-tl { top: 3px; left: 3px; border-right: 0; border-bottom: 0; }
-.corner-tr { top: 3px; right: 3px; border-left: 0; border-bottom: 0; }
-.corner-bl { bottom: 3px; left: 3px; border-right: 0; border-top: 0; }
-.corner-br { bottom: 3px; right: 3px; border-left: 0; border-top: 0; }
-
-.city-3d-label:hover .decor-corner {
-  border-color: var(--accent);
-}
-
-/* Plaque Content */
-.plaque-content {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  white-space: nowrap;
-}
-
 .plaque-name {
-  font-family: var(--font-heading);
-  font-size: var(--fs-body-sm);
-  font-weight: 600;
-  letter-spacing: 1px;
-  color: var(--text-primary);
+  writing-mode:vertical-rl;
+  text-orientation:upright;
+  font-family:var(--font-heading);
+  font-size:17px;
+  line-height:1.2;
+  letter-spacing:3px;
+  color:#fff1d4;
 }
-
-.plaque-divider {
-  width: 1px;
-  height: 12px;
-  background: var(--border);
+.city-3d-label:hover .label-plaque-card,
+.city-3d-label--selected .label-plaque-card {
+  transform:translateY(-3px);
+  border-color:#ffdc8e;
+  box-shadow:0 0 16px #ffc76366,inset 0 0 0 2px #bf965c90;
 }
-
-.plaque-tag {
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 1px 6px;
-  border-radius: var(--radius-sm);
-  letter-spacing: 0.5px;
-  color: var(--accent-dark);
-  background: var(--accent-a15);
-}
-
 /* Connecting Line */
 .label-connector-line {
   width: 1.5px;
-  height: 24px;
-  background: linear-gradient(to bottom, var(--accent), transparent);
+  height: 17px;
+  background: linear-gradient(to bottom, #e8bd6f, #ffde91);
   transition: height 0.3s ease;
 }
 
@@ -980,5 +923,26 @@ onBeforeUnmount(() => {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 3%, transparent);
 }
-.sn-hero { min-height:0; height:auto; padding:28px var(--page-gutter) 0; max-width:1360px; margin:auto; } .map-frame,.map-album { border-radius:3px; } .map-album__hud { padding:28px; } .sn-footer-cta { display:none; }
+.sn-hero { min-height:0; height:auto; padding:28px var(--page-gutter) 0; max-width:1360px; margin:auto; } .map-frame,.map-album { border-radius:3px; } .map-album__hud { padding:8px; } .sn-footer-cta { display:none; }
+
+.map-city-select { font:inherit; font-size:12px; padding:4px 8px; border:1px solid var(--border); color:var(--text-primary); background:var(--bg-primary); }
+.sandbox-gesture-help { position:absolute; right:14px; bottom:12px; margin:0; padding:6px 9px; color:#eee3c9; background:#17222be6; font-size:11px; pointer-events:none; }
+.sandbox-city-index { display:grid; gap:10px; font-size:12px; color:var(--text-secondary); }
+.sandbox-city-index select { font:inherit; padding:10px; background:var(--bg-primary); color:var(--text-primary); border:1px solid var(--border); }
+.sandbox-notice { position:absolute; top:12px; left:12px; right:12px; padding:10px; font-size:12px; color:var(--text-primary); background:var(--bg-primary); border:1px solid var(--border); z-index:12; }
+.sandbox-state { position:absolute; inset:0; z-index:15; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; background:var(--bg-primary); color:var(--text-secondary); font-size:14px; }
+.sandbox-map-note { position:absolute; left:14px; bottom:12px; color:var(--text-muted); font-size:10px; letter-spacing:1px; pointer-events:none; background:color-mix(in srgb,var(--bg-primary) 85%,transparent); padding:5px 8px; border-radius:2px; }
+
+.webgl-canvas:focus-visible { outline:2px solid var(--accent); outline-offset:-3px; }
+.sandbox-still .city-3d-label,.sandbox-still .ring-pulse { animation:none; }
+@media(max-width:900px) {
+  .map-stage,.map-stage--has-city,.map-stage--editing { grid-template-columns:minmax(0,1fr); height:auto; min-height:0; }
+  .real-3d-container { padding:20px var(--page-gutter); }
+  .map-frame { min-height:540px; height:70svh; }
+  .map-album { max-height:none; overflow:visible; }
+  .map-album__card-slot { margin:0; }
+}
+@media(max-width:600px) { .sandbox-gesture-help { bottom:45px; font-size:10px; } .sandbox-map-note { max-width:calc(100% - 28px); font-size:9px; } .map-frame { height:620px; min-height:0; } .plaque-tag,.plaque-divider { display:none; } .map-frame__sub { font-size:9px; } }
+@media(max-width:600px) { .map-frame--tour { height:780px; } }
+@media(prefers-reduced-motion:reduce) { .city-3d-label,.ring-pulse { animation:none; } .map-stage { transition:none; } }
 </style>

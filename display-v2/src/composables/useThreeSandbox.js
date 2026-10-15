@@ -1,947 +1,665 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { NINE_CITIES } from '../config/nineCities.js'
+import { createTour } from '../three/sandbox/tour.js'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-
-// ==========================================
-// Three.js 3D WebGL 沙盘引擎（从 MapView 抽出，P1-5）
-// 引擎与编排通过 4 个 ref（canvas3d/selectedCity/cityLabels/errorMsg）
-// + 2 个回调（onPickCity/onDoublePickCity）+ 4 个方法（init/dispose/flyToCity/setTheme）通信。
-// ==========================================
-
-// 3D coordinates for Shandong cities relative to [0, 0] plane
-// Correct aspect ratio: longitude scale = latitude scale * cos(mean_latitude)
-// For Shandong (mean latitude ~36.4° N), cos(36.4°) ≈ 0.805
-// If latitude scale is 3.8, longitude scale should be 3.8 * 0.805 ≈ 3.06.
-const projectGeo = (lon, lat) => {
-  const x = (lon - 117.0) * 3.06
-  const z = -(lat - 36.4) * 3.8
-  return { x, z }
-}
-
-const createCityShape = (coordinates) => {
-  const shape = new THREE.Shape()
-  coordinates.forEach((coord, index) => {
-    const { x, z } = projectGeo(coord[0], coord[1])
-    if (index === 0) {
-      shape.moveTo(x, -z)
-    } else {
-      shape.lineTo(x, -z)
-    }
-  })
-  return shape
-}
-
-// Geographical coordinates (Lon, Lat) of core cities (accurate administrative centers)
-const cityGeoCoords = [
-  { name: '菏泽', lon: 115.48, lat: 35.23, color: 0xc23a2b, river: true },
-  { name: '济宁', lon: 116.59, lat: 35.38, color: 0xe69138 },
-  { name: '泰安', lon: 117.08, lat: 36.20, color: 0xd4af37 },
-  { name: '聊城', lon: 115.97, lat: 36.45, color: 0x8e352e, river: true },
-  { name: '济南', lon: 117.00, lat: 36.67, color: 0x3d85c6, river: true },
-  { name: '德州', lon: 116.29, lat: 37.43, color: 0x674ea7, river: true },
-  { name: '淄博', lon: 118.00, lat: 36.81, color: 0x6aa84f, river: true },
-  { name: '滨州', lon: 118.02, lat: 37.37, color: 0x5b8c85, river: true },
-  { name: '东营', lon: 118.49, lat: 37.46, color: 0x008080, river: true }
-]
-
-const city3dCoords = cityGeoCoords.map(city => {
-  const { x, z } = projectGeo(city.lon, city.lat)
-  return {
-    name: city.name,
-    x,
-    z,
-    color: city.color,
-    river: !!city.river
-  }
-})
-
-// Yellow River geographical coordinate points
-const riverGeoPoints = [
-  { lon: 114.80, lat: 35.00 },
-  { lon: 115.43, lat: 35.24 }, // 菏泽
-  { lon: 115.97, lat: 36.45 }, // 聊城
-  { lon: 116.50, lat: 36.55 }, // 德州/Jinan border
-  { lon: 116.99, lat: 36.67 }, // 济南
-  { lon: 118.05, lat: 36.78 }, // 淄博
-  { lon: 118.02, lat: 37.37 }, // 滨州
-  { lon: 118.67, lat: 37.43 }, // 东营
-  { lon: 119.20, lat: 37.80 }  // 渤海口
-]
-
-const river2dPoints = riverGeoPoints.map(p => {
-  const { x, z } = projectGeo(p.lon, p.lat)
-  return { x, z }
-})
-
-// Curve guide points for carving the terrain valley (preventing circular dependencies)
-const guidePoints = new THREE.CatmullRomCurve3(
-  river2dPoints.map(p => new THREE.Vector3(p.x, 0, p.z))
-).getPoints(100)
-
-// Geographically accurate mountain centers
-const centerTai = projectGeo(117.09, 36.26)      // Mount Tai
-const centerYimeng = projectGeo(117.88, 35.53)   // Yimeng Range
-const centerJiaodong = projectGeo(121.39, 37.18) // Jiaodong Hills
-
-// Terrain height calculator based on geographic features of Shandong
-const getTerrainHeight = (x, z) => {
-  const vx = x
-  const vy = -z
-
-  // Bohai Bay & Yellow Sea bounds calculated based on coordinates
-  let isSea = false
-  if (vx > 4.5 && vy > 2.0) {
-    isSea = true // Bohai Bay
-  } else if (vx > 7.0 && vy < -1.5) {
-    isSea = true // Yellow Sea
-  }
-
-  if (isSea) return 0.05
-
-  let height = 0
-
-  // 1. Natural terrain undulating waves (fBm noise simulation)
-  let noise = Math.sin(vx * 0.25) * Math.cos(vy * 0.25) * 0.3
-  noise += Math.sin(vx * 0.6 + 1.2) * Math.cos(vy * 0.7 - 0.5) * 0.1
-  noise += Math.sin(vx * 1.5) * Math.cos(vy * 1.3) * 0.03
-  height += noise
-
-  // 2. Mountains (Mount Tai, Yimeng Range, Jiaodong Hills using projected centers)
-  const dxTai = vx - centerTai.x
-  const dyTai = vy - (-centerTai.z)
-  const distToTai = Math.sqrt(dxTai * dxTai + dyTai * dyTai)
-  if (distToTai < 3.5) {
-    height += 1.8 * Math.pow(1.0 - distToTai / 3.5, 2)
-  }
-
-  const dxYimeng = vx - centerYimeng.x
-  const dyYimeng = vy - (-centerYimeng.z)
-  const distToYimeng = Math.sqrt(dxYimeng * dxYimeng + dyYimeng * dyYimeng)
-  if (distToYimeng < 4.0) {
-    height += 1.3 * Math.pow(1.0 - distToYimeng / 4.0, 2)
-  }
-
-  const dxJiaodong = vx - centerJiaodong.x
-  const dyJiaodong = vy - (-centerJiaodong.z)
-  const distToJiaodong = Math.sqrt(dxJiaodong * dxJiaodong + dyJiaodong * dyJiaodong)
-  if (distToJiaodong < 3.0) {
-    height += 0.6 * Math.pow(1.0 - distToJiaodong / 3.0, 2)
-  }
-
-  // 3. Plain flattening (Heze, Liaocheng, Dezhou)
-  if (vx < -2.5) {
-    const plainFade = Math.max(0, (vx + 6.8) / 4.3)
-    height *= plainFade
-  }
-
-  // 4. Yellow River Valley Carving
-  let minDist = 999
-  guidePoints.forEach(pt => {
-    const dx = vx - pt.x
-    const dy = vy + pt.z
-    const dist = Math.sqrt(dx * dx + dy * dy)
-    if (dist < minDist) {
-      minDist = dist
-    }
-  })
-
-  if (minDist < 0.8) {
-    const valleyDepth = 0.38 * (1.0 - minDist / 0.8)
-    height -= valleyDepth
-  }
-
-  return height
-}
-
-// Hypsometric tinting color mapper based on realistic terrain features
-const getGeographyColor = (h) => {
-  const color = new THREE.Color()
-  if (h < -0.1) {
-    color.setHSL(0.24, 0.22, 0.45 + (h + 0.3) * 0.2)
-  } else if (h < 0.3) {
-    const t = (h - (-0.1)) / 0.4
-    color.lerpColors(new THREE.Color('#94af76'), new THREE.Color('#b5c48f'), t)
-  } else if (h < 0.8) {
-    const t = (h - 0.3) / 0.5
-    color.lerpColors(new THREE.Color('#b5c48f'), new THREE.Color('#caba7d'), t)
-  } else {
-    const t = Math.min(1.0, (h - 0.8) / 1.0)
-    color.lerpColors(new THREE.Color('#9e7a59'), new THREE.Color('#e0dcd3'), t)
-  }
-  return color
-}
-
-// Complete Yellow River 3D path line (sitting inside the carved valley)
-const riverPoints = river2dPoints.map(p => new THREE.Vector3(p.x, getTerrainHeight(p.x, p.z) + 0.04, p.z))
+import {
+  layoutLabels,
+  createFlight,
+  createGesture,
+  createHistory,
+  createTerrain,
+  emptyDraft,
+  validateDraft,
+} from '../three/sandbox/core.js'
+import { getTerrainHeight, riverDistance, city3dCoords, guidePoints } from '../three/sandbox/geography.js'
+import { buildWorld, releaseTree } from '../three/sandbox/scene.js'
+import { createEditor } from '../three/sandbox/editor.js'
+import { createRenderPipeline } from '../three/sandbox/renderPipeline.js'
+import { draftStorage } from '../three/sandbox/storage.js'
 
 export function useThreeSandbox() {
-  // ===== 暴露的响应式状态（template 绑定 / 编排读写） =====
-  const canvas3d = ref(null)
-  const selectedCity = ref(null)
-  const cityLabels = ref([])
-  const errorMsg = ref(null)
-
-  // ===== 引擎内部状态 =====
-  let scene, camera, renderer, controls, animationFrameId
-  const cityObjects = []
-  let pointerDownRef = null
-  let pointerMoveRef = null
-  let canvasResizeObserver = null
-  let cachedGeojson = null
-  let geojsonLoading = null
-  let callbacks = {}
-  let initTimerId = null
-
-  // Clean up existing Three.js scene, renderer, and animation loop to prevent leaks
-  const cleanupThree = () => {
-    if (animationFrameId) {
-      cancelAnimationFrame(animationFrameId)
-      animationFrameId = null
+  const canvas3d = ref(null),
+    selectedCity = ref(null),
+    cityLabels = ref([]),
+    errorMsg = ref(null),
+    notice = ref('')
+  const ready = ref(false),
+    loading = ref(false),
+    status = ref('idle'),
+    mode = ref('explore'),
+    weather = ref('clear'),
+    quality = ref('medium')
+  const tourController = createTour(NINE_CITIES)
+  const tour = ref(tourController.snapshot())
+  const motion = ref(true),
+    touchInteraction = ref(false),
+    selectedObject = ref(null),
+    canUndo = ref(false),
+    canRedo = ref(false)
+  const objectAsset = ref('pavilion'),
+    brush = ref({ type: 'raise', radius: 1, strength: 0.15 })
+  let scene,
+    camera,
+    renderer,
+    pipeline,
+    controls,
+    world,
+    editor,
+    light,
+    frame = 0,
+    generation = 0,
+    abort,
+    callbacks = {}
+  let observers = [],
+    listeners = [],
+    visible = true,
+    contextLost = false,
+    previousTime = 0,
+    elapsed = 0,
+    weatherMix = 0,
+    rainMix = 0,
+    lastLabelTime = 0
+  const flight = createFlight(),
+    targetFlight = createFlight(),
+    gesture = createGesture(),
+    history = createHistory(emptyDraft())
+  const terrain = createTerrain({ base: getTerrainHeight, riverDistance }),
+    raycaster = new THREE.Raycaster(),
+    pointer = new THREE.Vector2()
+  const reducedQuery =
+    typeof window !== 'undefined' ? window.matchMedia('(prefers-reduced-motion: reduce)') : null
+  const reducedMotion = ref(!!reducedQuery?.matches)
+  const tourCanPlay = computed(() => motion.value && !reducedMotion.value)
+  const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+  if (coarse) quality.value = 'low'
+  motion.value = !reducedQuery?.matches
+  const listen = (element, type, handler, options) => {
+    element.addEventListener(type, handler, options)
+    listeners.push(() => element.removeEventListener(type, handler, options))
+  }
+  const stopFlight = () => {
+    flight.cancel()
+    targetFlight.cancel()
+  }
+  const actualMotion = () => tourCanPlay.value
+  function updateHistory() {
+    canUndo.value = history.canUndo
+    canRedo.value = history.canRedo
+  }
+  function commit(value) {
+    history.commit(validateDraft(value))
+    if (renderer) renderer.shadowMap.needsUpdate = true
+    updateHistory()
+  }
+  function syncDraft() {
+    weather.value = history.value.weather
+    editor?.sync()
+    updateHistory()
+  }
+  function setMode(value) {
+    if (!['explore', 'guided', 'object', 'terrain'].includes(value)) return
+    editor?.cancel()
+    stopTour()
+    mode.value = value
+    if (controls) controls.enabled = value === 'explore' || value === 'guided'
+    if (coarse && (value === 'object' || value === 'terrain')) setTouchInteraction(true)
+  }
+  function setWeather(value) {
+    if (!['clear', 'fog', 'rain'].includes(value)) return
+    weather.value = value
+    commit({ ...history.value, weather: value })
+    editor?.sync()
+    if (!actualMotion()) {
+      weatherMix = value === 'clear' ? 0 : 1
+      rainMix = value === 'rain' ? 1 : 0
     }
-
+  }
+  function setQuality(value) {
+    if (!['low', 'medium', 'high'].includes(value)) return
+    quality.value = value
     if (renderer) {
-      if (renderer.domElement && pointerDownRef) {
-        renderer.domElement.removeEventListener('pointerdown', pointerDownRef)
-        pointerDownRef = null
+      renderer.setPixelRatio(
+        Math.min(window.devicePixelRatio, value === 'low' ? 1 : value === 'medium' ? 1.5 : 2),
+      )
+      pipeline?.setQuality(value)
+      resize()
+      renderer.shadowMap.enabled = value !== 'low'
+      renderer.shadowMap.needsUpdate = true
+      if (light) {
+        light.shadow.mapSize.setScalar(value === 'high' ? 2048 : 1024)
+        light.shadow.map?.dispose()
+        light.shadow.map = null
       }
-      if (renderer.domElement && pointerMoveRef) {
-        renderer.domElement.removeEventListener('pointermove', pointerMoveRef)
-        pointerMoveRef = null
-      }
-      renderer.dispose()
-      renderer = null
     }
-
-    if (scene) {
-      scene.traverse((object) => {
-        if (object.geometry) {
-          object.geometry.dispose()
-        }
-        if (object.material) {
-          if (Array.isArray(object.material)) {
-            object.material.forEach((material) => material.dispose())
-          } else {
-            object.material.dispose()
-          }
-        }
-      })
-      scene = null
+  }
+  function setMotion(value) {
+    motion.value = !!value
+    if (!actualMotion()) {
+      pauseTour()
+      stopFlight()
     }
-
+  }
+  function setTouchInteraction(value) {
+    touchInteraction.value = !!value
     if (controls) {
-      controls.dispose()
-      controls = null
+      controls.touches.ONE = value ? THREE.TOUCH.ROTATE : null
+      renderer.domElement.style.touchAction = coarse && !value ? 'pan-y' : 'none'
     }
-
-    cityObjects.length = 0
   }
-
-  // 相机飞往指定城市（clickLabel 标签点击 + onPointerDown 单击共用，消除重复）
-  const flyToCity = (cityName) => {
-    const targetPin = cityObjects.find(c => c.name === cityName)
-    if (!targetPin || !camera || !controls) return
-    const startPos = camera.position.clone()
-    const endPos = new THREE.Vector3(targetPin.position.x, targetPin.position.y + 3.5, targetPin.position.z + 5.0)
-    const startTarget = controls.target.clone()
-    const endTarget = targetPin.position.clone()
-    let t = 0
-    const animateCamera = () => {
-      // dispose 后 camera/controls 置 null，停止动画避免操作已释放资源
-      if (!camera || !controls) return
-      t += 0.05
-      if (t <= 1.0) {
-        camera.position.lerpVectors(startPos, endPos, t)
-        controls.target.lerpVectors(startTarget, endTarget, t)
-        controls.update()
-        requestAnimationFrame(animateCamera)
-      } else {
-        camera.position.copy(endPos)
-        controls.target.copy(endTarget)
-        controls.update()
-      }
-    }
-    animateCamera()
-  }
-
-  const initThree = (geojson) => {
-    if (!canvas3d.value) return
-
-    cleanupThree()
-
-    const width = canvas3d.value.parentElement.clientWidth
-    const height = canvas3d.value.parentElement.clientHeight
-
-    // 1. Create Scene & Camera
-    scene = new THREE.Scene()
-    scene.background = new THREE.Color(0xfbf8f3) // Parchment paper color for real mode
-
-    camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000)
-    camera.position.set(0, 15, 15) // Top down orthographic-style angle
-
-    // 2. Renderer with soft shadow optimization
-    renderer = new THREE.WebGLRenderer({ canvas: canvas3d.value, antialias: true })
-    renderer.setSize(width, height)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    renderer.shadowMap.enabled = true
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap
-
-    // 3. Orbit Controls
-    controls = new OrbitControls(camera, renderer.domElement)
-    controls.enableDamping = true
-    controls.dampingFactor = 0.05
-    controls.maxPolarAngle = Math.PI / 2.2 // Do not look underneath
-    controls.minDistance = 5
-    controls.maxDistance = 35
-
-    // 触屏（coarse pointer）：单指留给页面纵向滚动，双指操作沙盘；单击=预览卡（不走双击进入）
-    const isCoarse =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(pointer: coarse)').matches
-    if (isCoarse) {
-      controls.touches.ONE = null // 单指不旋转 → 浏览器接管滚动
-      renderer.domElement.style.touchAction = 'pan-y' // 覆盖 OrbitControls 内置 touch-action: none
-    }
-
-    // 4. Lights & Geographically calibrated shadows
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
-    scene.add(ambientLight)
-
-    const dirLight = new THREE.DirectionalLight(0xfffdf6, 1.2)
-    dirLight.position.set(5, 18, 5)
-    dirLight.castShadow = true
-    dirLight.shadow.mapSize.width = 2048
-    dirLight.shadow.mapSize.height = 2048
-    dirLight.shadow.camera.near = 0.5
-    dirLight.shadow.camera.far = 40
-    const d = 15
-    dirLight.shadow.camera.left = -d
-    dirLight.shadow.camera.right = d
-    dirLight.shadow.camera.top = d
-    dirLight.shadow.camera.bottom = -d
-    dirLight.shadow.bias = -0.0005
-    scene.add(dirLight)
-
-    const pointLight = new THREE.PointLight(0xb8860b, 1.0, 20)
-    pointLight.position.set(0, 5, 0)
-    scene.add(pointLight)
-
-    if (geojson) {
-      // 5. Build Extruded Shandong Administrative Map shapes
-      const extrudeSettings = {
-        depth: 0.35,
-        bevelEnabled: false
-      }
-
-      geojson.features.forEach(feature => {
-        const cityName = feature.properties.name.replace('市', '')
-
-        const getCityColorVal = (name) => {
-          const mineralColors = [
-            '#dfd7c2', '#cfcbbd', '#c8c3b0', '#c2bba8', '#d0c9a7', '#bca88b', '#b1bfa1'
-          ]
-          let sum = 0
-          for (let i = 0; i < name.length; i++) {
-            sum += name.charCodeAt(i)
-          }
-          return new THREE.Color(mineralColors[sum % mineralColors.length])
-        }
-
-        const cityColor = getCityColorVal(cityName)
-
-        const shapes = []
-        if (feature.geometry.type === 'Polygon') {
-          const coords = feature.geometry.coordinates[0]
-          if (coords.length >= 45) {
-            shapes.push(createCityShape(coords))
-          }
-        } else if (feature.geometry.type === 'MultiPolygon') {
-          feature.geometry.coordinates.forEach(poly => {
-            const coords = poly[0]
-            if (coords.length >= 45) {
-              shapes.push(createCityShape(coords))
-            }
-          })
-        }
-
-        if (shapes.length > 0) {
-          const cityGeometry = new THREE.ExtrudeGeometry(shapes, extrudeSettings)
-
-          const pos = cityGeometry.attributes.position
-          const colors = new Float32Array(pos.count * 3)
-          for (let i = 0; i < pos.count; i++) {
-            const lx = pos.getX(i)
-            const ly = pos.getY(i)
-            const lz = pos.getZ(i)
-
-            const wx = lx
-            const wz = -ly
-
-            const terrainH = getTerrainHeight(wx, wz)
-
-            let vertexColor
-            if (lz > 0.15) {
-              pos.setZ(i, terrainH)
-              vertexColor = getGeographyColor(terrainH)
-            } else {
-              pos.setZ(i, -0.6)
-              vertexColor = new THREE.Color('#4a3e3d')
-            }
-
-            colors[i * 3] = vertexColor.r
-            colors[i * 3 + 1] = vertexColor.g
-            colors[i * 3 + 2] = vertexColor.b
-          }
-          cityGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
-          cityGeometry.computeVertexNormals()
-
-          const cityMaterial = new THREE.MeshStandardMaterial({
-            vertexColors: true,
-            roughness: 0.8,
-            metalness: 0.05,
-            flatShading: true
-          })
-          const cityMesh = new THREE.Mesh(cityGeometry, cityMaterial)
-          cityMesh.rotation.x = -Math.PI / 2
-          cityMesh.receiveShadow = true
-          cityMesh.castShadow = true
-          scene.add(cityMesh)
-
-          const drawRing = (coords) => {
-            const points = []
-            coords.forEach(c => {
-              const { x, z } = projectGeo(c[0], c[1])
-              const y = getTerrainHeight(x, z) + 0.012
-              points.push(new THREE.Vector3(x, y, z))
-            })
-            const borderGeom = new THREE.BufferGeometry().setFromPoints(points)
-            const borderMat = new THREE.LineBasicMaterial({
-              color: 0x4a3f35,
-              linewidth: 1.5,
-              transparent: true,
-              opacity: 0.55
-            })
-            const borderLine = new THREE.Line(borderGeom, borderMat)
-            scene.add(borderLine)
-          }
-
-          if (feature.geometry.type === 'Polygon') {
-            const coords = feature.geometry.coordinates[0]
-            if (coords.length >= 45) {
-              drawRing(coords)
-            }
-          } else if (feature.geometry.type === 'MultiPolygon') {
-            feature.geometry.coordinates.forEach(poly => {
-              const coords = poly[0]
-              if (coords.length >= 45) {
-                drawRing(coords)
-              }
-            })
-          }
-        }
-      })
-
-      const seaGeometry = new THREE.PlaneGeometry(42, 30)
-      const seaMaterial = new THREE.MeshStandardMaterial({
-        color: 0xabbca7,
-        roughness: 0.35,
-        metalness: 0.15,
-        flatShading: true
-      })
-      const seaMesh = new THREE.Mesh(seaGeometry, seaMaterial)
-      seaMesh.rotation.x = -Math.PI / 2
-      seaMesh.position.y = -0.4
-      seaMesh.receiveShadow = true
-      scene.add(seaMesh)
-
-    } else {
-      // Fallback: Rectangular terrain plane if GeoJSON is not loaded
-      const mapGeometry = new THREE.PlaneGeometry(22, 14, 40, 40)
-      const posAttribute = mapGeometry.attributes.position
-      const colors = new Float32Array(posAttribute.count * 3)
-      for (let i = 0; i < posAttribute.count; i++) {
-        const vx = posAttribute.getX(i)
-        const vy = posAttribute.getY(i)
-        let z = Math.sin(vx * 0.2) * Math.cos(vy * 0.2) * 0.8
-        const distToTai = Math.sqrt(Math.pow(vx - 0, 2) + Math.pow(vy - (-1), 2))
-        if (distToTai < 3) {
-          z += (3 - distToTai) * 0.6
-        }
-        posAttribute.setZ(i, z)
-
-        const vertexColor = getGeographyColor(z)
-        colors[i * 3] = vertexColor.r
-        colors[i * 3 + 1] = vertexColor.g
-        colors[i * 3 + 2] = vertexColor.b
-      }
-      mapGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
-      mapGeometry.computeVertexNormals()
-
-      const mapMaterial = new THREE.MeshStandardMaterial({
-        vertexColors: true,
-        roughness: 0.8,
-        metalness: 0.1,
-        flatShading: true,
-        wireframe: false
-      })
-
-      const terrainMesh = new THREE.Mesh(mapGeometry, mapMaterial)
-      terrainMesh.rotation.x = -Math.PI / 2
-      terrainMesh.receiveShadow = true
-      scene.add(terrainMesh)
-    }
-
-    // 6. Glowing Yellow River path representation
-    const riverCurve = new THREE.CatmullRomCurve3(riverPoints)
-    const riverGeom = new THREE.TubeGeometry(riverCurve, 64, 0.15, 8, false)
-    const lowPerfRiver = (navigator.hardwareConcurrency ?? 4) <= 4 ||
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    let riverMat
-    if (lowPerfRiver) {
-      riverMat = new THREE.MeshBasicMaterial({ color: 0xc27b38, transparent: true, opacity: 0.85 })
-    } else {
-      riverMat = new THREE.ShaderMaterial({
-        uniforms: {
-          uTime: { value: 0 },
-          uColor: { value: new THREE.Color(0xc27b38) },
-          uHighlight: { value: new THREE.Color(0xffe896) },
-          uFlowSpeed: { value: 0.6 }
-        },
-        vertexShader: `
-          varying vec2 vUv;
-          void main() {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }`,
-        fragmentShader: `
-          varying vec2 vUv;
-          uniform float uTime;
-          uniform vec3 uColor;
-          uniform vec3 uHighlight;
-          uniform float uFlowSpeed;
-          void main() {
-            float b = 0.6 + 0.4 * sin(vUv.x * 18.0 - uTime * uFlowSpeed * 6.0);
-            b += smoothstep(0.7, 1.0, vUv.x) * 0.25;
-            vec3 col = mix(uColor, uHighlight, clamp(b, 0.0, 1.0));
-            float alpha = 0.7 + 0.25 * b;
-            gl_FragColor = vec4(col, clamp(alpha, 0.0, 1.0));
-          }`,
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending
-      })
-    }
-    const riverMesh = new THREE.Mesh(riverGeom, riverMat)
-    riverMesh.name = 'yellow-river'
-    scene.add(riverMesh)
-
-    // Flowing river dots (Particle pipeline along the river)
-    const dotCount = 80
-    const dotGeometry = new THREE.BufferGeometry()
-    const dotPositions = new Float32Array(dotCount * 3)
-    const dotOffsets = []
-
-    for (let i = 0; i < dotCount; i++) {
-      dotOffsets.push(Math.random())
-      const pt = riverCurve.getPointAt(dotOffsets[i])
-      dotPositions[i * 3] = pt.x
-      dotPositions[i * 3 + 1] = pt.y + 0.05
-      dotPositions[i * 3 + 2] = pt.z
-    }
-
-    dotGeometry.setAttribute('position', new THREE.BufferAttribute(dotPositions, 3))
-    const dotMaterial = new THREE.PointsMaterial({
-      color: 0xffe896,
-      size: 0.16,
-      transparent: true,
-      opacity: 0.95
-    })
-    const riverPointsObj = new THREE.Points(dotGeometry, dotMaterial)
-    scene.add(riverPointsObj)
-
-    // 7. Render City Nodes (holographic glowing markers)
-    city3dCoords.forEach(city => {
-      const pinGroup = new THREE.Group()
-      const terrainHeight = getTerrainHeight(city.x, city.z)
-      pinGroup.position.set(city.x, terrainHeight, city.z)
-      pinGroup.name = city.name
-
-      const beamGeom = new THREE.CylinderGeometry(0.04, 0.06, 1.2, 12, 1, true)
-      const beamMat = new THREE.MeshBasicMaterial({
-        color: city.color,
-        transparent: true,
-        opacity: 0.32,
-        side: THREE.DoubleSide,
-        blending: THREE.AdditiveBlending
-      })
-      const beamMesh = new THREE.Mesh(beamGeom, beamMat)
-      beamMesh.position.y = 0.6
-      pinGroup.add(beamMesh)
-
-      const octaGeom = new THREE.OctahedronGeometry(0.18, 0)
-      const octaMat = new THREE.MeshStandardMaterial({
-        color: city.color,
-        emissive: city.color,
-        emissiveIntensity: 0.7,
-        roughness: 0.15,
-        metalness: 0.9,
-        flatShading: true
-      })
-      const octaMesh = new THREE.Mesh(octaGeom, octaMat)
-      octaMesh.position.y = 1.3
-      octaMesh.castShadow = true
-      pinGroup.add(octaMesh)
-
-      const ringGeom = new THREE.RingGeometry(0.2, 0.26, 32)
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: city.color,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.65
-      })
-      const ringMesh = new THREE.Mesh(ringGeom, ringMat)
-      ringMesh.rotation.x = -Math.PI / 2
-      ringMesh.position.y = 0.01
-      pinGroup.add(ringMesh)
-
-      if (city.river) {
-        const riverRingGeom = new THREE.RingGeometry(0.30, 0.33, 48)
-        const riverRingMat = new THREE.MeshBasicMaterial({
-          color: 0xffe896,
-          side: THREE.DoubleSide,
-          transparent: true,
-          opacity: 0.55,
-          blending: THREE.AdditiveBlending
-        })
-        const riverRingMesh = new THREE.Mesh(riverRingGeom, riverRingMat)
-        riverRingMesh.rotation.x = -Math.PI / 2
-        riverRingMesh.position.y = 0.02
-        pinGroup.add(riverRingMesh)
-      }
-
-      const innerRingGeom = new THREE.RingGeometry(0.08, 0.13, 4, 1)
-      const innerRingMat = new THREE.MeshBasicMaterial({
-        color: city.color,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.75
-      })
-      const innerRingMesh = new THREE.Mesh(innerRingGeom, innerRingMat)
-      innerRingMesh.rotation.x = -Math.PI / 2
-      innerRingMesh.position.y = 0.015
-      pinGroup.add(innerRingMesh)
-
-      const rippleGeom = new THREE.RingGeometry(0.1, 0.5, 32)
-      const rippleMat = new THREE.MeshBasicMaterial({
-        color: city.color,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.4
-      })
-      const rippleMesh = new THREE.Mesh(rippleGeom, rippleMat)
-      rippleMesh.rotation.x = -Math.PI / 2
-      rippleMesh.position.y = 0.005
-      pinGroup.add(rippleMesh)
-
-      scene.add(pinGroup)
-      cityObjects.push(pinGroup)
-    })
-
-    // 8. Raycasting for mouse interactions
-    const raycaster = new THREE.Raycaster()
-    const mouse = new THREE.Vector2()
-    let clickTime = 0
-
-    const onPointerDown = (event) => {
-      const now = Date.now()
-      const isDoubleClick = now - clickTime < 300
-      clickTime = now
-
-      const rect = renderer.domElement.getBoundingClientRect()
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
-
-      raycaster.setFromCamera(mouse, camera)
-
-      const intersects = raycaster.intersectObjects(scene.children, true)
-
-      let clickedCity = null
-      for (let hit of intersects) {
-        let p = hit.object
-        while (p && p !== scene) {
-          if (p.parent === scene && city3dCoords.some(c => c.name === p.name)) {
-            clickedCity = p.name
-            break
-          }
-          p = p.parent
-        }
-        if (clickedCity) break
-      }
-
-      // 未点中城市时, 检查是否点中黄河 -> 飞往距命中点最近的沿河城
-      if (!clickedCity) {
-        const riverHit = intersects.find(hit => {
-          let p = hit.object
-          while (p) {
-            if (p.name === 'yellow-river') return true
-            p = p.parent
-          }
-          return false
-        })
-        if (riverHit) {
-          const hp = riverHit.point
-          let nearest = null
-          let minDist = Infinity
-          city3dCoords.forEach(c => {
-            if (!c.river) return
-            const dx = c.x - hp.x
-            const dz = c.z - hp.z
-            const d = Math.sqrt(dx * dx + dz * dz)
-            if (d < minDist) { minDist = d; nearest = c }
-          })
-          if (nearest) clickedCity = nearest.name
-        }
-      }
-
-      if (clickedCity) {
-        // 编排负责 openCity（单/双击都触发）
-        callbacks.onPickCity?.(clickedCity)
-
-        if (isDoubleClick && !isCoarse) {
-          // 双击直接跳路由（编排负责）；触屏无双击，进入由预览卡按钮完成
-          callbacks.onDoublePickCity?.(clickedCity)
-        } else {
-          // 单击：相机飞行（引擎内部）
-          flyToCity(clickedCity)
-        }
-      }
-    }
-
-    renderer.domElement.addEventListener('pointerdown', onPointerDown)
-    pointerDownRef = onPointerDown
-
-    // Hover cursor: pointer when over river or city pin
-    const onPointerMove = (event) => {
-      const rect = renderer.domElement.getBoundingClientRect()
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
-      raycaster.setFromCamera(mouse, camera)
-      const hits = raycaster.intersectObjects(scene.children, true)
-      let hovering = false
-      for (let hit of hits) {
-        let p = hit.object
-        while (p && p !== scene) {
-          if ((p.parent === scene && city3dCoords.some(c => c.name === p.name)) || p.name === 'yellow-river') {
-            hovering = true
-            break
-          }
-          p = p.parent
-        }
-        if (hovering) break
-      }
-      renderer.domElement.style.cursor = hovering ? 'pointer' : ''
-    }
-    renderer.domElement.addEventListener('pointermove', onPointerMove)
-    pointerMoveRef = onPointerMove
-
-    // 9. Animation Loop
-    let clock = new THREE.Clock()
-
-    const tick = () => {
-      const elapsedTime = clock.getElapsedTime()
-
-      if (riverMat.uniforms && riverMat.uniforms.uTime) {
-        riverMat.uniforms.uTime.value = elapsedTime
-      }
-
-      const positions = riverPointsObj.geometry.attributes.position.array
-      for (let i = 0; i < dotCount; i++) {
-        dotOffsets[i] = (dotOffsets[i] + 0.001) % 1.0
-        const pt = riverCurve.getPointAt(dotOffsets[i])
-        positions[i * 3] = pt.x
-        positions[i * 3 + 1] = pt.y + 0.05
-        positions[i * 3 + 2] = pt.z
-      }
-      riverPointsObj.geometry.attributes.position.needsUpdate = true
-
-      cityObjects.forEach((pin, index) => {
-        const diamond = pin.children[1]
-        const outerRing = pin.children[2]
-        const innerRing = pin.children[3]
-        const ripple = pin.children[4]
-
-        if (diamond) {
-          diamond.position.y = 1.25 + Math.sin(elapsedTime * 1.8 + index) * 0.08
-          diamond.rotation.y = elapsedTime * 1.6 + index
-          diamond.rotation.x = elapsedTime * 0.4
-        }
-        if (outerRing) {
-          outerRing.rotation.z = elapsedTime * 0.6
-        }
-        if (innerRing) {
-          innerRing.rotation.z = -elapsedTime * 1.1
-        }
-        if (ripple) {
-          const scaleVal = 1.0 + (elapsedTime + index * 0.5) % 1.5
-          ripple.scale.set(scaleVal, scaleVal, 1)
-          ripple.material.opacity = 0.45 * (1.0 - (scaleVal - 1.0) / 1.5)
-        }
-      })
-
-      // Update labels projection
-      if (camera && canvas3d.value) {
-        const width = canvas3d.value.clientWidth
-        const height = canvas3d.value.clientHeight
-
-        const newLabels = city3dCoords.map(city => {
-          const targetPin = cityObjects.find(c => c.name === city.name)
-          const terrainY = targetPin ? targetPin.position.y : 0
-          const sphereLocalY = targetPin && targetPin.children[1] ? targetPin.children[1].position.y : 1.3
-
-          const tempV = new THREE.Vector3(city.x, terrainY + sphereLocalY + 0.3, city.z)
-          tempV.project(camera)
-
-          const visible = tempV.z <= 1
-
-          const x = (tempV.x * 0.5 + 0.5) * width
-          const y = (tempV.y * -0.5 + 0.5) * height
-
-          const colorHex = '#' + city.color.toString(16).padStart(6, '0')
-
-          return {
-            name: city.name,
-            x,
-            y,
-            visible,
-            colorHex
-          }
-        })
-        cityLabels.value = newLabels
-      }
-
+  function startFlight(position, target, duration = 1.15) {
+    if (!camera || !controls) return
+    stopFlight()
+    if (!actualMotion()) {
+      camera.position.fromArray(position)
+      controls.target.fromArray(target)
       controls.update()
-      renderer.render(scene, camera)
-      animationFrameId = requestAnimationFrame(tick)
+      return
     }
-
-    tick()
+    flight.start(camera.position.toArray(), position, duration)
+    targetFlight.start(controls.target.toArray(), target, duration)
   }
-
-  // Window resizing（renderer/camera 存在即 real 模式，替代原 isReal.value 检查）
-  const handleResize = () => {
-    if (renderer && camera && canvas3d.value) {
-      const width = canvas3d.value.parentElement.clientWidth
-      const height = canvas3d.value.parentElement.clientHeight
-      camera.aspect = width / height
-      camera.updateProjectionMatrix()
-      renderer.setSize(width, height)
+  function stopTour() {
+    tour.value = tourController.stop()
+    stopFlight()
+  }
+  function pauseTour() {
+    tour.value = tourController.pause()
+    stopFlight()
+  }
+  function visitTourStop() {
+    const pin = world?.pins.find((p) => p.name === tour.value.city)
+    if (!pin) return
+    const p = pin.position
+    const zOffset = pin.name === '泰安' || pin.name === '济南' ? -6.2 : 6.2
+    startFlight([p.x + 2.2, p.y + 5.6, p.z + zOffset], [p.x, p.y + 0.4, p.z], 2.4)
+    projectLabels()
+  }
+  function startTour() {
+    if (!ready.value) return
+    setMode('explore')
+    selectedCity.value = null
+    callbacks.onClearCity?.()
+    notice.value = ''
+    tour.value = tourController.start(actualMotion())
+    visitTourStop()
+  }
+  function toggleTour() {
+    if (tour.value.status === 'idle' || tour.value.status === 'complete') return startTour()
+    if (tour.value.status === 'playing') return pauseTour()
+    if (!actualMotion()) return
+    tour.value = tourController.resume()
+    visitTourStop()
+  }
+  function moveTour(delta) {
+    if (tour.value.status === 'idle') return
+    tour.value = tourController.move(delta)
+    visitTourStop()
+  }
+  function setView(value) {
+    const presets = {
+      overview: [
+        [5, 14, 17],
+        [5, 0.4, 0],
+      ],
+      jitai: [
+        [4.2, 6.4, -7.4],
+        [0.3, 0.9, 0.2],
+      ],
+      top: [
+        [1, 25, 0.05],
+        [1, 0, 0],
+      ],
+      river: [
+        [6, 7, 9],
+        [-1, 0, 0],
+      ],
+    }
+    if (presets[value]) {
+      stopTour()
+      if (mode.value === 'guided') setMode('explore')
+      startFlight(...presets[value])
     }
   }
-
-  // 沙盘容器尺寸跟随（grid 列宽过渡/侧栏展开时，canvas 平滑 resize 不拉伸）
-  const observeCanvasResize = () => {
-    if (canvasResizeObserver || !canvas3d.value?.parentElement) return
-    canvasResizeObserver = new ResizeObserver(() => handleResize())
-    canvasResizeObserver.observe(canvas3d.value.parentElement)
+  function zoom(delta) {
+    if (!camera || !controls || !Number.isFinite(delta)) return
+    stopTour()
+    if (mode.value === 'guided') setMode('explore')
+    const offset = camera.position.clone().sub(controls.target)
+    offset.setLength(
+      THREE.MathUtils.clamp(offset.length() * (1 + delta), controls.minDistance, controls.maxDistance),
+    )
+    camera.position.copy(controls.target).add(offset)
+    controls.update()
   }
-  const disconnectCanvasResize = () => {
-    if (canvasResizeObserver) {
-      canvasResizeObserver.disconnect()
-      canvasResizeObserver = null
-    }
+  function flyToCity(name) {
+    stopTour()
+    if (mode.value === 'guided') setMode('explore')
+    const pin = world?.pins.find((p) => p.name === name)
+    if (pin) startFlight([pin.position.x, pin.position.y + 3.8, pin.position.z + 5.2], pin.position.toArray())
   }
-
-  // Cache GeoJSON to avoid redundant fetch on theme switch
-  const loadGeojson = async () => {
-    if (cachedGeojson !== null) return cachedGeojson
-    if (geojsonLoading) return geojsonLoading
-    geojsonLoading = (async () => {
-      try {
-        const response = await fetch('/shandong.json')
-        if (!response.ok) { cachedGeojson = null; return null }
-        const parsed = await response.json()
-        // 仅缓存合法 GeoJSON（含 features）；畸形响应置 null 触发回退/重试
-        cachedGeojson = parsed && parsed.features ? parsed : null
-        return cachedGeojson
-      } catch (e) {
-        console.error('Error loading shandong.json:', e)
-        cachedGeojson = null
-        return null
-      } finally {
-        geojsonLoading = null
+  function selectCity(name) {
+    selectedCity.value = name
+    callbacks.onPickCity?.(name)
+    flyToCity(name)
+  }
+  function setGuidedProgress(progress) {
+    if (mode.value !== 'guided' || !camera || !controls || !actualMotion()) return
+    stopFlight()
+    const i = Math.min(
+      guidePoints.length - 1,
+      Math.floor(THREE.MathUtils.clamp(progress, 0, 1) * (guidePoints.length - 1)),
+    )
+    const p = guidePoints[i]
+    camera.position.set(p.x + 2, 8, p.z + 8)
+    controls.target.set(p.x, terrain.sample(p.x, p.z), p.z)
+  }
+  function resize() {
+    if (!renderer || !camera || !canvas3d.value?.parentElement) return
+    const { clientWidth: w, clientHeight: h } = canvas3d.value.parentElement
+    if (!w || !h) return
+    renderer.setSize(w, h, false)
+    pipeline?.resize(w, h, renderer.getPixelRatio())
+    camera.aspect = w / h
+    camera.fov = THREE.MathUtils.radToDeg(
+      2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(43 / 2)) / Math.min(1, camera.aspect / 1.65)),
+    )
+    camera.updateProjectionMatrix()
+  }
+  function hitTest(event) {
+    const rect = canvas3d.value.getBoundingClientRect()
+    pointer.set(
+      ((event.clientX - rect.left) / rect.width) * 2 - 1,
+      (-(event.clientY - rect.top) / rect.height) * 2 + 1,
+    )
+    raycaster.setFromCamera(pointer, camera)
+    const hits = raycaster.intersectObjects(
+      [world.land, ...world.pins, editor.objects, ...world.occluders],
+      true,
+    )
+    const ground = hits.find((h) => h.object === world.land)
+    let city = null
+    for (const hit of hits.slice(0, 1)) {
+      let object = hit.object
+      while (object && object !== scene) {
+        if (object.userData.city) {
+          city = object.userData.city
+          break
+        }
+        object = object.parent
       }
-    })()
-    return geojsonLoading
+      if (city) break
+    }
+    return { hits, point: ground?.point, city }
   }
-
-  // Shared initialization - called by both init and theme-switch setTheme
-  const startThree = async () => {
-    const geojson = await loadGeojson()
-    initThree(geojson)
-    window.addEventListener('resize', handleResize)
-    observeCanvasResize()
+  function bindPointers() {
+    const canvas = renderer.domElement
+    const active = new Set()
+    let multi = false
+    let lastMove = 0
+    listen(canvas, 'pointerdown', (e) => {
+      stopTour()
+      if (e.button !== 0) return
+      notice.value = ''
+      if (mode.value === 'guided') setMode('explore')
+      active.add(e.pointerId)
+      if (active.size > 1) {
+        multi = true
+        editor.cancel()
+      }
+      gesture.down(e.pointerId, e.clientX, e.clientY)
+      if (active.size === 1) {
+        const hit = hitTest(e)
+        if (!coarse || touchInteraction.value) editor.down(hit.point, hit.hits, mode.value)
+      }
+      if (!coarse || touchInteraction.value) canvas.setPointerCapture(e.pointerId)
+    })
+    listen(canvas, 'pointermove', (e) => {
+      gesture.move(e.pointerId, e.clientX, e.clientY)
+      if (multi || e.timeStamp - lastMove < 16) return
+      lastMove = e.timeStamp
+      const hit = hitTest(e)
+      if (!coarse || touchInteraction.value) editor.move(hit.point, mode.value)
+      canvas.style.cursor = hit.city ? 'pointer' : mode.value === 'terrain' ? 'crosshair' : ''
+    })
+    listen(canvas, 'pointerup', (e) => {
+      const hit = hitTest(e),
+        click = gesture.up(e.pointerId, e.clientX, e.clientY, hit.city, e.timeStamp)
+      active.delete(e.pointerId)
+      if (!multi) {
+        if (!coarse || touchInteraction.value) editor.up(hit.point, mode.value, !!click)
+        if (click && (mode.value === 'explore' || mode.value === 'guided')) {
+          if (hit.city) {
+            selectCity(hit.city)
+            if (click === 'double' && !coarse) callbacks.onDoublePickCity?.(hit.city)
+          } else {
+            selectedCity.value = null
+            callbacks.onClearCity?.()
+          }
+        }
+      }
+      if (!active.size) multi = false
+      if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId)
+    })
+    listen(canvas, 'pointercancel', () => {
+      active.clear()
+      multi = false
+      gesture.cancel()
+      editor.cancel()
+    })
+    listen(controls, 'start', () => {
+      stopTour()
+      if (mode.value === 'guided') setMode('explore')
+    })
   }
-
-  const startThreeSafe = async () => {
+  function projectLabels() {
+    if (!camera || !canvas3d.value) return
+    const w = canvas3d.value.clientWidth,
+      h = canvas3d.value.clientHeight
+    const labels = world.pins.map((pin) => {
+      const p = pin.position
+        .clone()
+        .add(new THREE.Vector3(0, 0.1, 0))
+        .project(camera)
+      return {
+        name: pin.name,
+        x: (p.x * 0.5 + 0.5) * w,
+        y: (-0.5 * p.y + 0.5) * h,
+        visible: p.z >= -1 && p.z <= 1 && Math.abs(p.x) <= 1 && Math.abs(p.y) <= 1,
+        colorHex: '#aa8746',
+      }
+    })
+    cityLabels.value = layoutLabels(labels, tour.value.city || selectedCity.value, w, h)
+  }
+  function tick(now) {
+    frame = 0
+    if (!renderer || !visible || document.hidden || contextLost) return
+    const dt = previousTime ? Math.min((now - previousTime) / 1000, 0.05) : 0
+    previousTime = now
+    if (actualMotion()) elapsed += dt
+    const nextStop = tourController.step(dt)
+    if (nextStop) {
+      tour.value = nextStop
+      if (nextStop.status === 'playing') visitTourStop()
+    }
+    const p = flight.step(dt),
+      t = targetFlight.step(dt)
+    if (p) camera.position.fromArray(p)
+    if (t) controls.target.fromArray(t)
+    const fogTarget = weather.value === 'clear' ? 0 : 1,
+      rainTarget = weather.value === 'rain' ? 1 : 0,
+      factor = actualMotion() ? 1 - Math.exp(-dt * 2) : 1
+    weatherMix += (fogTarget - weatherMix) * factor
+    rainMix += (rainTarget - rainMix) * factor
+    scene.fog.density = 0.009 + weatherMix * 0.035
+    scene.background.set('#15232b').lerp(new THREE.Color('#455358'), weatherMix)
+    light.intensity = 3.0 - weatherMix * 1.3
+    editor.tick(dt)
+    world.animate(elapsed, dt, actualMotion(), tour.value.city || selectedCity.value, rainMix, quality.value)
+    controls.update()
+    const old = controls.target.clone()
+    controls.target.x = THREE.MathUtils.clamp(controls.target.x, -10, 14)
+    controls.target.z = THREE.MathUtils.clamp(controls.target.z, -10, 10)
+    controls.target.y = THREE.MathUtils.clamp(controls.target.y, -0.2, 3)
+    camera.position.add(controls.target.clone().sub(old))
+    if (now - lastLabelTime > 50) {
+      projectLabels()
+      lastLabelTime = now
+    }
+    renderer.info.reset()
+    pipeline.render()
+    frame = requestAnimationFrame(tick)
+  }
+  function resume() {
+    previousTime = 0
+    if (!frame && renderer && visible && !document.hidden && !contextLost) frame = requestAnimationFrame(tick)
+  }
+  function suspend() {
+    if (frame) cancelAnimationFrame(frame)
+    frame = 0
+    previousTime = 0
+    pauseTour()
+  }
+  function cleanup() {
+    suspend()
+    stopTour()
+    listeners.forEach((remove) => remove())
+    listeners = []
+    observers.forEach((o) => o.disconnect())
+    observers = []
+    controls?.dispose()
+    pipeline?.dispose()
+    pipeline = null
+    if (scene) releaseTree(scene)
+    light?.shadow?.map?.dispose()
+    renderer?.renderLists.dispose()
+    renderer?.dispose()
+    scene = camera = renderer = controls = world = editor = light = null
+    gesture.cancel()
+    cityLabels.value = []
+  }
+  async function init(opts = {}) {
+    const run = ++generation
+    abort?.abort()
+    cleanup()
+    abort = new AbortController()
+    callbacks = opts
+    ready.value = false
+    loading.value = true
+    status.value = 'loading'
+    errorMsg.value = null
     try {
-      await startThree()
-    } catch (err) {
-      console.error('加载三维地图失败:', err)
-      errorMsg.value = '加载三维地图失败，请稍后重试'
+      if (!canvas3d.value) throw new Error('沙盘画布尚未挂载')
+      const response = await fetch('/shandong.json', { signal: abort.signal })
+      if (!response.ok) throw new Error('地图资料加载失败')
+      const geojson = await response.json()
+      if (run !== generation) return false
+      if (!Array.isArray(geojson.features) || !geojson.features.length) throw new Error('地图资料格式无效')
+      scene = new THREE.Scene()
+      scene.background = new THREE.Color('#15232b')
+      scene.fog = new THREE.FogExp2('#263740', 0.008)
+      camera = new THREE.PerspectiveCamera(43, 1, 0.1, 100)
+      camera.position.set(5, 14, 17)
+      renderer = new THREE.WebGLRenderer({ canvas: canvas3d.value, antialias: true, alpha: false })
+      renderer.info.autoReset = false
+      renderer.outputColorSpace = THREE.SRGBColorSpace
+      renderer.toneMapping = THREE.ACESFilmicToneMapping
+      renderer.toneMappingExposure = 1.05
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap
+      renderer.shadowMap.autoUpdate = false
+      renderer.shadowMap.needsUpdate = true
+      scene.add(new THREE.HemisphereLight('#d5e6f1', '#57452f', 1.5))
+      light = new THREE.DirectionalLight('#ffddb1', 2.4)
+      light.position.set(-6, 16, 8)
+      light.castShadow = true
+      Object.assign(light.shadow.camera, { left: -18, right: 18, top: 16, bottom: -16, near: 0.1, far: 50 })
+      light.shadow.bias = -0.0004
+      light.shadow.normalBias = 0.035
+      scene.add(light)
+      controls = new OrbitControls(camera, renderer.domElement)
+      controls.target.set(5, 0.4, 0)
+      controls.enableDamping = true
+      controls.zoomToCursor = true
+      controls.dampingFactor = 0.07
+      controls.minDistance = 3
+      controls.maxDistance = 38
+      controls.maxPolarAngle = Math.PI / 2.15
+      controls.update()
+      world = buildWorld(scene, geojson, terrain)
+      editor = createEditor({
+        scene,
+        terrain,
+        world,
+        history,
+        selectedObject,
+        brush,
+        objectAsset,
+        commit,
+        invalidate: () => {
+          renderer.shadowMap.needsUpdate = true
+        },
+        notify: (message) => {
+          notice.value = message
+        },
+      })
+      pipeline = createRenderPipeline(renderer, scene, camera)
+      setQuality(quality.value)
+      setTouchInteraction(touchInteraction.value)
+      setMode(mode.value)
+      resize()
+      bindPointers()
+      listen(document, 'visibilitychange', () => (document.hidden ? suspend() : resume()))
+      listen(renderer.domElement, 'webglcontextlost', (e) => {
+        e.preventDefault()
+        contextLost = true
+        ready.value = false
+        status.value = 'context-lost'
+        errorMsg.value = '图形上下文已中断，正在等待恢复'
+        suspend()
+      })
+      listen(renderer.domElement, 'webglcontextrestored', () => {
+        contextLost = false
+        void init(callbacks)
+      })
+      if (reducedQuery)
+        listen(reducedQuery, 'change', () => {
+          reducedMotion.value = reducedQuery.matches
+          if (reducedQuery.matches) {
+            pauseTour()
+            elapsed = 0
+          }
+        })
+      const ro = new ResizeObserver(resize)
+      ro.observe(canvas3d.value.parentElement)
+      observers.push(ro)
+      if (typeof IntersectionObserver !== 'undefined') {
+        const io = new IntersectionObserver((entries) => {
+          visible = entries[0].isIntersecting
+          visible ? resume() : suspend()
+        })
+        io.observe(canvas3d.value)
+        observers.push(io)
+      }
+      visible = true
+      contextLost = false
+      ready.value = true
+      loading.value = false
+      status.value = 'ready'
+      projectLabels()
+      resume()
+      return true
+    } catch (error) {
+      if (run !== generation) return false
+      cleanup()
+      loading.value = false
+      status.value = 'error'
+      errorMsg.value = error.name === 'AbortError' ? '加载已取消' : error.message
+      return false
     }
   }
-
-  /**
-   * 注入回调并（若 canvas 已挂载）启动引擎。
-   * inkwash 时仅注入回调（canvas 未渲染），切 real 时 setTheme 复用，避免点击失效。
-   * @param {Object} opts
-   * @param {(cityName: string) => void} [opts.onPickCity]
-   * @param {(cityName: string) => void} [opts.onDoublePickCity]
-   */
-  const init = (opts = {}) => {
-    callbacks.onPickCity = opts.onPickCity
-    callbacks.onDoublePickCity = opts.onDoublePickCity
-    // 预热 GeoJSON 缓存：inkwash 首次加载时 canvas 未挂载不启动渲染，
-    // 但提前 fetch+parse，避免首次切 real 时 fetch 阻塞转场遮罩导致露白。
-    void loadGeojson()
-    if (canvas3d.value) {
-      if (initTimerId) clearTimeout(initTimerId)
-      initTimerId = setTimeout(() => { startThreeSafe() }, 150)
+  function dispose() {
+    generation++
+    abort?.abort()
+    cleanup()
+    ready.value = false
+    loading.value = false
+    status.value = 'disposed'
+  }
+  function setBrush(value) {
+    const next = { ...brush.value, ...value }
+    if (
+      !['raise', 'lower', 'smooth', 'flatten'].includes(next.type) ||
+      !Number.isFinite(next.radius) ||
+      !Number.isFinite(next.strength)
+    )
+      return
+    brush.value = {
+      type: next.type,
+      radius: THREE.MathUtils.clamp(next.radius, 0.4, 3),
+      strength: THREE.MathUtils.clamp(next.strength, 0.02, 0.5),
     }
   }
-
-  /** 销毁引擎（onBeforeUnmount / 切到 inkwash 时调用） */
-  const dispose = () => {
-    if (initTimerId) { clearTimeout(initTimerId); initTimerId = null }
-    window.removeEventListener('resize', handleResize)
-    disconnectCanvasResize()
-    cleanupThree()
+  function importDraft(value) {
+    if (typeof value === 'string' && value.length > 2000000) throw new Error('草稿文件超过 2 MB')
+    const next = validateDraft(value)
+    if (world && next.objects.some((o) => !world.contains(o.x, o.z) || riverDistance(o.x, o.z) <= 0.55))
+      throw new Error('草稿物件位于地图外或河道内')
+    const previousHeights = terrain.edits
+    terrain.restore(next.heights)
+    terrain.restore(previousHeights)
+    commit(next)
+    syncDraft()
   }
-
-  /**
-   * 主题切换（封装原 watch(isReal) 逻辑）。
-   * @param {boolean} isReal - 是否为 real 主题
-   */
-  const setTheme = (isReal) => {
-    if (initTimerId) { clearTimeout(initTimerId); initTimerId = null }
-    if (isReal) {
-      errorMsg.value = null
-      initTimerId = setTimeout(() => { startThreeSafe() }, 150)
-    } else {
-      dispose()
-    }
-  }
-
   return {
     canvas3d,
+    tour,
+    tourCanPlay,
+    toggleTour,
+    pauseTour,
+    stopTour,
+    moveTour,
     selectedCity,
     cityLabels,
     errorMsg,
+    notice,
+    ready,
+    loading,
+    status,
+    mode,
+    weather,
+    quality,
+    motion,
+    touchInteraction,
+    selectedObject,
+    canUndo,
+    canRedo,
+    objectAsset,
+    brush,
     init,
     dispose,
     flyToCity,
-    setTheme,
-    /** 供外部 composable（如 useScrollNarrative）读取相机状态做 scroll-driven 插值 */
+    selectCity,
+    setMode,
+    setWeather,
+    setQuality,
+    setMotion,
+    setTouchInteraction,
+    setView,
+    zoom,
+    setGuidedProgress,
+    setBrush,
+    setTheme: (value) => (value ? init(callbacks) : dispose()),
     getCamera: () => camera,
     getControls: () => controls,
+    getRenderStats: () =>
+      renderer ? { ...renderer.info.render, ...renderer.info.memory, dpr: renderer.getPixelRatio() } : null,
+    getScene: () => scene,
+    setObjectAsset: (value) => {
+      if (['pavilion', 'tree', 'rock'].includes(value)) {
+        objectAsset.value = value
+        selectedObject.value = null
+      }
+    },
+    updateSelected: (patch) => editor?.update(patch),
+    deleteSelected: () => editor?.remove(),
+    undo: () => {
+      if (history.undo()) syncDraft()
+    },
+    redo: () => {
+      if (history.redo()) syncDraft()
+    },
+    resetDraft: () => {
+      commit(emptyDraft())
+      selectedObject.value = null
+      syncDraft()
+    },
+    saveDraft: () => draftStorage('put', validateDraft(history.value)),
+    loadDraft: async () => {
+      const value = await draftStorage('get')
+      if (!value) throw new Error('本机尚无沙盘草稿')
+      importDraft(value)
+    },
+    exportDraft: () => JSON.stringify(history.value, null, 2),
+    importDraft,
   }
 }
