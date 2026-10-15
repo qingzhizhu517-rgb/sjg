@@ -32,15 +32,15 @@
     "display-v2": {
       "project_id": "appgprj_6aca26e375b081919acfa874a379028d",
       "expected_url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
-      "checkout_path": "/Users/a1/.codex/worktrees/8f8b/sjg/.local/releases/d336636892bc0696eb669ad7dc93f9152795b3c5/sites/display-v2",
+      "checkout_path": "/Users/a1/.codex/worktrees/4221/sjg/.local/site-release-sandbox",
       "status": "succeeded",
-      "commit_sha": "f0bc877f16984c0b105b172fd312359c3ae5c119",
-      "deployment_id": "appgdep_6ace2ca9a0e88191a65665641dc39372",
-      "version_id": "appgprj_6aca26e375b081919acfa874a379028d~appgver_6c23be7c91f8819186e52a542320314f",
+      "commit_sha": "8105b61b78278196ee93d73417b519b75fe783e6",
+      "deployment_id": "appgdep_6ad0c35891588191ab0b3ad765df2522",
+      "version_id": "appgprj_6aca26e375b081919acfa874a379028d~appgver_0afff43392e48191b3e5b0ed1d990ce7",
       "url": "https://qilu-wenmai-qzzhu.noisyamber1.chatgpt.site",
-      "repository_revision": "d336636892bc0696eb669ad7dc93f9152795b3c5",
-      "version_number": 11,
-      "verified_at": "2026-10-13T13:06:30.619Z",
+      "repository_revision": "6ba4290b6e71fc189a4a22fa44f72e23ccc8e5e3",
+      "version_number": 12,
+      "verified_at": "2026-10-15T12:14:43.725Z",
       "access_mode": "public",
       "custom_url": "https://qilu.aohs.top"
     },
@@ -294,18 +294,43 @@
       "temporary_backup_service_removed": true,
       "ci_url": "https://github.com/qingzhizhu517-rgb/sjg/actions/runs/38197505414",
       "ci_status": "success"
+    },
+    "river_sandbox": {
+      "application_revision": "6ba4290b6e71fc189a4a22fa44f72e23ccc8e5e3",
+      "published_services": [
+        "display-v2"
+      ],
+      "database_changes": false,
+      "verify_all": "passed_Java17",
+      "display_tests": 305,
+      "display_line_coverage_percent": 70.43,
+      "backend_unit_mvc_tests": 192,
+      "backend_mysql_integration_tests": 7,
+      "master_ci": "success",
+      "master_ci_url": "https://github.com/qingzhizhu517-rgb/sjg/actions/runs/38732301001",
+      "production_route": "https://qilu.aohs.top/river-sandbox",
+      "production_route_http": 200,
+      "static_assets_sha256_matched": 7,
+      "deployment_info_matches": true,
+      "html": "matches built entry after removing observed Cloudflare challenge injection",
+      "backend_health": "UP",
+      "nine_city_api": "HTTP200 and exact custom-domain CORS",
+      "local_browser": "desktop/mobile interactions and tour verified before release; no horizontal overflow; axe zero violations",
+      "production_browser": "not_run: existing browser task space returned user-control hard stop; no takeover attempted",
+      "geography": "artistic miniature terrain and landmarks; not DEM or historical reconstruction",
+      "release_record": "docs/2026-10-15-sandbox-release.md"
     }
   },
   "repository": {
     "online_base_sha": "d336636892bc0696eb669ad7dc93f9152795b3c5",
     "online_latest_local_redesign": true,
-    "publication_mode": "unified_release_journal_Railway_IaC_and_native_Sites",
+    "publication_mode": "frontend_only_native_Sites; backend/admin/datav retain prior verified revision",
     "master_updates_do_not_auto_deploy": true,
     "online_component_revisions": {
       "backend": "d336636892bc0696eb669ad7dc93f9152795b3c5",
       "sjg-datav": "d336636892bc0696eb669ad7dc93f9152795b3c5",
       "admin-frontend": "d336636892bc0696eb669ad7dc93f9152795b3c5",
-      "display-v2": "d336636892bc0696eb669ad7dc93f9152795b3c5"
+      "display-v2": "6ba4290b6e71fc189a4a22fa44f72e23ccc8e5e3"
     }
   }
 }
