@@ -45,7 +45,7 @@ jobs:
           npm run verify:all
           npm run release -- prepare
       - name: Save exact source and frontend distributions
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sjg-unified-${{ inputs.revision }}
           include-hidden-files: true
