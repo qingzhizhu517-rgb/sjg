@@ -12,13 +12,27 @@
           </router-link>
         </div>
       </div>
-      <div class="atlas-hero__painting">
-        <div class="atlas-stage">
-          <img class="river-painting" src="/media/inkwash/atlas/river-landscape-v2.webp" width="2400" height="1536" alt="青绿山峦间，金色黄河蜿蜒奔向海湾的水墨长卷" fetchpriority="high" />
-          <router-link v-for="point in points" :key="point.city" :to="atlasLink(`/regions/${point.city}`, route)" :class="['atlas-map-point', `atlas-map-point--${point.side}`]" :style="{ left: `${point.x}%`, top: `${point.y}%` }" :aria-label="`探索${point.city}`"><span class="atlas-map-point__dot">{{ point.index }}</span><b>{{ point.city }}</b></router-link>
+      <div class="atlas-hero__visual">
+        <div class="atlas-hero__painting">
+          <div class="atlas-stage">
+            <img class="river-painting" src="/media/inkwash/atlas/river-geography-v4.webp" width="1536" height="1024" alt="北朝上的山东沿黄区域水墨地理示意：西部与北部平原、鲁中青绿山地，东北侧为黄河三角洲与渤海" fetchpriority="high" />
+            <svg class="atlas-river-line" viewBox="0 0 1536 1024" aria-hidden="true">
+              <defs><linearGradient id="atlas-river-gold" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#d4a446"/><stop offset=".5" stop-color="#f1d577"/><stop offset="1" stop-color="#dcb955"/></linearGradient></defs>
+              <polyline class="atlas-river-line__bank" :points="ATLAS_RIVER_POINTS" />
+              <polyline class="atlas-river-line__water" :points="ATLAS_RIVER_POINTS" />
+            </svg>
+            <span class="atlas-sea-label" aria-hidden="true">渤海</span>
+            <span class="atlas-delta-label" aria-hidden="true">黄河三角洲</span>
+            <router-link v-for="point in points" :key="point.city" :to="atlasLink(`/regions/${point.city}`, route)" :class="['atlas-map-point', `atlas-map-point--${point.side}`]" :style="{ left: `${point.x}%`, top: `${point.y}%` }" :aria-label="`探索${point.city}`"><span class="atlas-map-point__dot">{{ point.index }}</span><b>{{ point.city }}</b></router-link>
+          </div>
+          <span class="atlas-compass" aria-hidden="true"><b>N</b><svg viewBox="0 0 32 48"><ellipse cx="16" cy="28" rx="12" ry="17"/><path d="m16 8-6 31 6-9 6 9-6-31Z"/><path d="M16 1v44"/></svg></span>
+          <router-link :to="atlasLink('/river-sandbox', route)" class="atlas-sandbox-entry"><span class="atlas-sandbox-entry__icon" aria-hidden="true">◈</span><span><strong>三维沙盘</strong><small>沿黄九市 · 立体漫游</small></span><span aria-hidden="true">→</span></router-link>
         </div>
-        <span class="atlas-compass" aria-hidden="true"><b>N</b><svg viewBox="0 0 32 48"><ellipse cx="16" cy="28" rx="12" ry="17"/><path d="m16 8-6 31 6-9 6 9-6-31Z"/><path d="M16 1v44"/></svg></span>
-        <router-link :to="atlasLink('/river-sandbox', route)" class="atlas-sandbox-entry"><span class="atlas-sandbox-entry__icon" aria-hidden="true">◈</span><span><strong>三维沙盘</strong><small>沿黄九市 · 立体漫游</small></span><span aria-hidden="true">→</span></router-link>
+        <details class="atlas-geography-note">
+          <summary>沿黄九市 · 城市中心标注 <span>图示说明 ↗</span></summary>
+          <p>北朝上的区域示意，城市中心并非黄河河道节点。水墨地貌为 AI 插画；河道与岸线参考概化地理资料，三角洲标注不代表当前精确入海口。</p>
+          <p>地理参考：<a href="https://www.naturalearthdata.com/downloads/10m-physical-vectors/10m-rivers-lake-centerlines/" target="_blank" rel="noopener noreferrer">Natural Earth 河道</a> · <a href="https://www.naturalearthdata.com/downloads/10m-physical-vectors/10m-land/" target="_blank" rel="noopener noreferrer">海岸</a> · <a href="https://geo.datav.aliyun.com/areas_v3/bound/370000_full.json" target="_blank" rel="noopener noreferrer">DataV 城市坐标</a></p>
+        </details>
       </div>
     </section>
 
@@ -68,6 +82,7 @@ import AtlasGlyph from '../components/AtlasGlyph.vue'
 import { NINE_SIGHTS } from '../config/nineSights'
 import { NINE_CITIES } from '../config/nineCities'
 import { atlasLink, isAtlasPreview } from '../config/atlasPreview'
+import { ATLAS_CITY_POINTS, ATLAS_RIVER_POINTS } from '../config/atlasGeography'
 
 const route = useRoute()
 const cities = NINE_CITIES
@@ -78,19 +93,7 @@ const categories = [
   { title: '自然景观', en: 'NATURAL SCENERY', icon: 'mountain', path: '/regions/济南' },
   { title: '黄河源韵', en: 'YELLOW RIVER', icon: 'river', path: '/river-sandbox' },
 ]
-// Art-directed links, not geographic coordinates. The geographic map is a separate view.
-// Positions are % of the river-landscape-v2 stage (2400×1536), following the painted river upstream → sea.
-const points = [
-  { city: '菏泽', x: 47, y: 83, side: 'left' },
-  { city: '济宁', x: 52, y: 71, side: 'right' },
-  { city: '聊城', x: 48, y: 58, side: 'left' },
-  { city: '泰安', x: 66, y: 61, side: 'right' },
-  { city: '济南', x: 59, y: 50, side: 'right' },
-  { city: '德州', x: 45, y: 40, side: 'left' },
-  { city: '淄博', x: 65, y: 42, side: 'right' },
-  { city: '滨州', x: 54, y: 28, side: 'left' },
-  { city: '东营', x: 61, y: 17, side: 'right' },
-].map((point) => ({ ...point, index: cities.indexOf(point.city) + 1 }))
+const points = ATLAS_CITY_POINTS
 // 九城各一处预设景点：静态数据，不请求接口；诗句均为 poem 表中的真实原句（见 config/nineSights.js）。
 const sights = NINE_SIGHTS
 const experiences = [
@@ -102,33 +105,46 @@ const experiences = [
 </script>
 
 <style scoped>
-.river-atlas { max-width: 1480px; margin: 0 auto; padding: 0 34px 52px; }
-.atlas-hero { position: relative; min-height: 640px; height: min(48vw, 690px); }
-.atlas-hero__copy { position: relative; z-index: 2; width: 302px; padding: 65px 0 0 13px; pointer-events: none; }
+.atlas-hero { --atlas-marker-size:22px; position:relative; display:grid; grid-template-columns:clamp(280px,26%,520px) minmax(0,1fr); align-items:start; gap:clamp(24px,2.5vw,80px); min-height:640px; padding-block:24px 32px; }
+.atlas-hero__copy { position:relative; z-index:2; min-width:0; width:100%; padding:clamp(20px,2vw,60px) 0 0; pointer-events:none; }
 .atlas-hero__copy a { pointer-events: auto; }
-.atlas-hero h1 { margin: 0; width: 295px; font: 400 clamp(48px, 4.4vw, 62px)/1.35 var(--font-display); letter-spacing: .08em; color: #433d30; }
+.atlas-hero h1 { margin:0; width:295px; font:600 clamp(48px,4.4vw,64px)/1.3 var(--font-display); letter-spacing:.06em; color:#493622; }
 .atlas-hero__title span { display: block; white-space: nowrap; }
-.atlas-hero__title span + span { color: #59674f; }
+.atlas-hero__title span + span { color:inherit; }
 .atlas-hero__subtitle { display: flex; align-items: center; gap: 17px; margin-top: 27px; font-size: 22px; font-weight: 600; letter-spacing: 3px; white-space: nowrap; }
 .atlas-hero__subtitle > span { font-weight: 400; }
 .atlas-seal { display: inline-flex; writing-mode: vertical-rl; font-family: var(--font-display); font-size: 10px; font-style: normal; color: #fff4e7; background: #a95043; letter-spacing: 1px; padding: 5px 2px; outline: 1px solid #bc786a; outline-offset: 2px; line-height: 1.2; margin-left: 3px; }
 .atlas-hero__description { margin-top: 27px; font-size: 13px; line-height: 2.05; color: #71675a; letter-spacing: .035em; }
-.atlas-categories { display: grid; grid-template-columns: 1fr 1fr; gap: 23px 18px; margin-top: 61px; width: 302px; }
+.atlas-categories { display: grid; grid-template-columns: 1fr 1fr; gap: 23px 18px; margin-top: 28px; width:100%; }
 .atlas-categories a { display: flex; gap: 9px; align-items: center; color: #71614d; font-size: 12px; line-height: 1.6; }
 .atlas-categories a:hover { color: var(--accent); }
 .atlas-categories svg { width: 31px; height: 31px; flex-shrink: 0; }
 .atlas-categories small { display: block; font: 7px/1.8 Georgia, serif; letter-spacing: .04em; color: var(--text-secondary); }
-.atlas-hero__painting { position: absolute; left: 22%; top: 0; right: -15px; height: 100%; container-type: size; }
-/* Stage keeps the painting's 25:16 ratio so city points stay pinned to the river at any viewport. */
-.atlas-stage { position: absolute; inset: 0; margin: auto; width: min(100cqw, 100cqh * 1.5625); aspect-ratio: 2400 / 1536; }
+.atlas-hero__visual { min-width:0; }
+.atlas-hero__painting { position:relative; min-width:0; width:100%; aspect-ratio:3 / 2; container-type:size; }
+/* Painting, source river line and city points share one 3:2 geographic stage. */
+.atlas-stage { position:absolute; inset:0; margin:auto; width:min(100cqw,150cqh); aspect-ratio:3 / 2; }
+.atlas-river-line { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.atlas-river-line polyline { fill:none; stroke-linecap:round; stroke-linejoin:round; }
+.atlas-river-line__bank { stroke:#8f763b; stroke-width:15; opacity:.72; }
+.atlas-river-line__water { stroke:url(#atlas-river-gold); stroke-width:10; }
+.atlas-sea-label,.atlas-delta-label { position:absolute; font-family:var(--font-display); font-size:clamp(12px,.8vw,24px); letter-spacing:.2em; pointer-events:none; }
+.atlas-sea-label { left:83%; top:11%; color:#436d69; }
+.atlas-delta-label { left:69%; top:12%; color:#72613d; font-size:clamp(10px,.65vw,18px); }
+.atlas-geography-note { margin:12px 16px 0; font-size:12px; line-height:1.8; color:var(--text-secondary); }
+.atlas-geography-note summary { cursor:pointer; }
+.atlas-geography-note summary span { margin-left:12px; color:var(--accent); white-space:nowrap; }
+.atlas-geography-note p { margin:8px 0 0; max-width:70ch; }
+.atlas-geography-note a { text-decoration:underline; text-underline-offset:3px; }
+.atlas-geography-note summary:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
 .river-painting { display: block; width: 100%; height: 100%; mix-blend-mode: multiply; --fade: linear-gradient(90deg, transparent, #000 9%, #000 93%, transparent), linear-gradient(180deg, transparent, #000 8%, #000 90%, transparent); -webkit-mask-image: var(--fade); -webkit-mask-composite: source-in; mask-image: var(--fade); mask-composite: intersect; }
 .atlas-compass { position: absolute; top: 16px; right: 16px; width: 30px; text-align: center; color: #74624f; }
 .atlas-compass b { font: 12px/1 Georgia, serif; }
 .atlas-compass svg { width: 100%; stroke: currentColor; stroke-width: 1; fill: none; }
 .atlas-compass path:nth-child(2) { fill: currentColor; }
-.atlas-map-point { position: absolute; z-index: 1; display: flex; align-items: center; gap: 6px; transform: translate(-11px, -50%); color: #3f3527; font-size: 14px; letter-spacing: 2px; transition: transform .2s; }
-.atlas-map-point--left { flex-direction: row-reverse; transform: translate(calc(-100% + 11px), -50%); }
-.atlas-map-point__dot { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #b15e50; color: #fff6ea; font: 11px/1 Georgia, serif; letter-spacing: 0; outline: 1px solid #b15e5080; outline-offset: 3px; box-shadow: 0 2px 6px #5a3a2a40; }
+.atlas-map-point { position: absolute; z-index: 1; display: flex; align-items: center; gap: 6px; transform: translate(calc(var(--atlas-marker-size) / -2), -50%); color: #3f3527; font-size: 14px; letter-spacing: 2px; transition: transform .2s; }
+.atlas-map-point--left { flex-direction: row-reverse; transform: translate(calc(-100% + var(--atlas-marker-size) / 2), -50%); }
+.atlas-map-point__dot { display: grid; place-items: center; width:var(--atlas-marker-size); height:var(--atlas-marker-size); border-radius: 50%; background: #b15e50; color: #fff6ea; font: 11px/1 Georgia, serif; letter-spacing: 0; outline: 1px solid #b15e5080; outline-offset: 3px; box-shadow: 0 2px 6px #5a3a2a40; }
 .atlas-map-point b { font-family: var(--font-display); font-weight: 400; padding: 2px 9px; background: #f8f4eceb; border: 1px solid #b15e5059; border-radius: 2px; box-shadow: 0 1px 4px #5a463014; }
 .atlas-map-point:hover b, .atlas-map-point:focus-visible b { background: #b15e50; color: #fff6ea; border-color: #b15e50; }
 .atlas-map-point:hover .atlas-map-point__dot, .atlas-map-point:focus-visible .atlas-map-point__dot { outline-offset: 5px; }
@@ -165,11 +181,11 @@ const experiences = [
 .atlas-experiences { margin-top:52px; }
 .atlas-section-kicker { font-size:11px; color:var(--text-muted); letter-spacing:3px; margin:0 0 8px; }
 .atlas-experience-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:24px; margin-top:24px; }
-.atlas-experience { min-width:0; color:var(--text-primary); }
-.atlas-experience__art { position:relative; display:block; aspect-ratio:3/2; overflow:hidden; background:var(--bg-secondary); }
+.atlas-experience { min-width:0; display:grid; grid-template-columns:clamp(64px,5vw,104px) minmax(0,1fr); gap:18px; align-items:center; color:var(--text-primary); }
+.atlas-experience__art { position:relative; display:block; aspect-ratio:1; overflow:hidden; border:1px solid var(--border); border-radius:50%; background:var(--bg-secondary); }
 .atlas-experience__art img { display:block; width:100%; height:100%; object-fit:cover; mix-blend-mode:multiply; transition:transform .4s ease; }
-.atlas-experience__number { position:absolute; top:12px; left:12px; display:grid; place-items:center; width:26px; height:30px; background:#f6f2e8e8; border:1px solid #b15e5059; color:var(--accent); font:italic 12px Georgia,serif; }
-.atlas-experience__copy { display:grid; grid-template-columns:1fr auto; gap:7px 10px; padding:15px 0 14px; border-bottom:1px solid var(--border); }
+.atlas-experience__number { display:none; }
+.atlas-experience__copy { display:grid; grid-template-columns:1fr auto; gap:7px 10px; padding:12px 0; }
 .atlas-experience strong { font-family:var(--font-display); font-size:22px; font-weight:400; letter-spacing:2px; }
 .atlas-experience small { grid-column:1/-1; color:var(--text-secondary); font-size:13px; line-height:1.85; }
 .atlas-experience__arrow { align-self:center; color:var(--accent); font-size:18px; transition:transform .2s; }
@@ -202,17 +218,28 @@ const experiences = [
 .atlas-reading-link__action { display:flex; align-items:center; gap:20px; min-height:44px; color:var(--accent); font-size:13px; margin-top:4px; }
 .atlas-reading-link:hover>img { transform:translateY(-3px); }
 .atlas-experience:focus-visible,.atlas-city-rail a:focus-visible,.atlas-reading-link:focus-visible { outline:2px solid var(--accent); outline-offset:5px; }
-@media (min-width: 1450px) { .atlas-hero__copy { padding-top: 90px; } }
+@media (min-width:1600px) {
+  .atlas-hero { --atlas-marker-size:clamp(22px,.85vw,32px); padding-block:32px 48px; }
+  .atlas-hero h1 { width:auto; font-size:clamp(64px,2.8vw,96px); }
+  .atlas-hero__subtitle { font-size:clamp(22px,.95vw,30px); gap:clamp(17px,.7vw,27px); }
+  .atlas-hero__description { font-size:clamp(14px,.6vw,18px); margin-top:32px; }
+  .atlas-categories { gap:28px 20px; }
+  .atlas-categories a { font-size:clamp(13px,.5vw,18px); gap:12px; }
+  .atlas-categories svg { width:clamp(31px,1.2vw,44px); height:clamp(31px,1.2vw,44px); }
+  .atlas-categories small { font-size:clamp(8px,.3vw,10px); }
+  .atlas-map-point { font-size:clamp(14px,.6vw,22px); }
+  .atlas-map-point__dot { font-size:clamp(11px,.4vw,15px); }
+  .atlas-heading h2 { font-size:clamp(26px,1vw,36px); }
+  .atlas-experience strong { font-size:clamp(22px,.8vw,30px); }
+}
 @media (max-width: 1150px) {
-  .river-atlas { padding-inline: 25px; }
-  .atlas-hero { min-height: 540px; }
-  .atlas-hero__copy { width: 260px; padding-top: 40px; padding-left: 4px; }
+  .atlas-hero { min-height:540px; grid-template-columns:260px minmax(0,1fr); gap:20px; }
+  .atlas-hero__copy { width:100%; padding:0; }
   .atlas-hero h1 { width: 245px; font-size: 50px; }
   .atlas-hero__subtitle { font-size: 19px; gap: 12px; }
   .atlas-hero__description { font-size: 12px; }
-  .atlas-categories { width: 266px; margin-top: 37px; gap: 19px 12px; }
+  .atlas-categories { width:100%; margin-top:37px; gap:19px 12px; }
   .atlas-categories a { font-size: 11px; }
-  .atlas-hero__painting { left: 23%; }
   .atlas-sights__grid { gap: 10px; grid-template-columns: repeat(3,minmax(0,1fr)); }
   .atlas-sight { padding: 18px; }
   .atlas-sight__heading { gap: 7px; }
@@ -220,15 +247,14 @@ const experiences = [
   .atlas-sight__tag { font-size: 9px; }
   .atlas-sight__description { font-size: 12px; }
 }
-@media (max-width: 760px) {
-  .river-atlas { padding-inline: 20px; }
-  .atlas-hero { height: auto; min-height: 0; padding-top: 23px; }
+@media (max-width: 960px) {
+  .atlas-hero { display:block; min-height:0; padding-block:8px 24px; }
   .atlas-hero__copy { padding: 8px 0 0; width: 100%; }
   .atlas-hero h1 { width: 224px; font-size: 46px; }
   .atlas-hero__subtitle { font-size: 17px; margin-top: 17px; }
   .atlas-hero__description { margin-top: 17px; font-size: 12px; }
-  .atlas-categories { position: absolute; top: 43px; right: 0; width: 190px; grid-template-columns: 1fr; gap: 13px; }
-  .atlas-hero__painting { position: relative; left: auto; right: auto; height: auto; margin: 4px -13px 10px; container-type: normal; }
+  .atlas-categories { position:static; width:100%; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; }
+  .atlas-hero__painting { height:auto; aspect-ratio:auto; margin:20px 0 10px; container-type:normal; }
   .atlas-stage { position: relative; inset: auto; width: 100%; }
   .atlas-compass { right: 8px; top: 4px; width: 24px; }
   .atlas-sandbox-entry { position: static; margin: 8px 13px 0; justify-content: space-between; }
@@ -264,15 +290,35 @@ const experiences = [
 .atlas-categories { margin-top:28px; }
 .atlas-sights__grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; }
 .atlas-sight { padding:24px; }
-.atlas-sight h3 { font-size:21px; }
+.atlas-sight h3 { font-size:clamp(21px,.75vw,28px); }
 .atlas-sight__tag { font-size:11px; margin-left:auto; }
-.atlas-sight__poetry { font-size:15px; min-height:30px; }
-.atlas-sight__description { font-size:13px; padding-bottom:20px; }
+.atlas-sight__poetry { font-size:clamp(15px,.65vw,22px); min-height:30px; }
+.atlas-sight__description { font-size:clamp(13px,.55vw,17px); max-width:40em; padding-bottom:20px; }
 .atlas-heading > a { font-size:13px; min-height:44px; display:inline-flex; align-items:center; }
-@media(max-width:760px) { .atlas-categories { position:static; grid-template-columns:repeat(2,1fr); width:100%; margin-top:26px; } .atlas-sights__grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; } .atlas-sight { padding:18px; } .atlas-sight__tag { margin:0; } .atlas-sight h3 { font-size:19px; } }
+@media(max-width:960px) { .atlas-categories { position:static; grid-template-columns:repeat(2,1fr); width:100%; margin-top:26px; } .atlas-sights__grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; } .atlas-sight { padding:18px; } .atlas-sight__tag { margin:0; } .atlas-sight h3 { font-size:19px; } }
+@media (min-width:600px) and (max-width:960px) {
+  .atlas-hero__copy { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px 32px; align-items:center; }
+  .atlas-hero h1 { grid-column:1; grid-row:1 / 3; }
+  .atlas-hero__subtitle { grid-column:1; grid-row:3; margin:0; }
+  .atlas-hero__description { grid-column:2; grid-row:1; margin:0; }
+  .atlas-hero__actions { grid-column:2; grid-row:2; margin:0; }
+  .atlas-categories { grid-column:2; grid-row:3; margin:0; }
+}
+@media (min-width:2400px) {
+  .atlas-sights__grid { grid-template-columns:repeat(9,minmax(0,1fr)); gap:16px; }
+  .atlas-sight { padding:18px 14px; }
+  .atlas-sight h3 { font-size:clamp(19px,.6vw,23px); }
+  .atlas-sight__tag { margin-left:0; font-size:10px; }
+  .atlas-sight__poetry { font-size:clamp(13px,.45vw,17px); letter-spacing:1px; }
+  .atlas-sight__description { font-size:clamp(12px,.4vw,15px); }
+}
+@media (max-width:480px) {
+  .atlas-experience { grid-template-columns:64px minmax(0,1fr); gap:16px; }
+}
 @media(max-width:480px) { .atlas-sights__grid { grid-template-columns:1fr; } .atlas-sight { display:grid; grid-template-columns:1fr 1fr; gap:8px 18px; } .atlas-sight__heading { grid-column:1/-1; } .atlas-sight__image { grid-row:2 / 5; margin:0; align-self:center; } .atlas-sight__poetry { font-size:13px; } .atlas-sight__description { padding:0; margin:0; font-size:12px; } .atlas-pill { justify-self:start; font-size:12px; padding-inline:12px; } }
 @media(max-width:1100px) { .atlas-experience-grid { gap:18px; } .atlas-city-rail { gap:8px; } .atlas-city-rail strong { font-size:17px; letter-spacing:1px; } .atlas-city-rail__label { gap:4px; } .atlas-reading-link { padding:26px; } }
-@media(max-width:760px) { .atlas-experiences { margin-top:34px; } .atlas-experiences .atlas-heading h2 { font-size:21px; letter-spacing:1px; } .atlas-experiences .atlas-journeys__hint { display:none; } .atlas-experience-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px 16px; margin-top:20px; } .atlas-experience strong { font-size:20px; } .atlas-experience small { font-size:12px; } .atlas-city-rail { gap:16px 13px; } .atlas-city-rail__art { aspect-ratio:1.65; } .atlas-reading-links { gap:16px; } .atlas-reading-link { min-height:244px; padding:24px; } .atlas-reading-link strong { font-size:26px; } .atlas-reading-link--poet>img { width:42%; } .atlas-reading-link--lake>img { width:44%; opacity:.65; } }
+@media(max-width:960px) { .atlas-experiences { margin-top:34px; } .atlas-experiences .atlas-heading h2 { font-size:21px; letter-spacing:1px; } .atlas-experiences .atlas-journeys__hint { display:none; } .atlas-experience-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px 16px; margin-top:20px; } .atlas-experience strong { font-size:20px; } .atlas-experience small { font-size:12px; } .atlas-city-rail { gap:16px 13px; } .atlas-city-rail__art { aspect-ratio:1.65; } .atlas-reading-links { gap:16px; } .atlas-reading-link { min-height:244px; padding:24px; } .atlas-reading-link strong { font-size:26px; } .atlas-reading-link--poet>img { width:42%; } .atlas-reading-link--lake>img { width:44%; opacity:.65; } }
+@media(max-width:480px) { .atlas-experience-grid { grid-template-columns:1fr; } }
 @media(max-width:480px) { .atlas-reading-link { min-height:256px; padding:24px 20px; } .atlas-reading-link strong { font-size:23px; letter-spacing:1px; } .atlas-reading-link__eyebrow { font-size:10px; letter-spacing:1px; } .atlas-reading-link__source { font-size:11px; } .atlas-reading-link--lake>img { width:43%; } }
 @media(prefers-reduced-motion:reduce) { .atlas-experience img,.atlas-experience__arrow,.atlas-city-rail img,.atlas-reading-link>img { transition:none!important; transform:none!important; } }
 </style>

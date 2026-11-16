@@ -102,6 +102,9 @@
   --container-max: 1440px;
   /* 展示端阅读排版：页面、导航与共享组件使用同一尺度。 */
   --page-max: 1360px;
+  /* 图册/视觉舞台可选用宽屏容器；阅读页继续使用 --page-max。 */
+  --page-wide-max: clamp(1360px, 94vw, 3200px);
+  --page-wide-gutter: clamp(20px, 3vw, 96px);
   --page-gutter: clamp(20px, 4vw, 48px);
   --page-top: clamp(24px, 3vw, 40px);
   --page-bottom: clamp(48px, 6vw, 80px);

@@ -1,5 +1,11 @@
 /* 展示端阅读布局。通过显式 folio-* 类复用，不影响沙盘、Canvas 与浮层。
    app-root + route-page 明确覆盖页面 scoped 中遗留的容器尺寸。 */
+.app-root--atlas {
+  --page-max: var(--page-wide-max);
+  --page-gutter: var(--page-wide-gutter);
+}
+.app-root--atlas .site-navigation a { font-size: clamp(14px, .5vw, 18px); }
+.app-root--atlas .site-wordmark b { font-size: clamp(23px, .8vw, 30px); }
 .app-root .route-page .folio-page {
   width: 100%;
   max-width: var(--page-max);
@@ -101,6 +107,7 @@
 .app-root .route-page .folio-detail-actions .folio-actions { margin-left: auto; }
 
 @media (max-width: 960px) {
+  .app-root--atlas { --page-gutter: 20px; }
   .app-root .route-page .folio-split { grid-template-columns: 1fr; }
   .app-root .route-page .folio-heading__row { flex-wrap: wrap; }
   .app-root .route-page .folio-heading__row > .folio-actions { justify-content: flex-start; padding-top: 0; }

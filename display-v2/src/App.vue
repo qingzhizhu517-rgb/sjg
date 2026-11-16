@@ -1,5 +1,5 @@
 <template>
-  <div :class="themeClass" class="app-root">
+  <div :class="[themeClass, { 'app-root--atlas': route.name === 'Map' }]" class="app-root">
     <RouteProgress :progress="progressValue" :visible="progressVisible" />
     <SiteHeader />
     <main id="main-content" class="main-content" tabindex="-1">
