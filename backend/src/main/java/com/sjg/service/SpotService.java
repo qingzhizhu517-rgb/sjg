@@ -2,6 +2,7 @@ package com.sjg.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.sjg.dto.ImportResult;
 import com.sjg.dto.PageResult;
 import com.sjg.entity.ScenicSpot;
 import com.sjg.mapper.ScenicSpotMapper;
@@ -27,6 +28,10 @@ public class SpotService {
     }
 
     public PageResult<ScenicSpot> list(int page, int size, String keyword, String region) {
+        return list(page, size, keyword, region, null);
+    }
+
+    public PageResult<ScenicSpot> list(int page, int size, String keyword, String region, String quality) {
         LambdaQueryWrapper<ScenicSpot> wrapper = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
             wrapper.and(w -> w.like(ScenicSpot::getName, keyword)
@@ -34,6 +39,13 @@ public class SpotService {
         }
         if (StringUtils.hasText(region)) {
             wrapper.eq(ScenicSpot::getRegion, region);
+        }
+        if ("missingCoordinates".equals(quality)) {
+            wrapper.and(w -> w.isNull(ScenicSpot::getLongitude).or().isNull(ScenicSpot::getLatitude));
+        } else if ("missingImages".equals(quality)) {
+            wrapper.and(w -> w.isNull(ScenicSpot::getImageUrl)
+                    .or().eq(ScenicSpot::getImageUrl, "")
+                    .or().eq(ScenicSpot::getImageUrl, "[]"));
         }
         wrapper.orderByDesc(ScenicSpot::getId);
         Page<ScenicSpot> result = spotMapper.selectPage(new Page<>(page, size), wrapper);
@@ -46,8 +58,8 @@ public class SpotService {
     public void delete(Long id) { spotMapper.deleteById(id); }
 
     @Transactional
-    public int importFromExcel(MultipartFile file) throws IOException {
-        List<ScenicSpot> spots = new ArrayList<>();
+    public ImportResult importFromExcel(MultipartFile file) throws IOException {
+        ImportResult result = ImportResult.empty();
         DataFormatter formatter = new DataFormatter();
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
@@ -55,7 +67,10 @@ public class SpotService {
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
                 String name = formatter.formatCellValue(row.getCell(0)).trim();
-                if (!StringUtils.hasText(name)) continue;
+                if (!StringUtils.hasText(name)) {
+                    result.skipped(i + 1, "景点名称为空");
+                    continue;
+                }
                 ScenicSpot spot = new ScenicSpot();
                 spot.setName(name);
                 spot.setRegion(formatter.formatCellValue(row.getCell(1)).trim());
@@ -63,11 +78,11 @@ public class SpotService {
                 spot.setLongitude(getCellBigDecimal(row.getCell(3)));
                 spot.setLatitude(getCellBigDecimal(row.getCell(4)));
                 spot.setDescription(formatter.formatCellValue(row.getCell(5)).trim());
-                spots.add(spot);
+                spotMapper.insert(spot);
+                result.imported();
             }
         }
-        for (ScenicSpot spot : spots) { spotMapper.insert(spot); }
-        return spots.size();
+        return result;
     }
 
     private BigDecimal getCellBigDecimal(Cell cell) {

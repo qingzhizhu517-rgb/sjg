@@ -8,7 +8,7 @@
       <el-tab-pane label="已拒绝" name="rejected" />
       <el-tab-pane label="已禁用" name="disabled" />
     </el-tabs>
-    <DataTable ref="table" :fetchFn="fetchUsers">
+    <DataTable ref="table" :fetchFn="fetchUsers" :show-import="false" :show-add="false">
       <el-table-column type="index" label="序号" width="70" />
       <el-table-column prop="username" label="用户名" width="150" />
       <el-table-column prop="role" label="角色" width="100">
@@ -58,11 +58,11 @@
 
     <!-- 重置密码弹窗 -->
     <el-dialog v-model="resetDialogVisible" title="重置密码" width="400px">
-      <el-form :model="resetForm" label-width="80px">
+      <el-form ref="resetFormRef" :model="resetForm" :rules="resetRules" label-width="80px">
         <el-form-item label="用户名">
           <el-input :value="resetForm.username" disabled />
         </el-form-item>
-        <el-form-item label="新密码" required>
+        <el-form-item label="新密码" prop="newPassword" required>
           <el-input v-model="resetForm.newPassword" type="password" placeholder="请输入新密码" show-password />
         </el-form-item>
       </el-form>
@@ -76,15 +76,32 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../api'
 import DataTable from '../components/DataTable.vue'
+import { createRequiredRule, minLengthValidator } from '../utils/formRules'
 
+const validStatuses = ['', 'pending', 'approved', 'rejected', 'disabled']
+const readStatusQuery = (status) => {
+  const value = Array.isArray(status) ? status[0] : status
+  return validStatuses.includes(value) ? value : ''
+}
+
+const route = useRoute()
 const table = ref(null)
-const statusFilter = ref('')
+const statusFilter = ref(readStatusQuery(route.query.status))
 const resetDialogVisible = ref(false)
 const resetLoading = ref(false)
+const resetFormRef = ref(null)
 const resetForm = ref({ id: null, username: '', newPassword: '' })
+
+const resetRules = {
+  newPassword: [
+    createRequiredRule('请输入新密码'),
+    { validator: minLengthValidator(6, '密码至少 6 位'), trigger: 'blur' }
+  ]
+}
 
 const fetchUsers = (page, size, keyword) =>
   api.get('/admin/users', { params: { page, size, keyword, status: statusFilter.value || undefined } })
@@ -137,10 +154,7 @@ const openResetPassword = (row) => {
 }
 
 const handleResetPassword = async () => {
-  if (!resetForm.value.newPassword) {
-    ElMessage.error('请输入新密码')
-    return
-  }
+  await resetFormRef.value.validate()
   resetLoading.value = true
   try {
     await api.put(`/admin/users/${resetForm.value.id}/reset-password`, {

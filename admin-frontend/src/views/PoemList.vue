@@ -2,6 +2,22 @@
   <div class="page-container">
     <div class="page-title">诗词管理</div>
     <DataTable ref="table" :fetchFn="fetchPoems" @add="openAdd" @edit="openEdit" @delete="handleDelete" @import="showImport = true">
+      <template #filters>
+        <el-select v-model="poetFilter" filterable clearable placeholder="作者" style="width: 130px" @change="table.fetch()">
+          <el-option v-for="p in poets" :key="p.id" :label="p.name" :value="p.id" />
+        </el-select>
+        <el-select v-model="dynastyFilter" clearable placeholder="朝代" style="width: 120px" @change="table.fetch()">
+          <el-option v-for="d in dynasties" :key="d.id" :label="d.name" :value="d.id" />
+        </el-select>
+        <el-select v-model="spotFilter" filterable clearable placeholder="景点" style="width: 130px" @change="table.fetch()">
+          <el-option v-for="s in spots" :key="s.id" :label="s.name" :value="s.id" />
+        </el-select>
+        <el-select v-model="qualityFilter" clearable placeholder="数据质量" style="width: 150px" @change="table.fetch()">
+          <el-option label="缺少作者" value="missingPoet" />
+          <el-option label="缺少景点" value="missingSpot" />
+          <el-option label="缺少注解/背景" value="missingAnnotation" />
+        </el-select>
+      </template>
       <el-table-column type="index" label="序号" width="70" />
       <el-table-column prop="title" label="标题" width="150" show-overflow-tooltip />
       <el-table-column label="作者" width="110">
@@ -22,13 +38,13 @@
       <el-table-column prop="content" label="内容" show-overflow-tooltip />
     </DataTable>
 
-    <FormDialog :visible="dialogVisible" :isEdit="isEdit" :initialData="current" :submitFn="handleSubmit"
+    <FormDialog :visible="dialogVisible" :isEdit="isEdit" :initialData="current" :submitFn="handleSubmit" :rules="poemRules"
       @close="dialogVisible = false" @success="table.fetch()">
       <template #default="{ form }">
-        <el-form-item label="标题" required>
+        <el-form-item label="标题" prop="title" required>
           <el-input v-model="form.title" placeholder="请输入诗词标题" />
         </el-form-item>
-        <el-form-item label="内容" required>
+        <el-form-item label="内容" prop="content" required>
           <el-input v-model="form.content" type="textarea" :rows="6" placeholder="请输入诗词内容" />
         </el-form-item>
         <el-form-item label="作者">
@@ -67,12 +83,16 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import api from '../api'
 import DataTable from '../components/DataTable.vue'
 import FormDialog from '../components/FormDialog.vue'
 import ImportDialog from '../components/ImportDialog.vue'
+import { cleanParams, parseQualityFromRoute } from '../utils/resourceFilters'
+import { createRequiredRule } from '../utils/formRules'
 
+const route = useRoute()
 const table = ref(null)
 const dialogVisible = ref(false)
 const isEdit = ref(false)
@@ -81,6 +101,15 @@ const showImport = ref(false)
 const poets = ref([])
 const dynasties = ref([])
 const spots = ref([])
+const poetFilter = ref(null)
+const dynastyFilter = ref(null)
+const spotFilter = ref(null)
+const qualityFilter = ref(parseQualityFromRoute(route))
+
+const poemRules = {
+  title: [createRequiredRule('请输入诗词标题')],
+  content: [createRequiredRule('请输入诗词内容')],
+}
 
 const getPoetName = (id) => {
   const p = poets.value.find(item => item.id === id)
@@ -97,7 +126,17 @@ const getSpotName = (id) => {
   return s ? s.name : id || '—'
 }
 
-const fetchPoems = (page, size, keyword) => api.get('/admin/poems', { params: { page, size, keyword } })
+const fetchPoems = (page, size, keyword) => api.get('/admin/poems', {
+  params: cleanParams({
+    page,
+    size,
+    keyword,
+    poetId: poetFilter.value,
+    dynastyId: dynastyFilter.value,
+    spotId: spotFilter.value,
+    quality: qualityFilter.value,
+  })
+})
 const openAdd = () => { isEdit.value = false; current.value = {}; dialogVisible.value = true }
 const openEdit = (row) => { isEdit.value = true; current.value = { ...row }; dialogVisible.value = true }
 const handleSubmit = async (form) => {

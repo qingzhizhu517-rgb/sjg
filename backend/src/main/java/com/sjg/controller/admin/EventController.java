@@ -1,6 +1,7 @@
 package com.sjg.controller.admin;
 
 import com.sjg.dto.PageResult;
+import com.sjg.dto.ImportResult;
 import com.sjg.dto.Result;
 import com.sjg.entity.Event;
 import com.sjg.service.EventService;
@@ -85,10 +86,10 @@ public class EventController {
 
     @Operation(summary = "批量导入事件", description = "通过Excel文件批量导入事件，表头：标题、朝代ID、年份、描述、历史意义")
     @PostMapping("/import")
-    public ResponseEntity<Result<Map<String, Object>>> importExcel(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Result<ImportResult>> importExcel(@RequestParam("file") MultipartFile file) {
         try {
-            int count = eventService.importFromExcel(file);
-            return ResponseEntity.ok(Result.success(Map.of("success", true, "message", "成功导入 " + count + " 条事件记录")));
+            ImportResult result = eventService.importFromExcel(file);
+            return ResponseEntity.ok(Result.success(result));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Result.error(400, "导入失败: " + e.getMessage()));
         }

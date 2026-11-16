@@ -2,6 +2,7 @@ package com.sjg.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.sjg.dto.ImportResult;
 import com.sjg.dto.PageResult;
 import com.sjg.entity.Event;
 import com.sjg.entity.PoemEvent;
@@ -52,8 +53,8 @@ public class EventService {
     }
 
     @Transactional
-    public int importFromExcel(MultipartFile file) throws IOException {
-        List<Event> events = new ArrayList<>();
+    public ImportResult importFromExcel(MultipartFile file) throws IOException {
+        ImportResult result = ImportResult.empty();
         DataFormatter formatter = new DataFormatter();
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
@@ -61,18 +62,21 @@ public class EventService {
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
                 String title = formatter.formatCellValue(row.getCell(0)).trim();
-                if (!StringUtils.hasText(title)) continue;
+                if (!StringUtils.hasText(title)) {
+                    result.skipped(i + 1, "事件标题为空");
+                    continue;
+                }
                 Event event = new Event();
                 event.setTitle(title);
                 event.setDynastyId(getCellLong(row.getCell(1)));
                 event.setYear(getCellInt(row.getCell(2)));
                 event.setDescription(formatter.formatCellValue(row.getCell(3)).trim());
                 event.setSignificance(formatter.formatCellValue(row.getCell(4)).trim());
-                events.add(event);
+                eventMapper.insert(event);
+                result.imported();
             }
         }
-        for (Event event : events) { eventMapper.insert(event); }
-        return events.size();
+        return result;
     }
 
     private Long getCellLong(Cell cell) {

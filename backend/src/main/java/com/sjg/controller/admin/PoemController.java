@@ -1,6 +1,7 @@
 package com.sjg.controller.admin;
 
 import com.sjg.dto.PageResult;
+import com.sjg.dto.ImportResult;
 import com.sjg.dto.Result;
 import com.sjg.entity.Poem;
 import com.sjg.service.PoemService;
@@ -32,8 +33,12 @@ public class PoemController {
     public ResponseEntity<Result<PageResult<Poem>>> list(
             @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页数量", example = "10") @RequestParam(defaultValue = "10") int size,
-            @Parameter(description = "搜索关键字（按诗词标题模糊匹配）") @RequestParam(required = false) String keyword) {
-        return ResponseEntity.ok(Result.success(poemService.list(page, size, keyword)));
+            @Parameter(description = "搜索关键字（按诗词标题模糊匹配）") @RequestParam(required = false) String keyword,
+            @Parameter(description = "诗人ID筛选", example = "1") @RequestParam(required = false) Long poetId,
+            @Parameter(description = "朝代ID筛选", example = "4") @RequestParam(required = false) Long dynastyId,
+            @Parameter(description = "景点ID筛选", example = "2") @RequestParam(required = false) Long spotId,
+            @Parameter(description = "数据质量筛选", example = "missingAnnotation") @RequestParam(required = false) String quality) {
+        return ResponseEntity.ok(Result.success(poemService.list(page, size, keyword, poetId, dynastyId, spotId, quality)));
     }
 
     /**
@@ -85,10 +90,10 @@ public class PoemController {
 
     @Operation(summary = "批量导入诗词", description = "通过Excel文件批量导入诗词，表头：标题、内容、作者ID、朝代ID、景点ID、注解、背景、音频URL、视频URL、情感标签")
     @PostMapping("/import")
-    public ResponseEntity<Result<Map<String, Object>>> importExcel(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Result<ImportResult>> importExcel(@RequestParam("file") MultipartFile file) {
         try {
-            int count = poemService.importFromExcel(file);
-            return ResponseEntity.ok(Result.success(Map.of("success", true, "message", "成功导入 " + count + " 条诗词记录")));
+            ImportResult result = poemService.importFromExcel(file);
+            return ResponseEntity.ok(Result.success(result));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Result.error(400, "导入失败: " + e.getMessage()));
         }

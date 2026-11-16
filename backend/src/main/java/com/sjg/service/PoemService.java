@@ -2,6 +2,7 @@ package com.sjg.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.sjg.dto.ImportResult;
 import com.sjg.dto.PageResult;
 import com.sjg.entity.Poem;
 import com.sjg.entity.PoemEvent;
@@ -30,10 +31,33 @@ public class PoemService {
     }
 
     public PageResult<Poem> list(int page, int size, String keyword) {
+        return list(page, size, keyword, null, null, null, null);
+    }
+
+    public PageResult<Poem> list(int page, int size, String keyword, Long poetId, Long dynastyId, Long spotId, String quality) {
         LambdaQueryWrapper<Poem> wrapper = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
             wrapper.and(w -> w.like(Poem::getTitle, keyword)
                    .or().like(Poem::getContent, keyword));
+        }
+        if (poetId != null) {
+            wrapper.eq(Poem::getPoetId, poetId);
+        }
+        if (dynastyId != null) {
+            wrapper.eq(Poem::getDynastyId, dynastyId);
+        }
+        if (spotId != null) {
+            wrapper.eq(Poem::getSpotId, spotId);
+        }
+        if ("missingPoet".equals(quality)) {
+            wrapper.isNull(Poem::getPoetId);
+        } else if ("missingSpot".equals(quality)) {
+            wrapper.isNull(Poem::getSpotId);
+        } else if ("missingAnnotation".equals(quality)) {
+            wrapper.and(w -> w.isNull(Poem::getAnnotation)
+                    .or().eq(Poem::getAnnotation, "")
+                    .or().isNull(Poem::getBackground)
+                    .or().eq(Poem::getBackground, ""));
         }
         wrapper.orderByDesc(Poem::getId);
         Page<Poem> result = poemMapper.selectPage(new Page<>(page, size), wrapper);
@@ -52,8 +76,8 @@ public class PoemService {
     }
 
     @Transactional
-    public int importFromExcel(MultipartFile file) throws IOException {
-        List<Poem> poems = new ArrayList<>();
+    public ImportResult importFromExcel(MultipartFile file) throws IOException {
+        ImportResult result = ImportResult.empty();
         DataFormatter formatter = new DataFormatter();
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
@@ -61,7 +85,10 @@ public class PoemService {
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
                 String title = formatter.formatCellValue(row.getCell(0)).trim();
-                if (!StringUtils.hasText(title)) continue;
+                if (!StringUtils.hasText(title)) {
+                    result.skipped(i + 1, "诗词标题为空");
+                    continue;
+                }
                 Poem poem = new Poem();
                 poem.setTitle(title);
                 poem.setContent(formatter.formatCellValue(row.getCell(1)).trim());
@@ -73,11 +100,11 @@ public class PoemService {
                 poem.setAudioUrl(formatter.formatCellValue(row.getCell(7)).trim());
                 poem.setVideoUrl(formatter.formatCellValue(row.getCell(8)).trim());
                 poem.setSentimentTags(parseSentimentTags(formatter.formatCellValue(row.getCell(9)).trim()));
-                poems.add(poem);
+                poemMapper.insert(poem);
+                result.imported();
             }
         }
-        for (Poem poem : poems) { poemMapper.insert(poem); }
-        return poems.size();
+        return result;
     }
 
     private String parseSentimentTags(String val) {

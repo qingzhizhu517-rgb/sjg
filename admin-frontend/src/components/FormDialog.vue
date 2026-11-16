@@ -7,7 +7,7 @@
     class="traditional-dialog"
     :close-on-click-modal="false"
   >
-    <el-form :model="form" label-width="100px" class="traditional-form">
+    <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" class="traditional-form">
       <slot :form="form" />
     </el-form>
     <template #footer>
@@ -25,10 +25,12 @@ const props = defineProps({
   isEdit: Boolean,
   initialData: { type: Object, default: () => ({}) },
   submitFn: Function,
+  rules: { type: Object, default: () => ({}) },
 })
 const emit = defineEmits(['close', 'success'])
 
 const form = ref({})
+const formRef = ref(null)
 const loading = ref(false)
 
 watch(() => props.visible, (val) => {
@@ -44,6 +46,9 @@ watch(() => props.initialData, (val) => {
 const submit = async () => {
   loading.value = true
   try {
+    if (formRef.value) {
+      await formRef.value.validate()
+    }
     await props.submitFn(form.value)
     emit('success')
     emit('close')

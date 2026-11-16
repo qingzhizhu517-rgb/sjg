@@ -16,10 +16,10 @@
       </el-table-column>
     </DataTable>
 
-    <FormDialog :visible="dialogVisible" :isEdit="isEdit" :initialData="current" :submitFn="handleSubmit"
+    <FormDialog :visible="dialogVisible" :isEdit="isEdit" :initialData="current" :submitFn="handleSubmit" :rules="eventRules"
       @close="dialogVisible = false" @success="table.fetch()">
       <template #default="{ form }">
-        <el-form-item label="标题" required>
+        <el-form-item label="标题" prop="title" required>
           <el-input v-model="form.title" placeholder="请输入事件标题" />
         </el-form-item>
         <el-form-item label="朝代">
@@ -54,6 +54,7 @@ import DataTable from '../components/DataTable.vue'
 import FormDialog from '../components/FormDialog.vue'
 import ImportDialog from '../components/ImportDialog.vue'
 import MultiImageUpload from '../components/MultiImageUpload.vue'
+import { createRequiredRule } from '../utils/formRules'
 
 const table = ref(null)
 const dialogVisible = ref(false)
@@ -61,6 +62,10 @@ const isEdit = ref(false)
 const current = ref({})
 const showImport = ref(false)
 const dynasties = ref([])
+
+const eventRules = {
+  title: [createRequiredRule('请输入事件标题')],
+}
 
 const getFirstImage = (json) => {
   if (!json) return ''

@@ -2,6 +2,7 @@ package com.sjg.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.sjg.dto.ImportResult;
 import com.sjg.dto.PageResult;
 import com.sjg.entity.Poet;
 import com.sjg.entity.Poem;
@@ -136,23 +137,18 @@ public class PoetService {
     }
 
     @Transactional
-    public int importFromExcel(MultipartFile file) throws IOException {
-        List<Poet> poets = parseExcel(file);
-        for (Poet poet : poets) {
-            poetMapper.insert(poet);
-        }
-        return poets.size();
-    }
-
-    private List<Poet> parseExcel(MultipartFile file) throws IOException {
-        List<Poet> poets = new ArrayList<>();
+    public ImportResult importFromExcel(MultipartFile file) throws IOException {
+        ImportResult result = ImportResult.empty();
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
                 String name = getCellStringValue(row.getCell(0));
-                if (!StringUtils.hasText(name)) continue;
+                if (!StringUtils.hasText(name)) {
+                    result.skipped(i + 1, "姓名为空");
+                    continue;
+                }
 
                 Poet poet = new Poet();
                 poet.setName(name);
@@ -162,10 +158,11 @@ public class PoetService {
                 poet.setBirthplace(getCellStringValue(row.getCell(4)));
                 poet.setBiography(getCellStringValue(row.getCell(5)));
                 poet.setStyle(getCellStringValue(row.getCell(6)));
-                poets.add(poet);
+                poetMapper.insert(poet);
+                result.imported();
             }
         }
-        return poets;
+        return result;
     }
 
     private String getCellStringValue(Cell cell) {

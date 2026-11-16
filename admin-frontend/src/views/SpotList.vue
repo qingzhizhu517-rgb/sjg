@@ -2,6 +2,15 @@
   <div class="page-container">
     <div class="page-title">景点管理</div>
     <DataTable ref="table" :fetchFn="fetchSpots" @add="openAdd" @edit="openEdit" @delete="handleDelete" @import="showImport = true">
+      <template #filters>
+        <el-select v-model="regionFilter" clearable placeholder="地区筛选" style="width: 120px" @change="table.fetch()">
+          <el-option v-for="r in regions" :key="r" :label="r" :value="r" />
+        </el-select>
+        <el-select v-model="qualityFilter" clearable placeholder="数据质量" style="width: 150px" @change="table.fetch()">
+          <el-option label="缺少坐标" value="missingCoordinates" />
+          <el-option label="缺少图片" value="missingImages" />
+        </el-select>
+      </template>
       <el-table-column type="index" label="序号" width="70" />
       <el-table-column prop="name" label="名称" width="180" />
       <el-table-column prop="region" label="地区" width="100" />
@@ -25,13 +34,13 @@
       </el-table-column>
     </DataTable>
 
-    <FormDialog :visible="dialogVisible" :isEdit="isEdit" :initialData="current" :submitFn="handleSubmit"
+    <FormDialog :visible="dialogVisible" :isEdit="isEdit" :initialData="current" :submitFn="handleSubmit" :rules="spotRules"
       @close="dialogVisible = false" @success="table.fetch()">
       <template #default="{ form }">
-        <el-form-item label="名称" required>
+        <el-form-item label="名称" prop="name" required>
           <el-input v-model="form.name" placeholder="请输入景点名称" />
         </el-form-item>
-        <el-form-item label="地区">
+        <el-form-item label="地区" prop="region" required>
           <el-select v-model="form.region" placeholder="选择地区">
             <el-option v-for="r in regions" :key="r" :label="r" :value="r" />
           </el-select>
@@ -39,10 +48,10 @@
         <el-form-item label="地址">
           <el-input v-model="form.address" placeholder="请输入详细地址" />
         </el-form-item>
-        <el-form-item label="经度">
+        <el-form-item label="经度" prop="longitude">
           <el-input-number v-model="form.longitude" :precision="7" :step="0.001" style="width: 100%;" />
         </el-form-item>
-        <el-form-item label="纬度">
+        <el-form-item label="纬度" prop="latitude">
           <el-input-number v-model="form.latitude" :precision="7" :step="0.001" style="width: 100%;" />
         </el-form-item>
         <el-form-item label="介绍">
@@ -66,6 +75,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import api from '../api'
 import DataTable from '../components/DataTable.vue'
@@ -73,13 +83,25 @@ import FormDialog from '../components/FormDialog.vue'
 import ImportDialog from '../components/ImportDialog.vue'
 import MultiImageUpload from '../components/MultiImageUpload.vue'
 import VideoUpload from '../components/VideoUpload.vue'
+import { cleanParams, parseQualityFromRoute } from '../utils/resourceFilters'
+import { createRequiredRule, latitudeValidator, longitudeValidator } from '../utils/formRules'
 
 const regions = ['菏泽', '济宁', '泰安', '聊城', '济南', '德州', '滨州', '淄博', '东营']
+const route = useRoute()
 const table = ref(null)
 const showImport = ref(false)
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const current = ref({})
+const regionFilter = ref('')
+const qualityFilter = ref(parseQualityFromRoute(route))
+
+const spotRules = {
+  name: [createRequiredRule('请输入景点名称')],
+  region: [createRequiredRule('请选择地区')],
+  longitude: [{ validator: longitudeValidator, trigger: 'blur' }],
+  latitude: [{ validator: latitudeValidator, trigger: 'blur' }],
+}
 
 const getFirstImage = (json) => {
   if (!json) return ''
@@ -129,7 +151,17 @@ const parseImageUrls = (json) => {
   }
 }
 
-const fetchSpots = (page, size, keyword) => api.get('/admin/spots', { params: { page, size, keyword } })
+const normalizeMediaValue = (value) => JSON.stringify(parseImageUrls(value))
+
+const fetchSpots = (page, size, keyword) => api.get('/admin/spots', {
+  params: cleanParams({
+    page,
+    size,
+    keyword,
+    region: regionFilter.value,
+    quality: qualityFilter.value,
+  })
+})
 
 const openAdd = () => {
   isEdit.value = false
@@ -153,7 +185,7 @@ const handleSubmit = async (form) => {
     ...form,
     imageUrl: JSON.stringify(form.imageUrlArray || []),
     imageAnimeUrl: JSON.stringify(form.imageAnimeUrlArray || []),
-    videoUrl: JSON.stringify(form.videoUrlArray || [])
+    videoUrl: normalizeMediaValue(form.videoUrl)
   }
   delete payload.imageUrlArray
   delete payload.imageAnimeUrlArray

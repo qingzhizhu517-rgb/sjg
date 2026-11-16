@@ -31,6 +31,24 @@
       class="import-result"
     />
 
+    <div v-if="hasStructuredResult" class="import-summary">
+      <div class="summary-item">
+        <span class="summary-label">成功导入</span>
+        <strong>{{ result.importedCount }}</strong>
+      </div>
+      <div class="summary-item">
+        <span class="summary-label">跳过记录</span>
+        <strong>{{ result.skippedCount }}</strong>
+      </div>
+    </div>
+
+    <div v-if="result?.errors?.length" class="import-errors">
+      <div class="errors-title">导入提示</div>
+      <ul>
+        <li v-for="item in result.errors.slice(0, 8)" :key="item">{{ item }}</li>
+      </ul>
+    </div>
+
     <template #footer>
       <el-button class="btn-outline" @click="$emit('close')">取消</el-button>
       <el-button class="btn-zhu" type="primary" :loading="loading" @click="upload">
@@ -42,7 +60,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 
 const props = defineProps({ visible: Boolean, uploadFn: Function })
 const emit = defineEmits(['close', 'success'])
@@ -51,10 +70,22 @@ const file = ref(null)
 const loading = ref(false)
 const result = ref(null)
 
+const hasStructuredResult = computed(() => result.value && typeof result.value.importedCount === 'number')
+
+watch(() => props.visible, (visible) => {
+  if (visible) {
+    file.value = null
+    result.value = null
+  }
+})
+
 const handleChange = (f) => { file.value = f.raw }
 
 const upload = async () => {
-  if (!file.value) return
+  if (!file.value) {
+    ElMessage.warning('请选择 Excel 文件')
+    return
+  }
   loading.value = true
   try {
     const formData = new FormData()
@@ -124,6 +155,53 @@ const upload = async () => {
 
 .import-result {
   margin-top: 16px;
+}
+
+.import-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.summary-item {
+  padding: 12px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: #FAF6EF;
+}
+
+.summary-label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.summary-item strong {
+  font-size: 20px;
+  color: var(--color-zhu);
+}
+
+.import-errors {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: #FFF8E6;
+  color: var(--text-secondary);
+}
+
+.errors-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.import-errors ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.7;
 }
 
 .traditional-dialog :deep(.el-dialog) {

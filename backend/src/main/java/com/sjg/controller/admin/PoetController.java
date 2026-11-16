@@ -1,6 +1,7 @@
 package com.sjg.controller.admin;
 
 import com.sjg.dto.PageResult;
+import com.sjg.dto.ImportResult;
 import com.sjg.dto.Result;
 import com.sjg.entity.Poet;
 import com.sjg.service.PoetService;
@@ -110,10 +111,10 @@ public class PoetController {
      */
     @Operation(summary = "批量导入诗人", description = "通过Excel文件批量导入诗人，表头：名称、朝代ID、出生年、卒年、出生地、简介、风格")
     @PostMapping("/import")
-    public ResponseEntity<Result<Map<String, Object>>> importExcel(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Result<ImportResult>> importExcel(@RequestParam("file") MultipartFile file) {
         try {
-            int count = poetService.importFromExcel(file);
-            return ResponseEntity.ok(Result.success(Map.of("success", true, "message", "成功导入 " + count + " 条诗人记录")));
+            ImportResult result = poetService.importFromExcel(file);
+            return ResponseEntity.ok(Result.success(result));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Result.error(400, "导入失败: " + e.getMessage()));
         }

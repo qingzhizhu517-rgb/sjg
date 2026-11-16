@@ -1,6 +1,7 @@
 package com.sjg.controller.admin;
 
 import com.sjg.dto.PageResult;
+import com.sjg.dto.ImportResult;
 import com.sjg.dto.Result;
 import com.sjg.entity.ScenicSpot;
 import com.sjg.service.SpotService;
@@ -33,8 +34,9 @@ public class SpotController {
             @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页数量", example = "10") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "搜索关键字（按景点名称模糊匹配）") @RequestParam(required = false) String keyword,
-            @Parameter(description = "所属区域筛选", example = "济南") @RequestParam(required = false) String region) {
-        return ResponseEntity.ok(Result.success(spotService.list(page, size, keyword, region)));
+            @Parameter(description = "所属区域筛选", example = "济南") @RequestParam(required = false) String region,
+            @Parameter(description = "数据质量筛选", example = "missingCoordinates") @RequestParam(required = false) String quality) {
+        return ResponseEntity.ok(Result.success(spotService.list(page, size, keyword, region, quality)));
     }
 
     /**
@@ -86,10 +88,10 @@ public class SpotController {
 
     @Operation(summary = "批量导入景点", description = "通过Excel文件批量导入景点，表头：名称、地区、地址、经度、纬度、介绍")
     @PostMapping("/import")
-    public ResponseEntity<Result<Map<String, Object>>> importExcel(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Result<ImportResult>> importExcel(@RequestParam("file") MultipartFile file) {
         try {
-            int count = spotService.importFromExcel(file);
-            return ResponseEntity.ok(Result.success(Map.of("success", true, "message", "成功导入 " + count + " 条景点记录")));
+            ImportResult result = spotService.importFromExcel(file);
+            return ResponseEntity.ok(Result.success(result));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Result.error(400, "导入失败: " + e.getMessage()));
         }

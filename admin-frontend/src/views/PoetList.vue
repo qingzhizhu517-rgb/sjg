@@ -21,11 +21,12 @@
       :isEdit="isEdit"
       :initialData="currentPoet"
       :submitFn="handleSubmit"
+      :rules="poetRules"
       @close="dialogVisible = false"
       @success="table.fetch()"
     >
       <template #default="{ form }">
-        <el-form-item label="姓名" required>
+        <el-form-item label="姓名" prop="name" required>
           <el-input v-model="form.name" placeholder="请输入诗人姓名" />
         </el-form-item>
         <el-form-item label="朝代">
@@ -69,6 +70,7 @@ import DataTable from '../components/DataTable.vue'
 import FormDialog from '../components/FormDialog.vue'
 import ImportDialog from '../components/ImportDialog.vue'
 import MultiImageUpload from '../components/MultiImageUpload.vue'
+import { createRequiredRule } from '../utils/formRules'
 
 const table = ref(null)
 const dialogVisible = ref(false)
@@ -76,6 +78,10 @@ const isEdit = ref(false)
 const currentPoet = ref({})
 const showImport = ref(false)
 const dynasties = ref([])
+
+const poetRules = {
+  name: [createRequiredRule('请输入诗人姓名')],
+}
 
 const getFirstImage = (json) => {
   if (!json) return ''

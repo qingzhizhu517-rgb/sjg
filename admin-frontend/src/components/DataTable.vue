@@ -15,19 +15,28 @@
           搜索
         </el-button>
       </div>
+      <div class="filter-group">
+        <slot name="filters" />
+      </div>
       <div class="action-group">
-        <el-button class="btn-outline" @click="$emit('import')">
+        <el-button v-if="showImport" class="btn-outline" @click="$emit('import')">
           <el-icon><Upload /></el-icon>
           批量导入
         </el-button>
-        <el-button class="btn-zhu" type="primary" @click="$emit('add')">
+        <el-button v-if="showAdd" class="btn-zhu" type="primary" @click="$emit('add')">
           <el-icon><Plus /></el-icon>
           新增
         </el-button>
       </div>
     </div>
 
-    <el-table :data="data" v-loading="loading" stripe class="traditional-table" style="width: 100%; height: 100%">
+    <div v-if="errorMsg" class="table-state">
+      <el-empty :description="errorMsg">
+        <el-button class="btn-outline" @click="fetch">重新加载</el-button>
+      </el-empty>
+    </div>
+
+    <el-table v-else :data="data" v-loading="loading" stripe class="traditional-table" style="width: 100%; height: 100%">
       <slot />
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
@@ -47,7 +56,12 @@
       </el-table-column>
     </el-table>
 
+    <div v-if="!loading && !errorMsg && data.length === 0" class="table-state compact">
+      <el-empty :description="emptyText" />
+    </div>
+
     <el-pagination
+      v-if="!errorMsg"
       class="traditional-pagination"
       v-model:current-page="page"
       v-model:page-size="size"
@@ -63,11 +77,17 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 
-const props = defineProps({ fetchFn: Function })
+const props = defineProps({
+  fetchFn: Function,
+  showImport: { type: Boolean, default: true },
+  showAdd: { type: Boolean, default: true },
+  emptyText: { type: String, default: '暂无数据' },
+})
 const emit = defineEmits(['add', 'edit', 'delete', 'import'])
 
 const data = ref([])
 const loading = ref(false)
+const errorMsg = ref('')
 const keyword = ref('')
 const page = ref(1)
 const size = ref(10)
@@ -75,10 +95,15 @@ const total = ref(0)
 
 const fetch = async () => {
   loading.value = true
+  errorMsg.value = ''
   try {
     const result = await props.fetchFn(page.value, size.value, keyword.value)
-    data.value = result.records
-    total.value = result.total
+    data.value = result.records || []
+    total.value = result.total || 0
+  } catch (err) {
+    data.value = []
+    total.value = 0
+    errorMsg.value = err.message || '加载失败'
   } finally {
     loading.value = false
   }
@@ -116,5 +141,28 @@ defineExpose({ fetch })
   padding-top: 16px;
   border-top: 1px solid var(--border-light);
   justify-content: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.table-state {
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius-md);
+  background: #FAF6EF;
+}
+
+.table-state.compact {
+  min-height: 180px;
+  margin-top: 12px;
 }
 </style>
