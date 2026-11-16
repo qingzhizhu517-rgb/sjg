@@ -5,8 +5,9 @@ const routes = [
   {
     path: '/',
     component: () => import('../views/Layout.vue'),
-    redirect: '/poets',
+    redirect: '/dashboard',
     children: [
+      { path: 'dashboard', name: 'Dashboard', component: () => import('../views/Dashboard.vue') },
       { path: 'poets', name: 'PoetList', component: () => import('../views/PoetList.vue') },
       { path: 'spots', name: 'SpotList', component: () => import('../views/SpotList.vue') },
       { path: 'poems', name: 'PoemList', component: () => import('../views/PoemList.vue') },

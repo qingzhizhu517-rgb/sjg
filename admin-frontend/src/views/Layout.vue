@@ -13,6 +13,10 @@
         text-color="rgba(232, 220, 200, 0.7)"
         active-text-color="#F0D0A0"
       >
+        <el-menu-item index="/dashboard">
+          <el-icon><DataBoard /></el-icon>
+          <span>运营总览</span>
+        </el-menu-item>
         <el-menu-item index="/poets">
           <el-icon><User /></el-icon>
           <span>诗人管理</span>
@@ -79,6 +83,7 @@ const username = computed(() => localStorage.getItem('username') || '管理员')
 const isAdmin = computed(() => localStorage.getItem('role') === 'admin')
 
 const pageTitles = {
+  '/dashboard': '运营总览',
   '/poets': '诗人管理',
   '/spots': '景点管理',
   '/poems': '诗词管理',
